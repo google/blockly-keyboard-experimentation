@@ -1,0 +1,68 @@
+{
+  "name": "@blockly/keyboard-experiment",
+  "version": "0.0.0",
+  "description": "A plugin for keyboard navigation.",
+  "scripts": {
+    "audit:fix": "blockly-scripts auditFix",
+    "build": "blockly-scripts build",
+    "clean": "blockly-scripts clean",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "predeploy": "blockly-scripts predeploy",
+    "start": "blockly-scripts start",
+    "test": "blockly-scripts test"
+  },
+  "main": "./dist/index.js",
+  "module": "./src/index.js",
+  "unpkg": "./dist/index.js",
+  "author": "Blockly Team",
+  "keywords": [
+    "blockly",
+    "blockly-plugin",
+    "keyboard-experiment"
+  ],
+  "homepage": "TODO",
+  "bugs": {
+    "url": "TODO"
+  },
+  "repository": {
+    "type": "git",
+    "url": "TODO",
+    "directory": "keyboard-experiment"
+  },
+  "license": "Apache-2.0",
+  "directories": {
+    "dist": "dist",
+    "src": "src"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "devDependencies": {
+    "@blockly/dev-scripts": "^4.0.1",
+    "@blockly/dev-tools": "^8.0.2",
+    "@eslint/eslintrc": "^2.1.2",
+    "@eslint/js": "^8.49.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.2",
+    "@typescript-eslint/parser": "^6.7.2",
+    "blockly": "^11.1.0",
+    "eslint": "^8.49.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-jsdoc": "^46.8.2",
+    "globals": "^15.4.0",
+    "prettier": "^3.3.1",
+    "typescript": "^5.4.5"
+  },
+  "peerDependencies": {
+    "blockly": "^11.1.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://wombat-dressing-room.appspot.com"
+  },
+  "eslintConfig": {
+    "extends": "@blockly/eslint-config"
+  }
+}
