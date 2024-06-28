@@ -34,7 +34,7 @@ jobs:
           node-version: latest
           cache: 'npm'
       - run: npm ci
-      - run: npm run build
+      - run: npm run ghpages
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
