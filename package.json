@@ -67,5 +67,8 @@
   },
   "eslintConfig": {
     "extends": "@blockly/eslint-config"
+  },
+  "dependencies": {
+    "@blockly/keyboard-navigation": "^0.6.2"
   }
 }
