@@ -26,7 +26,22 @@ function createWorkspace(
   return workspace;
 }
 
+function setOptionsDefaultCollapsed() {
+  const key = 'playgroundState_@blockly/keyboard-experiment';
+  let state = localStorage.getItem(key);
+  if (state === null) {
+    localStorage.setItem(key, JSON.stringify({
+      activeTab: 'JSON',
+      // This is the thing we're actually changing.
+      playgroundOpen: false,
+      autoGenerate: true,
+      workspaceJson: '',
+    }));
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
+  setOptionsDefaultCollapsed();
   const defaultOptions = {
     toolbox: toolboxCategories,
   };
