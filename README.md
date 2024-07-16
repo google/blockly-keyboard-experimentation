@@ -12,6 +12,4 @@ is where experimentation will be done.
 
 ## Contributing
 
-To learn more about contributing to this project, see the contributing page.
-
-TODO: Add a link once this repo is actually moved to its final location.
+To learn more about contributing to this project, see the [contributing page](https://github.com/google/blockly-keyboard-experimentation/blob/main/CONTRIBUTING.md).
