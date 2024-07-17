@@ -15,26 +15,10 @@ import {blocks} from '../src/blocks/p5_blocks';
 // @ts-expect-error No types in js file
 import {toolbox} from '../src/blocks/toolbox.js';
 
-import p5 from 'p5';
 import {javascriptGenerator} from 'blockly/javascript';
 // @ts-expect-error No types in js file
 import {save, load} from './serialization';
-
-const runCode = () => {
-  const code = javascriptGenerator.workspaceToCode(Blockly.getMainWorkspace());
-  const p5outputDiv = document.getElementById('p5output');
-  if (p5outputDiv) {
-    // Clear the old canvas.
-    p5outputDiv.innerHTML = '';
-    // Run P5 in instance mode. The name 'sketch' matches the name used
-    // in the generator for all of the p5 blocks.
-    // eslint-disable-next-line new-cap
-    new p5((sketch) => {
-      console.log(sketch);
-      eval(code);
-    }, p5outputDiv);
-  }
-};
+import {runCode, registerRunCodeShortcut} from './runCode';
 
 /**
  * Create a workspace.
@@ -50,6 +34,7 @@ function createWorkspace(
   const workspace = Blockly.inject(blocklyDiv, options);
 
   const plugin = new KeyboardNavigation(workspace);
+  registerRunCodeShortcut();
 
   // Disable blocks that aren't inside the setup or draw loops.
   workspace.addChangeListener(Blockly.Events.disableOrphans);
