@@ -21,7 +21,8 @@ import {save, load} from './serialization';
 import {runCode, registerRunCodeShortcut} from './runCode';
 
 /**
- * Create a workspace.
+ * Create the workspace, including installing keyboard navigation and
+ * change listeners.
  *
  * @param blocklyDiv The blockly container div.
  * @param options The Blockly options.
@@ -54,6 +55,9 @@ function createWorkspace(
   return workspace;
 }
 
+/**
+ * Install p5.js blocks and generators.
+ */
 function addP5() {
   // Installs all four blocks, the colour field, and all language generators.
   installColourBlocks({
@@ -64,6 +68,10 @@ function addP5() {
   javascriptGenerator.addReservedWords('sketch');
 }
 
+/**
+ * Clean up the appearance of the playground by hiding the developer
+ * drawer.
+ */
 function setOptionsDefaultCollapsed() {
   const key = 'playgroundState_@blockly/keyboard-experiment';
   const state = localStorage.getItem(key);
@@ -86,6 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
   setOptionsDefaultCollapsed();
   const defaultOptions = {
     toolbox: toolbox,
+    renderer: 'zelos',
   };
 
   createPlayground(
@@ -93,5 +102,6 @@ document.addEventListener('DOMContentLoaded', function () {
     createWorkspace,
     defaultOptions,
   );
+  
   document.getElementById('run')?.addEventListener('click', runCode);
 });
