@@ -17,7 +17,7 @@ import {toolbox} from '../src/blocks/toolbox.js';
 
 import {javascriptGenerator} from 'blockly/javascript';
 // @ts-expect-error No types in js file
-import {save, load} from './serialization';
+import {save, load} from './loadTestBlocks';
 import {runCode, registerRunCodeShortcut} from './runCode';
 
 /**
@@ -43,14 +43,6 @@ function createWorkspace(
   // Load the initial state from storage and run the code.
   load(workspace);
   runCode();
-
-  // Every time the workspace changes state, save the changes to storage.
-  workspace.addChangeListener((e) => {
-    // UI events are things like scrolling, zooming, etc.
-    // No need to save after one of these.
-    if (e.isUiEvent) return;
-    save(workspace);
-  });
 
   return workspace;
 }
@@ -102,6 +94,6 @@ document.addEventListener('DOMContentLoaded', function () {
     createWorkspace,
     defaultOptions,
   );
-  
+
   document.getElementById('run')?.addEventListener('click', runCode);
 });

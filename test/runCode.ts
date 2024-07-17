@@ -27,7 +27,7 @@ export function runCode() {
       eval(code);
     }, p5outputDiv);
   }
-};
+}
 
 /**
  * Register a shortcut under ctrl+R to run code in the test page.
