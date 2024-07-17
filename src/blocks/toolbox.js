@@ -2,10 +2,6 @@ export const toolbox = {
   'kind': 'flyoutToolbox',
   'contents': [
     {
-      'kind': 'block',
-      'type': 'colour_picker',
-    },
-    {
       kind: 'block',
       type: 'p5_background_color',
       inputs: {
@@ -45,6 +41,7 @@ export const toolbox = {
     {
       kind: 'block',
       type: 'p5_ellipse',
+      inline: 'true',
       inputs: {
         X: {
           shadow: {
@@ -81,10 +78,10 @@ export const toolbox = {
       },
     },
     {
-      'kind': 'block',
-      'type': 'math_random_int',
-      'inputs': {
-        'FROM': {
+      kind: 'block',
+      type: 'math_random_int',
+      inputs: {
+        FROM: {
           shadow: {
             type: 'math_number',
             fields: {
@@ -92,7 +89,7 @@ export const toolbox = {
             },
           },
         },
-        'TO': {
+        TO: {
           shadow: {
             type: 'math_number',
             fields: {
@@ -103,32 +100,18 @@ export const toolbox = {
       },
     },
     {
-      'kind': 'block',
-      'type': 'controls_if',
-    },
-    {
-      'kind': 'block',
-      'type': 'controls_repeat_ext',
-    },
-    {
-      'kind': 'block',
-      'type': 'logic_compare',
-    },
-    {
-      'kind': 'block',
-      'type': 'math_number',
-    },
-    {
-      'kind': 'block',
-      'type': 'math_arithmetic',
-    },
-    {
-      'kind': 'block',
-      'type': 'text',
-    },
-    {
-      'kind': 'block',
-      'type': 'text_print',
+      kind: 'block',
+      type: 'controls_repeat_ext',
+      inputs: {
+        TIMES: {
+            block: {
+                type: 'math_number',
+                fields: {
+                    NUM: 5
+                }
+            }
+        }
+      }
     },
   ],
 };
