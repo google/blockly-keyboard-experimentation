@@ -30,13 +30,23 @@
         overflow: auto;
         padding-top: 1rem;
         padding-left: 1rem;
+        padding-right: 1rem;
       }
 
       #output {
         height: 50%;
       }
+
       #p5output {
-        height: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 10px;
+      }
+
+      #announceWrapper {
+        overflow-y: scroll;
+        height: 400px;
       }
 
       thead {
@@ -73,7 +83,9 @@
             >
           </p>
           <h3 id="announcerHeading">Announcer region:</h3>
+          <div id="announceWrapper">
           <p id="announcer"></p>
+        </div>
         </div>
       </div>
     </div>
