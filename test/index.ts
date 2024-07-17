@@ -21,9 +21,7 @@ import {javascriptGenerator} from 'blockly/javascript';
 import {save, load} from './serialization';
 
 const runCode = () => {
-  const codeDiv = document.getElementById('generatedCode')!.firstChild;
   const code = javascriptGenerator.workspaceToCode(Blockly.getMainWorkspace());
-  (codeDiv as any).innerText = code;
   const p5outputDiv = document.getElementById('p5output');
   if (p5outputDiv) {
     // Clear the old canvas.
