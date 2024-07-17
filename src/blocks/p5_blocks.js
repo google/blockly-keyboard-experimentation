@@ -17,7 +17,7 @@ const p5SetupJson = {
 };
 
 const p5Setup = {
-  init: function() {
+  init: function () {
     this.jsonInit(p5SetupJson);
     // The setup block can't be removed.
     this.setDeletable(false);
@@ -39,7 +39,7 @@ const p5DrawJson = {
 };
 
 const p5Draw = {
-  init: function() {
+  init: function () {
     this.jsonInit(p5DrawJson);
     // The draw block can't be removed.
     this.setDeletable(false);
@@ -73,7 +73,7 @@ const p5CanvasJson = {
 };
 
 const p5Canvas = {
-  init: function() {
+  init: function () {
     this.jsonInit(p5CanvasJson);
     // The canvas block can't be moved or disconnected from its parent.
     this.setMovable(false);
@@ -97,7 +97,6 @@ const background = {
   'helpUrl': '',
 };
 
-
 const stroke = {
   'type': 'p5_stroke',
   'message0': 'Set stroke color to %1',
@@ -114,7 +113,6 @@ const stroke = {
   'helpUrl': '',
 };
 
-
 const fill = {
   'type': 'p5_fill',
   'message0': 'Set fill color to %1',
@@ -130,7 +128,6 @@ const fill = {
   'tooltip': 'Set the fill color',
   'helpUrl': '',
 };
-
 
 const ellipse = {
   'type': 'p5_ellipse',
@@ -169,9 +166,16 @@ const ellipse = {
 
 // Create the block definitions for all the JSON-only blocks.
 // This does not register their definitions with Blockly.
-const jsonBlocks = Blockly.common.createBlockDefinitionsFromJsonArray(
-    [background, stroke, fill, ellipse]);
+const jsonBlocks = Blockly.common.createBlockDefinitionsFromJsonArray([
+  background,
+  stroke,
+  fill,
+  ellipse,
+]);
 
 export const blocks = {
-  'p5_setup': p5Setup, 'p5_draw': p5Draw, 'p5_canvas': p5Canvas, ...jsonBlocks,
+  'p5_setup': p5Setup,
+  'p5_draw': p5Draw,
+  'p5_canvas': p5Canvas,
+  ...jsonBlocks,
 };

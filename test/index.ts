@@ -6,20 +6,19 @@
 
 import * as Blockly from 'blockly';
 import {installAllBlocks as installColourBlocks} from '@blockly/field-colour';
-import {toolboxCategories, createPlayground} from '@blockly/dev-tools';
+import {createPlayground} from '@blockly/dev-tools';
 import {KeyboardNavigation} from '../src/index';
-// @ts-ignore
+// @ts-expect-error No types in js file
 import {forBlock} from '../src/blocks/p5_generators';
-// @ts-ignore
+// @ts-expect-error No types in js file
 import {blocks} from '../src/blocks/p5_blocks';
-// @ts-ignore
+// @ts-expect-error No types in js file
 import {toolbox} from '../src/blocks/toolbox.js';
 
 import p5 from 'p5';
 import {javascriptGenerator} from 'blockly/javascript';
-// @ts-ignore
+// @ts-expect-error No types in js file
 import {save, load} from './serialization';
-
 
 const runCode = () => {
   const codeDiv = document.getElementById('generatedCode')!.firstChild;
@@ -56,7 +55,7 @@ function createWorkspace(
 
   // Disable blocks that aren't inside the setup or draw loops.
   workspace.addChangeListener(Blockly.Events.disableOrphans);
-  
+
   // Load the initial state from storage and run the code.
   load(workspace);
   runCode();
@@ -68,7 +67,7 @@ function createWorkspace(
     if (e.isUiEvent) return;
     save(workspace);
   });
-  
+
   return workspace;
 }
 
@@ -84,15 +83,18 @@ function addP5() {
 
 function setOptionsDefaultCollapsed() {
   const key = 'playgroundState_@blockly/keyboard-experiment';
-  let state = localStorage.getItem(key);
+  const state = localStorage.getItem(key);
   if (state === null) {
-    localStorage.setItem(key, JSON.stringify({
-      activeTab: 'JSON',
-      // This is the thing we're actually changing.
-      playgroundOpen: false,
-      autoGenerate: true,
-      workspaceJson: '',
-    }));
+    localStorage.setItem(
+      key,
+      JSON.stringify({
+        activeTab: 'JSON',
+        // This is the thing we're actually changing.
+        playgroundOpen: false,
+        autoGenerate: true,
+        workspaceJson: '',
+      }),
+    );
   }
 }
 
