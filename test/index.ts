@@ -20,19 +20,23 @@ import {javascriptGenerator} from 'blockly/javascript';
 // @ts-ignore
 import {save, load} from './serialization';
 
-function runCode(workspace: Blockly.WorkspaceSvg) : void {
+
+const runCode = () => {
   const codeDiv = document.getElementById('generatedCode')!.firstChild;
-  const code = javascriptGenerator.workspaceToCode(workspace);
+  const code = javascriptGenerator.workspaceToCode(Blockly.getMainWorkspace());
   (codeDiv as any).innerText = code;
   const p5outputDiv = document.getElementById('p5output');
-  p5outputDiv!.innerHTML = '';
-  console.log('running code');
-  // Run P5 in instance mode. The name 'sketch' matches the name used
-  // in the generator for all of the p5 blocks.
-  // eslint-disable-next-line new-cap
-  const curP5 = new p5((sketch) => {
-    eval(code);
-  }, p5outputDiv!);
+  if (p5outputDiv) {
+    // Clear the old canvas.
+    p5outputDiv.innerHTML = '';
+    // Run P5 in instance mode. The name 'sketch' matches the name used
+    // in the generator for all of the p5 blocks.
+    // eslint-disable-next-line new-cap
+    new p5((sketch) => {
+      console.log(sketch);
+      eval(code);
+    }, p5outputDiv);
+  }
 };
 
 /**
@@ -52,10 +56,10 @@ function createWorkspace(
 
   // Disable blocks that aren't inside the setup or draw loops.
   workspace.addChangeListener(Blockly.Events.disableOrphans);
-
+  
   // Load the initial state from storage and run the code.
   load(workspace);
-  runCode(workspace);
+  runCode();
 
   // Every time the workspace changes state, save the changes to storage.
   workspace.addChangeListener((e) => {
@@ -64,19 +68,7 @@ function createWorkspace(
     if (e.isUiEvent) return;
     save(workspace);
   });
-
-  // Whenever the workspace changes meaningfully, run the code again.
-  workspace.addChangeListener((e) => {
-    // Don't run the code when the workspace finishes loading; we're
-    // already running it once when the application starts.
-    // Don't run the code during drags; we might have invalid state.
-    if (e.isUiEvent || e.type == Blockly.Events.FINISHED_LOADING ||
-      workspace.isDragging()) {
-      return;
-    }
-    runCode(workspace);
-  });
-
+  
   return workspace;
 }
 
@@ -116,4 +108,5 @@ document.addEventListener('DOMContentLoaded', function () {
     createWorkspace,
     defaultOptions,
   );
+  document.getElementById('run')?.addEventListener('click', runCode);
 });
