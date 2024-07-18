@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2024 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 export const toolbox = {
   'kind': 'flyoutToolbox',
   'contents': [
@@ -104,14 +110,14 @@ export const toolbox = {
       type: 'controls_repeat_ext',
       inputs: {
         TIMES: {
-            block: {
-                type: 'math_number',
-                fields: {
-                    NUM: 5
-                }
-            }
-        }
-      }
+          block: {
+            type: 'math_number',
+            fields: {
+              NUM: 5,
+            },
+          },
+        },
+      },
     },
   ],
 };
