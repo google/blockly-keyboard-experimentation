@@ -136,7 +136,6 @@ function keyCodeToString(keycode) {
     strrep = keyNames[piece] ?? piece;
     result += `+${strrep}`;
   }
-  console.log(`${keycode}, ${result}`);
   return result;
 }
 
