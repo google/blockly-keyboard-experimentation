@@ -301,6 +301,17 @@ export class ExtendedNavigationController extends NavigationController {
   }
 }
 
+function addAriaInfo(workspace, navController) {
+  const injectionDiv = workspace.getInjectionDiv();
+  injectionDiv.setAttribute('role', 'application');
+  injectionDiv.setAttribute('aria-label', 'Blockly workspace');
+  injectionDiv.setAttribute('tabindex', '0');
+  // Set focus when entering the region.
+  injectionDiv.addEventListener('focusin', (event) => {
+    navController.navigation.focusWorkspace(workspace);
+  })
+}
+
 export function installNavController(workspace) {
   const navigationController = new ExtendedNavigationController();
   navigationController.init();
@@ -308,4 +319,6 @@ export function installNavController(workspace) {
   // Turns on keyboard navigation.
   navigationController.enable(workspace);
   navigationController.listShortcuts();
+
+  addAriaInfo(workspace, navigationController);
 }
