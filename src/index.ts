@@ -6,7 +6,7 @@
 
 import * as Blockly from 'blockly/core';
 // @ts-ignore
-import {installNavController} from './extended_navigation_controller';
+import {NavigationController} from './base_keyboard_nav/navigation_controller';
 // @ts-ignore
 import {installCursor} from './extended_line_cursor';
 
@@ -23,7 +23,15 @@ export class KeyboardNavigation {
    */
   constructor(workspace: Blockly.WorkspaceSvg) {
     this.workspace = workspace;
-    installNavController(workspace);
+
+    const navigationController = new NavigationController();
+    navigationController.init();
+    navigationController.addWorkspace(workspace);
+    // Turns on keyboard navigation.
+    navigationController.enable(workspace);
+    navigationController.listShortcuts();
+
     installCursor(workspace.getMarkerManager());
   }
 }
+
