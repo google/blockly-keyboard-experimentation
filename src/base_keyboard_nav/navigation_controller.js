@@ -12,7 +12,8 @@
 
 import './gesture_monkey_patch';
 
-import * as Blockly from 'blockly/core';
+import {ASTNode, ShortcutRegistry} from 'blockly';
+import {utils as BlocklyUtils} from 'blockly';
 
 import * as Constants from './constants';
 import {Navigation} from './navigation';
@@ -93,7 +94,7 @@ export class NavigationController {
   /**
    * Handles the given keyboard shortcut.
    * This is only triggered when keyboard accessibility mode is enabled.
-   * @param {!Blockly.ShortcutRegistry.KeyboardShortcut} shortcut The shortcut
+   * @param {!ShortcutRegistry.KeyboardShortcut} shortcut The shortcut
    *     to be handled.
    * @returns {boolean} True if the field handled the shortcut,
    *     false otherwise.
@@ -127,7 +128,7 @@ export class NavigationController {
   /**
    * Handles the given keyboard shortcut.
    * This is only triggered when keyboard accessibility mode is enabled.
-   * @param {!Blockly.ShortcutRegistry.KeyboardShortcut} shortcut The shortcut
+   * @param {!ShortcutRegistry.KeyboardShortcut} shortcut The shortcut
    *     to be handled.
    * @returns {boolean} True if the field handled the shortcut,
    *     false otherwise.
@@ -155,7 +156,7 @@ export class NavigationController {
   /**
    * Handles the given keyboard shortcut.
    * This is only triggered when keyboard accessibility mode is enabled.
-   * @param {!Blockly.ShortcutRegistry.KeyboardShortcut} shortcut The shortcut
+   * @param {!ShortcutRegistry.KeyboardShortcut} shortcut The shortcut
    *     to be handled.
    * @returns {boolean} True if the toolbox handled the shortcut,
    *     false otherwise.
@@ -226,7 +227,7 @@ export class NavigationController {
   /**
    * Gives the cursor to the field to handle if the cursor is on a field.
    * @param {!Blockly.WorkspaceSvg} workspace The workspace to check.
-   * @param {!Blockly.ShortcutRegistry.KeyboardShortcut} shortcut The shortcut
+   * @param {!ShortcutRegistry.KeyboardShortcut} shortcut The shortcut
    *     to give to the field.
    * @returns {boolean} True if the shortcut was handled by the field, false
    *     otherwise.
@@ -238,7 +239,7 @@ export class NavigationController {
       return false;
     }
     const curNode = cursor.getCurNode();
-    if (curNode.getType() === Blockly.ASTNode.types.FIELD) {
+    if (curNode.getType() === ASTNode.types.FIELD) {
       return /** @type {!Blockly.Field} */ (curNode.getLocation()).onShortcut(
         shortcut,
       );
@@ -252,7 +253,7 @@ export class NavigationController {
    * @protected
    */
   registerPrevious() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const previousShortcut = {
       name: Constants.SHORTCUT_NAMES.PREVIOUS,
       preconditionFn: (workspace) => {
@@ -287,9 +288,9 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(previousShortcut);
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
-      Blockly.utils.KeyCodes.UP,
+    ShortcutRegistry.registry.register(previousShortcut);
+    ShortcutRegistry.registry.addKeyMapping(
+      BlocklyUtils.KeyCodes.UP,
       previousShortcut.name,
     );
   }
@@ -299,7 +300,7 @@ export class NavigationController {
    * @protected
    */
   registerToggleKeyboardNav() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const toggleKeyboardNavShortcut = {
       name: Constants.SHORTCUT_NAMES.TOGGLE_KEYBOARD_NAV,
       callback: (workspace) => {
@@ -312,12 +313,12 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(toggleKeyboardNavShortcut);
-    const ctrlShiftK = Blockly.ShortcutRegistry.registry.createSerializedKey(
-      Blockly.utils.KeyCodes.K,
-      [Blockly.utils.KeyCodes.CTRL, Blockly.utils.KeyCodes.SHIFT],
+    ShortcutRegistry.registry.register(toggleKeyboardNavShortcut);
+    const ctrlShiftK = ShortcutRegistry.registry.createSerializedKey(
+      BlocklyUtils.KeyCodes.K,
+      [BlocklyUtils.KeyCodes.CTRL, BlocklyUtils.KeyCodes.SHIFT],
     );
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
+    ShortcutRegistry.registry.addKeyMapping(
       ctrlShiftK,
       toggleKeyboardNavShortcut.name,
     );
@@ -329,7 +330,7 @@ export class NavigationController {
    * @protected
    */
   registerOut() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const outShortcut = {
       name: Constants.SHORTCUT_NAMES.OUT,
       preconditionFn: (workspace) => {
@@ -359,9 +360,9 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(outShortcut);
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
-      Blockly.utils.KeyCodes.LEFT,
+    ShortcutRegistry.registry.register(outShortcut);
+    ShortcutRegistry.registry.addKeyMapping(
+      BlocklyUtils.KeyCodes.LEFT,
       outShortcut.name,
     );
   }
@@ -372,7 +373,7 @@ export class NavigationController {
    * @protected
    */
   registerNext() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const nextShortcut = {
       name: Constants.SHORTCUT_NAMES.NEXT,
       preconditionFn: (workspace) => {
@@ -407,9 +408,9 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(nextShortcut);
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
-      Blockly.utils.KeyCodes.DOWN,
+    ShortcutRegistry.registry.register(nextShortcut);
+    ShortcutRegistry.registry.addKeyMapping(
+      BlocklyUtils.KeyCodes.DOWN,
       nextShortcut.name,
     );
   }
@@ -420,7 +421,7 @@ export class NavigationController {
    * @protected
    */
   registerIn() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const inShortcut = {
       name: Constants.SHORTCUT_NAMES.IN,
       preconditionFn: (workspace) => {
@@ -452,9 +453,9 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(inShortcut);
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
-      Blockly.utils.KeyCodes.RIGHT,
+    ShortcutRegistry.registry.register(inShortcut);
+    ShortcutRegistry.registry.addKeyMapping(
+      BlocklyUtils.KeyCodes.RIGHT,
       inShortcut.name,
     );
   }
@@ -465,7 +466,7 @@ export class NavigationController {
    * @protected
    */
   registerInsert() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const insertShortcut = {
       name: Constants.SHORTCUT_NAMES.INSERT,
       preconditionFn: (workspace) => {
@@ -483,9 +484,9 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(insertShortcut);
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
-      Blockly.utils.KeyCodes.I,
+    ShortcutRegistry.registry.register(insertShortcut);
+    ShortcutRegistry.registry.addKeyMapping(
+      BlocklyUtils.KeyCodes.I,
       insertShortcut.name,
     );
   }
@@ -495,7 +496,7 @@ export class NavigationController {
    * @protected
    */
   registerMark() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const markShortcut = {
       name: Constants.SHORTCUT_NAMES.MARK,
       preconditionFn: (workspace) => {
@@ -521,10 +522,10 @@ export class NavigationController {
             nodeType = curNode.getType();
 
             switch (nodeType) {
-              case Blockly.ASTNode.types.STACK:
+              case ASTNode.types.STACK:
                 this.navigation.insertFromFlyout(workspace);
                 break;
-              case Blockly.ASTNode.types.BUTTON:
+              case ASTNode.types.BUTTON:
                 this.navigation.triggerButtonCallback(workspace);
                 break;
             }
@@ -536,9 +537,9 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(markShortcut);
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
-      Blockly.utils.KeyCodes.ENTER,
+    ShortcutRegistry.registry.register(markShortcut);
+    ShortcutRegistry.registry.addKeyMapping(
+      BlocklyUtils.KeyCodes.ENTER,
       markShortcut.name,
     );
   }
@@ -549,7 +550,7 @@ export class NavigationController {
    * @protected
    */
   registerDisconnect() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const disconnectShortcut = {
       name: Constants.SHORTCUT_NAMES.DISCONNECT,
       preconditionFn: (workspace) => {
@@ -568,9 +569,9 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(disconnectShortcut);
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
-      Blockly.utils.KeyCodes.X,
+    ShortcutRegistry.registry.register(disconnectShortcut);
+    ShortcutRegistry.registry.addKeyMapping(
+      BlocklyUtils.KeyCodes.X,
       disconnectShortcut.name,
     );
   }
@@ -581,7 +582,7 @@ export class NavigationController {
    * @protected
    */
   registerToolboxFocus() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const focusToolboxShortcut = {
       name: Constants.SHORTCUT_NAMES.TOOLBOX,
       preconditionFn: (workspace) => {
@@ -604,9 +605,9 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(focusToolboxShortcut);
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
-      Blockly.utils.KeyCodes.T,
+    ShortcutRegistry.registry.register(focusToolboxShortcut);
+    ShortcutRegistry.registry.addKeyMapping(
+      BlocklyUtils.KeyCodes.T,
       focusToolboxShortcut.name,
     );
   }
@@ -617,7 +618,7 @@ export class NavigationController {
    * @protected
    */
   registerExit() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const exitShortcut = {
       name: Constants.SHORTCUT_NAMES.EXIT,
       preconditionFn: (workspace) => {
@@ -637,14 +638,14 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(exitShortcut, true);
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
-      Blockly.utils.KeyCodes.ESC,
+    ShortcutRegistry.registry.register(exitShortcut, true);
+    ShortcutRegistry.registry.addKeyMapping(
+      BlocklyUtils.KeyCodes.ESC,
       exitShortcut.name,
       true,
     );
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
-      Blockly.utils.KeyCodes.E,
+    ShortcutRegistry.registry.addKeyMapping(
+      BlocklyUtils.KeyCodes.E,
       exitShortcut.name,
       true,
     );
@@ -656,7 +657,7 @@ export class NavigationController {
    * @protected
    */
   registerWorkspaceMoveLeft() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const wsMoveLeftShortcut = {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_LEFT,
       preconditionFn: (workspace) => {
@@ -669,12 +670,12 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(wsMoveLeftShortcut);
-    const shiftA = Blockly.ShortcutRegistry.registry.createSerializedKey(
-      Blockly.utils.KeyCodes.A,
-      [Blockly.utils.KeyCodes.SHIFT],
+    ShortcutRegistry.registry.register(wsMoveLeftShortcut);
+    const shiftA = ShortcutRegistry.registry.createSerializedKey(
+      BlocklyUtils.KeyCodes.A,
+      [BlocklyUtils.KeyCodes.SHIFT],
     );
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
+    ShortcutRegistry.registry.addKeyMapping(
       shiftA,
       wsMoveLeftShortcut.name,
     );
@@ -686,7 +687,7 @@ export class NavigationController {
    * @protected
    */
   registerWorkspaceMoveRight() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const wsMoveRightShortcut = {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_RIGHT,
       preconditionFn: (workspace) => {
@@ -699,12 +700,12 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(wsMoveRightShortcut);
-    const shiftD = Blockly.ShortcutRegistry.registry.createSerializedKey(
-      Blockly.utils.KeyCodes.D,
-      [Blockly.utils.KeyCodes.SHIFT],
+    ShortcutRegistry.registry.register(wsMoveRightShortcut);
+    const shiftD = ShortcutRegistry.registry.createSerializedKey(
+      BlocklyUtils.KeyCodes.D,
+      [BlocklyUtils.KeyCodes.SHIFT],
     );
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
+    ShortcutRegistry.registry.addKeyMapping(
       shiftD,
       wsMoveRightShortcut.name,
     );
@@ -716,7 +717,7 @@ export class NavigationController {
    * @protected
    */
   registerWorkspaceMoveUp() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const wsMoveUpShortcut = {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_UP,
       preconditionFn: (workspace) => {
@@ -729,12 +730,12 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(wsMoveUpShortcut);
-    const shiftW = Blockly.ShortcutRegistry.registry.createSerializedKey(
-      Blockly.utils.KeyCodes.W,
-      [Blockly.utils.KeyCodes.SHIFT],
+    ShortcutRegistry.registry.register(wsMoveUpShortcut);
+    const shiftW = ShortcutRegistry.registry.createSerializedKey(
+      BlocklyUtils.KeyCodes.W,
+      [BlocklyUtils.KeyCodes.SHIFT],
     );
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
+    ShortcutRegistry.registry.addKeyMapping(
       shiftW,
       wsMoveUpShortcut.name,
     );
@@ -746,7 +747,7 @@ export class NavigationController {
    * @protected
    */
   registerWorkspaceMoveDown() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const wsMoveDownShortcut = {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_DOWN,
       preconditionFn: (workspace) => {
@@ -759,12 +760,12 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(wsMoveDownShortcut);
-    const shiftW = Blockly.ShortcutRegistry.registry.createSerializedKey(
-      Blockly.utils.KeyCodes.S,
-      [Blockly.utils.KeyCodes.SHIFT],
+    ShortcutRegistry.registry.register(wsMoveDownShortcut);
+    const shiftW = ShortcutRegistry.registry.createSerializedKey(
+      BlocklyUtils.KeyCodes.S,
+      [BlocklyUtils.KeyCodes.SHIFT],
     );
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
+    ShortcutRegistry.registry.addKeyMapping(
       shiftW,
       wsMoveDownShortcut.name,
     );
@@ -775,7 +776,7 @@ export class NavigationController {
    * @protected
    */
   registerCopy() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const copyShortcut = {
       name: Constants.SHORTCUT_NAMES.COPY,
       preconditionFn: (workspace) => {
@@ -807,33 +808,33 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(copyShortcut);
+    ShortcutRegistry.registry.register(copyShortcut);
 
-    const ctrlC = Blockly.ShortcutRegistry.registry.createSerializedKey(
-      Blockly.utils.KeyCodes.C,
-      [Blockly.utils.KeyCodes.CTRL],
+    const ctrlC = ShortcutRegistry.registry.createSerializedKey(
+      BlocklyUtils.KeyCodes.C,
+      [BlocklyUtils.KeyCodes.CTRL],
     );
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
+    ShortcutRegistry.registry.addKeyMapping(
       ctrlC,
       copyShortcut.name,
       true,
     );
 
-    const altC = Blockly.ShortcutRegistry.registry.createSerializedKey(
-      Blockly.utils.KeyCodes.C,
-      [Blockly.utils.KeyCodes.ALT],
+    const altC = ShortcutRegistry.registry.createSerializedKey(
+      BlocklyUtils.KeyCodes.C,
+      [BlocklyUtils.KeyCodes.ALT],
     );
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
+    ShortcutRegistry.registry.addKeyMapping(
       altC,
       copyShortcut.name,
       true,
     );
 
-    const metaC = Blockly.ShortcutRegistry.registry.createSerializedKey(
-      Blockly.utils.KeyCodes.C,
-      [Blockly.utils.KeyCodes.META],
+    const metaC = ShortcutRegistry.registry.createSerializedKey(
+      BlocklyUtils.KeyCodes.C,
+      [BlocklyUtils.KeyCodes.META],
     );
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
+    ShortcutRegistry.registry.addKeyMapping(
       metaC,
       copyShortcut.name,
       true,
@@ -845,7 +846,7 @@ export class NavigationController {
    * @protected
    */
   registerPaste() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const pasteShortcut = {
       name: Constants.SHORTCUT_NAMES.PASTE,
       preconditionFn: (workspace) => {
@@ -861,33 +862,33 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(pasteShortcut);
+    ShortcutRegistry.registry.register(pasteShortcut);
 
-    const ctrlV = Blockly.ShortcutRegistry.registry.createSerializedKey(
-      Blockly.utils.KeyCodes.V,
-      [Blockly.utils.KeyCodes.CTRL],
+    const ctrlV = ShortcutRegistry.registry.createSerializedKey(
+      BlocklyUtils.KeyCodes.V,
+      [BlocklyUtils.KeyCodes.CTRL],
     );
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
+    ShortcutRegistry.registry.addKeyMapping(
       ctrlV,
       pasteShortcut.name,
       true,
     );
 
-    const altV = Blockly.ShortcutRegistry.registry.createSerializedKey(
-      Blockly.utils.KeyCodes.V,
-      [Blockly.utils.KeyCodes.ALT],
+    const altV = ShortcutRegistry.registry.createSerializedKey(
+      BlocklyUtils.KeyCodes.V,
+      [BlocklyUtils.KeyCodes.ALT],
     );
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
+    ShortcutRegistry.registry.addKeyMapping(
       altV,
       pasteShortcut.name,
       true,
     );
 
-    const metaV = Blockly.ShortcutRegistry.registry.createSerializedKey(
-      Blockly.utils.KeyCodes.V,
-      [Blockly.utils.KeyCodes.META],
+    const metaV = ShortcutRegistry.registry.createSerializedKey(
+      BlocklyUtils.KeyCodes.V,
+      [BlocklyUtils.KeyCodes.META],
     );
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
+    ShortcutRegistry.registry.addKeyMapping(
       metaV,
       pasteShortcut.name,
       true,
@@ -900,7 +901,7 @@ export class NavigationController {
    * @protected
    */
   registerCut() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const cutShortcut = {
       name: Constants.SHORTCUT_NAMES.CUT,
       preconditionFn: (workspace) => {
@@ -934,33 +935,33 @@ export class NavigationController {
       },
     };
 
-    Blockly.ShortcutRegistry.registry.register(cutShortcut);
+    ShortcutRegistry.registry.register(cutShortcut);
 
-    const ctrlX = Blockly.ShortcutRegistry.registry.createSerializedKey(
-      Blockly.utils.KeyCodes.X,
-      [Blockly.utils.KeyCodes.CTRL],
+    const ctrlX = ShortcutRegistry.registry.createSerializedKey(
+      BlocklyUtils.KeyCodes.X,
+      [BlocklyUtils.KeyCodes.CTRL],
     );
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
+    ShortcutRegistry.registry.addKeyMapping(
       ctrlX,
       cutShortcut.name,
       true,
     );
 
-    const altX = Blockly.ShortcutRegistry.registry.createSerializedKey(
-      Blockly.utils.KeyCodes.X,
-      [Blockly.utils.KeyCodes.ALT],
+    const altX = ShortcutRegistry.registry.createSerializedKey(
+      BlocklyUtils.KeyCodes.X,
+      [BlocklyUtils.KeyCodes.ALT],
     );
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
+    ShortcutRegistry.registry.addKeyMapping(
       altX,
       cutShortcut.name,
       true,
     );
 
-    const metaX = Blockly.ShortcutRegistry.registry.createSerializedKey(
-      Blockly.utils.KeyCodes.X,
-      [Blockly.utils.KeyCodes.META],
+    const metaX = ShortcutRegistry.registry.createSerializedKey(
+      BlocklyUtils.KeyCodes.X,
+      [BlocklyUtils.KeyCodes.META],
     );
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
+    ShortcutRegistry.registry.addKeyMapping(
       metaX,
       cutShortcut.name,
       true,
@@ -973,7 +974,7 @@ export class NavigationController {
    * @protected
    */
   registerDelete() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
+    /** @type {!ShortcutRegistry.KeyboardShortcut} */
     const deleteShortcut = {
       name: Constants.SHORTCUT_NAMES.DELETE,
       preconditionFn: function (workspace) {
@@ -1005,14 +1006,14 @@ export class NavigationController {
         return true;
       },
     };
-    Blockly.ShortcutRegistry.registry.register(deleteShortcut);
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
-      Blockly.utils.KeyCodes.DELETE,
+    ShortcutRegistry.registry.register(deleteShortcut);
+    ShortcutRegistry.registry.addKeyMapping(
+      BlocklyUtils.KeyCodes.DELETE,
       deleteShortcut.name,
       true,
     );
-    Blockly.ShortcutRegistry.registry.addKeyMapping(
-      Blockly.utils.KeyCodes.BACKSPACE,
+    ShortcutRegistry.registry.addKeyMapping(
+      BlocklyUtils.KeyCodes.BACKSPACE,
       deleteShortcut.name,
       true,
     );
@@ -1054,7 +1055,7 @@ export class NavigationController {
   dispose() {
     const shortcutNames = Object.values(Constants.SHORTCUT_NAMES);
     for (const name of shortcutNames) {
-      Blockly.ShortcutRegistry.registry.unregister(name);
+      ShortcutRegistry.registry.unregister(name);
     }
     this.removeShortcutHandlers();
     this.navigation.dispose();
