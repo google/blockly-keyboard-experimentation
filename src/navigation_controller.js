@@ -1021,19 +1021,22 @@ export class NavigationController {
     );
   }
 
-
+  /**
+   * List all of the currently registered shortcuts.
+   */
   listShortcuts() {
     this.announcer.listShortcuts();
   }
 
+  /**
+   * Register a keyboard shortcut to list all current shortcuts.
+   */
   registerListShortcuts() {
     const listShortcuts = {
       name: 'List shortcuts',
       preconditionFn: (workspace) => {
         return true;
       },
-      // List out the current shortcuts.
-      // Adds a table to the announcer area.
       callback: (workspace) => {
         this.announcer.listShortcuts();
         return true;
@@ -1047,6 +1050,10 @@ export class NavigationController {
     );
   }
 
+  /**
+   * Register a keyboard shortcut to announce the current location
+   * of the cursor.
+   */
   registerAnnounce() {
     const announceShortcut = {
       name: 'Announce',
@@ -1068,6 +1075,10 @@ export class NavigationController {
     );
   }
 
+  /**
+   * Register a shortcut to handle going to the next sibling of the
+   * cursor's current location.
+   */
   registerNextSibling() {
     const shortcut = {
       name: 'Go to next sibling',
@@ -1100,6 +1111,10 @@ export class NavigationController {
     );
   }
 
+  /**
+   * Register a shortcut to handle going to the previous sibling of the
+   * cursor's current location.
+   */
   registerPreviousSibling() {
     const shortcut = {
       name: 'Go to previous sibling',
@@ -1131,6 +1146,9 @@ export class NavigationController {
     );
   }
 
+  /**
+   * Register a shortcut to jump to the root of the current stack.
+   */
   registerJumpToRoot() {
     const jumpShortcut = {
       name: 'Jump to root of current stack',
@@ -1161,27 +1179,10 @@ export class NavigationController {
     );
   }
 
-  registerAnnounce() {
-    const announceShortcut = {
-      name: 'Announce',
-      preconditionFn: (workspace) => {
-        return true;
-      },
-      // Print out the type of the current node.
-      callback: (workspace) => {
-        const cursor = workspace.getCursor();
-        this.announcer.setText(cursor.getCurNode().getType());
-        return true;
-      },
-    };
-
-    ShortcutRegistry.registry.register(announceShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.A,
-      announceShortcut.name,
-    );
-  }
-
+  /**
+   * Register a shortcut to move the cursor out of its current context,
+   * such as a loop block.
+   */
   registerContextOut() {
     /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
     const shortcut = {
@@ -1209,6 +1210,10 @@ export class NavigationController {
     ShortcutRegistry.registry.addKeyMapping(ctrlShiftO, shortcut.name);
   }
 
+  /**
+   * Register a shortcut to move the cursor in a level of context, such as into
+   * a loop.
+   */
   registerContextIn() {
     const shortcut = {
       name: 'Context in',
@@ -1236,7 +1241,6 @@ export class NavigationController {
     );
     ShortcutRegistry.registry.addKeyMapping(ctrlShiftI, shortcut.name);
   }
-
 
   /**
    * Registers all default keyboard shortcut items for keyboard navigation. This
