@@ -289,7 +289,7 @@ export class NavigationController {
 
     Blockly.ShortcutRegistry.registry.register(previousShortcut);
     Blockly.ShortcutRegistry.registry.addKeyMapping(
-      Blockly.utils.KeyCodes.W,
+      Blockly.utils.KeyCodes.UP,
       previousShortcut.name,
     );
   }
@@ -361,7 +361,7 @@ export class NavigationController {
 
     Blockly.ShortcutRegistry.registry.register(outShortcut);
     Blockly.ShortcutRegistry.registry.addKeyMapping(
-      Blockly.utils.KeyCodes.A,
+      Blockly.utils.KeyCodes.LEFT,
       outShortcut.name,
     );
   }
@@ -409,7 +409,7 @@ export class NavigationController {
 
     Blockly.ShortcutRegistry.registry.register(nextShortcut);
     Blockly.ShortcutRegistry.registry.addKeyMapping(
-      Blockly.utils.KeyCodes.S,
+      Blockly.utils.KeyCodes.DOWN,
       nextShortcut.name,
     );
   }
@@ -454,7 +454,7 @@ export class NavigationController {
 
     Blockly.ShortcutRegistry.registry.register(inShortcut);
     Blockly.ShortcutRegistry.registry.addKeyMapping(
-      Blockly.utils.KeyCodes.D,
+      Blockly.utils.KeyCodes.RIGHT,
       inShortcut.name,
     );
   }

@@ -5,7 +5,7 @@
  */
 
 import {NavigationController} from './base_keyboard_nav/navigation_controller';
-import {SHORTCUT_NAMES, STATE} from './base_keyboard_nav/constants';
+import {STATE} from './base_keyboard_nav/constants';
 import {ASTNode, ShortcutRegistry} from 'blockly';
 import {utils as BlocklyUtils} from 'blockly';
 import {keyCodeArrayToString} from './keynames';
@@ -15,7 +15,6 @@ export class ExtendedNavigationController extends NavigationController {
   init() {
     this.addShortcutHandlers();
     this.registerDefaults();
-    this.remapDefaults();
     this.registerAddOns();
   }
 
@@ -265,39 +264,6 @@ export class ExtendedNavigationController extends NavigationController {
     this.registerListShortcuts();
     this.registerContextIn();
     this.registerContextOut();
-  }
-
-  // Remap to use arrow keys instead.
-  remapDefaults() {
-    ShortcutRegistry.registry.removeAllKeyMappings(
-      SHORTCUT_NAMES.OUT,
-    );
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.LEFT,
-      SHORTCUT_NAMES.OUT,
-    );
-
-    ShortcutRegistry.registry.removeAllKeyMappings(SHORTCUT_NAMES.IN);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.RIGHT,
-      SHORTCUT_NAMES.IN,
-    );
-
-    ShortcutRegistry.registry.removeAllKeyMappings(
-      SHORTCUT_NAMES.PREVIOUS,
-    );
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.UP,
-      SHORTCUT_NAMES.PREVIOUS,
-    );
-
-    ShortcutRegistry.registry.removeAllKeyMappings(
-      SHORTCUT_NAMES.NEXT,
-    );
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.DOWN,
-      SHORTCUT_NAMES.NEXT,
-    );
   }
 }
 
