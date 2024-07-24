@@ -17,7 +17,7 @@ import {utils as BlocklyUtils} from 'blockly';
 
 import * as Constants from './constants';
 import {Navigation} from './navigation';
-import {keyCodeArrayToString} from '../keynames';
+import {keyCodeArrayToString} from './keynames';
 
 /**
  * Class for registering shortcuts for keyboard navigation.
