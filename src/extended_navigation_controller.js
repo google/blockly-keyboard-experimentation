@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {NavigationController} from '@blockly/keyboard-navigation';
-import {Constants} from '@blockly/keyboard-navigation';
+import {NavigationController} from './base_keyboard_nav/navigation_controller';
+import {SHORTCUT_NAMES, STATE} from './base_keyboard_nav/constants';
 import {ASTNode, ShortcutRegistry} from 'blockly';
 import {utils as BlocklyUtils} from 'blockly';
 import {keyCodeArrayToString} from './keynames';
@@ -93,7 +93,7 @@ export class ExtendedNavigationController extends NavigationController {
         const announcer = document.getElementById('announcer');
         const cursor = workspace.getCursor();
 
-        if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
+        if (this.navigation.getState(workspace) == STATE.WORKSPACE) {
           if (this.fieldShortcutHandler(workspace, e, shortcut)) {
             announcer.innerText = 'next sibling (handled by field)';
             return true;
@@ -125,7 +125,7 @@ export class ExtendedNavigationController extends NavigationController {
         const announcer = document.getElementById('announcer');
         const cursor = workspace.getCursor();
 
-        if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
+        if (this.navigation.getState(workspace) == STATE.WORKSPACE) {
           if (this.fieldShortcutHandler(workspace, e, shortcut)) {
             announcer.innerText = 'previous sibling (handled by field)';
             return true;
@@ -209,7 +209,7 @@ export class ExtendedNavigationController extends NavigationController {
       },
       callback: (workspace) => {
         const announcer = document.getElementById('announcer');
-        if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
+        if (this.navigation.getState(workspace) == STATE.WORKSPACE) {
           announcer.innerText = 'context out';
           if (workspace.getCursor().contextOut()) {
             return true;
@@ -238,7 +238,7 @@ export class ExtendedNavigationController extends NavigationController {
       callback: (workspace) => {
         const announcer = document.getElementById('announcer');
         const cursor = workspace.getCursor();
-        if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
+        if (this.navigation.getState(workspace) == STATE.WORKSPACE) {
           if (cursor.contextIn()) {
             announcer.innerText = 'context in';
             return true;
@@ -270,33 +270,33 @@ export class ExtendedNavigationController extends NavigationController {
   // Remap to use arrow keys instead.
   remapDefaults() {
     ShortcutRegistry.registry.removeAllKeyMappings(
-      Constants.SHORTCUT_NAMES.OUT,
+      SHORTCUT_NAMES.OUT,
     );
     ShortcutRegistry.registry.addKeyMapping(
       BlocklyUtils.KeyCodes.LEFT,
-      Constants.SHORTCUT_NAMES.OUT,
+      SHORTCUT_NAMES.OUT,
     );
 
-    ShortcutRegistry.registry.removeAllKeyMappings(Constants.SHORTCUT_NAMES.IN);
+    ShortcutRegistry.registry.removeAllKeyMappings(SHORTCUT_NAMES.IN);
     ShortcutRegistry.registry.addKeyMapping(
       BlocklyUtils.KeyCodes.RIGHT,
-      Constants.SHORTCUT_NAMES.IN,
+      SHORTCUT_NAMES.IN,
     );
 
     ShortcutRegistry.registry.removeAllKeyMappings(
-      Constants.SHORTCUT_NAMES.PREVIOUS,
+      SHORTCUT_NAMES.PREVIOUS,
     );
     ShortcutRegistry.registry.addKeyMapping(
       BlocklyUtils.KeyCodes.UP,
-      Constants.SHORTCUT_NAMES.PREVIOUS,
+      SHORTCUT_NAMES.PREVIOUS,
     );
 
     ShortcutRegistry.registry.removeAllKeyMappings(
-      Constants.SHORTCUT_NAMES.NEXT,
+      SHORTCUT_NAMES.NEXT,
     );
     ShortcutRegistry.registry.addKeyMapping(
       BlocklyUtils.KeyCodes.DOWN,
-      Constants.SHORTCUT_NAMES.NEXT,
+      SHORTCUT_NAMES.NEXT,
     );
   }
 }

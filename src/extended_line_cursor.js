@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {LineCursor} from '@blockly/keyboard-navigation';
+import {LineCursor} from './base_keyboard_nav/line_cursor';
 import {ASTNode} from 'blockly';
 
 export class ExtendedLineCursor extends LineCursor {
