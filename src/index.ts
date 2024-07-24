@@ -8,7 +8,7 @@ import * as Blockly from 'blockly/core';
 // @ts-ignore
 import {NavigationController} from './base_keyboard_nav/navigation_controller';
 // @ts-ignore
-import {installCursor} from './extended_line_cursor';
+import {installCursor} from './base_keyboard_nav/line_cursor';
 
 /** Plugin for keyboard navigation. */
 export class KeyboardNavigation {
