@@ -17,7 +17,7 @@ import {utils as BlocklyUtils} from 'blockly';
 
 import * as Constants from './constants';
 import {Navigation} from './navigation';
-import {keyCodeArrayToString} from './keynames';
+import {Announcer} from './announcer';
 
 /**
  * Class for registering shortcuts for keyboard navigation.
@@ -43,6 +43,7 @@ export class NavigationController {
      * @public
      */
     this.navigation = optNavigation || new Navigation();
+    this.announcer = new Announcer();
   }
 
   /**
@@ -1022,23 +1023,7 @@ export class NavigationController {
 
 
   listShortcuts() {
-    const announcer = document.getElementById('announcer');
-
-    const registry = ShortcutRegistry.registry.getRegistry();
-    let text = `<table>
-<thead>
-<tr>
-<td>Shortcut name</td>
-<td>Shortcut action</td>
-</tr>
-</thead>`;
-    for (const keyboardShortcut of Object.keys(registry)) {
-      const codeArray =
-        ShortcutRegistry.registry.getKeyCodesByShortcutName(keyboardShortcut);
-      const prettyPrinted = keyCodeArrayToString(codeArray);
-      text += `<tr><td>${keyboardShortcut}</td> <td>${prettyPrinted}</td></tr>`;
-    }
-    announcer.innerHTML = text + '\n</table/>';
+    this.announcer.listShortcuts();
   }
 
   registerListShortcuts() {
@@ -1050,7 +1035,7 @@ export class NavigationController {
       // List out the current shortcuts.
       // Adds a table to the announcer area.
       callback: (workspace) => {
-        this.listShortcuts();
+        this.announcer.listShortcuts();
         return true;
       },
     };
@@ -1070,9 +1055,8 @@ export class NavigationController {
       },
       // Print out the type of the current node.
       callback: (workspace) => {
-        const announcer = document.getElementById('announcer');
         const cursor = workspace.getCursor();
-        announcer.innerText = cursor.getCurNode().getType();
+        this.announcer.setText(cursor.getCurNode().getType());
         return true;
       },
     };
@@ -1092,20 +1076,19 @@ export class NavigationController {
       },
       // Jump to the next node at the same level, when in the workspace
       callback: (workspace, e, shortcut) => {
-        const announcer = document.getElementById('announcer');
         const cursor = workspace.getCursor();
 
         if (this.navigation.getState(workspace) == STATE.WORKSPACE) {
           if (this.fieldShortcutHandler(workspace, e, shortcut)) {
-            announcer.innerText = 'next sibling (handled by field)';
+            this.announcer.setText('next sibling (handled by field)');
             return true;
           }
           if (cursor.nextSibling()) {
-            announcer.innerText = 'next sibling (success)';
+            this.announcer.setText('next sibling (success)');
             return true;
           }
         }
-        announcer.innerText = 'next sibling (no-op)';
+        this.announcer.setText('next sibling (no-op)');
         return false;
       },
     };
@@ -1124,20 +1107,19 @@ export class NavigationController {
         return true;
       },
       callback: (workspace, e, shortcut) => {
-        const announcer = document.getElementById('announcer');
         const cursor = workspace.getCursor();
 
         if (this.navigation.getState(workspace) == STATE.WORKSPACE) {
           if (this.fieldShortcutHandler(workspace, e, shortcut)) {
-            announcer.innerText = 'previous sibling (handled by field)';
+            this.announcer.setText('previous sibling (handled by field)');
             return true;
           }
           if (cursor.previousSibling()) {
-            announcer.innerText = 'previous sibling (success)';
+            this.announcer.setText('previous sibling (success)');
             return true;
           }
         }
-        announcer.innerText = 'previous sibling (no-op)';
+        this.announcer.setText('previous sibling (no-op)');
         return false;
       },
     };
@@ -1157,7 +1139,6 @@ export class NavigationController {
       },
       // Jump to the root of the current stack.
       callback: (workspace) => {
-        const announcer = document.getElementById('announcer');
         const cursor = workspace.getCursor();
         const curNode = cursor.getCurNode();
         const curBlock = curNode.getSourceBlock();
@@ -1165,10 +1146,10 @@ export class NavigationController {
           const rootBlock = curBlock.getRootBlock();
           const stackNode = ASTNode.createStackNode(rootBlock);
           cursor.setCurNode(stackNode);
-          announcer.innerText = 'jumped to root';
+          this.announcer.setText('jumped to root');
           return true;
         }
-        announcer.innerText = 'could not jump to root';
+        this.announcer.setText('could not jump to root');
         return false;
       },
     };
@@ -1188,9 +1169,8 @@ export class NavigationController {
       },
       // Print out the type of the current node.
       callback: (workspace) => {
-        const announcer = document.getElementById('announcer');
         const cursor = workspace.getCursor();
-        announcer.innerText = cursor.getCurNode().getType();
+        this.announcer.setText(cursor.getCurNode().getType());
         return true;
       },
     };
@@ -1210,14 +1190,13 @@ export class NavigationController {
         return workspace.keyboardAccessibilityMode;
       },
       callback: (workspace) => {
-        const announcer = document.getElementById('announcer');
         if (this.navigation.getState(workspace) == STATE.WORKSPACE) {
-          announcer.innerText = 'context out';
+          this.announcer.setText('context out');
           if (workspace.getCursor().contextOut()) {
             return true;
           }
         }
-        announcer.innerText = 'context out (no-op)';
+        this.announcer.setText('context out (no-op)');
         return false;
       },
     };
@@ -1238,15 +1217,14 @@ export class NavigationController {
       },
       // Print out the type of the current node.
       callback: (workspace) => {
-        const announcer = document.getElementById('announcer');
         const cursor = workspace.getCursor();
         if (this.navigation.getState(workspace) == STATE.WORKSPACE) {
           if (cursor.contextIn()) {
-            announcer.innerText = 'context in';
+            this.announcer.setText('context in');
             return true;
           }
         }
-        announcer.innerText = 'context in (no-op)';
+        this.announcer.setText('context in (no-op)');
         return false;
       },
     };
