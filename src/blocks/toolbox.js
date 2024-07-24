@@ -123,26 +123,26 @@ export const toolbox = {
       kind: 'block',
       type: 'math_arithmetic',
       fields: {
-        OP: 'ADD'
+        OP: 'ADD',
       },
       inputs: {
         A: {
           shadow: {
             type: 'math_number',
             fields: {
-              NUM: 1
-            }
-          }
+              NUM: 1,
+            },
+          },
         },
         B: {
           shadow: {
             type: 'math_number',
             fields: {
-              NUM: 1
-            }
-          }
-        }
-      }
-    }
+              NUM: 1,
+            },
+          },
+        },
+      },
+    },
   ],
 };

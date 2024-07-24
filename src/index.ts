@@ -34,4 +34,3 @@ export class KeyboardNavigation {
     installCursor(workspace.getMarkerManager());
   }
 }
-

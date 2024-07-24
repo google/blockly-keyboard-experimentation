@@ -275,7 +275,6 @@ export class LineCursor extends BasicCursor {
     }
     return newNode;
   }
-
 }
 
 export const registrationName = 'LineCursor';

@@ -599,10 +599,7 @@ export class NavigationController {
       BlocklyUtils.KeyCodes.A,
       [BlocklyUtils.KeyCodes.SHIFT],
     );
-    ShortcutRegistry.registry.addKeyMapping(
-      shiftA,
-      wsMoveLeftShortcut.name,
-    );
+    ShortcutRegistry.registry.addKeyMapping(shiftA, wsMoveLeftShortcut.name);
   }
 
   /**
@@ -629,10 +626,7 @@ export class NavigationController {
       BlocklyUtils.KeyCodes.D,
       [BlocklyUtils.KeyCodes.SHIFT],
     );
-    ShortcutRegistry.registry.addKeyMapping(
-      shiftD,
-      wsMoveRightShortcut.name,
-    );
+    ShortcutRegistry.registry.addKeyMapping(shiftD, wsMoveRightShortcut.name);
   }
 
   /**
@@ -659,10 +653,7 @@ export class NavigationController {
       BlocklyUtils.KeyCodes.W,
       [BlocklyUtils.KeyCodes.SHIFT],
     );
-    ShortcutRegistry.registry.addKeyMapping(
-      shiftW,
-      wsMoveUpShortcut.name,
-    );
+    ShortcutRegistry.registry.addKeyMapping(shiftW, wsMoveUpShortcut.name);
   }
 
   /**
@@ -689,10 +680,7 @@ export class NavigationController {
       BlocklyUtils.KeyCodes.S,
       [BlocklyUtils.KeyCodes.SHIFT],
     );
-    ShortcutRegistry.registry.addKeyMapping(
-      shiftW,
-      wsMoveDownShortcut.name,
-    );
+    ShortcutRegistry.registry.addKeyMapping(shiftW, wsMoveDownShortcut.name);
   }
 
   /**
@@ -738,31 +726,19 @@ export class NavigationController {
       BlocklyUtils.KeyCodes.C,
       [BlocklyUtils.KeyCodes.CTRL],
     );
-    ShortcutRegistry.registry.addKeyMapping(
-      ctrlC,
-      copyShortcut.name,
-      true,
-    );
+    ShortcutRegistry.registry.addKeyMapping(ctrlC, copyShortcut.name, true);
 
     const altC = ShortcutRegistry.registry.createSerializedKey(
       BlocklyUtils.KeyCodes.C,
       [BlocklyUtils.KeyCodes.ALT],
     );
-    ShortcutRegistry.registry.addKeyMapping(
-      altC,
-      copyShortcut.name,
-      true,
-    );
+    ShortcutRegistry.registry.addKeyMapping(altC, copyShortcut.name, true);
 
     const metaC = ShortcutRegistry.registry.createSerializedKey(
       BlocklyUtils.KeyCodes.C,
       [BlocklyUtils.KeyCodes.META],
     );
-    ShortcutRegistry.registry.addKeyMapping(
-      metaC,
-      copyShortcut.name,
-      true,
-    );
+    ShortcutRegistry.registry.addKeyMapping(metaC, copyShortcut.name, true);
   }
 
   /**
@@ -792,31 +768,19 @@ export class NavigationController {
       BlocklyUtils.KeyCodes.V,
       [BlocklyUtils.KeyCodes.CTRL],
     );
-    ShortcutRegistry.registry.addKeyMapping(
-      ctrlV,
-      pasteShortcut.name,
-      true,
-    );
+    ShortcutRegistry.registry.addKeyMapping(ctrlV, pasteShortcut.name, true);
 
     const altV = ShortcutRegistry.registry.createSerializedKey(
       BlocklyUtils.KeyCodes.V,
       [BlocklyUtils.KeyCodes.ALT],
     );
-    ShortcutRegistry.registry.addKeyMapping(
-      altV,
-      pasteShortcut.name,
-      true,
-    );
+    ShortcutRegistry.registry.addKeyMapping(altV, pasteShortcut.name, true);
 
     const metaV = ShortcutRegistry.registry.createSerializedKey(
       BlocklyUtils.KeyCodes.V,
       [BlocklyUtils.KeyCodes.META],
     );
-    ShortcutRegistry.registry.addKeyMapping(
-      metaV,
-      pasteShortcut.name,
-      true,
-    );
+    ShortcutRegistry.registry.addKeyMapping(metaV, pasteShortcut.name, true);
   }
 
   /**
@@ -865,31 +829,19 @@ export class NavigationController {
       BlocklyUtils.KeyCodes.X,
       [BlocklyUtils.KeyCodes.CTRL],
     );
-    ShortcutRegistry.registry.addKeyMapping(
-      ctrlX,
-      cutShortcut.name,
-      true,
-    );
+    ShortcutRegistry.registry.addKeyMapping(ctrlX, cutShortcut.name, true);
 
     const altX = ShortcutRegistry.registry.createSerializedKey(
       BlocklyUtils.KeyCodes.X,
       [BlocklyUtils.KeyCodes.ALT],
     );
-    ShortcutRegistry.registry.addKeyMapping(
-      altX,
-      cutShortcut.name,
-      true,
-    );
+    ShortcutRegistry.registry.addKeyMapping(altX, cutShortcut.name, true);
 
     const metaX = ShortcutRegistry.registry.createSerializedKey(
       BlocklyUtils.KeyCodes.X,
       [BlocklyUtils.KeyCodes.META],
     );
-    ShortcutRegistry.registry.addKeyMapping(
-      metaX,
-      cutShortcut.name,
-      true,
-    );
+    ShortcutRegistry.registry.addKeyMapping(metaX, cutShortcut.name, true);
   }
 
   /**
@@ -1011,7 +963,7 @@ export class NavigationController {
       callback: (workspace, e, shortcut) => {
         const cursor = workspace.getCursor();
 
-        if (this.navigation.getState(workspace) == STATE.WORKSPACE) {
+        if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
           if (this.fieldShortcutHandler(workspace, e, shortcut)) {
             this.announcer.setText('next sibling (handled by field)');
             return true;
@@ -1046,7 +998,7 @@ export class NavigationController {
       callback: (workspace, e, shortcut) => {
         const cursor = workspace.getCursor();
 
-        if (this.navigation.getState(workspace) == STATE.WORKSPACE) {
+        if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
           if (this.fieldShortcutHandler(workspace, e, shortcut)) {
             this.announcer.setText('previous sibling (handled by field)');
             return true;
@@ -1113,7 +1065,7 @@ export class NavigationController {
         return workspace.keyboardAccessibilityMode;
       },
       callback: (workspace) => {
-        if (this.navigation.getState(workspace) == STATE.WORKSPACE) {
+        if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
           this.announcer.setText('context out');
           if (workspace.getCursor().contextOut()) {
             return true;
