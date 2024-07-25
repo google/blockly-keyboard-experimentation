@@ -180,6 +180,13 @@ export class LineCursor extends BasicCursor {
     return isValid;
   }
 
+  /**
+   * Moves the cursor to the next sibling that is at the same level
+   * of nesting.
+   * @returns {ASTNode} The next sibling node, or null if the current node
+   *     is not set or there is no next sibling node.
+   * @override
+   */
   nextSibling() {
     const curNode = this.getCurNode();
     if (!curNode) {
@@ -208,6 +215,13 @@ export class LineCursor extends BasicCursor {
     return newNode;
   }
 
+  /**
+   * Moves the cursor to the previous sibling that is at the same level
+   * of nesting.
+   * @returns {ASTNode} The previous sibling node, or null if the current node
+   *     is not set or there is no previous sibling node.
+   * @override
+   */
   previousSibling() {
     const curNode = this.getCurNode();
     if (!curNode) {
@@ -240,6 +254,12 @@ export class LineCursor extends BasicCursor {
     return newNode;
   }
 
+  /**
+   * Moves the cursor out by one level of nesting.
+   * @returns {ASTNode} The new node the cursor points to, or null if
+   * one could not be found.
+   * @override
+   */
   contextOut() {
     const curNode = this.getCurNode();
     if (!curNode) {
@@ -255,6 +275,12 @@ export class LineCursor extends BasicCursor {
     return newNode;
   }
 
+  /**
+   * Moves the cursor in by one level of nesting.
+   * @returns {ASTNode} The new node the cursor points to, or null if
+   * one could not be found.
+   * @override
+   */
   contextIn() {
     let curNode = this.getCurNode();
     if (!curNode) {
@@ -286,6 +312,11 @@ export const pluginInfo = {
   [registrationType]: registrationName,
 };
 
+/**
+ * Install this cursor on the marker manager in the same position as
+ * the previous cursor.
+ * @param {Blockly.MarkerManager} markerManager
+ */
 export function installCursor(markerManager) {
   const oldCurNode = markerManager.getCursor().getCurNode();
   const lineCursor = new LineCursor();
