@@ -7,7 +7,6 @@
 import * as Blockly from 'blockly/core';
 // @ts-expect-error No types in js file
 import {NavigationController} from './navigation_controller';
-// @ts-expect-error No types in js file
 import {installCursor} from './line_cursor';
 
 /** Plugin for keyboard navigation. */
