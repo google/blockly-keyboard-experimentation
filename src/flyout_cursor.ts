@@ -15,8 +15,6 @@ import * as Blockly from 'blockly/core';
  * Class for a flyout cursor.
  * This controls how a user navigates blocks in the flyout.
  * This cursor only allows a user to go to the previous or next stack.
- * @constructor
- * @extends {Blockly.Cursor}
  */
 export class FlyoutCursor extends Blockly.Cursor {
   /**
@@ -28,11 +26,11 @@ export class FlyoutCursor extends Blockly.Cursor {
 
   /**
    * Moves the cursor to the next stack of blocks in the flyout.
-   * @returns {Blockly.ASTNode} The next element, or null if the current node is
+   *
+   * @returns The next element, or null if the current node is
    *     not set or there is no next value.
-   * @override
    */
-  next() {
+  override next(): Blockly.ASTNode | null {
     const curNode = this.getCurNode();
     if (!curNode) {
       return null;
@@ -47,20 +45,20 @@ export class FlyoutCursor extends Blockly.Cursor {
 
   /**
    * This is a no-op since a flyout cursor can not go in.
-   * @returns {null} Always null.
-   * @override
+   *
+   * @returns Always null.
    */
-  in() {
+  override in(): null {
     return null;
   }
 
   /**
    * Moves the cursor to the previous stack of blocks in the flyout.
-   * @returns {Blockly.ASTNode} The previous element, or null if the current
+   *
+   * @returns The previous element, or null if the current
    *     node is not set or there is no previous value.
-   * @override
    */
-  prev() {
+  override prev(): Blockly.ASTNode | null {
     const curNode = this.getCurNode();
     if (!curNode) {
       return null;
@@ -75,10 +73,10 @@ export class FlyoutCursor extends Blockly.Cursor {
 
   /**
    * This is a  no-op since a flyout cursor can not go out.
-   * @returns {null} Always null.
-   * @override
+   *
+   * @returns Always null.
    */
-  out() {
+  override out(): null {
     return null;
   }
 }
@@ -89,5 +87,5 @@ export const registrationName = 'FlyoutCursor';
 Blockly.registry.register(registrationType, registrationName, FlyoutCursor);
 
 export const pluginInfo = {
-  [registrationType]: registrationName,
+  [registrationType.toString()]: registrationName,
 };

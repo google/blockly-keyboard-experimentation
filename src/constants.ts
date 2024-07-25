@@ -32,15 +32,17 @@ export const SHORTCUT_NAMES = {
   DISCONNECT: 'disconnect',
   TOOLBOX: 'toolbox',
   EXIT: 'exit',
-  TOGGLE_KEYBOARD_NAV: 'toggle_keyboard_nav',
   COPY: 'keyboard_nav_copy',
   CUT: 'keyboard_nav_cut',
   PASTE: 'keyboard_nav_paste',
   DELETE: 'keyboard_nav_delete',
+  /* eslint-disable @typescript-eslint/naming-convention */
   MOVE_WS_CURSOR_UP: 'workspace_up',
   MOVE_WS_CURSOR_DOWN: 'workspace_down',
   MOVE_WS_CURSOR_LEFT: 'workspace_left',
   MOVE_WS_CURSOR_RIGHT: 'workspace_right',
+  TOGGLE_KEYBOARD_NAV: 'toggle_keyboard_nav',
+  /* eslint-enable @typescript-eslint/naming-convention */
 };
 
 /**

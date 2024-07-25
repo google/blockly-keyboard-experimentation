@@ -18,8 +18,6 @@ import {ASTNode, BasicCursor} from 'blockly/core';
 
 /**
  * Class for a line cursor.
- * @constructor
- * @extends {BasicCursor}
  */
 export class LineCursor extends BasicCursor {
   /**
@@ -32,6 +30,7 @@ export class LineCursor extends BasicCursor {
   /**
    * Moves the cursor to the next previous connection, next connection or block
    * in the pre order traversal. Finds the next node in the pre order traversal.
+   *
    * @returns The next node, or null if the current node is
    *     not set or there is no next value.
    * @override
@@ -61,11 +60,11 @@ export class LineCursor extends BasicCursor {
   /**
    * Moves the cursor to the next input connection or field
    * in the pre order traversal.
+   *
    * @returns The next node, or null if the current node is
    *     not set or there is no next value.
-   * @override
    */
-  in(): ASTNode | null {
+  override in(): ASTNode | null {
     const curNode = this.getCurNode();
     if (!curNode) {
       return null;
@@ -80,11 +79,11 @@ export class LineCursor extends BasicCursor {
   /**
    * Moves the cursor to the previous next connection or previous connection in
    * the pre order traversal.
+   *
    * @returns The previous node, or null if the current node
    *     is not set or there is no previous value.
-   * @override
    */
-  prev(): ASTNode | null {
+  override prev(): ASTNode | null {
     const curNode = this.getCurNode();
     if (!curNode) {
       return null;
@@ -108,11 +107,11 @@ export class LineCursor extends BasicCursor {
   /**
    * Moves the cursor to the previous input connection or field in the pre order
    * traversal.
+   *
    * @returns The previous node, or null if the current node
    *     is not set or there is no previous value.
-   * @override
    */
-  out(): ASTNode | null {
+  override out(): ASTNode | null {
     const curNode = this.getCurNode();
     if (!curNode) {
       return null;
@@ -129,6 +128,7 @@ export class LineCursor extends BasicCursor {
    * Decides if the previous and next methods should traverse the given node.
    * The previous and next method only traverse previous connections, next
    * connections and blocks.
+   *
    * @param node The AST node to check.
    * @returns True if the node should be visited, false otherwise.
    * @protected
@@ -158,6 +158,7 @@ export class LineCursor extends BasicCursor {
   /**
    * Decides if the in and out methods should traverse the given node.
    * The in and out method only traverse fields and input connections.
+   *
    * @param node The AST node to check whether it is valid.
    * @returns True if the node should be visited, false otherwise.
    * @protected
@@ -183,9 +184,9 @@ export class LineCursor extends BasicCursor {
   /**
    * Moves the cursor to the next sibling that is at the same level
    * of nesting.
+   *
    * @returns The next sibling node, or null if the current node
    *     is not set or there is no next sibling node.
-   * @override
    */
   nextSibling(): ASTNode | null {
     const curNode = this.getCurNode();
@@ -221,9 +222,9 @@ export class LineCursor extends BasicCursor {
   /**
    * Moves the cursor to the previous sibling that is at the same level
    * of nesting.
+   *
    * @returns The previous sibling node, or null if the current node
    *     is not set or there is no previous sibling node.
-   * @override
    */
   previousSibling(): ASTNode | null {
     const curNode = this.getCurNode();
@@ -247,7 +248,7 @@ export class LineCursor extends BasicCursor {
         // TODO: Decide what this should do if the source block
         // has an output instead of a previous.
         const prevBlock = block?.getPreviousBlock();
-        if ( prevBlock) {
+        if (prevBlock) {
           newNode = ASTNode.createBlockNode(prevBlock);
         }
         break;
@@ -262,9 +263,9 @@ export class LineCursor extends BasicCursor {
 
   /**
    * Moves the cursor out by one level of nesting.
+   *
    * @returns The new node the cursor points to, or null if
    * one could not be found.
-   * @override
    */
   contextOut(): ASTNode | null {
     const curNode = this.getCurNode();
@@ -283,12 +284,12 @@ export class LineCursor extends BasicCursor {
 
   /**
    * Moves the cursor in by one level of nesting.
+   *
    * @returns The new node the cursor points to, or null if
    * one could not be found.
-   * @override
    */
   contextIn(): ASTNode | null {
-    let curNode : ASTNode | null = this.getCurNode();
+    let curNode: ASTNode | null = this.getCurNode();
     if (!curNode) {
       return null;
     }
@@ -321,8 +322,8 @@ export const pluginInfo = {
 /**
  * Install this cursor on the marker manager in the same position as
  * the previous cursor.
- * @param {Blockly.MarkerManager} markerManager The currently active
- *     marker manager.
+ *
+ * @param markerManager The currently active marker manager.
  */
 export function installCursor(markerManager: Blockly.MarkerManager) {
   const oldCurNode = markerManager.getCursor()?.getCurNode();
