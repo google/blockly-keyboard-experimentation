@@ -12,9 +12,6 @@
 /**
  * Keyboard navigation states.
  * The different parts of Blockly that the user navigates between.
- * @enum {string}
- * @const
- * @public
  */
 export const STATE = {
   WORKSPACE: 'workspace',
@@ -24,9 +21,6 @@ export const STATE = {
 
 /**
  * Default keyboard navigation shortcut names.
- * @enum {string}
- * @const
- * @public
  */
 export const SHORTCUT_NAMES = {
   PREVIOUS: 'previous',
@@ -52,9 +46,6 @@ export const SHORTCUT_NAMES = {
 /**
  * Types of possible messages passed into the loggingCallback in the Navigation
  * class.
- * @enum {string}
- * @const
- * @public
  */
 export const LOGGING_MSG_TYPE = {
   ERROR: 'error',
