@@ -143,7 +143,6 @@ const defaultData = {
 /**
  * Loads saved state from local storage into the given workspace.
  * @param {Blockly.Workspace} workspace Blockly workspace to load into.
- * @returns
  */
 export const load = function (workspace) {
   const data = JSON.stringify(defaultData);

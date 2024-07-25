@@ -11,6 +11,9 @@ import {keyCodeArrayToString} from './keynames';
  * Class for surfacing information about keyboard navigation state.
  */
 export class Announcer {
+  /**
+   * Constructor for an Announcer.
+   */
   constructor() {
     // For testing purposes, this assumes that the page has a
     // div named 'announcer'.
@@ -40,7 +43,7 @@ export class Announcer {
 
   /**
    * Set the text of the output div, with no validation.
-   * @param {string} text
+   * @param {string} text The text to display.
    */
   setText(text) {
     this.outputDiv.innerHTML = text;

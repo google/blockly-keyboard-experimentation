@@ -268,7 +268,7 @@ export class LineCursor extends BasicCursor {
 
     // Returns null at the workspace level.
     // TODO: Decide where the cursor goes from the workspace level.
-    let newNode = curNode.out();
+    const newNode = curNode.out();
     if (newNode) {
       this.setCurNode(newNode);
     }
@@ -315,7 +315,8 @@ export const pluginInfo = {
 /**
  * Install this cursor on the marker manager in the same position as
  * the previous cursor.
- * @param {Blockly.MarkerManager} markerManager
+ * @param {Blockly.MarkerManager} markerManager The currently active
+ *     marker manager.
  */
 export function installCursor(markerManager) {
   const oldCurNode = markerManager.getCursor().getCurNode();

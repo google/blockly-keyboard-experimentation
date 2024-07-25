@@ -1097,7 +1097,7 @@ export class NavigationController {
       // Print out the type of the current node.
       callback: (workspace) => {
         const cursor = workspace.getCursor();
-        if (this.navigation.getState(workspace) == STATE.WORKSPACE) {
+        if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
           if (cursor.contextIn()) {
             this.announcer.setText('context in');
             return true;

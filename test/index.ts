@@ -16,7 +16,7 @@ import {toolbox} from '../src/blocks/toolbox.js';
 
 import {javascriptGenerator} from 'blockly/javascript';
 // @ts-expect-error No types in js file
-import {save, load} from './loadTestBlocks';
+import {load} from './loadTestBlocks';
 import {runCode, registerRunCodeShortcut} from './runCode';
 
 /**
@@ -33,7 +33,7 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   const blocklyDiv = document.getElementById('blocklyDiv')!;
   const workspace = Blockly.inject(blocklyDiv, options);
 
-  const plugin = new KeyboardNavigation(workspace);
+  new KeyboardNavigation(workspace);
   registerRunCodeShortcut();
 
   // Disable blocks that aren't inside the setup or draw loops.
