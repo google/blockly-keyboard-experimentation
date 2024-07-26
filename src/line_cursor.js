@@ -14,7 +14,7 @@
  */
 
 import * as Blockly from 'blockly/core';
-import {ASTNode, BasicCursor} from 'blockly';
+import {ASTNode, BasicCursor} from 'blockly/core';
 
 /**
  * Class for a line cursor.

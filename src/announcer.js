@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ShortcutRegistry} from 'blockly';
+import {ShortcutRegistry} from 'blockly/core';
 import {keyCodeArrayToString} from './keynames';
 
 /**

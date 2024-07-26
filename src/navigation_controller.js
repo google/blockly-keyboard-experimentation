@@ -12,8 +12,8 @@
 
 import './gesture_monkey_patch';
 
-import {ASTNode, ShortcutRegistry} from 'blockly';
-import {utils as BlocklyUtils} from 'blockly';
+import {ASTNode, ShortcutRegistry} from 'blockly/core';
+import {utils as BlocklyUtils} from 'blockly/core';
 
 import * as Constants from './constants';
 import {Navigation} from './navigation';
