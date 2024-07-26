@@ -5,12 +5,14 @@
  */
 
 import {ShortcutRegistry} from 'blockly/core';
+// @ts-expect-error No types in js file
 import {keyCodeArrayToString} from './keynames';
 
 /**
  * Class for surfacing information about keyboard navigation state.
  */
 export class Announcer {
+  outputDiv: HTMLElement | null;
   /**
    * Constructor for an Announcer.
    */
@@ -38,14 +40,19 @@ export class Announcer {
       const prettyPrinted = keyCodeArrayToString(codeArray);
       text += `<tr><td>${keyboardShortcut}</td> <td>${prettyPrinted}</td></tr>`;
     }
-    this.outputDiv.innerHTML = text + '\n</table/>';
+    if (this.outputDiv) {
+      this.outputDiv.innerHTML = text + '\n</table/>';
+    }
   }
 
   /**
    * Set the text of the output div, with no validation.
-   * @param {string} text The text to display.
+   * 
+   * @param text The text to display.
    */
-  setText(text) {
-    this.outputDiv.innerHTML = text;
+  setText(text: string) {
+    if (this.outputDiv) {
+      this.outputDiv.innerHTML = text;
+    }
   }
 }
