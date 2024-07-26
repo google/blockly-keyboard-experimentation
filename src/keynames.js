@@ -7,7 +7,7 @@
 /**
  * Key names for common characters. These should be used with keyup/keydown
  * events, since the .keyCode property on those is meant to indicate the
- * *physical key* the user held down on the keyboard. Hence the mapping uses
+ * _physical key_ the user held down on the keyboard. Hence the mapping uses
  * only the unshifted version of each key (e.g. no '#', since that's shift+3).
  * Keypress events on the other hand generate (mostly) ASCII codes since they
  * correspond to *characters* the user typed.
@@ -120,9 +120,14 @@ const keyNames = {
   224: 'win',
 };
 
-// Convert from a serialized key code to a string.
-// This should be the inverse of ShortcutRegistry.createSerializedKey, but
-// should also convert ascii characters to strings.
+/**
+ * Convert from a serialized key code to a string.
+ * This should be the inverse of ShortcutRegistry.createSerializedKey, but
+ * should also convert ascii characters to strings.
+ * @param {string} keycode The key code as a string of characters separated
+ *     by the + character.
+ * @returns {string} A single string representing the key code.
+ */
 function keyCodeToString(keycode) {
   let result = '';
   const pieces = keycode.split('+');
@@ -139,6 +144,12 @@ function keyCodeToString(keycode) {
   return result;
 }
 
+/**
+ * Convert an array of key codes into a comma-separated list of strings
+ * @param {Array<string>} keycodeArr The array of key codes to convert.
+ * @returns {string} The input array as a comma-separated list of
+ *     human-readable strings.
+ */
 export function keyCodeArrayToString(keycodeArr) {
   const stringified = keycodeArr.map((keycode) => keyCodeToString(keycode));
   return stringified.join(', ');

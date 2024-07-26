@@ -5,10 +5,10 @@
  */
 
 import * as Blockly from 'blockly/core';
-// @ts-ignore
-import {installNavController} from './extended_navigation_controller';
-// @ts-ignore
-import {installCursor} from './extended_line_cursor';
+// @ts-expect-error No types in js file
+import {NavigationController} from './navigation_controller';
+// @ts-expect-error No types in js file
+import {installCursor} from './line_cursor';
 
 /** Plugin for keyboard navigation. */
 export class KeyboardNavigation {
@@ -23,7 +23,14 @@ export class KeyboardNavigation {
    */
   constructor(workspace: Blockly.WorkspaceSvg) {
     this.workspace = workspace;
-    installNavController(workspace);
+
+    const navigationController = new NavigationController();
+    navigationController.init();
+    navigationController.addWorkspace(workspace);
+    // Turns on keyboard navigation.
+    navigationController.enable(workspace);
+    navigationController.listShortcuts();
+
     installCursor(workspace.getMarkerManager());
   }
 }
