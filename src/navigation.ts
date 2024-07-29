@@ -15,6 +15,7 @@ import * as Constants from './constants';
 import {
   registrationName as cursorRegistrationName,
   registrationType as cursorRegistrationType,
+  FlyoutCursor,
 } from './flyout_cursor';
 
 /**
@@ -22,92 +23,71 @@ import {
  */
 export class Navigation {
   /**
+   * Object holding the location of the cursor for each workspace.
+   * Possible locations of the cursor are: workspace, flyout or toolbox.
+   */
+  workspaceStates: {[index: string]: Constants.STATE} = {};
+
+  /**
+   * The distance to move the cursor when the cursor is on the workspace.
+   */
+  WS_MOVE_DISTANCE = 40;
+
+  /**
+   * The name of the marker to use for keyboard navigation.
+   */
+  MARKER_NAME = 'local_marker_1';
+
+  /**
+   * The default coordinate to use when focusing on the workspace and no
+   * blocks are present. In pixel coordinates, but will be converted to
+   * workspace coordinates when used to position the cursor.
+   */
+  DEFAULT_WS_COORDINATE: Blockly.utils.Coordinate =
+    new Blockly.utils.Coordinate(100, 100);
+
+  /**
+   * The default coordinate to use when moving the cursor to the workspace
+   * after a block has been deleted. In pixel coordinates, but will be
+   * converted to workspace coordinates when used to position the cursor.
+   */
+  WS_COORDINATE_ON_DELETE: Blockly.utils.Coordinate =
+    new Blockly.utils.Coordinate(100, 100);
+
+  /**
+   * Wrapper for method that deals with workspace changes.
+   * Used for removing change listener.
+   */
+  protected wsChangeWrapper: (e: Blockly.Events.Abstract) => void;
+
+  /**
+   * Wrapper for method that deals with flyout changes.
+   * Used for removing change listener.
+   */
+  protected flyoutChangeWrapper: (e: Blockly.Events.Abstract) => void;
+
+  /**
+   * The list of registered workspaces.
+   * Used when removing change listeners in dispose.
+   */
+  protected workspaces: Blockly.WorkspaceSvg[] = [];
+
+  /**
    * Constructor for keyboard navigation.
    */
   constructor() {
-    /**
-     * Object holding the location of the cursor for each workspace.
-     * Possible locations of the cursor are: workspace, flyout or toolbox.
-     * @type {Object<string,Constants.STATE>}
-     * @protected
-     */
-    this.workspaceStates = {};
-
-    /**
-     * An optional method that allows a developer to customize how to handle
-     * logs, warnings, and errors. The first argument is one of 'log', 'warn',
-     * or 'error'. The second argument is the message.
-     * @type {?function(Constants.LOGGING_MSG_TYPE, string)}
-     * @public
-     */
-    this.loggingCallback = null;
-
-    /**
-     * The distance to move the cursor when the cursor is on the workspace.
-     * @type {number}
-     * @public
-     */
-    this.WS_MOVE_DISTANCE = 40;
-
-    /**
-     * The name of the marker to use for keyboard navigation.
-     * @type {string}
-     * @public
-     */
-    this.MARKER_NAME = 'local_marker_1';
-
-    /**
-     * The default coordinate to use when focusing on the workspace and no
-     * blocks are present. In pixel coordinates, but will be converted to
-     * workspace coordinates when used to position the cursor.
-     * @type {!Blockly.utils.Coordinate}
-     * @public
-     */
-    this.DEFAULT_WS_COORDINATE = new Blockly.utils.Coordinate(100, 100);
-
-    /**
-     * The default coordinate to use when moving the cursor to the workspace
-     * after a block has been deleted. In pixel coordinates, but will be
-     * converted to workspace coordinates when used to position the cursor.
-     * @type {!Blockly.utils.Coordinate}
-     * @public
-     */
-    this.WS_COORDINATE_ON_DELETE = new Blockly.utils.Coordinate(100, 100);
-
-    /**
-     * Wrapper for method that deals with workspace changes.
-     * Used for removing change listener.
-     * @type {Function}
-     * @protected
-     */
     this.wsChangeWrapper = this.workspaceChangeListener.bind(this);
-
-    /**
-     * Wrapper for method that deals with flyout changes.
-     * Used for removing change listener.
-     * @type {Function}
-     * @protected
-     */
     this.flyoutChangeWrapper = this.flyoutChangeListener.bind(this);
-
-    /**
-     * The list of registered workspaces.
-     * Used when removing change listeners in dispose.
-     * @type {!Array<!Blockly.WorkspaceSvg>}
-     * @protected
-     */
-    this.workspaces = [];
   }
 
   /**
    * Adds all necessary change listeners and markers to a workspace for keyboard
    * navigation to work. This must be called for keyboard navigation to work
    * on a workspace.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace to add keyboard
-   *     navigation to.
-   * @public
+   *
+   * @param workspace The workspace to add keyboard navigation to.
    */
-  addWorkspace(workspace) {
+  addWorkspace(workspace: Blockly.WorkspaceSvg) {
     this.workspaces.push(workspace);
     const flyout = workspace.getFlyout();
     workspace
@@ -122,11 +102,10 @@ export class Navigation {
 
   /**
    * Removes all keyboard navigation change listeners and markers.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace to remove keyboard
-   *     navigation from.
-   * @public
+   *
+   * @param workspace The workspace to remove keyboard navigation from.
    */
-  removeWorkspace(workspace) {
+  removeWorkspace(workspace: Blockly.WorkspaceSvg) {
     const workspaceIdx = this.workspaces.indexOf(workspace);
     const flyout = workspace.getFlyout();
 
@@ -149,60 +128,59 @@ export class Navigation {
 
   /**
    * Sets the state for the given workspace.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace to set the state on.
-   * @param {!Constants.STATE} state The navigation state.
-   * @protected
+   *
+   * @param workspace The workspace to set the state on.
+   * @param state The navigation state.
    */
-  setState(workspace, state) {
+  setState(workspace: Blockly.WorkspaceSvg, state: Constants.STATE) {
     this.workspaceStates[workspace.id] = state;
   }
 
   /**
    * Gets the navigation state of the current workspace.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace to get the state of.
-   * @returns {!Constants.STATE} The state of the given workspace.
-   * @package
+   *
+   * @param workspace The workspace to get the state of.
+   * @returns The state of the given workspace.
    */
-  getState(workspace) {
+  getState(workspace: Blockly.WorkspaceSvg): Constants.STATE {
     return this.workspaceStates[workspace.id];
   }
 
   /**
    * Gets the marker created for keyboard navigation.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace to get the marker
-   *     from.
-   * @returns {?Blockly.Marker} The marker created for keyboard navigation.
-   * @protected
+   *
+   * @param workspace The workspace to get the marker from.
+   * @returns The marker created for keyboard navigation.
    */
-  getMarker(workspace) {
+  getMarker(workspace: Blockly.WorkspaceSvg): Blockly.Marker | null {
     return workspace.getMarker(this.MARKER_NAME);
   }
 
   /**
    * Adds all event listeners and cursors to the flyout that are needed for
    * keyboard navigation to work.
-   * @param {!Blockly.IFlyout} flyout The flyout to add a cursor and change
-   *     listeners to.
-   * @protected
+   *
+   * @param flyout The flyout to add a cursor and change listeners to.
    */
-  addFlyout(flyout) {
+  addFlyout(flyout: Blockly.IFlyout) {
     const flyoutWorkspace = flyout.getWorkspace();
     flyoutWorkspace.addChangeListener(this.flyoutChangeWrapper);
     const FlyoutCursorClass = Blockly.registry.getClass(
       cursorRegistrationType,
       cursorRegistrationName,
     );
-    flyoutWorkspace.getMarkerManager().setCursor(new FlyoutCursorClass());
+    if (FlyoutCursorClass) {
+      flyoutWorkspace.getMarkerManager().setCursor(new FlyoutCursorClass());
+    }
   }
 
   /**
    * Removes all change listeners from the flyout that are needed for
    * keyboard navigation to work.
-   * @param {!Blockly.IFlyout} flyout The flyout to add a cursor and event
-   *     listeners to.
-   * @protected
+   *
+   * @param flyout The flyout to add a cursor and event listeners to.
    */
-  removeFlyout(flyout) {
+  removeFlyout(flyout: Blockly.IFlyout) {
     const flyoutWorkspace = flyout.getWorkspace();
     flyoutWorkspace.removeChangeListener(this.flyoutChangeWrapper);
   }
@@ -210,36 +188,38 @@ export class Navigation {
   /**
    * Updates the state of keyboard navigation and the position of the cursor
    * based on workspace events.
-   * @param {!Blockly.Events.Abstract} e The Blockly event to process.
-   * @protected
+   *
+   * @param e The Blockly event to process.
    */
-  workspaceChangeListener(e) {
-    const workspace = Blockly.Workspace.getById(e.workspaceId);
+  workspaceChangeListener(e: Blockly.Events.Abstract) {
+    if (!e.workspaceId) {
+      return;
+    }
+    const workspace = Blockly.Workspace.getById(
+      e.workspaceId,
+    ) as Blockly.WorkspaceSvg;
     if (!workspace || !workspace.keyboardAccessibilityMode) {
       return;
     }
     switch (e.type) {
       case Blockly.Events.DELETE:
-        this.handleBlockDeleteByDrag(workspace, e);
+        this.handleBlockDeleteByDrag(
+          workspace,
+          e as Blockly.Events.BlockDelete,
+        );
         break;
       case Blockly.Events.BLOCK_CHANGE:
-        if (e.element === 'mutation') {
-          this.handleBlockMutation(
-            workspace,
-            /** @type {Blockly.Events.BlockChange} */ (e),
-          );
+        if ((e as Blockly.Events.BlockChange).element === 'mutation') {
+          this.handleBlockMutation(workspace, e as Blockly.Events.BlockChange);
         }
         break;
       case Blockly.Events.CLICK:
-        this.handleWorkspaceClick(
-          workspace,
-          /** @type {Blockly.Events.Click} */ (e),
-        );
+        this.handleWorkspaceClick(workspace, e as Blockly.Events.Click);
         break;
       case Blockly.Events.TOOLBOX_ITEM_SELECT:
         this.handleToolboxCategoryClick(
           workspace,
-          /** @type {Blockly.Events.ToolboxItemSelect} */ (e),
+          e as Blockly.Events.ToolboxItemSelect,
         );
         break;
       case Blockly.Events.BLOCK_CREATE:
@@ -250,13 +230,24 @@ export class Navigation {
   /**
    * Updates the state of keyboard navigation and the position of the cursor
    * based on events emitted from the flyout's workspace.
-   * @param {!Blockly.Events.Abstract} e The Blockly event to process.
-   * @protected
+   *
+   * @param e The Blockly event to process.
    */
-  flyoutChangeListener(e) {
-    const flyoutWorkspace = Blockly.Workspace.getById(e.workspaceId);
+  flyoutChangeListener(e: Blockly.Events.Abstract) {
+    if (!e.workspaceId) {
+      return;
+    }
+    const flyoutWorkspace = Blockly.Workspace.getById(
+      e.workspaceId,
+    ) as Blockly.WorkspaceSvg;
     const mainWorkspace = flyoutWorkspace.targetWorkspace;
+    if (!mainWorkspace) {
+      return;
+    }
     const flyout = mainWorkspace.getFlyout();
+    if (!flyout) {
+      return;
+    }
 
     // This is called for simple toolboxes and for toolboxes that have a flyout
     // that does not close. Autoclosing flyouts close before we need to focus
@@ -266,12 +257,19 @@ export class Navigation {
       mainWorkspace.keyboardAccessibilityMode &&
       !flyout.autoClose
     ) {
-      if (e.type === Blockly.Events.CLICK && e.targetType === 'block') {
-        const block = flyoutWorkspace.getBlockById(e.blockId);
-        this.handleBlockClickInFlyout(mainWorkspace, block);
+      if (
+        e.type === Blockly.Events.CLICK &&
+        (e as Blockly.Events.Click).targetType === 'block'
+      ) {
+        const block = flyoutWorkspace.getBlockById(
+          (e as Blockly.Events.Click).blockId!,
+        );
+        this.handleBlockClickInFlyout(mainWorkspace, block!);
       } else if (e.type === Blockly.Events.SELECTED) {
-        const block = flyoutWorkspace.getBlockById(e.newElementId);
-        this.handleBlockClickInFlyout(mainWorkspace, block);
+        const block = flyoutWorkspace.getBlockById(
+          (e as Blockly.Events.Selected).newElementId!,
+        );
+        this.handleBlockClickInFlyout(mainWorkspace, block!);
       }
     }
   }
@@ -280,12 +278,14 @@ export class Navigation {
    * Moves the cursor to the workspace if a block has been dragged from a simple
    * toolbox. For a category toolbox this is handled in
    * handleToolboxCategoryClick_.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace the cursor belongs
-   *     to.
-   * @param {!Blockly.Events.Abstract} e The Blockly event to process.
-   * @protected
+   *
+   * @param workspace The workspace the cursor belongs to.
+   * @param e The Blockly event to process.
    */
-  handleBlockCreate(workspace, e) {
+  handleBlockCreate(
+    workspace: Blockly.WorkspaceSvg,
+    e: Blockly.Events.Abstract,
+  ) {
     if (this.getState(workspace) === Constants.STATE.FLYOUT) {
       this.resetFlyout(workspace, !!workspace.getToolbox());
       this.setState(workspace, Constants.STATE.WORKSPACE);
@@ -295,31 +295,36 @@ export class Navigation {
   /**
    * Moves the cursor to the block level when the block the cursor is on
    * mutates.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace the cursor belongs
+   *
+   * @param workspace The workspace the cursor belongs
    *     to.
-   * @param {!Blockly.Events.BlockChange} e The Blockly event to process.
-   * @protected
+   * @param e The Blockly event to process.
    */
-  handleBlockMutation(workspace, e) {
+  handleBlockMutation(
+    workspace: Blockly.WorkspaceSvg,
+    e: Blockly.Events.BlockChange,
+  ) {
     const mutatedBlockId = e.blockId;
     const cursor = workspace.getCursor();
     if (cursor) {
       const curNode = cursor.getCurNode();
       const block = curNode ? curNode.getSourceBlock() : null;
       if (block && block.id === mutatedBlockId) {
-        cursor.setCurNode(Blockly.ASTNode.createBlockNode(block));
+        cursor.setCurNode(Blockly.ASTNode.createBlockNode(block)!);
       }
     }
   }
 
   /**
    * Moves the cursor to the workspace when a user clicks on the workspace.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace the cursor belongs
-   *     to.
-   * @param {!Blockly.Events.Click} e The Blockly event to process.
-   * @protected
+   *
+   * @param workspace The workspace the cursor belongs to.
+   * @param e The Blockly event to process.
    */
-  handleWorkspaceClick(workspace, e) {
+  handleWorkspaceClick(
+    workspace: Blockly.WorkspaceSvg,
+    e: Blockly.Events.Click,
+  ) {
     const workspaceState = this.getState(workspace);
     if (workspaceState !== Constants.STATE.WORKSPACE) {
       this.resetFlyout(workspace, !!workspace.getToolbox());
@@ -330,12 +335,14 @@ export class Navigation {
   /**
    * Moves the cursor to the toolbox when a user clicks on a toolbox category.
    * Moves the cursor to the workspace if theh user closes the toolbox category.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace the toolbox is on.
-   * @param {!Blockly.Events.ToolboxItemSelect} e The event emitted from the
-   *     workspace.
-   * @protected
+   *
+   * @param workspace The workspace the toolbox is on.
+   * @param e The event emitted from the workspace.
    */
-  handleToolboxCategoryClick(workspace, e) {
+  handleToolboxCategoryClick(
+    workspace: Blockly.WorkspaceSvg,
+    e: Blockly.Events.ToolboxItemSelect,
+  ) {
     const workspaceState = this.getState(workspace);
     if (e.newItem && workspaceState !== Constants.STATE.TOOLBOX) {
       // If the toolbox category was just clicked, focus on the toolbox.
@@ -350,14 +357,16 @@ export class Navigation {
   /**
    * Moves the cursor to the workspace when its parent block is deleted by
    * being dragged to the flyout or to the trashcan.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace the block was on.
-   * @param {!Blockly.Events.Delete} e The event emitted when a block is
-   *     deleted.
-   * @protected
+   *
+   * @param workspace The workspace the block was on.
+   * @param e The event emitted when a block is deleted.
    */
-  handleBlockDeleteByDrag(workspace, e) {
+  handleBlockDeleteByDrag(
+    workspace: Blockly.WorkspaceSvg,
+    e: Blockly.Events.BlockDelete,
+  ) {
     const deletedBlockId = e.blockId;
-    const ids = e.ids;
+    const ids = e.ids ?? [];
     const cursor = workspace.getCursor();
 
     // Make sure the cursor is on a block.
@@ -370,13 +379,13 @@ export class Navigation {
     }
 
     const curNode = cursor.getCurNode();
-    const sourceBlock = curNode.getSourceBlock();
+    const sourceBlock = curNode.getSourceBlock()!;
     if (sourceBlock.id === deletedBlockId || ids.indexOf(sourceBlock.id) > -1) {
       cursor.setCurNode(
         Blockly.ASTNode.createWorkspaceNode(
           workspace,
           this.WS_COORDINATE_ON_DELETE,
-        ),
+        )!,
       );
     }
   }
@@ -384,20 +393,22 @@ export class Navigation {
   /**
    * Handles when a user clicks on a block in the flyout by moving the cursor
    * to that stack of blocks and setting the state of navigation to the flyout.
-   * @param {!Blockly.WorkspaceSvg} mainWorkspace The workspace the user clicked
-   *     on.
-   * @param {!Blockly.BlockSvg} block The block the user clicked on.
-   * @protected
+   *
+   * @param mainWorkspace The workspace the user clicked on.
+   * @param block The block the user clicked on.
    */
-  handleBlockClickInFlyout(mainWorkspace, block) {
+  handleBlockClickInFlyout(
+    mainWorkspace: Blockly.WorkspaceSvg,
+    block: Blockly.BlockSvg,
+  ) {
     if (!block) {
       return;
     }
     if (block.isShadow()) {
-      block = /** @type {Blockly.BlockSvg}*/ (block.getParent());
+      block = block.getParent()!;
     }
-    this.getFlyoutCursor(mainWorkspace).setCurNode(
-      Blockly.ASTNode.createStackNode(block),
+    this.getFlyoutCursor(mainWorkspace)!.setCurNode(
+      Blockly.ASTNode.createStackNode(block)!,
     );
     this.setState(mainWorkspace, Constants.STATE.FLYOUT);
   }
@@ -406,16 +417,18 @@ export class Navigation {
    * Moves the cursor to the appropriate location before a block is deleted.
    * This is used when the user deletes a block using the delete or backspace
    * key.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace the block is being
-   *     deleted on.
-   * @param {!Blockly.BlockSvg} deletedBlock The block that is being deleted.
-   * @package
+   *
+   * @param workspace The workspace the block is being deleted on.
+   * @param deletedBlock The block that is being deleted.
    */
-  moveCursorOnBlockDelete(workspace, deletedBlock) {
-    if (!workspace || !workspace.getCursor()) {
+  moveCursorOnBlockDelete(
+    workspace: Blockly.WorkspaceSvg,
+    deletedBlock: Blockly.BlockSvg,
+  ) {
+    const cursor = workspace.getCursor();
+    if (!cursor) {
       return;
     }
-    const cursor = workspace.getCursor();
     const curNode = cursor.getCurNode();
     const block = curNode ? curNode.getSourceBlock() : null;
 
@@ -424,11 +437,11 @@ export class Navigation {
       if (block.getParent()) {
         const topConnection =
           block.previousConnection || block.outputConnection;
-        if (topConnection) {
+        if (topConnection?.targetConnection) {
           cursor.setCurNode(
             Blockly.ASTNode.createConnectionNode(
               topConnection.targetConnection,
-            ),
+            )!,
           );
         }
       } else {
@@ -437,17 +450,20 @@ export class Navigation {
           Blockly.ASTNode.createWorkspaceNode(
             block.workspace,
             block.getRelativeToSurfaceXY(),
-          ),
+          )!,
         );
       }
       // If the cursor is on a block whose parent is being deleted, move the
       // cursor to the workspace.
-    } else if (block && deletedBlock.getChildren(false).indexOf(block) > -1) {
+    } else if (
+      block &&
+      deletedBlock.getChildren(false).indexOf(block as Blockly.BlockSvg) > -1
+    ) {
       cursor.setCurNode(
         Blockly.ASTNode.createWorkspaceNode(
           block.workspace,
           block.getRelativeToSurfaceXY(),
-        ),
+        )!,
       );
     }
   }
@@ -455,11 +471,10 @@ export class Navigation {
   /**
    * Sets the navigation state to toolbox and selects the first category in the
    * toolbox. No-op if a toolbox does not exist on the given workspace.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace to get the toolbox
-   *     on.
-   * @package
+   *
+   * @param workspace The workspace to get the toolbox on.
    */
-  focusToolbox(workspace) {
+  focusToolbox(workspace: Blockly.WorkspaceSvg) {
     const toolbox = workspace.getToolbox();
     if (!toolbox) {
       return;
@@ -468,13 +483,13 @@ export class Navigation {
     this.setState(workspace, Constants.STATE.TOOLBOX);
     this.resetFlyout(workspace, false /* shouldHide */);
 
-    if (!this.getMarker(workspace).getCurNode()) {
+    if (!this.getMarker(workspace)!.getCurNode()) {
       this.markAtCursor(workspace);
     }
 
     if (!toolbox.getSelectedItem()) {
       // Find the first item that is selectable.
-      const toolboxItems = toolbox.getToolboxItems();
+      const toolboxItems = (toolbox as any).getToolboxItems();
       for (let i = 0, toolboxItem; (toolboxItem = toolboxItems[i]); i++) {
         if (toolboxItem.isSelectable()) {
           toolbox.selectItemByPosition(i);
@@ -487,15 +502,15 @@ export class Navigation {
   /**
    * Sets the navigation state to flyout and moves the cursor to the first
    * block or button in the flyout.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace the flyout is on.
-   * @package
+   *
+   * @param workspace The workspace the flyout is on.
    */
-  focusFlyout(workspace) {
+  focusFlyout(workspace: Blockly.WorkspaceSvg) {
     const flyout = workspace.getFlyout();
 
     this.setState(workspace, Constants.STATE.FLYOUT);
 
-    if (!this.getMarker(workspace).getCurNode()) {
+    if (!this.getMarker(workspace)!.getCurNode()) {
       this.markAtCursor(workspace);
     }
 
@@ -507,10 +522,10 @@ export class Navigation {
         const astNode = Blockly.ASTNode.createButtonNode(
           firstFlyoutItem.button,
         );
-        this.getFlyoutCursor(workspace).setCurNode(astNode);
+        this.getFlyoutCursor(workspace)!.setCurNode(astNode!);
       } else if (firstFlyoutItem.block) {
         const astNode = Blockly.ASTNode.createStackNode(firstFlyoutItem.block);
-        this.getFlyoutCursor(workspace).setCurNode(astNode);
+        this.getFlyoutCursor(workspace)!.setCurNode(astNode!);
       }
     }
   }
@@ -518,10 +533,10 @@ export class Navigation {
   /**
    * Sets the navigation state to workspace and moves the cursor to either the
    * top block on a workspace or to the workspace.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace to focus on.
-   * @package
+   *
+   * @param workspace The workspace to focus on.
    */
-  focusWorkspace(workspace) {
+  focusWorkspace(workspace: Blockly.WorkspaceSvg) {
     workspace.hideChaff();
     const reset = !!workspace.getToolbox();
 
@@ -534,40 +549,41 @@ export class Navigation {
    * Moves the cursor to the top connection point on on the first top block.
    * If the workspace is empty, moves the cursor to the default location on
    * the workspace.
-   * @param {!Blockly.WorkspaceSvg} workspace The main Blockly workspace.
-   * @protected
+   *
+   * @param workspace The main Blockly workspace.
    */
-  setCursorOnWorkspaceFocus(workspace) {
+  setCursorOnWorkspaceFocus(workspace: Blockly.WorkspaceSvg) {
     const topBlocks = workspace.getTopBlocks(true);
     const cursor = workspace.getCursor();
+    if (!cursor) {
+      return;
+    }
     const wsCoordinates = new Blockly.utils.Coordinate(
       this.DEFAULT_WS_COORDINATE.x / workspace.scale,
       this.DEFAULT_WS_COORDINATE.y / workspace.scale,
     );
     if (topBlocks.length > 0) {
-      cursor.setCurNode(Blockly.ASTNode.createTopNode(topBlocks[0]));
+      cursor.setCurNode(Blockly.ASTNode.createTopNode(topBlocks[0])!);
     } else {
       const wsNode = Blockly.ASTNode.createWorkspaceNode(
         workspace,
         wsCoordinates,
       );
-      cursor.setCurNode(wsNode);
+      cursor.setCurNode(wsNode!);
     }
   }
 
   /**
    * Gets the cursor on the flyout's workspace.
-   * @param {!Blockly.WorkspaceSvg} workspace The main workspace the flyout is
-   *     on.
-   * @returns {?Blockly.FlyoutCursor} The flyout's cursor or null if no flyout
-   *     exists.
-   * @protected
+   *
+   * @param workspace The main workspace the flyout is on.
+   * @returns The flyout's cursor or null if no flyout exists.
    */
-  getFlyoutCursor(workspace) {
+  getFlyoutCursor(workspace: Blockly.WorkspaceSvg): FlyoutCursor | null {
     const flyout = workspace.getFlyout();
     const cursor = flyout ? flyout.getWorkspace().getCursor() : null;
 
-    return /** @type {?Blockly.FlyoutCursor} */ (cursor);
+    return cursor as FlyoutCursor;
   }
 
   /**
@@ -575,21 +591,21 @@ export class Navigation {
    * Tries to find a connection on the block to connect to the marked
    * location. If no connection has been marked, or there is not a compatible
    * connection then the block is placed on the workspace.
-   * @param {!Blockly.WorkspaceSvg} workspace The main workspace. The workspace
+   *
+   * @param workspace The main workspace. The workspace
    *     the block will be placed on.
-   * @package
    */
-  insertFromFlyout(workspace) {
+  insertFromFlyout(workspace: Blockly.WorkspaceSvg) {
     const newBlock = this.createNewBlock(workspace);
     if (!newBlock) {
       return;
     }
-    const markerNode = this.getMarker(workspace).getCurNode();
+    const markerNode = this.getMarker(workspace)!.getCurNode();
     if (
       !this.tryToConnectMarkerAndCursor(
         workspace,
         markerNode,
-        Blockly.ASTNode.createBlockNode(newBlock),
+        Blockly.ASTNode.createBlockNode(newBlock)!,
       )
     ) {
       this.warn(
@@ -598,18 +614,18 @@ export class Navigation {
     }
 
     this.focusWorkspace(workspace);
-    workspace.getCursor().setCurNode(Blockly.ASTNode.createTopNode(newBlock));
+    workspace.getCursor()!.setCurNode(Blockly.ASTNode.createTopNode(newBlock)!);
     this.removeMark(workspace);
   }
 
   /**
    * Creates a new block based on the current block the flyout cursor is on.
-   * @param {!Blockly.WorkspaceSvg} workspace The main workspace. The workspace
+   *
+   * @param workspace The main workspace. The workspace
    *     the block will be placed on.
-   * @returns {?Blockly.BlockSvg} The newly created block.
-   * @protected
+   * @returns The newly created block.
    */
-  createNewBlock(workspace) {
+  createNewBlock(workspace: Blockly.WorkspaceSvg): Blockly.BlockSvg | null {
     const flyout = workspace.getFlyout();
     if (!flyout || !flyout.isVisible()) {
       this.warn(
@@ -619,9 +635,9 @@ export class Navigation {
       return null;
     }
 
-    const curBlock = /** @type {!Blockly.BlockSvg} */ (
-      this.getFlyoutCursor(workspace).getCurNode().getLocation()
-    );
+    const curBlock = this.getFlyoutCursor(workspace)!
+      .getCurNode()
+      .getLocation() as Blockly.BlockSvg;
     if (!curBlock.isEnabled()) {
       this.warn("Can't insert a disabled block.");
       return null;
@@ -639,15 +655,15 @@ export class Navigation {
 
   /**
    * Hides the flyout cursor and optionally hides the flyout.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace.
-   * @param {boolean} shouldHide True if the flyout should be hidden.
-   * @protected
+   *
+   * @param workspace The workspace.
+   * @param shouldHide True if the flyout should be hidden.
    */
-  resetFlyout(workspace, shouldHide) {
+  resetFlyout(workspace: Blockly.WorkspaceSvg, shouldHide: boolean) {
     if (this.getFlyoutCursor(workspace)) {
-      this.getFlyoutCursor(workspace).hide();
+      this.getFlyoutCursor(workspace)!.hide();
       if (shouldHide) {
-        workspace.getFlyout().hide();
+        workspace.getFlyout()!.hide();
       }
     }
   }
@@ -655,14 +671,14 @@ export class Navigation {
   /**
    * Connects the location of the marker and the location of the cursor.
    * No-op if the marker or cursor node are null.
-   * @param {!Blockly.WorkspaceSvg} workspace The main workspace.
-   * @returns {boolean} True if the cursor and marker locations were connected,
+   *
+   * @param workspace The main workspace.
+   * @returns True if the cursor and marker locations were connected,
    *     false otherwise.
-   * @package
    */
-  connectMarkerAndCursor(workspace) {
-    const markerNode = this.getMarker(workspace).getCurNode();
-    const cursorNode = workspace.getCursor().getCurNode();
+  connectMarkerAndCursor(workspace: Blockly.WorkspaceSvg): boolean {
+    const markerNode = this.getMarker(workspace)!.getCurNode();
+    const cursorNode = workspace.getCursor()!.getCurNode();
 
     if (markerNode && cursorNode) {
       return this.tryToConnectMarkerAndCursor(
@@ -676,14 +692,18 @@ export class Navigation {
 
   /**
    * Tries to connect the given marker and cursor node.
-   * @param {!Blockly.WorkspaceSvg} workspace The main workspace.
-   * @param {!Blockly.ASTNode} markerNode The node to try to connect to.
-   * @param {!Blockly.ASTNode} cursorNode The node to connect to the markerNode.
-   * @returns {boolean} True if the key was handled; false if something went
+   *
+   * @param workspace The main workspace.
+   * @param markerNode The node to try to connect to.
+   * @param cursorNode The node to connect to the markerNode.
+   * @returns True if the key was handled; false if something went
    *     wrong.
-   * @protected
    */
-  tryToConnectMarkerAndCursor(workspace, markerNode, cursorNode) {
+  tryToConnectMarkerAndCursor(
+    workspace: Blockly.WorkspaceSvg,
+    markerNode: Blockly.ASTNode,
+    cursorNode: Blockly.ASTNode,
+  ): boolean {
     if (!this.logConnectionWarning(markerNode, cursorNode)) {
       return false;
     }
@@ -694,29 +714,22 @@ export class Navigation {
     const cursorLoc = cursorNode.getLocation();
     const markerLoc = markerNode.getLocation();
     if (markerNode.isConnection() && cursorNode.isConnection()) {
-      const cursorConnection = /** @type {!Blockly.RenderedConnection} */ (
-        cursorLoc
-      );
-      const markerConnection = /** @type {!Blockly.RenderedConnection} */ (
-        markerLoc
-      );
+      const cursorConnection = cursorLoc as Blockly.RenderedConnection;
+      const markerConnection = markerLoc as Blockly.RenderedConnection;
       return this.connect(cursorConnection, markerConnection);
     } else if (
       markerNode.isConnection() &&
       (cursorType == Blockly.ASTNode.types.BLOCK ||
         cursorType == Blockly.ASTNode.types.STACK)
     ) {
-      const cursorBlock = /** @type {!Blockly.BlockSvg} */ (cursorLoc);
-      const markerConnection = /** @type {!Blockly.RenderedConnection} */ (
-        markerLoc
-      );
+      const cursorBlock = cursorLoc as Blockly.BlockSvg;
+      const markerConnection = markerLoc as Blockly.RenderedConnection;
       return this.insertBlock(cursorBlock, markerConnection);
     } else if (markerType == Blockly.ASTNode.types.WORKSPACE) {
-      const block = cursorNode ? cursorNode.getSourceBlock() : null;
-      return this.moveBlockToWorkspace(
-        /** @type {Blockly.BlockSvg} */ (block),
-        markerNode,
-      );
+      const block = cursorNode
+        ? (cursorNode.getSourceBlock() as Blockly.BlockSvg)
+        : null;
+      return this.moveBlockToWorkspace(block, markerNode);
     }
     this.warn('Unexpected state in tryToConnectMarkerAndCursor.');
     return false;
@@ -724,13 +737,16 @@ export class Navigation {
 
   /**
    * Warns the user if the given cursor or marker node can not be connected.
-   * @param {!Blockly.ASTNode} markerNode The node to try to connect to.
-   * @param {!Blockly.ASTNode} cursorNode The node to connect to the markerNode.
-   * @returns {boolean} True if the marker and cursor are valid types, false
+   *
+   * @param markerNode The node to try to connect to.
+   * @param cursorNode The node to connect to the markerNode.
+   * @returns True if the marker and cursor are valid types, false
    *     otherwise.
-   * @protected
    */
-  logConnectionWarning(markerNode, cursorNode) {
+  logConnectionWarning(
+    markerNode: Blockly.ASTNode,
+    cursorNode: Blockly.ASTNode,
+  ): boolean {
     if (!markerNode) {
       this.warn('Cannot insert with no marked node.');
       return false;
@@ -769,14 +785,17 @@ export class Navigation {
   /**
    * Disconnects the block from its parent and moves it to the position of the
    * workspace node.
-   * @param {?Blockly.BlockSvg} block The block to be moved to the workspace.
-   * @param {!Blockly.ASTNode} wsNode The workspace node holding the position
+   *
+   * @param block The block to be moved to the workspace.
+   * @param wsNode The workspace node holding the position
    *     the block will be moved to.
-   * @returns {boolean} True if the block can be moved to the workspace,
+   * @returns True if the block can be moved to the workspace,
    *     false otherwise.
-   * @protected
    */
-  moveBlockToWorkspace(block, wsNode) {
+  moveBlockToWorkspace(
+    block: Blockly.BlockSvg | null,
+    wsNode: Blockly.ASTNode,
+  ): boolean {
     if (!block) {
       return false;
     }
@@ -794,13 +813,14 @@ export class Navigation {
   /**
    * Disconnects the child block from its parent block. No-op if the two given
    * connections are unrelated.
-   * @param {!Blockly.RenderedConnection} movingConnection The connection that
-   *     is being moved.
-   * @param {!Blockly.RenderedConnection} destConnection The connection to be
-   *     moved to.
-   * @protected
+   *
+   * @param movingConnection The connection that is being moved.
+   * @param destConnection The connection to be moved to.
    */
-  disconnectChild(movingConnection, destConnection) {
+  disconnectChild(
+    movingConnection: Blockly.RenderedConnection,
+    destConnection: Blockly.RenderedConnection,
+  ) {
     const movingBlock = movingConnection.getSourceBlock();
     const destBlock = destConnection.getSourceBlock();
     let inferiorConnection;
@@ -825,15 +845,16 @@ export class Navigation {
    *
    * If the given connections are not compatible try finding compatible
    * connections on the source blocks of the given connections.
-   * @param {?Blockly.RenderedConnection} movingConnection The connection that
-   *     is being moved.
-   * @param {?Blockly.RenderedConnection} destConnection The connection to be
-   *     moved to.
-   * @returns {boolean} True if the two connections or their target connections
+   *
+   * @param movingConnection The connection that is being moved.
+   * @param destConnection The connection to be moved to.
+   * @returns True if the two connections or their target connections
    *     were connected, false otherwise.
-   * @protected
    */
-  connect(movingConnection, destConnection) {
+  connect(
+    movingConnection: Blockly.RenderedConnection | null,
+    destConnection: Blockly.RenderedConnection | null,
+  ): boolean {
     if (!movingConnection || !destConnection) {
       return false;
     }
@@ -877,14 +898,17 @@ export class Navigation {
   /**
    * Finds the inferior connection on the source block if the given connection
    * is superior.
-   * @param {?Blockly.RenderedConnection} connection The connection trying to be
-   *     connected.
-   * @returns {?Blockly.RenderedConnection} The inferior connection or null if
-   *     none exists.
-   * @protected
+   *
+   * @param connection The connection trying to be connected.
+   * @returns The inferior connection or null if none exists.
    */
-  getInferiorConnection(connection) {
-    const block = /** @type{!Blockly.BlockSvg} */ (connection.getSourceBlock());
+  getInferiorConnection(
+    connection: Blockly.RenderedConnection | null,
+  ): Blockly.RenderedConnection | null {
+    if (!connection) {
+      return null;
+    }
+    const block = connection.getSourceBlock() as Blockly.BlockSvg;
     if (!connection.isSuperior()) {
       return connection;
     } else if (block.previousConnection) {
@@ -899,13 +923,16 @@ export class Navigation {
   /**
    * Finds a superior connection on the source block if the given connection is
    * inferior.
-   * @param {?Blockly.RenderedConnection} connection The connection trying to be
-   *     connected.
-   * @returns {?Blockly.RenderedConnection} The superior connection or null if
-   *     none exists.
-   * @protected
+   *
+   * @param connection The connection trying to be connected.
+   * @returns The superior connection or null if none exists.
    */
-  getSuperiorConnection(connection) {
+  getSuperiorConnection(
+    connection: Blockly.RenderedConnection | null,
+  ): Blockly.RenderedConnection | null {
+    if (!connection) {
+      return null;
+    }
     if (connection.isSuperior()) {
       return connection;
     } else if (connection.targetConnection) {
@@ -916,14 +943,15 @@ export class Navigation {
 
   /**
    * Moves the moving connection to the target connection and connects them.
-   * @param {?Blockly.RenderedConnection} movingConnection The connection that
-   *     is being moved.
-   * @param {?Blockly.RenderedConnection} destConnection The connection to be
-   *     moved to.
-   * @returns {boolean} True if the connections were connected, false otherwise.
-   * @protected
+   *
+   * @param movingConnection The connection that is being moved.
+   * @param destConnection The connection to be moved to.
+   * @returns True if the connections were connected, false otherwise.
    */
-  moveAndConnect(movingConnection, destConnection) {
+  moveAndConnect(
+    movingConnection: Blockly.RenderedConnection | null,
+    destConnection: Blockly.RenderedConnection | null,
+  ): boolean {
     if (!movingConnection || !destConnection) {
       return false;
     }
@@ -963,13 +991,16 @@ export class Navigation {
   /**
    * Tries to connect the given block to the destination connection, making an
    * intelligent guess about which connection to use on the moving block.
-   * @param {!Blockly.BlockSvg} block The block to move.
-   * @param {!Blockly.RenderedConnection} destConnection The connection to
+   *
+   * @param block The block to move.
+   * @param destConnection The connection to
    *     connect to.
-   * @returns {boolean} Whether the connection was successful.
-   * @protected
+   * @returns Whether the connection was successful.
    */
-  insertBlock(block, destConnection) {
+  insertBlock(
+    block: Blockly.BlockSvg,
+    destConnection: Blockly.RenderedConnection,
+  ): boolean {
     switch (destConnection.type) {
       case Blockly.PREVIOUS_STATEMENT:
         if (this.connect(block.nextConnection, destConnection)) {
@@ -988,13 +1019,14 @@ export class Navigation {
         break;
       case Blockly.OUTPUT_VALUE:
         for (let i = 0; i < block.inputList.length; i++) {
-          const inputConnection = /** @type {Blockly.RenderedConnection} */ (
-            block.inputList[i].connection
-          );
+          const inputConnection = block.inputList[i].connection;
           if (
             inputConnection &&
             inputConnection.type === Blockly.INPUT_VALUE &&
-            this.connect(inputConnection, destConnection)
+            this.connect(
+              inputConnection as Blockly.RenderedConnection,
+              destConnection,
+            )
           ) {
             return true;
           }
@@ -1017,30 +1049,32 @@ export class Navigation {
    * Disconnects the connection that the cursor is pointing to, and bump blocks.
    * This is a no-op if the connection cannot be broken or if the cursor is not
    * pointing to a connection.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace.
-   * @package
+   *
+   * @param workspace The workspace.
    */
-  disconnectBlocks(workspace) {
-    const curNode = workspace.getCursor().getCurNode();
+  disconnectBlocks(workspace: Blockly.WorkspaceSvg) {
+    const cursor = workspace.getCursor();
+    if (!cursor) {
+      return;
+    }
+    const curNode = cursor.getCurNode();
     if (!curNode.isConnection()) {
       this.log(
         'Cannot disconnect blocks when the cursor is not on a connection',
       );
       return;
     }
-    const curConnection = /** @type {!Blockly.RenderedConnection} */ (
-      curNode.getLocation()
-    );
+    const curConnection = curNode.getLocation() as Blockly.RenderedConnection;
     if (!curConnection.isConnected()) {
       this.log('Cannot disconnect unconnected connection');
       return;
     }
     const superiorConnection = curConnection.isSuperior()
       ? curConnection
-      : curConnection.targetConnection;
+      : curConnection.targetConnection!;
 
     const inferiorConnection = curConnection.isSuperior()
-      ? curConnection.targetConnection
+      ? curConnection.targetConnection!
       : curConnection;
 
     if (inferiorConnection.getSourceBlock().isShadow()) {
@@ -1055,36 +1089,35 @@ export class Navigation {
 
     const connectionNode =
       Blockly.ASTNode.createConnectionNode(superiorConnection);
-    workspace.getCursor().setCurNode(connectionNode);
+    workspace.getCursor()!.setCurNode(connectionNode!);
   }
 
   /**
    * Moves the marker to the cursor's current location.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace.
-   * @protected
+   *
+   * @param workspace The workspace.
    */
-  markAtCursor(workspace) {
-    this.getMarker(workspace).setCurNode(workspace.getCursor().getCurNode());
+  markAtCursor(workspace: Blockly.WorkspaceSvg) {
+    this.getMarker(workspace)!.setCurNode(workspace.getCursor()!.getCurNode());
   }
 
   /**
    * Removes the marker from its current location and hide it.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace.
-   * @protected
+   *
+   * @param workspace The workspace.
    */
-  removeMark(workspace) {
+  removeMark(workspace: Blockly.WorkspaceSvg) {
     const marker = this.getMarker(workspace);
-    marker.setCurNode(null);
-    marker.hide();
+    marker?.hide();
   }
 
   /**
    * Enables accessibility mode.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace to enable keyboard
+   *
+   * @param workspace The workspace to enable keyboard
    *     accessibility mode on.
-   * @package
    */
-  enableKeyboardAccessibility(workspace) {
+  enableKeyboardAccessibility(workspace: Blockly.WorkspaceSvg) {
     if (
       this.workspaces.indexOf(workspace) > -1 &&
       !workspace.keyboardAccessibilityMode
@@ -1096,20 +1129,20 @@ export class Navigation {
 
   /**
    * Disables accessibility mode.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace to disable keyboard
+   *
+   * @param workspace The workspace to disable keyboard
    *     accessibility mode on.
-   * @package
    */
-  disableKeyboardAccessibility(workspace) {
+  disableKeyboardAccessibility(workspace: Blockly.WorkspaceSvg) {
     if (
       this.workspaces.indexOf(workspace) > -1 &&
       workspace.keyboardAccessibilityMode
     ) {
       workspace.keyboardAccessibilityMode = false;
-      workspace.getCursor().hide();
-      this.getMarker(workspace).hide();
+      workspace.getCursor()!.hide();
+      this.getMarker(workspace)!.hide();
       if (this.getFlyoutCursor(workspace)) {
-        this.getFlyoutCursor(workspace).hide();
+        this.getFlyoutCursor(workspace)!.hide();
       }
     }
   }
@@ -1117,57 +1150,52 @@ export class Navigation {
   /**
    * Navigation log handler. If loggingCallback is defined, use it.
    * Otherwise just log to the console.log.
-   * @param {string} msg The message to log.
-   * @protected
+   *
+   * @param msg The message to log.
    */
-  log(msg) {
-    if (this.loggingCallback) {
-      this.loggingCallback(Constants.LOGGING_MSG_TYPE.LOG, msg);
-    } else {
-      console.log(msg);
-    }
+  log(msg: string) {
+    console.log(msg);
   }
 
   /**
    * Navigation warning handler. If loggingCallback is defined, use it.
    * Otherwise call console.warn.
-   * @param {string} msg The warning message.
-   * @protected
+   *
+   * @param msg The warning message.
    */
-  warn(msg) {
-    if (this.loggingCallback) {
-      this.loggingCallback(Constants.LOGGING_MSG_TYPE.WARN, msg);
-    } else {
-      console.warn(msg);
-    }
+  warn(msg: string) {
+    console.warn(msg);
   }
 
   /**
    * Navigation error handler. If loggingCallback is defined, use it.
    * Otherwise call console.error.
-   * @param {string} msg The error message.
-   * @protected
+   *
+   * @param msg The error message.
    */
-  error(msg) {
-    if (this.loggingCallback) {
-      this.loggingCallback(Constants.LOGGING_MSG_TYPE.ERROR, msg);
-    } else {
-      console.error(msg);
-    }
+  error(msg: string) {
+    console.error(msg);
   }
 
   /**
    * Moves the workspace cursor in the given direction.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace the cursor is on.
-   * @param {number} xDirection -1 to move cursor left. 1 to move cursor right.
-   * @param {number} yDirection -1 to move cursor up. 1 to move cursor down.
-   * @returns {boolean} True if the current node is a workspace, false
+   *
+   * @param workspace The workspace the cursor is on.
+   * @param xDirection -1 to move cursor left. 1 to move cursor right.
+   * @param yDirection -1 to move cursor up. 1 to move cursor down.
+   * @returns True if the current node is a workspace, false
    *     otherwise.
-   * @package
    */
-  moveWSCursor(workspace, xDirection, yDirection) {
+  moveWSCursor(
+    workspace: Blockly.WorkspaceSvg,
+    xDirection: number,
+    yDirection: number,
+  ): boolean {
     const cursor = workspace.getCursor();
-    const curNode = workspace.getCursor().getCurNode();
+    if (!cursor) {
+      return false;
+    }
+    const curNode = cursor.getCurNode();
 
     if (curNode.getType() !== Blockly.ASTNode.types.WORKSPACE) {
       return false;
@@ -1181,22 +1209,25 @@ export class Navigation {
       Blockly.ASTNode.createWorkspaceNode(
         workspace,
         new Blockly.utils.Coordinate(newX, newY),
-      ),
+      )!,
     );
     return true;
   }
 
   /**
    * Handles hitting the enter key on the workspace.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace.
-   * @package
+   *
+   * @param workspace The workspace.
    */
-  handleEnterForWS(workspace) {
+  handleEnterForWS(workspace: Blockly.WorkspaceSvg) {
     const cursor = workspace.getCursor();
+    if (!cursor) {
+      return;
+    }
     const curNode = cursor.getCurNode();
     const nodeType = curNode.getType();
     if (nodeType == Blockly.ASTNode.types.FIELD) {
-      /** @type {!Blockly.Field} */ (curNode.getLocation()).showEditor();
+      (curNode.getLocation() as Blockly.Field).showEditor();
     } else if (
       curNode.isConnection() ||
       nodeType == Blockly.ASTNode.types.WORKSPACE
@@ -1211,19 +1242,18 @@ export class Navigation {
 
   /**
    * Pastes the copied block to the marked location.
-   * @param {Blockly.BlockCopyData} copyData The data
-   *     to paste into the workspace.
-   * @param {Blockly.WorkspaceSvg} workspace The workspace to paste the data
-   *     into.
-   * @returns {boolean} True if the paste was sucessful, false otherwise.
-   * @package
+   *
+   * @param copyData The data to paste into the workspace.
+   * @param workspace The workspace to paste the data into.
+   * @returns True if the paste was sucessful, false otherwise.
    */
-  paste(copyData, workspace) {
+  paste(copyData: Blockly.ICopyData, workspace: Blockly.WorkspaceSvg): boolean {
     let isHandled = false;
     Blockly.Events.setGroup(true);
-    const block = /** @type {Blockly.BlockSvg} */ (
-      Blockly.clipboard.paste(copyData, workspace)
-    );
+    const block = Blockly.clipboard.paste(
+      copyData,
+      workspace,
+    ) as Blockly.BlockSvg;
     if (block) {
       isHandled = this.insertPastedBlock(workspace, block);
     }
@@ -1235,21 +1265,23 @@ export class Navigation {
    * Inserts the pasted block at the marked location if a compatible connection
    * exists. If no connection has been marked, or there is not a compatible
    * connection then the block is placed on the workspace.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace to paste the block
-   *     on.
-   * @param {!Blockly.BlockSvg} block The block to paste.
-   * @returns {boolean} True if the block was pasted to the workspace, false
+   *
+   * @param workspace The workspace to paste the block on.
+   * @param block The block to paste.
+   * @returns True if the block was pasted to the workspace, false
    *     otherwise.
-   * @protected
    */
-  insertPastedBlock(workspace, block) {
+  insertPastedBlock(
+    workspace: Blockly.WorkspaceSvg,
+    block: Blockly.BlockSvg,
+  ): boolean {
     let isHandled = false;
-    const markedNode = workspace.getMarker(this.MARKER_NAME).getCurNode();
+    const markedNode = workspace.getMarker(this.MARKER_NAME)?.getCurNode();
     if (markedNode) {
       isHandled = this.tryToConnectMarkerAndCursor(
         workspace,
         markedNode,
-        Blockly.ASTNode.createBlockNode(block),
+        Blockly.ASTNode.createBlockNode(block)!,
       );
     }
     return isHandled;
@@ -1257,16 +1289,16 @@ export class Navigation {
 
   /**
    * Triggers a flyout button's callback.
-   * @param {!Blockly.WorkspaceSvg} workspace The main workspace. The workspace
+   *
+   * @param workspace The main workspace. The workspace
    *     containing a flyout with a button.
-   * @package
    */
-  triggerButtonCallback(workspace) {
-    const button = /** @type {!Blockly.FlyoutButton} */ (
-      this.getFlyoutCursor(workspace).getCurNode().getLocation()
-    );
-    const buttonCallback = workspace.flyoutButtonCallbacks.get(
-      button.callbackKey,
+  triggerButtonCallback(workspace: Blockly.WorkspaceSvg) {
+    const button = this.getFlyoutCursor(workspace)!
+      .getCurNode()
+      .getLocation() as Blockly.FlyoutButton;
+    const buttonCallback = (workspace as any).flyoutButtonCallbacks.get(
+      (button as any).callbackKey,
     );
     if (typeof buttonCallback === 'function') {
       buttonCallback(button);
@@ -1277,7 +1309,6 @@ export class Navigation {
 
   /**
    * Removes the change listeners on all registered workspaces.
-   * @package
    */
   dispose() {
     for (const workspace of this.workspaces) {

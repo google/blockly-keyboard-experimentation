@@ -47,7 +47,7 @@ export class Announcer {
 
   /**
    * Set the text of the output div, with no validation.
-   * 
+   *
    * @param text The text to display.
    */
   setText(text: string) {
