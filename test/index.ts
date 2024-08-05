@@ -20,6 +20,24 @@ import {load} from './loadTestBlocks';
 import {runCode, registerRunCodeShortcut} from './runCode';
 
 /**
+ * Load initial workspace state based on the value in the scenario dropdown.
+ *
+ * @param workspace The workspace to load blocks into.
+ */
+function loadScenario(workspace: Blockly.WorkspaceSvg) {
+  const scenarioSelector = location.search.match(/scenario=([^&]+)/);
+  // Default to the sunny day example.
+  const scenarioString = scenarioSelector ? scenarioSelector[1] : 'sun';
+  const selector = document.getElementById(
+    'scenarioSelect',
+  ) as HTMLSelectElement;
+  selector.value = scenarioString;
+
+  // Load the initial state from storage and run the code.
+  load(workspace, scenarioString);
+}
+
+/**
  * Create the workspace, including installing keyboard navigation and
  * change listeners.
  *
@@ -39,8 +57,7 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   // Disable blocks that aren't inside the setup or draw loops.
   workspace.addChangeListener(Blockly.Events.disableOrphans);
 
-  // Load the initial state from storage and run the code.
-  load(workspace);
+  loadScenario(workspace);
   runCode();
 
   return workspace;

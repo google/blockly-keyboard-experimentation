@@ -6,7 +6,7 @@
 
 import * as Blockly from 'blockly/core';
 
-const defaultData = {
+const sunnyDay = {
   'blocks': {
     'languageVersion': 0,
     'blocks': [
@@ -140,12 +140,54 @@ const defaultData = {
   },
 };
 
+const blankCanvas = {
+  'blocks': {
+    'languageVersion': 0,
+    'blocks': [
+      {
+        'type': 'p5_setup',
+        'id': '5.{;T}3Qv}Awi:1M$:ut',
+        'x': 0,
+        'y': 75,
+        'deletable': false,
+        'inputs': {
+          'STATEMENTS': {
+            'block': {
+              'type': 'p5_canvas',
+              'id': 'spya_H-5F=K8+DhedX$y',
+              'deletable': false,
+              'movable': false,
+              'fields': {
+                'WIDTH': 400,
+                'HEIGHT': 400,
+              },
+            },
+          },
+        },
+      },
+      {
+        'type': 'p5_draw',
+        'id': '3iI4f%2#Gmk}=OjI7(8h',
+        'x': 0,
+        'y': 332,
+        'deletable': false,
+      },
+    ],
+  },
+};
+
 /**
  * Loads saved state from local storage into the given workspace.
  * @param {Blockly.Workspace} workspace Blockly workspace to load into.
+ * @param {string} scenarioString Which scenario to load.
  */
-export const load = function (workspace) {
-  const data = JSON.stringify(defaultData);
+export const load = function (workspace, scenarioString) {
+  const scenarioMap = {
+    'blank': blankCanvas,
+    'sun': sunnyDay,
+  };
+
+  const data = JSON.stringify(scenarioMap[scenarioString]);
   // Don't emit events during loading.
   Blockly.Events.disable();
   Blockly.serialization.workspaces.load(JSON.parse(data), workspace, false);
