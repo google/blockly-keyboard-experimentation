@@ -19,18 +19,18 @@ import {utils as BlocklyUtils} from 'blockly/core';
 import * as Constants from './constants';
 import {Navigation} from './navigation';
 import {Announcer} from './announcer';
-import { LineCursor } from './line_cursor';
-import { BlockCopyData } from 'node_modules/blockly/core/clipboard/block_paster';
+import {LineCursor} from './line_cursor';
+import {BlockCopyData} from 'node_modules/blockly/core/clipboard/block_paster';
 
 /**
  * Class for registering shortcuts for keyboard navigation.
  */
 export class NavigationController {
   /** Data copied by the copy or cut keyboard shortcuts. */
-  copyData: BlockCopyData|null = null;
+  copyData: BlockCopyData | null = null;
 
   /** The workspace a copy or cut keyboard shortcut happened in. */
-  copyWorkspace: Blockly.WorkspaceSvg|null= null;
+  copyWorkspace: Blockly.WorkspaceSvg | null = null;
   navigation: Navigation;
   announcer: Announcer;
   selectedItem_: any;
@@ -170,16 +170,17 @@ export class NavigationController {
    *     otherwise.
    * @protected
    */
-  fieldShortcutHandler(workspace: Blockly.WorkspaceSvg, shortcut: ShortcutRegistry.KeyboardShortcut): boolean {
+  fieldShortcutHandler(
+    workspace: Blockly.WorkspaceSvg,
+    shortcut: ShortcutRegistry.KeyboardShortcut,
+  ): boolean {
     const cursor = workspace.getCursor();
     if (!cursor || !cursor.getCurNode()) {
       return false;
     }
     const curNode = cursor.getCurNode();
     if (curNode.getType() === ASTNode.types.FIELD) {
-      return (curNode.getLocation() as Blockly.Field).onShortcut(
-        shortcut,
-      );
+      return (curNode.getLocation() as Blockly.Field).onShortcut(shortcut);
     }
     return false;
   }
@@ -708,7 +709,10 @@ export class NavigationController {
         return false;
       },
       callback: (workspace) => {
-        const sourceBlock = workspace.getCursor()?.getCurNode().getSourceBlock() as Blockly.BlockSvg;
+        const sourceBlock = workspace
+          .getCursor()
+          ?.getCurNode()
+          .getSourceBlock() as Blockly.BlockSvg;
         workspace.hideChaff();
         this.copyData = sourceBlock.toCopyData();
         this.copyWorkspace = sourceBlock.workspace;
@@ -806,8 +810,10 @@ export class NavigationController {
         return false;
       },
       callback: (workspace) => {
-        const sourceBlock = 
-          workspace.getCursor()?.getCurNode().getSourceBlock() as Blockly.BlockSvg;
+        const sourceBlock = workspace
+          .getCursor()
+          ?.getCurNode()
+          .getSourceBlock() as Blockly.BlockSvg;
         this.copyData = sourceBlock.toCopyData();
         this.copyWorkspace = sourceBlock.workspace;
         this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
@@ -863,7 +869,9 @@ export class NavigationController {
         if (!cursor) {
           return false;
         }
-        const sourceBlock = cursor.getCurNode().getSourceBlock() as Blockly.BlockSvg;
+        const sourceBlock = cursor
+          .getCurNode()
+          .getSourceBlock() as Blockly.BlockSvg;
         // Delete or backspace.
         // Stop the browser from going back to the previous page.
         // Do this first to prevent an error in the delete code from resulting
