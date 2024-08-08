@@ -13,22 +13,20 @@
 import './gesture_monkey_patch';
 
 import * as Blockly from 'blockly/core';
-import {ASTNode, ShortcutRegistry, BlockSvg, WorkspaceSvg} from 'blockly/core';
+import {ASTNode, ShortcutRegistry, BlockSvg, WorkspaceSvg, ICopyData} from 'blockly/core';
 import {utils as BlocklyUtils} from 'blockly/core';
 
 import * as Constants from './constants';
 import {Navigation} from './navigation';
 import {Announcer} from './announcer';
 import {LineCursor} from './line_cursor';
-// TODO (#40): Use ICopyable instead.
-import {BlockCopyData} from 'node_modules/blockly/core/clipboard/block_paster';
 
 /**
  * Class for registering shortcuts for keyboard navigation.
  */
 export class NavigationController {
   /** Data copied by the copy or cut keyboard shortcuts. */
-  copyData: BlockCopyData | null = null;
+  copyData: ICopyData | null = null;
 
   /** The workspace a copy or cut keyboard shortcut happened in. */
   copyWorkspace: WorkspaceSvg | null = null;
