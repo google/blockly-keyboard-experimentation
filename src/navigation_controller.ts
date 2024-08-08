@@ -39,15 +39,12 @@ export class NavigationController {
    * Constructor used for registering shortcuts.
    * This will register any default shortcuts for keyboard navigation.
    * This is intended to be a singleton.
-   *
-   * @param optNavigation The class that handles keyboard
-   *     navigation shortcuts. (Ex: inserting a block, focusing the flyout).
    */
-  constructor(optNavigation: Navigation | undefined) {
+  constructor() {
     /**
      * Handles any keyboard navigation shortcuts.
      */
-    this.navigation = optNavigation || new Navigation();
+    this.navigation = new Navigation();
     this.announcer = new Announcer();
   }
 
