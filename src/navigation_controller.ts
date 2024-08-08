@@ -20,6 +20,7 @@ import * as Constants from './constants';
 import {Navigation} from './navigation';
 import {Announcer} from './announcer';
 import {LineCursor} from './line_cursor';
+// TODO (#40): Use ICopyable instead.
 import {BlockCopyData} from 'node_modules/blockly/core/clipboard/block_paster';
 
 /**
@@ -31,21 +32,8 @@ export class NavigationController {
 
   /** The workspace a copy or cut keyboard shortcut happened in. */
   copyWorkspace: WorkspaceSvg | null = null;
-  navigation: Navigation;
-  announcer: Announcer;
-
-  /**
-   * Constructor used for registering shortcuts.
-   * This will register any default shortcuts for keyboard navigation.
-   * This is intended to be a singleton.
-   */
-  constructor() {
-    /**
-     * Handles any keyboard navigation shortcuts.
-     */
-    this.navigation = new Navigation();
-    this.announcer = new Announcer();
-  }
+  navigation: Navigation = new Navigation();
+  announcer: Announcer = new Announcer();
 
   /**
    * Registers the default keyboard shortcuts for keyboard navigation.
