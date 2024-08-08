@@ -12,22 +12,28 @@
 
 import './gesture_monkey_patch';
 
+import * as Blockly from 'blockly/core';
 import {ASTNode, ShortcutRegistry} from 'blockly/core';
 import {utils as BlocklyUtils} from 'blockly/core';
 
 import * as Constants from './constants';
 import {Navigation} from './navigation';
 import {Announcer} from './announcer';
+import { LineCursor } from './line_cursor';
+import { BlockCopyData } from 'node_modules/blockly/core/clipboard/block_paster';
 
 /**
  * Class for registering shortcuts for keyboard navigation.
  */
 export class NavigationController {
   /** Data copied by the copy or cut keyboard shortcuts. */
-  copyData = null;
+  copyData: BlockCopyData|null = null;
 
   /** The workspace a copy or cut keyboard shortcut happened in. */
-  copyWorkspace = null;
+  copyWorkspace: Blockly.WorkspaceSvg|null= null;
+  navigation: Navigation;
+  announcer: Announcer;
+  selectedItem_: any;
 
   /**
    * Constructor used for registering shortcuts.
@@ -36,7 +42,7 @@ export class NavigationController {
    * @param {!Navigation=} optNavigation The class that handles keyboard
    *     navigation shortcuts. (Ex: inserting a block, focusing the flyout).
    */
-  constructor(optNavigation) {
+  constructor(optNavigation: Navigation | undefined) {
     /**
      * Handles any keyboard navigation shortcuts.
      * @type {!Navigation}
@@ -48,7 +54,6 @@ export class NavigationController {
 
   /**
    * Registers the default keyboard shortcuts for keyboard navigation.
-   * @public
    */
   init() {
     this.addShortcutHandlers();
@@ -87,7 +92,7 @@ export class NavigationController {
    * @this {Blockly.Toolbox}
    * @protected
    */
-  toolboxHandler(shortcut) {
+  toolboxHandler(shortcut: ShortcutRegistry.KeyboardShortcut): boolean {
     if (!this.selectedItem_) {
       return false;
     }
@@ -104,6 +109,18 @@ export class NavigationController {
         return false;
     }
   }
+  selectPrevious_(): boolean {
+    throw new Error('Method not implemented.');
+  }
+  selectParent_(): boolean {
+    throw new Error('Method not implemented.');
+  }
+  selectNext_(): boolean {
+    throw new Error('Method not implemented.');
+  }
+  selectChild_(): boolean {
+    throw new Error('Method not implemented.');
+  }
 
   /**
    * Adds all necessary event listeners and markers to a workspace for keyboard
@@ -111,9 +128,8 @@ export class NavigationController {
    * on a workspace.
    * @param {!Blockly.WorkspaceSvg} workspace The workspace to add keyboard
    *     navigation to.
-   * @public
    */
-  addWorkspace(workspace) {
+  addWorkspace(workspace: Blockly.WorkspaceSvg) {
     this.navigation.addWorkspace(workspace);
   }
 
@@ -122,9 +138,8 @@ export class NavigationController {
    * keyboard navigation to work.
    * @param {!Blockly.WorkspaceSvg} workspace The workspace to remove keyboard
    *     navigation from.
-   * @public
    */
-  removeWorkspace(workspace) {
+  removeWorkspace(workspace: Blockly.WorkspaceSvg) {
     this.navigation.removeWorkspace(workspace);
   }
 
@@ -132,9 +147,8 @@ export class NavigationController {
    * Turns on keyboard navigation.
    * @param {!Blockly.WorkspaceSvg} workspace The workspace to turn on keyboard
    *     navigation for.
-   * @public
    */
-  enable(workspace) {
+  enable(workspace: Blockly.WorkspaceSvg) {
     this.navigation.enableKeyboardAccessibility(workspace);
   }
 
@@ -142,9 +156,8 @@ export class NavigationController {
    * Turns off keyboard navigation.
    * @param {!Blockly.WorkspaceSvg} workspace The workspace to turn off keyboard
    *     navigation on.
-   * @public
    */
-  disable(workspace) {
+  disable(workspace: Blockly.WorkspaceSvg) {
     this.navigation.disableKeyboardAccessibility(workspace);
   }
 
@@ -157,14 +170,14 @@ export class NavigationController {
    *     otherwise.
    * @protected
    */
-  fieldShortcutHandler(workspace, shortcut) {
+  fieldShortcutHandler(workspace: Blockly.WorkspaceSvg, shortcut: ShortcutRegistry.KeyboardShortcut): boolean {
     const cursor = workspace.getCursor();
     if (!cursor || !cursor.getCurNode()) {
       return false;
     }
     const curNode = cursor.getCurNode();
     if (curNode.getType() === ASTNode.types.FIELD) {
-      return /** @type {!Blockly.Field} */ (curNode.getLocation()).onShortcut(
+      return (curNode.getLocation() as Blockly.Field).onShortcut(
         shortcut,
       );
     }
@@ -177,8 +190,7 @@ export class NavigationController {
    * @protected
    */
   registerPrevious() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const previousShortcut = {
+    const previousShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.PREVIOUS,
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
@@ -191,14 +203,14 @@ export class NavigationController {
           case Constants.STATE.WORKSPACE:
             isHandled = this.fieldShortcutHandler(workspace, shortcut);
             if (!isHandled) {
-              workspace.getCursor().prev();
+              workspace.getCursor()?.prev();
               isHandled = true;
             }
             return isHandled;
           case Constants.STATE.FLYOUT:
             isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled) {
-              flyout.getWorkspace().getCursor().prev();
+            if (!isHandled && flyout) {
+              flyout.getWorkspace()?.getCursor()?.prev();
               isHandled = true;
             }
             return isHandled;
@@ -224,8 +236,7 @@ export class NavigationController {
    * @protected
    */
   registerToggleKeyboardNav() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const toggleKeyboardNavShortcut = {
+    const toggleKeyboardNavShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.TOGGLE_KEYBOARD_NAV,
       callback: (workspace) => {
         if (workspace.keyboardAccessibilityMode) {
@@ -254,8 +265,7 @@ export class NavigationController {
    * @protected
    */
   registerOut() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const outShortcut = {
+    const outShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.OUT,
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
@@ -266,8 +276,8 @@ export class NavigationController {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
             isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled) {
-              workspace.getCursor().out();
+            if (!isHandled && workspace) {
+              workspace.getCursor()?.out();
               isHandled = true;
             }
             return isHandled;
@@ -297,8 +307,7 @@ export class NavigationController {
    * @protected
    */
   registerNext() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const nextShortcut = {
+    const nextShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.NEXT,
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
@@ -310,15 +319,15 @@ export class NavigationController {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
             isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled) {
-              workspace.getCursor().next();
+            if (!isHandled && workspace) {
+              workspace.getCursor()?.next();
               isHandled = true;
             }
             return isHandled;
           case Constants.STATE.FLYOUT:
             isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled) {
-              flyout.getWorkspace().getCursor().next();
+            if (!isHandled && flyout) {
+              flyout.getWorkspace()?.getCursor()?.next();
               isHandled = true;
             }
             return isHandled;
@@ -345,8 +354,7 @@ export class NavigationController {
    * @protected
    */
   registerIn() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const inShortcut = {
+    const inShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.IN,
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
@@ -357,8 +365,8 @@ export class NavigationController {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
             isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled) {
-              workspace.getCursor().in();
+            if (!isHandled && workspace) {
+              workspace.getCursor()?.in();
               isHandled = true;
             }
             return isHandled;
@@ -390,8 +398,7 @@ export class NavigationController {
    * @protected
    */
   registerInsert() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const insertShortcut = {
+    const insertShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.INSERT,
       preconditionFn: (workspace) => {
         return (
@@ -420,8 +427,7 @@ export class NavigationController {
    * @protected
    */
   registerMark() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const markShortcut = {
+    const markShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.MARK,
       preconditionFn: (workspace) => {
         return (
@@ -474,8 +480,7 @@ export class NavigationController {
    * @protected
    */
   registerDisconnect() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const disconnectShortcut = {
+    const disconnectShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.DISCONNECT,
       preconditionFn: (workspace) => {
         return (
@@ -506,8 +511,7 @@ export class NavigationController {
    * @protected
    */
   registerToolboxFocus() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const focusToolboxShortcut = {
+    const focusToolboxShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.TOOLBOX,
       preconditionFn: (workspace) => {
         return (
@@ -542,8 +546,7 @@ export class NavigationController {
    * @protected
    */
   registerExit() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const exitShortcut = {
+    const exitShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.EXIT,
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
@@ -581,8 +584,7 @@ export class NavigationController {
    * @protected
    */
   registerWorkspaceMoveLeft() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const wsMoveLeftShortcut = {
+    const wsMoveLeftShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_LEFT,
       preconditionFn: (workspace) => {
         return (
@@ -608,8 +610,7 @@ export class NavigationController {
    * @protected
    */
   registerWorkspaceMoveRight() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const wsMoveRightShortcut = {
+    const wsMoveRightShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_RIGHT,
       preconditionFn: (workspace) => {
         return (
@@ -635,8 +636,7 @@ export class NavigationController {
    * @protected
    */
   registerWorkspaceMoveUp() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const wsMoveUpShortcut = {
+    const wsMoveUpShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_UP,
       preconditionFn: (workspace) => {
         return (
@@ -662,8 +662,7 @@ export class NavigationController {
    * @protected
    */
   registerWorkspaceMoveDown() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const wsMoveDownShortcut = {
+    const wsMoveDownShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_DOWN,
       preconditionFn: (workspace) => {
         return (
@@ -688,18 +687,17 @@ export class NavigationController {
    * @protected
    */
   registerCopy() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const copyShortcut = {
+    const copyShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.COPY,
       preconditionFn: (workspace) => {
         if (
           workspace.keyboardAccessibilityMode &&
           !workspace.options.readOnly
         ) {
-          const curNode = workspace.getCursor().getCurNode();
+          const curNode = workspace.getCursor()?.getCurNode();
           if (curNode && curNode.getSourceBlock()) {
             const sourceBlock = curNode.getSourceBlock();
-            return (
+            return !!(
               !Blockly.Gesture.inProgress() &&
               sourceBlock &&
               sourceBlock.isDeletable() &&
@@ -710,9 +708,7 @@ export class NavigationController {
         return false;
       },
       callback: (workspace) => {
-        const sourceBlock = /** @type {Blockly.BlockSvg} */ (
-          workspace.getCursor().getCurNode().getSourceBlock()
-        );
+        const sourceBlock = workspace.getCursor()?.getCurNode().getSourceBlock() as Blockly.BlockSvg;
         workspace.hideChaff();
         this.copyData = sourceBlock.toCopyData();
         this.copyWorkspace = sourceBlock.workspace;
@@ -746,8 +742,7 @@ export class NavigationController {
    * @protected
    */
   registerPaste() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const pasteShortcut = {
+    const pasteShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.PASTE,
       preconditionFn: (workspace) => {
         return (
@@ -789,18 +784,17 @@ export class NavigationController {
    * @protected
    */
   registerCut() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const cutShortcut = {
+    const cutShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.CUT,
       preconditionFn: (workspace) => {
         if (
           workspace.keyboardAccessibilityMode &&
           !workspace.options.readOnly
         ) {
-          const curNode = workspace.getCursor().getCurNode();
+          const curNode = workspace.getCursor()?.getCurNode();
           if (curNode && curNode.getSourceBlock()) {
             const sourceBlock = curNode.getSourceBlock();
-            return (
+            return !!(
               !Blockly.Gesture.inProgress() &&
               sourceBlock &&
               sourceBlock.isDeletable() &&
@@ -812,9 +806,8 @@ export class NavigationController {
         return false;
       },
       callback: (workspace) => {
-        const sourceBlock = /** @type {Blockly.BlockSvg} */ (
-          workspace.getCursor().getCurNode().getSourceBlock()
-        );
+        const sourceBlock = 
+          workspace.getCursor()?.getCurNode().getSourceBlock() as Blockly.BlockSvg;
         this.copyData = sourceBlock.toCopyData();
         this.copyWorkspace = sourceBlock.workspace;
         this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
@@ -850,24 +843,27 @@ export class NavigationController {
    * @protected
    */
   registerDelete() {
-    /** @type {!ShortcutRegistry.KeyboardShortcut} */
-    const deleteShortcut = {
+    const deleteShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.DELETE,
       preconditionFn: function (workspace) {
         if (
           workspace.keyboardAccessibilityMode &&
           !workspace.options.readOnly
         ) {
-          const curNode = workspace.getCursor().getCurNode();
+          const curNode = workspace.getCursor()?.getCurNode();
           if (curNode && curNode.getSourceBlock()) {
             const sourceBlock = curNode.getSourceBlock();
-            return sourceBlock && sourceBlock.isDeletable();
+            return !!(sourceBlock && sourceBlock.isDeletable());
           }
         }
         return false;
       },
       callback: (workspace, e) => {
-        const sourceBlock = workspace.getCursor().getCurNode().getSourceBlock();
+        const cursor = workspace.getCursor();
+        if (!cursor) {
+          return false;
+        }
+        const sourceBlock = cursor.getCurNode().getSourceBlock() as Blockly.BlockSvg;
         // Delete or backspace.
         // Stop the browser from going back to the previous page.
         // Do this first to prevent an error in the delete code from resulting
@@ -906,7 +902,7 @@ export class NavigationController {
    * Register a keyboard shortcut to list all current shortcuts.
    */
   registerListShortcuts() {
-    const listShortcuts = {
+    const listShortcuts: Blockly.ShortcutRegistry.KeyboardShortcut = {
       name: 'List shortcuts',
       preconditionFn: (workspace) => {
         return true;
@@ -929,7 +925,7 @@ export class NavigationController {
    * of the cursor.
    */
   registerAnnounce() {
-    const announceShortcut = {
+    const announceShortcut: Blockly.ShortcutRegistry.KeyboardShortcut = {
       name: 'Announce',
       preconditionFn: (workspace) => {
         return true;
@@ -937,6 +933,9 @@ export class NavigationController {
       // Print out the type of the current node.
       callback: (workspace) => {
         const cursor = workspace.getCursor();
+        if (!cursor) {
+          return false;
+        }
         this.announcer.setText(cursor.getCurNode().getType());
         return true;
       },
@@ -954,17 +953,17 @@ export class NavigationController {
    * cursor's current location.
    */
   registerNextSibling() {
-    const shortcut = {
+    const shortcut: Blockly.ShortcutRegistry.KeyboardShortcut = {
       name: 'Go to next sibling',
       preconditionFn: (workspace) => {
         return true;
       },
       // Jump to the next node at the same level, when in the workspace
       callback: (workspace, e, shortcut) => {
-        const cursor = workspace.getCursor();
+        const cursor = workspace.getCursor() as LineCursor;
 
         if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
-          if (this.fieldShortcutHandler(workspace, e, shortcut)) {
+          if (this.fieldShortcutHandler(workspace, shortcut)) {
             this.announcer.setText('next sibling (handled by field)');
             return true;
           }
@@ -990,16 +989,16 @@ export class NavigationController {
    * cursor's current location.
    */
   registerPreviousSibling() {
-    const shortcut = {
+    const shortcut: Blockly.ShortcutRegistry.KeyboardShortcut = {
       name: 'Go to previous sibling',
       preconditionFn: (workspace) => {
         return true;
       },
       callback: (workspace, e, shortcut) => {
-        const cursor = workspace.getCursor();
+        const cursor = workspace.getCursor() as LineCursor;
 
         if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
-          if (this.fieldShortcutHandler(workspace, e, shortcut)) {
+          if (this.fieldShortcutHandler(workspace, shortcut)) {
             this.announcer.setText('previous sibling (handled by field)');
             return true;
           }
@@ -1024,7 +1023,7 @@ export class NavigationController {
    * Register a shortcut to jump to the root of the current stack.
    */
   registerJumpToRoot() {
-    const jumpShortcut = {
+    const jumpShortcut: Blockly.ShortcutRegistry.KeyboardShortcut = {
       name: 'Jump to root of current stack',
       preconditionFn: (workspace) => {
         return true;
@@ -1032,11 +1031,12 @@ export class NavigationController {
       // Jump to the root of the current stack.
       callback: (workspace) => {
         const cursor = workspace.getCursor();
+        if (!cursor) return false;
         const curNode = cursor.getCurNode();
         const curBlock = curNode.getSourceBlock();
         if (curBlock) {
           const rootBlock = curBlock.getRootBlock();
-          const stackNode = ASTNode.createStackNode(rootBlock);
+          const stackNode = ASTNode.createStackNode(rootBlock) as ASTNode;
           cursor.setCurNode(stackNode);
           this.announcer.setText('jumped to root');
           return true;
@@ -1058,8 +1058,7 @@ export class NavigationController {
    * such as a loop block.
    */
   registerContextOut() {
-    /** @type {!Blockly.ShortcutRegistry.KeyboardShortcut} */
-    const shortcut = {
+    const shortcut: Blockly.ShortcutRegistry.KeyboardShortcut = {
       name: 'Context out',
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
@@ -1067,7 +1066,8 @@ export class NavigationController {
       callback: (workspace) => {
         if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
           this.announcer.setText('context out');
-          if (workspace.getCursor().contextOut()) {
+          const cursor = workspace.getCursor() as LineCursor;
+          if (cursor.contextOut()) {
             return true;
           }
         }
@@ -1089,7 +1089,7 @@ export class NavigationController {
    * a loop.
    */
   registerContextIn() {
-    const shortcut = {
+    const shortcut: Blockly.ShortcutRegistry.KeyboardShortcut = {
       name: 'Context in',
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
@@ -1098,6 +1098,7 @@ export class NavigationController {
       callback: (workspace) => {
         const cursor = workspace.getCursor();
         if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
+          const cursor = workspace.getCursor() as LineCursor;
           if (cursor.contextIn()) {
             this.announcer.setText('context in');
             return true;
@@ -1155,7 +1156,6 @@ export class NavigationController {
 
   /**
    * Removes all the keyboard navigation shortcuts.
-   * @public
    */
   dispose() {
     const shortcutNames = Object.values(Constants.SHORTCUT_NAMES);
