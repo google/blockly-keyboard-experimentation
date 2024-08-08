@@ -39,14 +39,13 @@ export class NavigationController {
    * Constructor used for registering shortcuts.
    * This will register any default shortcuts for keyboard navigation.
    * This is intended to be a singleton.
-   * @param {!Navigation=} optNavigation The class that handles keyboard
+   *
+   * @param optNavigation The class that handles keyboard
    *     navigation shortcuts. (Ex: inserting a block, focusing the flyout).
    */
   constructor(optNavigation: Navigation | undefined) {
     /**
      * Handles any keyboard navigation shortcuts.
-     * @type {!Navigation}
-     * @public
      */
     this.navigation = optNavigation || new Navigation();
     this.announcer = new Announcer();
@@ -63,9 +62,8 @@ export class NavigationController {
   /**
    * Adds methods to core Blockly components that allows them to handle keyboard
    * shortcuts when in keyboard navigation mode.
-   * @protected
    */
-  addShortcutHandlers() {
+  protected addShortcutHandlers() {
     if (Blockly.Toolbox) {
       Blockly.Toolbox.prototype.onShortcut = this.toolboxHandler;
     }
@@ -74,25 +72,26 @@ export class NavigationController {
   /**
    * Removes methods on core Blockly components that allows them to handle
    * keyboard shortcuts.
-   * @protected
    */
-  removeShortcutHandlers() {
+  protected removeShortcutHandlers() {
     if (Blockly.Toolbox) {
-      Blockly.Toolbox.prototype.onShortcut = null;
+      Blockly.Toolbox.prototype.onShortcut = () => false;
     }
   }
 
   /**
    * Handles the given keyboard shortcut.
    * This is only triggered when keyboard accessibility mode is enabled.
-   * @param {!ShortcutRegistry.KeyboardShortcut} shortcut The shortcut
+   *
+   * @param shortcut The shortcut
    *     to be handled.
-   * @returns {boolean} True if the toolbox handled the shortcut,
+   * @returns True if the toolbox handled the shortcut,
    *     false otherwise.
    * @this {Blockly.Toolbox}
-   * @protected
    */
-  toolboxHandler(shortcut: ShortcutRegistry.KeyboardShortcut): boolean {
+  protected toolboxHandler(
+    shortcut: ShortcutRegistry.KeyboardShortcut,
+  ): boolean {
     if (!this.selectedItem_) {
       return false;
     }
@@ -126,7 +125,8 @@ export class NavigationController {
    * Adds all necessary event listeners and markers to a workspace for keyboard
    * navigation to work. This must be called for keyboard navigation to work
    * on a workspace.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace to add keyboard
+   *
+   * @param workspace The workspace to add keyboard
    *     navigation to.
    */
   addWorkspace(workspace: Blockly.WorkspaceSvg) {
@@ -136,7 +136,8 @@ export class NavigationController {
   /**
    * Removes all necessary event listeners and markers to a workspace for
    * keyboard navigation to work.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace to remove keyboard
+   *
+   * @param workspace The workspace to remove keyboard
    *     navigation from.
    */
   removeWorkspace(workspace: Blockly.WorkspaceSvg) {
@@ -145,7 +146,8 @@ export class NavigationController {
 
   /**
    * Turns on keyboard navigation.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace to turn on keyboard
+   *
+   * @param workspace The workspace to turn on keyboard
    *     navigation for.
    */
   enable(workspace: Blockly.WorkspaceSvg) {
@@ -154,7 +156,8 @@ export class NavigationController {
 
   /**
    * Turns off keyboard navigation.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace to turn off keyboard
+   *
+   * @param workspace The workspace to turn off keyboard
    *     navigation on.
    */
   disable(workspace: Blockly.WorkspaceSvg) {
@@ -163,14 +166,14 @@ export class NavigationController {
 
   /**
    * Gives the cursor to the field to handle if the cursor is on a field.
-   * @param {!Blockly.WorkspaceSvg} workspace The workspace to check.
-   * @param {!ShortcutRegistry.KeyboardShortcut} shortcut The shortcut
+   *
+   * @param workspace The workspace to check.
+   * @param shortcut The shortcut
    *     to give to the field.
-   * @returns {boolean} True if the shortcut was handled by the field, false
+   * @returns True if the shortcut was handled by the field, false
    *     otherwise.
-   * @protected
    */
-  fieldShortcutHandler(
+  protected fieldShortcutHandler(
     workspace: Blockly.WorkspaceSvg,
     shortcut: ShortcutRegistry.KeyboardShortcut,
   ): boolean {
@@ -188,9 +191,8 @@ export class NavigationController {
   /**
    * Keyboard shortcut to go to the previous location when in keyboard
    * navigation mode.
-   * @protected
    */
-  registerPrevious() {
+  protected registerPrevious() {
     const previousShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.PREVIOUS,
       preconditionFn: (workspace) => {
@@ -198,7 +200,7 @@ export class NavigationController {
       },
       callback: (workspace, e, shortcut) => {
         const flyout = workspace.getFlyout();
-        const toolbox = workspace.getToolbox();
+        const toolbox = workspace.getToolbox() as Blockly.Toolbox;
         let isHandled = false;
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
@@ -234,9 +236,8 @@ export class NavigationController {
 
   /**
    * Keyboard shortcut to turn keyboard navigation on or off.
-   * @protected
    */
-  registerToggleKeyboardNav() {
+  protected registerToggleKeyboardNav() {
     const toggleKeyboardNavShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.TOGGLE_KEYBOARD_NAV,
       callback: (workspace) => {
@@ -263,16 +264,15 @@ export class NavigationController {
   /**
    * Keyboard shortcut to go to the out location when in keyboard navigation
    * mode.
-   * @protected
    */
-  registerOut() {
+  protected registerOut() {
     const outShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.OUT,
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
       },
       callback: (workspace, e, shortcut) => {
-        const toolbox = workspace.getToolbox();
+        const toolbox = workspace.getToolbox() as Blockly.Toolbox;
         let isHandled = false;
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
@@ -305,16 +305,15 @@ export class NavigationController {
   /**
    * Keyboard shortcut to go to the next location when in keyboard navigation
    * mode.
-   * @protected
    */
-  registerNext() {
+  protected registerNext() {
     const nextShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.NEXT,
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
       },
       callback: (workspace, e, shortcut) => {
-        const toolbox = workspace.getToolbox();
+        const toolbox = workspace.getToolbox() as Blockly.Toolbox;
         const flyout = workspace.getFlyout();
         let isHandled = false;
         switch (this.navigation.getState(workspace)) {
@@ -352,16 +351,15 @@ export class NavigationController {
   /**
    * Keyboard shortcut to go to the in location when in keyboard navigation
    * mode.
-   * @protected
    */
-  registerIn() {
+  protected registerIn() {
     const inShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.IN,
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
       },
       callback: (workspace, e, shortcut) => {
-        const toolbox = workspace.getToolbox();
+        const toolbox = workspace.getToolbox() as Blockly.Toolbox;
         let isHandled = false;
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
@@ -396,9 +394,8 @@ export class NavigationController {
   /**
    * Keyboard shortcut to connect a block to a marked location when in keyboard
    * navigation mode.
-   * @protected
    */
-  registerInsert() {
+  protected registerInsert() {
     const insertShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.INSERT,
       preconditionFn: (workspace) => {
@@ -425,9 +422,8 @@ export class NavigationController {
 
   /**
    * Keyboard shortcut to mark a location when in keyboard navigation mode.
-   * @protected
    */
-  registerMark() {
+  protected registerMark() {
     const markShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.MARK,
       preconditionFn: (workspace) => {
@@ -478,9 +474,8 @@ export class NavigationController {
   /**
    * Keyboard shortcut to disconnect two blocks when in keyboard navigation
    * mode.
-   * @protected
    */
-  registerDisconnect() {
+  protected registerDisconnect() {
     const disconnectShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.DISCONNECT,
       preconditionFn: (workspace) => {
@@ -509,9 +504,8 @@ export class NavigationController {
   /**
    * Keyboard shortcut to focus on the toolbox when in keyboard navigation
    * mode.
-   * @protected
    */
-  registerToolboxFocus() {
+  protected registerToolboxFocus() {
     const focusToolboxShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.TOOLBOX,
       preconditionFn: (workspace) => {
@@ -544,9 +538,8 @@ export class NavigationController {
   /**
    * Keyboard shortcut to exit the current location and focus on the workspace
    * when in keyboard navigation mode.
-   * @protected
    */
-  registerExit() {
+  protected registerExit() {
     const exitShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.EXIT,
       preconditionFn: (workspace) => {
@@ -582,9 +575,8 @@ export class NavigationController {
   /**
    * Keyboard shortcut to move the cursor on the workspace to the left when in
    * keyboard navigation mode.
-   * @protected
    */
-  registerWorkspaceMoveLeft() {
+  protected registerWorkspaceMoveLeft() {
     const wsMoveLeftShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_LEFT,
       preconditionFn: (workspace) => {
@@ -608,9 +600,8 @@ export class NavigationController {
   /**
    * Keyboard shortcut to move the cursor on the workspace to the right when in
    * keyboard navigation mode.
-   * @protected
    */
-  registerWorkspaceMoveRight() {
+  protected registerWorkspaceMoveRight() {
     const wsMoveRightShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_RIGHT,
       preconditionFn: (workspace) => {
@@ -634,9 +625,8 @@ export class NavigationController {
   /**
    * Keyboard shortcut to move the cursor on the workspace up when in keyboard
    * navigation mode.
-   * @protected
    */
-  registerWorkspaceMoveUp() {
+  protected registerWorkspaceMoveUp() {
     const wsMoveUpShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_UP,
       preconditionFn: (workspace) => {
@@ -660,9 +650,8 @@ export class NavigationController {
   /**
    * Keyboard shortcut to move the cursor on the workspace down when in
    * keyboard navigation mode.
-   * @protected
    */
-  registerWorkspaceMoveDown() {
+  protected registerWorkspaceMoveDown() {
     const wsMoveDownShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_DOWN,
       preconditionFn: (workspace) => {
@@ -685,9 +674,8 @@ export class NavigationController {
 
   /**
    * Keyboard shortcut to copy the block the cursor is currently on.
-   * @protected
    */
-  registerCopy() {
+  protected registerCopy() {
     const copyShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.COPY,
       preconditionFn: (workspace) => {
@@ -743,9 +731,8 @@ export class NavigationController {
 
   /**
    * Register shortcut to paste the copied block to the marked location.
-   * @protected
    */
-  registerPaste() {
+  protected registerPaste() {
     const pasteShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.PASTE,
       preconditionFn: (workspace) => {
@@ -785,9 +772,8 @@ export class NavigationController {
   /**
    * Keyboard shortcut to copy and delete the block the cursor is on using
    * ctrl+x, cmd+x, or alt+x.
-   * @protected
    */
-  registerCut() {
+  protected registerCut() {
     const cutShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.CUT,
       preconditionFn: (workspace) => {
@@ -846,9 +832,8 @@ export class NavigationController {
   /**
    * Registers shortcut to delete the block the cursor is on using delete or
    * backspace.
-   * @protected
    */
-  registerDelete() {
+  protected registerDelete() {
     const deleteShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.DELETE,
       preconditionFn: function (workspace) {
@@ -1104,7 +1089,6 @@ export class NavigationController {
       },
       // Print out the type of the current node.
       callback: (workspace) => {
-        const cursor = workspace.getCursor();
         if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
           const cursor = workspace.getCursor() as LineCursor;
           if (cursor.contextIn()) {
@@ -1128,9 +1112,8 @@ export class NavigationController {
   /**
    * Registers all default keyboard shortcut items for keyboard navigation. This
    * should be called once per instance of KeyboardShortcutRegistry.
-   * @protected
    */
-  registerDefaults() {
+  protected registerDefaults() {
     this.registerPrevious();
     this.registerNext();
     this.registerIn();
