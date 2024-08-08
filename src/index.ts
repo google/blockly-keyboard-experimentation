@@ -5,7 +5,6 @@
  */
 
 import * as Blockly from 'blockly/core';
-
 import {NavigationController} from './navigation_controller';
 import {installCursor} from './line_cursor';
 

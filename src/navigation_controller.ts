@@ -33,7 +33,6 @@ export class NavigationController {
   copyWorkspace: Blockly.WorkspaceSvg | null = null;
   navigation: Navigation;
   announcer: Announcer;
-  selectedItem_: any;
 
   /**
    * Constructor used for registering shortcuts.
@@ -80,13 +79,11 @@ export class NavigationController {
    * Handles the given keyboard shortcut.
    * This is only triggered when keyboard accessibility mode is enabled.
    *
-   * @param shortcut The shortcut
-   *     to be handled.
-   * @returns True if the toolbox handled the shortcut,
-   *     false otherwise.
-   * @this {Blockly.Toolbox}
+   * @param shortcut The shortcut to be handled.
+   * @returns True if the toolbox handled the shortcut, false otherwise.
    */
   protected toolboxHandler(
+    this: Blockly.Toolbox,
     shortcut: ShortcutRegistry.KeyboardShortcut,
   ): boolean {
     if (!this.selectedItem_) {
@@ -94,28 +91,16 @@ export class NavigationController {
     }
     switch (shortcut.name) {
       case Constants.SHORTCUT_NAMES.PREVIOUS:
-        return this.selectPrevious_();
+        return (this as any).selectPrevious_();
       case Constants.SHORTCUT_NAMES.OUT:
-        return this.selectParent_();
+        return (this as any).selectParent_();
       case Constants.SHORTCUT_NAMES.NEXT:
-        return this.selectNext_();
+        return (this as any).selectNext_();
       case Constants.SHORTCUT_NAMES.IN:
-        return this.selectChild_();
+        return (this as any).selectChild_();
       default:
         return false;
     }
-  }
-  selectPrevious_(): boolean {
-    throw new Error('Method not implemented.');
-  }
-  selectParent_(): boolean {
-    throw new Error('Method not implemented.');
-  }
-  selectNext_(): boolean {
-    throw new Error('Method not implemented.');
-  }
-  selectChild_(): boolean {
-    throw new Error('Method not implemented.');
   }
 
   /**
