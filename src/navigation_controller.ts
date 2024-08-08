@@ -13,7 +13,7 @@
 import './gesture_monkey_patch';
 
 import * as Blockly from 'blockly/core';
-import {ASTNode, ShortcutRegistry} from 'blockly/core';
+import {ASTNode, ShortcutRegistry, BlockSvg, WorkspaceSvg} from 'blockly/core';
 import {utils as BlocklyUtils} from 'blockly/core';
 
 import * as Constants from './constants';
@@ -30,7 +30,7 @@ export class NavigationController {
   copyData: BlockCopyData | null = null;
 
   /** The workspace a copy or cut keyboard shortcut happened in. */
-  copyWorkspace: Blockly.WorkspaceSvg | null = null;
+  copyWorkspace: WorkspaceSvg | null = null;
   navigation: Navigation;
   announcer: Announcer;
 
@@ -111,7 +111,7 @@ export class NavigationController {
    * @param workspace The workspace to add keyboard
    *     navigation to.
    */
-  addWorkspace(workspace: Blockly.WorkspaceSvg) {
+  addWorkspace(workspace: WorkspaceSvg) {
     this.navigation.addWorkspace(workspace);
   }
 
@@ -122,7 +122,7 @@ export class NavigationController {
    * @param workspace The workspace to remove keyboard
    *     navigation from.
    */
-  removeWorkspace(workspace: Blockly.WorkspaceSvg) {
+  removeWorkspace(workspace: WorkspaceSvg) {
     this.navigation.removeWorkspace(workspace);
   }
 
@@ -132,7 +132,7 @@ export class NavigationController {
    * @param workspace The workspace to turn on keyboard
    *     navigation for.
    */
-  enable(workspace: Blockly.WorkspaceSvg) {
+  enable(workspace: WorkspaceSvg) {
     this.navigation.enableKeyboardAccessibility(workspace);
   }
 
@@ -142,7 +142,7 @@ export class NavigationController {
    * @param workspace The workspace to turn off keyboard
    *     navigation on.
    */
-  disable(workspace: Blockly.WorkspaceSvg) {
+  disable(workspace: WorkspaceSvg) {
     this.navigation.disableKeyboardAccessibility(workspace);
   }
 
@@ -156,7 +156,7 @@ export class NavigationController {
    *     otherwise.
    */
   protected fieldShortcutHandler(
-    workspace: Blockly.WorkspaceSvg,
+    workspace: WorkspaceSvg,
     shortcut: ShortcutRegistry.KeyboardShortcut,
   ): boolean {
     const cursor = workspace.getCursor();
@@ -682,7 +682,7 @@ export class NavigationController {
         const sourceBlock = workspace
           .getCursor()
           ?.getCurNode()
-          .getSourceBlock() as Blockly.BlockSvg;
+          .getSourceBlock() as BlockSvg;
         workspace.hideChaff();
         this.copyData = sourceBlock.toCopyData();
         this.copyWorkspace = sourceBlock.workspace;
@@ -781,7 +781,7 @@ export class NavigationController {
         const sourceBlock = workspace
           .getCursor()
           ?.getCurNode()
-          .getSourceBlock() as Blockly.BlockSvg;
+          .getSourceBlock() as BlockSvg;
         this.copyData = sourceBlock.toCopyData();
         this.copyWorkspace = sourceBlock.workspace;
         this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
@@ -838,7 +838,7 @@ export class NavigationController {
         }
         const sourceBlock = cursor
           .getCurNode()
-          .getSourceBlock() as Blockly.BlockSvg;
+          .getSourceBlock() as BlockSvg;
         // Delete or backspace.
         // Stop the browser from going back to the previous page.
         // Do this first to prevent an error in the delete code from resulting
