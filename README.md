@@ -10,6 +10,35 @@ There is also an [existing keyboard navigation plugin](https://www.npmjs.com/pac
 a finalized version of keyboard navigation eventually lives. But for now, this
 is where experimentation will be done.
 
+## Testing in your app
+
+### Installation
+
+#### Yarn
+
+```
+yarn add @blockly/keyboard-experiment
+```
+
+#### npm
+
+```
+npm install @blockly/keyboard-experiment --save
+```
+
+### Usage
+
+```js
+import * as Blockly from 'blockly';
+import {KeyboardNavigation} from '@blockly/keyboard-experiment';
+// Inject Blockly.
+const workspace = Blockly.inject('blocklyDiv', {
+  toolbox: toolboxCategories,
+});
+// Initialize plugin.
+const keyboardNav = new KeyboardNavigation(workspace);
+```
+
 ## Contributing
 
 To learn more about contributing to this project, see the [contributing page](https://github.com/google/blockly-keyboard-experimentation/blob/main/CONTRIBUTING.md).

@@ -22,14 +22,13 @@
     "blockly-plugin",
     "keyboard-experiment"
   ],
-  "homepage": "TODO",
+  "homepage": "https://github.com/google/blockly-keyboard-experimentation#readme",
   "bugs": {
-    "url": "TODO"
+    "url": "https://github.com/google/blockly-keyboard-experimentation/issues"
   },
   "repository": {
     "type": "git",
-    "url": "TODO",
-    "directory": "keyboard-experiment"
+    "url": "git+https://github.com/google/blockly-keyboard-experimentation.git"
   },
   "license": "Apache-2.0",
   "directories": {
@@ -42,7 +41,7 @@
   ],
   "devDependencies": {
     "@blockly/dev-scripts": "^4.0.1",
-    "@blockly/field-colour": "^5.0.4",
+    "@blockly/field-colour": "^5.0.7",
     "@eslint/eslintrc": "^2.1.2",
     "@eslint/js": "^8.49.0",
     "@types/p5": "^1.7.6",
@@ -55,6 +54,7 @@
     "eslint-plugin-jsdoc": "^46.8.2",
     "globals": "^15.4.0",
     "html-webpack-plugin": "^5.6.0",
+    "p5": "^1.10.0",
     "prettier": "^3.3.1",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.5"
@@ -68,8 +68,5 @@
   },
   "eslintConfig": {
     "extends": "@blockly/eslint-config"
-  },
-  "dependencies": {
-    "p5": "^1.9.4"
   }
 }
