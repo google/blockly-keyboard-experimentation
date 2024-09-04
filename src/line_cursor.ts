@@ -14,12 +14,14 @@
  */
 
 import * as Blockly from 'blockly/core';
-import {ASTNode, BasicCursor} from 'blockly/core';
+import {ASTNode, Marker} from 'blockly/core';
 
 /**
  * Class for a line cursor.
  */
-export class LineCursor extends BasicCursor {
+export class LineCursor extends Marker {
+  override type = 'cursor';
+
   /**
    * Constructor for a line cursor.
    */
@@ -33,14 +35,13 @@ export class LineCursor extends BasicCursor {
    *
    * @returns The next node, or null if the current node is
    *     not set or there is no next value.
-   * @override
    */
   next(): ASTNode | null {
     const curNode = this.getCurNode();
     if (!curNode) {
       return null;
     }
-    let newNode = this.getNextNode_(curNode, this.validLineNode);
+    let newNode = this.getNextNode(curNode, this.validLineNode);
 
     // Skip the input or next value if there is a connected block.
     if (
@@ -49,7 +50,7 @@ export class LineCursor extends BasicCursor {
         newNode.getType() == ASTNode.types.NEXT) &&
       (newNode.getLocation() as Blockly.Connection).targetBlock()
     ) {
-      newNode = this.getNextNode_(newNode, this.validLineNode);
+      newNode = this.getNextNode(newNode, this.validLineNode);
     }
     if (newNode) {
       this.setCurNode(newNode);
@@ -64,12 +65,12 @@ export class LineCursor extends BasicCursor {
    * @returns The next node, or null if the current node is
    *     not set or there is no next value.
    */
-  override in(): ASTNode | null {
+  in(): ASTNode | null {
     const curNode = this.getCurNode();
     if (!curNode) {
       return null;
     }
-    const newNode = this.getNextNode_(curNode, this.validInLineNode);
+    const newNode = this.getNextNode(curNode, this.validInLineNode);
 
     if (newNode) {
       this.setCurNode(newNode);
@@ -83,12 +84,12 @@ export class LineCursor extends BasicCursor {
    * @returns The previous node, or null if the current node
    *     is not set or there is no previous value.
    */
-  override prev(): ASTNode | null {
+  prev(): ASTNode | null {
     const curNode = this.getCurNode();
     if (!curNode) {
       return null;
     }
-    let newNode = this.getPreviousNode_(curNode, this.validLineNode);
+    let newNode = this.getPreviousNode(curNode, this.validLineNode);
 
     if (
       newNode &&
@@ -96,7 +97,7 @@ export class LineCursor extends BasicCursor {
         newNode.getType() == ASTNode.types.NEXT) &&
       (newNode.getLocation() as Blockly.Connection).targetBlock()
     ) {
-      newNode = this.getPreviousNode_(newNode, this.validLineNode);
+      newNode = this.getPreviousNode(newNode, this.validLineNode);
     }
 
     if (newNode) {
@@ -104,6 +105,7 @@ export class LineCursor extends BasicCursor {
     }
     return newNode;
   }
+
   /**
    * Moves the cursor to the previous input connection or field in the pre order
    * traversal.
@@ -111,12 +113,12 @@ export class LineCursor extends BasicCursor {
    * @returns The previous node, or null if the current node
    *     is not set or there is no previous value.
    */
-  override out(): ASTNode | null {
+  out(): ASTNode | null {
     const curNode = this.getCurNode();
     if (!curNode) {
       return null;
     }
-    const newNode = this.getPreviousNode_(curNode, this.validInLineNode);
+    const newNode = this.getPreviousNode(curNode, this.validInLineNode);
 
     if (newNode) {
       this.setCurNode(newNode);
@@ -307,6 +309,106 @@ export class LineCursor extends BasicCursor {
       this.setCurNode(newNode);
     }
     return newNode;
+  }
+
+  /**
+   * Uses pre order traversal to navigate the Blockly AST. This will allow
+   * a user to easily navigate the entire Blockly AST without having to go in
+   * and out levels on the tree.
+   *
+   * @param node The current position in the AST.
+   * @param isValid A function true/false depending on whether the given node
+   *     should be traversed.
+   * @returns The next node in the traversal.
+   */
+  private getNextNode(
+    node: ASTNode | null,
+    isValid: (p1: ASTNode | null) => boolean,
+  ): ASTNode | null {
+    if (!node) {
+      return null;
+    }
+    const newNode = node.in() || node.next();
+    if (isValid(newNode)) {
+      return newNode;
+    } else if (newNode) {
+      return this.getNextNode(newNode, isValid);
+    }
+    const siblingOrParent = this.findSiblingOrParent(node.out());
+    if (isValid(siblingOrParent)) {
+      return siblingOrParent;
+    } else if (siblingOrParent) {
+      return this.getNextNode(siblingOrParent, isValid);
+    }
+    return null;
+  }
+
+  /**
+   * Reverses the pre order traversal in order to find the previous node. This
+   * will allow a user to easily navigate the entire Blockly AST without having
+   * to go in and out levels on the tree.
+   *
+   * @param node The current position in the AST.
+   * @param isValid A function true/false depending on whether the given node
+   *     should be traversed.
+   * @returns The previous node in the traversal or null if no previous node
+   *     exists.
+   */
+  private getPreviousNode(
+    node: ASTNode | null,
+    isValid: (p1: ASTNode | null) => boolean,
+  ): ASTNode | null {
+    if (!node) {
+      return null;
+    }
+    let newNode: ASTNode | null = node.prev();
+
+    if (newNode) {
+      newNode = this.getRightMostChild(newNode);
+    } else {
+      newNode = node.out();
+    }
+    if (isValid(newNode)) {
+      return newNode;
+    } else if (newNode) {
+      return this.getPreviousNode(newNode, isValid);
+    }
+    return null;
+  }
+
+  /**
+   * From the given node find either the next valid sibling or parent.
+   *
+   * @param node The current position in the AST.
+   * @returns The parent AST node or null if there are no valid parents.
+   */
+  private findSiblingOrParent(node: ASTNode | null): ASTNode | null {
+    if (!node) {
+      return null;
+    }
+    const nextNode = node.next();
+    if (nextNode) {
+      return nextNode;
+    }
+    return this.findSiblingOrParent(node.out());
+  }
+
+  /**
+   * Get the right most child of a node.
+   *
+   * @param node The node to find the right most child of.
+   * @returns The right most child of the given node, or the node if no child
+   *     exists.
+   */
+  private getRightMostChild(node: ASTNode | null): ASTNode | null {
+    if (!node!.in()) {
+      return node;
+    }
+    let newNode = node!.in();
+    while (newNode && newNode.next()) {
+      newNode = newNode.next();
+    }
+    return this.getRightMostChild(newNode);
   }
 }
 

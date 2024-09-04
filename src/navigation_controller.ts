@@ -13,7 +13,13 @@
 import './gesture_monkey_patch';
 
 import * as Blockly from 'blockly/core';
-import {ASTNode, ShortcutRegistry, BlockSvg, WorkspaceSvg, ICopyData} from 'blockly/core';
+import {
+  ASTNode,
+  ShortcutRegistry,
+  BlockSvg,
+  WorkspaceSvg,
+  ICopyData,
+} from 'blockly/core';
 import {utils as BlocklyUtils} from 'blockly/core';
 
 import * as Constants from './constants';
@@ -822,9 +828,7 @@ export class NavigationController {
         if (!cursor) {
           return false;
         }
-        const sourceBlock = cursor
-          .getCurNode()
-          .getSourceBlock() as BlockSvg;
+        const sourceBlock = cursor.getCurNode().getSourceBlock() as BlockSvg;
         // Delete or backspace.
         // Stop the browser from going back to the previous page.
         // Do this first to prevent an error in the delete code from resulting
