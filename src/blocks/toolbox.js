@@ -46,6 +46,10 @@ export const toolbox = {
     },
     {
       kind: 'block',
+      type: 'draw_emoji',
+    },
+    {
+      kind: 'block',
       type: 'p5_ellipse',
       inline: 'true',
       inputs: {
