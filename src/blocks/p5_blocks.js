@@ -170,6 +170,31 @@ const ellipse = {
   'helpUrl': 'https://p5js.org/reference/#/p5/ellipse',
 };
 
+const draw_emoji = {
+  'type': 'draw_emoji',
+  'tooltip': '',
+  'helpUrl': '',
+  'message0': 'draw %1 %2',
+  'args0': [
+    {
+      'type': 'field_dropdown',
+      'name': 'emoji',
+      'options': [
+        ['❤️', '❤️'],
+        ['✨', '✨'],
+        ['🐻', '🐻'],
+      ],
+    },
+    {
+      'type': 'input_dummy',
+      'name': '',
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 230,
+};
+
 // Create the block definitions for all the JSON-only blocks.
 // This does not register their definitions with Blockly.
 const jsonBlocks = Blockly.common.createBlockDefinitionsFromJsonArray([
@@ -177,6 +202,7 @@ const jsonBlocks = Blockly.common.createBlockDefinitionsFromJsonArray([
   stroke,
   fill,
   ellipse,
+  draw_emoji,
 ]);
 
 export const blocks = {

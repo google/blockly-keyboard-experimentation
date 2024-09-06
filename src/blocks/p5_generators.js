@@ -61,3 +61,10 @@ forBlock['p5_ellipse'] = function (block, generator) {
   const height = generator.valueToCode(block, 'HEIGHT', Order.NONE) || 0;
   return `sketch.ellipse(${x}, ${y}, ${width}, ${height});\n`;
 };
+
+forBlock['draw_emoji'] = function (block) {
+  const dropdown_emoji = block.getFieldValue('emoji');
+  const code = `sketch.textSize(100);
+sketch.text('${dropdown_emoji}', 150, 200);\n`;
+  return code;
+};
