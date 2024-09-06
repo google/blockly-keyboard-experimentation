@@ -1082,6 +1082,29 @@ export class NavigationController {
   }
 
   /**
+   * Register a shortcut to clean up the workspace.
+   */
+  registerCleanup() {
+    const cleanupShortcut: Blockly.ShortcutRegistry.KeyboardShortcut = {
+      name: 'Clean up workspace',
+      preconditionFn: (workspace) => {
+        return workspace.getTopBlocks(false).length > 0;
+      },
+      callback: (workspace) => {
+        workspace.cleanUp();
+        this.announcer.setText('clean up');
+        return true;
+      },
+    };
+
+    ShortcutRegistry.registry.register(cleanupShortcut);
+    ShortcutRegistry.registry.addKeyMapping(
+      BlocklyUtils.KeyCodes.C,
+      cleanupShortcut.name,
+    );
+  }
+
+  /**
    * Registers all default keyboard shortcut items for keyboard navigation. This
    * should be called once per instance of KeyboardShortcutRegistry.
    */
@@ -1115,6 +1138,8 @@ export class NavigationController {
     this.registerListShortcuts();
     this.registerContextIn();
     this.registerContextOut();
+
+    this.registerCleanup();
   }
 
   /**
