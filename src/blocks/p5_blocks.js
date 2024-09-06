@@ -193,6 +193,27 @@ const draw_emoji = {
   'previousStatement': null,
   'nextStatement': null,
   'colour': 230,
+  'inputsInline': true,
+};
+
+const simpleCircle = {
+  'type': 'simple_circle',
+  'tooltip': '',
+  'helpUrl': '',
+  'message0': 'draw %1 circle %2',
+  'args0': [
+    {
+      'type': 'input_value',
+      'name': 'COLOR',
+    },
+    {
+      'type': 'input_dummy',
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 230,
+  'inputsInline': true,
 };
 
 // Create the block definitions for all the JSON-only blocks.
@@ -203,6 +224,7 @@ const jsonBlocks = Blockly.common.createBlockDefinitionsFromJsonArray([
   fill,
   ellipse,
   draw_emoji,
+  simpleCircle,
 ]);
 
 export const blocks = {

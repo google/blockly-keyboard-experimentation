@@ -68,3 +68,11 @@ forBlock['draw_emoji'] = function (block) {
 sketch.text('${dropdown_emoji}', 150, 200);\n`;
   return code;
 };
+
+forBlock['simple_circle'] = function (block, generator) {
+  const color = generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#fff'`;
+  const code = `sketch.fill(${color});
+sketch.stroke(${color});
+sketch.ellipse(150, 150, 50, 50);`;
+  return code;
+};

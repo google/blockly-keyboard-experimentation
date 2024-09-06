@@ -50,6 +50,17 @@ export const toolbox = {
     },
     {
       kind: 'block',
+      type: 'simple_circle',
+      inputs: {
+        COLOR: {
+          shadow: {
+            type: 'colour_picker',
+          },
+        },
+      },
+    },
+    {
+      kind: 'block',
       type: 'p5_ellipse',
       inline: 'true',
       inputs: {
