@@ -43,11 +43,10 @@ export class LineCursor extends Marker {
     }
     let newNode = this.getNextNode(curNode, this.validLineNode);
 
-    // Skip the input or next value if there is a connected block.
+    // Skip the input (but not next) connection if there is a connected block.
     if (
       newNode &&
-      (newNode.getType() == ASTNode.types.INPUT ||
-        newNode.getType() == ASTNode.types.NEXT) &&
+      newNode.getType() === ASTNode.types.INPUT &&
       (newNode.getLocation() as Blockly.Connection).targetBlock()
     ) {
       newNode = this.getNextNode(newNode, this.validLineNode);
