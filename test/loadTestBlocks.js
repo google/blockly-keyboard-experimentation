@@ -176,6 +176,79 @@ const blankCanvas = {
   },
 };
 
+const simpleCircle = {
+  'blocks': {
+    'languageVersion': 0,
+    'blocks': [
+      {
+        'type': 'p5_setup',
+        'id': '5.{;T}3Qv}Awi:1M$:ut',
+        'x': 0,
+        'y': 75,
+        'deletable': false,
+        'inputs': {
+          'STATEMENTS': {
+            'block': {
+              'type': 'p5_canvas',
+              'id': 'spya_H-5F=K8+DhedX$y',
+              'deletable': false,
+              'movable': false,
+              'fields': {
+                'WIDTH': 400,
+                'HEIGHT': 400,
+              },
+              'next': {
+                'block': {
+                  'type': 'p5_background_color',
+                  'id': 'i/Hvi~^DYffkN/WpT_Ck',
+                  'inputs': {
+                    'COLOR': {
+                      'shadow': {
+                        'type': 'colour_picker',
+                        'id': 'B:zpi7kg+.GF_Dutd9GL',
+                        'fields': {
+                          'COLOUR': '#9999ff',
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        'type': 'p5_draw',
+        'id': '3iI4f%2#Gmk}=OjI7(8h',
+        'x': 0,
+        'y': 332,
+        'deletable': false,
+        'inputs': {
+          'STATEMENTS': {
+            'block': {
+              'type': 'simple_circle',
+              'id': '_}!@OHwjAb,2Gi8nT0}L',
+              'inline': true,
+              'inputs': {
+                'COLOR': {
+                  'shadow': {
+                    'type': 'colour_picker',
+                    'id': 'gq(POne}j:hVw%C3t{vx',
+                    'fields': {
+                      'COLOUR': '#f59b42',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    ],
+  },
+};
+
 /**
  * Loads saved state from local storage into the given workspace.
  * @param {Blockly.Workspace} workspace Blockly workspace to load into.
@@ -185,6 +258,7 @@ export const load = function (workspace, scenarioString) {
   const scenarioMap = {
     'blank': blankCanvas,
     'sun': sunnyDay,
+    'simpleCircle': simpleCircle
   };
 
   const data = JSON.stringify(scenarioMap[scenarioString]);
