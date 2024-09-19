@@ -258,7 +258,7 @@ export const load = function (workspace, scenarioString) {
   const scenarioMap = {
     'blank': blankCanvas,
     'sun': sunnyDay,
-    'simpleCircle': simpleCircle
+    'simpleCircle': simpleCircle,
   };
 
   const data = JSON.stringify(scenarioMap[scenarioString]);
