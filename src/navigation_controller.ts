@@ -15,17 +15,22 @@ import './gesture_monkey_patch';
 import * as Blockly from 'blockly/core';
 import {
   ASTNode,
-  ShortcutRegistry,
   BlockSvg,
-  WorkspaceSvg,
   ICopyData,
+  ShortcutRegistry,
+  utils as BlocklyUtils,
+  WorkspaceSvg,
 } from 'blockly/core';
-import {utils as BlocklyUtils} from 'blockly/core';
 
 import * as Constants from './constants';
 import {Navigation} from './navigation';
 import {Announcer} from './announcer';
 import {LineCursor} from './line_cursor';
+
+const KeyCodes = BlocklyUtils.KeyCodes;
+const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
+  ShortcutRegistry.registry,
+);
 
 /**
  * Class for registering shortcuts for keyboard navigation.
@@ -199,13 +204,10 @@ export class NavigationController {
             return false;
         }
       },
+      keyCodes: [KeyCodes.UP],
     };
 
     ShortcutRegistry.registry.register(previousShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.UP,
-      previousShortcut.name,
-    );
   }
 
   /**
@@ -222,17 +224,12 @@ export class NavigationController {
         }
         return true;
       },
+      keyCodes: [
+        createSerializedKey(KeyCodes.K, [KeyCodes.CTRL, KeyCodes.SHIFT]),
+      ],
     };
 
     ShortcutRegistry.registry.register(toggleKeyboardNavShortcut);
-    const ctrlShiftK = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.K,
-      [BlocklyUtils.KeyCodes.CTRL, BlocklyUtils.KeyCodes.SHIFT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(
-      ctrlShiftK,
-      toggleKeyboardNavShortcut.name,
-    );
   }
 
   /**
@@ -267,13 +264,10 @@ export class NavigationController {
             return false;
         }
       },
+      keyCodes: [KeyCodes.LEFT],
     };
 
     ShortcutRegistry.registry.register(outShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.LEFT,
-      outShortcut.name,
-    );
   }
 
   /**
@@ -313,13 +307,10 @@ export class NavigationController {
             return false;
         }
       },
+      keyCodes: [KeyCodes.DOWN],
     };
 
     ShortcutRegistry.registry.register(nextShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.DOWN,
-      nextShortcut.name,
-    );
   }
 
   /**
@@ -356,13 +347,10 @@ export class NavigationController {
             return false;
         }
       },
+      keyCodes: [KeyCodes.RIGHT],
     };
 
     ShortcutRegistry.registry.register(inShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.RIGHT,
-      inShortcut.name,
-    );
   }
 
   /**
@@ -385,13 +373,10 @@ export class NavigationController {
             return false;
         }
       },
+      keyCodes: [KeyCodes.I],
     };
 
     ShortcutRegistry.registry.register(insertShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.I,
-      insertShortcut.name,
-    );
   }
 
   /**
@@ -436,13 +421,10 @@ export class NavigationController {
             return false;
         }
       },
+      keyCodes: [KeyCodes.ENTER],
     };
 
     ShortcutRegistry.registry.register(markShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.ENTER,
-      markShortcut.name,
-    );
   }
 
   /**
@@ -466,13 +448,10 @@ export class NavigationController {
             return false;
         }
       },
+      keyCodes: [KeyCodes.X],
     };
 
     ShortcutRegistry.registry.register(disconnectShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.X,
-      disconnectShortcut.name,
-    );
   }
 
   /**
@@ -500,13 +479,10 @@ export class NavigationController {
             return false;
         }
       },
+      keyCodes: [KeyCodes.T],
     };
 
     ShortcutRegistry.registry.register(focusToolboxShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.T,
-      focusToolboxShortcut.name,
-    );
   }
 
   /**
@@ -531,19 +507,11 @@ export class NavigationController {
             return false;
         }
       },
+      keyCodes: [KeyCodes.ESC, KeyCodes.E],
+      allowCollision: true,
     };
 
     ShortcutRegistry.registry.register(exitShortcut, true);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.ESC,
-      exitShortcut.name,
-      true,
-    );
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.E,
-      exitShortcut.name,
-      true,
-    );
   }
 
   /**
@@ -561,14 +529,10 @@ export class NavigationController {
       callback: (workspace) => {
         return this.navigation.moveWSCursor(workspace, -1, 0);
       },
+      keyCodes: [createSerializedKey(KeyCodes.A, [KeyCodes.SHIFT])],
     };
 
     ShortcutRegistry.registry.register(wsMoveLeftShortcut);
-    const shiftA = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.A,
-      [BlocklyUtils.KeyCodes.SHIFT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(shiftA, wsMoveLeftShortcut.name);
   }
 
   /**
@@ -586,14 +550,10 @@ export class NavigationController {
       callback: (workspace) => {
         return this.navigation.moveWSCursor(workspace, 1, 0);
       },
+      keyCodes: [createSerializedKey(KeyCodes.D, [KeyCodes.SHIFT])],
     };
 
     ShortcutRegistry.registry.register(wsMoveRightShortcut);
-    const shiftD = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.D,
-      [BlocklyUtils.KeyCodes.SHIFT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(shiftD, wsMoveRightShortcut.name);
   }
 
   /**
@@ -611,14 +571,10 @@ export class NavigationController {
       callback: (workspace) => {
         return this.navigation.moveWSCursor(workspace, 0, -1);
       },
+      keyCodes: [createSerializedKey(KeyCodes.W, [KeyCodes.SHIFT])],
     };
 
     ShortcutRegistry.registry.register(wsMoveUpShortcut);
-    const shiftW = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.W,
-      [BlocklyUtils.KeyCodes.SHIFT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(shiftW, wsMoveUpShortcut.name);
   }
 
   /**
@@ -636,14 +592,10 @@ export class NavigationController {
       callback: (workspace) => {
         return this.navigation.moveWSCursor(workspace, 0, 1);
       },
+      keyCodes: [createSerializedKey(KeyCodes.S, [KeyCodes.SHIFT])],
     };
 
     ShortcutRegistry.registry.register(wsMoveDownShortcut);
-    const shiftW = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.S,
-      [BlocklyUtils.KeyCodes.SHIFT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(shiftW, wsMoveDownShortcut.name);
   }
 
   /**
@@ -680,27 +632,15 @@ export class NavigationController {
         this.copyWorkspace = sourceBlock.workspace;
         return !!this.copyData;
       },
+      keyCodes: [
+        createSerializedKey(KeyCodes.C, [KeyCodes.CTRL]),
+        createSerializedKey(KeyCodes.C, [KeyCodes.ALT]),
+        createSerializedKey(KeyCodes.C, [KeyCodes.META]),
+      ],
+      allowCollision: true,
     };
 
     ShortcutRegistry.registry.register(copyShortcut);
-
-    const ctrlC = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.C,
-      [BlocklyUtils.KeyCodes.CTRL],
-    );
-    ShortcutRegistry.registry.addKeyMapping(ctrlC, copyShortcut.name, true);
-
-    const altC = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.C,
-      [BlocklyUtils.KeyCodes.ALT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(altC, copyShortcut.name, true);
-
-    const metaC = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.C,
-      [BlocklyUtils.KeyCodes.META],
-    );
-    ShortcutRegistry.registry.addKeyMapping(metaC, copyShortcut.name, true);
   }
 
   /**
@@ -720,27 +660,15 @@ export class NavigationController {
         if (!this.copyData || !this.copyWorkspace) return false;
         return this.navigation.paste(this.copyData, this.copyWorkspace);
       },
+      keyCodes: [
+        createSerializedKey(KeyCodes.V, [KeyCodes.CTRL]),
+        createSerializedKey(KeyCodes.V, [KeyCodes.ALT]),
+        createSerializedKey(KeyCodes.V, [KeyCodes.META]),
+      ],
+      allowCollision: true,
     };
 
     ShortcutRegistry.registry.register(pasteShortcut);
-
-    const ctrlV = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.V,
-      [BlocklyUtils.KeyCodes.CTRL],
-    );
-    ShortcutRegistry.registry.addKeyMapping(ctrlV, pasteShortcut.name, true);
-
-    const altV = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.V,
-      [BlocklyUtils.KeyCodes.ALT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(altV, pasteShortcut.name, true);
-
-    const metaV = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.V,
-      [BlocklyUtils.KeyCodes.META],
-    );
-    ShortcutRegistry.registry.addKeyMapping(metaV, pasteShortcut.name, true);
   }
 
   /**
@@ -780,27 +708,15 @@ export class NavigationController {
         sourceBlock.checkAndDelete();
         return true;
       },
+      keyCodes: [
+        createSerializedKey(KeyCodes.X, [KeyCodes.CTRL]),
+        createSerializedKey(KeyCodes.X, [KeyCodes.ALT]),
+        createSerializedKey(KeyCodes.X, [KeyCodes.META]),
+      ],
+      allowCollision: true,
     };
 
     ShortcutRegistry.registry.register(cutShortcut);
-
-    const ctrlX = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.X,
-      [BlocklyUtils.KeyCodes.CTRL],
-    );
-    ShortcutRegistry.registry.addKeyMapping(ctrlX, cutShortcut.name, true);
-
-    const altX = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.X,
-      [BlocklyUtils.KeyCodes.ALT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(altX, cutShortcut.name, true);
-
-    const metaX = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.X,
-      [BlocklyUtils.KeyCodes.META],
-    );
-    ShortcutRegistry.registry.addKeyMapping(metaX, cutShortcut.name, true);
   }
 
   /**
@@ -842,18 +758,11 @@ export class NavigationController {
         sourceBlock.checkAndDelete();
         return true;
       },
+      keyCodes: [KeyCodes.DELETE, KeyCodes.BACKSPACE],
+      allowCollision: true,
     };
+
     ShortcutRegistry.registry.register(deleteShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.DELETE,
-      deleteShortcut.name,
-      true,
-    );
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.BACKSPACE,
-      deleteShortcut.name,
-      true,
-    );
   }
 
   /**
@@ -876,13 +785,10 @@ export class NavigationController {
         this.announcer.listShortcuts();
         return true;
       },
+      keyCodes: [KeyCodes.SLASH],
     };
 
     ShortcutRegistry.registry.register(listShortcuts);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.SLASH,
-      listShortcuts.name,
-    );
   }
 
   /**
@@ -904,13 +810,10 @@ export class NavigationController {
         this.announcer.setText(cursor.getCurNode().getType());
         return true;
       },
+      keyCodes: [KeyCodes.A],
     };
 
     ShortcutRegistry.registry.register(announceShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.A,
-      announceShortcut.name,
-    );
   }
 
   /**
@@ -940,13 +843,10 @@ export class NavigationController {
         this.announcer.setText('next sibling (no-op)');
         return false;
       },
+      keyCodes: [KeyCodes.N],
     };
 
     ShortcutRegistry.registry.register(shortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.N,
-      shortcut.name,
-    );
   }
 
   /**
@@ -975,13 +875,10 @@ export class NavigationController {
         this.announcer.setText('previous sibling (no-op)');
         return false;
       },
+      keyCodes: [KeyCodes.M],
     };
 
     ShortcutRegistry.registry.register(shortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.M,
-      shortcut.name,
-    );
   }
 
   /**
@@ -1009,13 +906,10 @@ export class NavigationController {
         this.announcer.setText('could not jump to root');
         return false;
       },
+      keyCodes: [KeyCodes.R],
     };
 
     ShortcutRegistry.registry.register(jumpShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.R,
-      jumpShortcut.name,
-    );
   }
 
   /**
@@ -1039,14 +933,10 @@ export class NavigationController {
         this.announcer.setText('context out (no-op)');
         return false;
       },
+      keyCodes: [createSerializedKey(KeyCodes.O, [KeyCodes.SHIFT])],
     };
 
     ShortcutRegistry.registry.register(shortcut);
-    const ctrlShiftO = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.O,
-      [BlocklyUtils.KeyCodes.SHIFT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(ctrlShiftO, shortcut.name);
   }
 
   /**
@@ -1071,14 +961,10 @@ export class NavigationController {
         this.announcer.setText('context in (no-op)');
         return false;
       },
+      keyCodes: [createSerializedKey(KeyCodes.I, [KeyCodes.SHIFT])],
     };
 
     ShortcutRegistry.registry.register(shortcut);
-    const ctrlShiftI = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.I,
-      [BlocklyUtils.KeyCodes.SHIFT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(ctrlShiftI, shortcut.name);
   }
 
   /**
@@ -1095,13 +981,10 @@ export class NavigationController {
         this.announcer.setText('clean up');
         return true;
       },
+      keyCodes: [KeyCodes.C],
     };
 
     ShortcutRegistry.registry.register(cleanupShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.C,
-      cleanupShortcut.name,
-    );
   }
 
   /**
