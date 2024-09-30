@@ -380,7 +380,7 @@ export class Navigation {
 
     const curNode = cursor.getCurNode();
     const sourceBlock = curNode.getSourceBlock()!;
-    if (sourceBlock.id === deletedBlockId || ids.indexOf(sourceBlock.id) > -1) {
+    if (sourceBlock.id === deletedBlockId || ids.includes(sourceBlock.id)) {
       cursor.setCurNode(
         Blockly.ASTNode.createWorkspaceNode(
           workspace,
@@ -457,7 +457,7 @@ export class Navigation {
       // cursor to the workspace.
     } else if (
       block &&
-      deletedBlock.getChildren(false).indexOf(block as Blockly.BlockSvg) > -1
+      deletedBlock.getChildren(false).includes(block as Blockly.BlockSvg)
     ) {
       cursor.setCurNode(
         Blockly.ASTNode.createWorkspaceNode(
@@ -826,7 +826,7 @@ export class Navigation {
     let inferiorConnection;
 
     if (movingBlock.getRootBlock() === destBlock.getRootBlock()) {
-      if (movingBlock.getDescendants(false).indexOf(destBlock) > -1) {
+      if (movingBlock.getDescendants(false).includes(destBlock)) {
         inferiorConnection = this.getInferiorConnection(destConnection);
         if (inferiorConnection) {
           inferiorConnection.disconnect();
@@ -1119,7 +1119,7 @@ export class Navigation {
    */
   enableKeyboardAccessibility(workspace: Blockly.WorkspaceSvg) {
     if (
-      this.workspaces.indexOf(workspace) > -1 &&
+      this.workspaces.includes(workspace) &&
       !workspace.keyboardAccessibilityMode
     ) {
       workspace.keyboardAccessibilityMode = true;
@@ -1135,7 +1135,7 @@ export class Navigation {
    */
   disableKeyboardAccessibility(workspace: Blockly.WorkspaceSvg) {
     if (
-      this.workspaces.indexOf(workspace) > -1 &&
+      this.workspaces.includes(workspace) &&
       workspace.keyboardAccessibilityMode
     ) {
       workspace.keyboardAccessibilityMode = false;
