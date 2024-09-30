@@ -1241,7 +1241,8 @@ export class Navigation {
   }
 
   /**
-   * Pastes the copied block to the marked location.
+   * Pastes the copied block to the marked location if possible or
+   * onto the workspace otherwise.
    *
    * @param copyData The data to paste into the workspace.
    * @param workspace The workspace to paste the data into.
@@ -1262,9 +1263,10 @@ export class Navigation {
   }
 
   /**
-   * Inserts the pasted block at the marked location if a compatible connection
-   * exists. If no connection has been marked, or there is not a compatible
-   * connection then the block is placed on the workspace.
+   * Inserts the pasted block at the marked location if a compatible
+   * connection exists. If no connection has been marked, or there is
+   * not a compatible connection then the block is placed on the
+   * workspace.
    *
    * @param workspace The workspace to paste the block on.
    * @param block The block to paste.
