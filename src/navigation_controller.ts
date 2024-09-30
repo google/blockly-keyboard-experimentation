@@ -18,6 +18,7 @@ import {
   BlockSvg,
   ICopyData,
   ShortcutRegistry,
+  Toolbox,
   utils as BlocklyUtils,
   WorkspaceSvg,
 } from 'blockly/core';
@@ -45,6 +46,14 @@ export class NavigationController {
   announcer: Announcer = new Announcer();
 
   /**
+   * Original Toolbox.prototype.onShortcut method, saved by
+   * addShortcutHandlers.
+   */
+  private origToolboxOnShortcut:
+    | typeof Blockly.Toolbox.prototype.onShortcut
+    | null = null;
+
+  /**
    * Registers the default keyboard shortcuts for keyboard navigation.
    */
   init() {
@@ -53,23 +62,24 @@ export class NavigationController {
   }
 
   /**
-   * Adds methods to core Blockly components that allows them to handle keyboard
-   * shortcuts when in keyboard navigation mode.
+   * Monkeypatches core Blockly components to add methods that allow
+   * them to handle keyboard shortcuts when in keyboard navigation
+   * mode.
    */
   protected addShortcutHandlers() {
-    if (Blockly.Toolbox) {
-      Blockly.Toolbox.prototype.onShortcut = this.toolboxHandler;
-    }
+    this.origToolboxOnShortcut = Toolbox.prototype.onShortcut;
+    Toolbox.prototype.onShortcut = this.toolboxHandler;
   }
 
   /**
-   * Removes methods on core Blockly components that allows them to handle
-   * keyboard shortcuts.
+   * Removes monkeypatches from core Blockly components.
    */
   protected removeShortcutHandlers() {
-    if (Blockly.Toolbox) {
-      Blockly.Toolbox.prototype.onShortcut = () => false;
+    if (!this.origToolboxOnShortcut) {
+      throw new Error('no original onShortcut method recorded');
     }
+    Blockly.Toolbox.prototype.onShortcut = this.origToolboxOnShortcut;
+    this.origToolboxOnShortcut = null;
   }
 
   /**
