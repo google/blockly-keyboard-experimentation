@@ -28,6 +28,7 @@ export class KeyboardNavigation {
     // Turns on keyboard navigation.
     navigationController.enable(workspace);
     navigationController.listShortcuts();
+    navigationController.initShortcutsModal();
 
     installCursor(workspace.getMarkerManager());
   }

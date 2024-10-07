@@ -54,3 +54,13 @@ export enum LOGGING_MSG_TYPE {
   WARN = 'warn',
   LOG = 'log',
 }
+
+/**
+ * Platform specific modifier key used in shortcuts.
+ */
+export enum  MODIFIER_KEY {
+  Window = 'Ctrl',
+  ChromeOS = 'Ctrl',
+  macOS ='⌘ Command',
+  Linux = 'Meta'
+}

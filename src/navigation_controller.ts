@@ -26,6 +26,7 @@ import * as Constants from './constants';
 import {Navigation} from './navigation';
 import {Announcer} from './announcer';
 import {LineCursor} from './line_cursor';
+import {ShortcutDialog} from './shortcut_dialog';
 
 /**
  * Class for registering shortcuts for keyboard navigation.
@@ -38,6 +39,7 @@ export class NavigationController {
   copyWorkspace: WorkspaceSvg | null = null;
   navigation: Navigation = new Navigation();
   announcer: Announcer = new Announcer();
+  shortcutDialog: ShortcutDialog = new ShortcutDialog();
 
   /**
    * Registers the default keyboard shortcuts for keyboard navigation.
@@ -864,6 +866,16 @@ export class NavigationController {
   }
 
   /**
+   * Initalise the shortcut modal with available shortcuts.
+   * Needs to be done separately rather at construction, as many shortcuts are
+   * not registered at that point.
+   */
+  initShortcutsModal() {
+    this.shortcutDialog.createModalContent();
+  }
+
+
+  /**
    * Register a keyboard shortcut to list all current shortcuts.
    */
   registerListShortcuts() {
@@ -873,7 +885,7 @@ export class NavigationController {
         return true;
       },
       callback: (workspace) => {
-        this.announcer.listShortcuts();
+        this.shortcutDialog.toggle();
         return true;
       },
     };
