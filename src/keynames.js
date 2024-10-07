@@ -121,7 +121,7 @@ const keyNames = {
 };
 
 /**
- * Convert from a serialized key code to a string.
+ * Convert from a serialized key code to a HTML string.
  * This should be the inverse of ShortcutRegistry.createSerializedKey, but
  * should also convert ascii characters to strings.
  * @param {string} keycode The key code as a string of characters separated
@@ -129,28 +129,40 @@ const keyNames = {
  * @returns {string} A single string representing the key code.
  */
 function keyCodeToString(keycode) {
-  let result = '';
+  let result = '<span class="shortcut-combo">';
   const pieces = keycode.split('+');
 
   let piece = pieces[0];
   let strrep = keyNames[piece] ?? piece;
-  result += strrep;
+  result += '<span class="key">' + strrep + '</span>';
 
   for (let i = 1; i < pieces.length; i++) {
     piece = pieces[i];
     strrep = keyNames[piece] ?? piece;
-    result += `+${strrep}`;
+    result += `+<span class="key">${strrep}</span>`;
   }
+  result += '</span>';
   return result;
 }
+
+// /**
+//  * Convert an array of key codes into a comma-separated list of strings
+//  * @param {Array<string>} keycodeArr The array of key codes to convert.
+//  * @returns {string} The input array as a comma-separated list of
+//  *     human-readable strings.
+//  */
+// export function keyCodeArrayToString(keycodeArr) {
+//   const stringified = keycodeArr.map((keycode) => keyCodeToString(keycode));
+//   return stringified.join(', ');
+// }
 
 /**
  * Convert an array of key codes into a comma-separated list of strings
  * @param {Array<string>} keycodeArr The array of key codes to convert.
  * @returns {string} The input array as a comma-separated list of
- *     human-readable strings.
+ *     human-readable strings wrapped in HTML.
  */
 export function keyCodeArrayToString(keycodeArr) {
   const stringified = keycodeArr.map((keycode) => keyCodeToString(keycode));
-  return stringified.join(', ');
+  return stringified.join('<span class="separator">/</span>');
 }
