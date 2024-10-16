@@ -19,7 +19,11 @@ forBlock['text_print'] = function (block, generator) {
 forBlock['p5_setup'] = function (block, generator) {
   const statements = generator.statementToCode(block, 'STATEMENTS');
   const code = `sketch.setup = function() {
-${statements}};\n`;
+  ${statements}
+  // Only run draw code once.
+  sketch.noLoop();
+};
+`;
   return code;
 };
 
