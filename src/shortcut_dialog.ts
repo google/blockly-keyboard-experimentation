@@ -10,6 +10,7 @@ import {ShortcutRegistry} from 'blockly/core';
 // @ts-expect-error No types in js file
 import {keyCodeArrayToString} from './keynames';
 
+
 /**
  * Class for handling the shortcuts dialog.
  */
@@ -53,7 +54,7 @@ export class ShortcutDialog {
   /**
    * Update the modifier key to the user's specific platform.
    */
-  updatePlatformModifier () {
+  updatePlatformModifier() {
     const platform = this.getPlatform();
     const platformEl = this.outputDiv ?
         this.outputDiv.querySelector('.platform') : null;
@@ -102,13 +103,6 @@ export class ShortcutDialog {
   createModalContent() {
     const registry = ShortcutRegistry.registry.getRegistry();
 
-    // Missing category headings and groupings
-    // <thead>
-    //   <tr class="category">
-    //     <th colspan="2">Editing</th> General Workspace navigation
-    //   </tr>
-    // </thead>
-
     let modalContents = `<div class="modal-container">
   <dialog class="shortcut-modal">
     <div class="shortcut-container">
@@ -124,24 +118,38 @@ export class ShortcutDialog {
     <div class="shortcut-container">
       <table class="shortcuts">
         <tbody>
-          <thead>
-            <tr class="category">
-              <th colspan="2">General</th>
-            </tr>
-          </thead>
     `;
 
-    for (const keyboardShortcut of Object.keys(registry)) {
-      const codeArray =
-        ShortcutRegistry.registry.getKeyCodesByShortcutName(keyboardShortcut);
-      const prettyPrinted = keyCodeArrayToString(codeArray);
-      modalContents +=
-        `<tr>
-          <td>${this.getReadableShortcutName(keyboardShortcut)}</td>
-          <td>${prettyPrinted}</td>
-         </tr>`;
-    }
+    // Display shortcuts by their categories.
+    const categoryKeys = Object.keys(Constants.SHORTCUT_CATEGORIES);
+    for (const key of categoryKeys) {
+      const categoryShortcuts: string[] =
+          Constants.SHORTCUT_CATEGORIES[key as keyof typeof Constants.SHORTCUT_CATEGORIES];
 
+      modalContents += `
+          <thead>
+            <tr class="category">
+              <th colspan="2">${key}</th>
+            </tr>
+          </thead>
+          `;
+      for (const keyboardShortcut of Object.keys(registry)) {
+        if (categoryShortcuts.includes(keyboardShortcut)) {
+          const codeArray =
+            ShortcutRegistry.registry.getKeyCodesByShortcutName(keyboardShortcut);
+          // Only show the first shortcut if there are many
+          const prettyPrinted = codeArray.length > 2 ? 
+              keyCodeArrayToString(codeArray.slice(0,1)) :
+              keyCodeArrayToString(codeArray);
+
+          modalContents +=
+            `<tr>
+              <td>${this.getReadableShortcutName(keyboardShortcut)}</td>
+              <td>${prettyPrinted}</td>
+             </tr>`;
+        }
+      }
+    }
     if (this.outputDiv) {
       this.outputDiv.innerHTML = modalContents + `\n</tbody>
           </table>
@@ -198,7 +206,7 @@ Blockly.Css.register(`
   min-width: 300px;
   padding: 24px 12px 24px 32px;
   position: relative;
-  width: 70%;
+  width: 50%;
   z-index: 99;
 }
 
@@ -238,22 +246,23 @@ Blockly.Css.register(`
   padding: 1em 0 0.5em;
 }
 
-.key {
+.shortcuts .key {
   border-radius: 8px;
   border: 1px solid var(--key-border-color);
   display: inline-block;
   margin: 0 8px;
   min-width: 2em;
-  padding: .2em .5em;
+  padding: .5em .5em;
   text-align: center;
 }
 
-tr:not(.category, :last-child) {
+.shortcuts tr:not(.category, :last-child) {
   border-bottom: 1px solid var(--divider-border-color);
 }
 
-td {
-  padding: .5em 0 .6em;
+.shortcuts td {
+  padding: .5em 1em .6em 0;
+  text-wrap: nowrap
 }
 
 .shortcut-container {
@@ -262,7 +271,8 @@ td {
 
 .shortcuts .separator {
   display: inline-block;
-  padding: 0 1em
+  padding: 0 0.5em;
+  color: gray;
 }
 
 .shortcut-combo {
