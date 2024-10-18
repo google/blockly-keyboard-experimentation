@@ -73,3 +73,40 @@ export enum MODIFIER_KEY {
   macOS = '⌘ Command',
   Linux = 'Meta',
 }
+
+/**
+ * Categories used to organised the shortcut dialog.
+ * Shortcut name should match those obtained from the Blockly shortcut register.
+ */
+export const SHORTCUT_CATEGORIES = {
+  'General': [
+    'escape',
+    'exit',
+    'delete',
+    'run_code',
+    'toggle_keyboard_nav',
+    'Announce',
+    'List shortcuts',
+    'toolbox',
+    'disconnect',
+  ],
+  'Editing': ['cut', 'copy', 'paste', 'undo', 'redo', 'mark', 'insert'],
+  'Code navigation': [
+    'previous',
+    'next',
+    'in',
+    'out',
+    'Context in',
+    'Context out',
+    'Go to previous sibling',
+    'Go to next sibling',
+    'Jump to root of current stack',
+  ],
+  'Workspace navigation': [
+    'workspace_down',
+    'workspace_left',
+    'workspace_up',
+    'workspace_right',
+    'Clean up workspace',
+  ],
+};
