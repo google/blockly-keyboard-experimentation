@@ -15,17 +15,23 @@ import './gesture_monkey_patch';
 import * as Blockly from 'blockly/core';
 import {
   ASTNode,
-  ShortcutRegistry,
   BlockSvg,
-  WorkspaceSvg,
   ICopyData,
+  ShortcutRegistry,
+  Toolbox,
+  utils as BlocklyUtils,
+  WorkspaceSvg,
 } from 'blockly/core';
-import {utils as BlocklyUtils} from 'blockly/core';
 
 import * as Constants from './constants';
 import {Navigation} from './navigation';
 import {Announcer} from './announcer';
 import {LineCursor} from './line_cursor';
+
+const KeyCodes = BlocklyUtils.KeyCodes;
+const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
+  ShortcutRegistry.registry,
+);
 
 /**
  * Class for registering shortcuts for keyboard navigation.
@@ -40,6 +46,14 @@ export class NavigationController {
   announcer: Announcer = new Announcer();
 
   /**
+   * Original Toolbox.prototype.onShortcut method, saved by
+   * addShortcutHandlers.
+   */
+  private origToolboxOnShortcut:
+    | typeof Blockly.Toolbox.prototype.onShortcut
+    | null = null;
+
+  /**
    * Registers the default keyboard shortcuts for keyboard navigation.
    */
   init() {
@@ -48,23 +62,24 @@ export class NavigationController {
   }
 
   /**
-   * Adds methods to core Blockly components that allows them to handle keyboard
-   * shortcuts when in keyboard navigation mode.
+   * Monkeypatches core Blockly components to add methods that allow
+   * them to handle keyboard shortcuts when in keyboard navigation
+   * mode.
    */
   protected addShortcutHandlers() {
-    if (Blockly.Toolbox) {
-      Blockly.Toolbox.prototype.onShortcut = this.toolboxHandler;
-    }
+    this.origToolboxOnShortcut = Toolbox.prototype.onShortcut;
+    Toolbox.prototype.onShortcut = this.toolboxHandler;
   }
 
   /**
-   * Removes methods on core Blockly components that allows them to handle
-   * keyboard shortcuts.
+   * Removes monkeypatches from core Blockly components.
    */
   protected removeShortcutHandlers() {
-    if (Blockly.Toolbox) {
-      Blockly.Toolbox.prototype.onShortcut = () => false;
+    if (!this.origToolboxOnShortcut) {
+      throw new Error('no original onShortcut method recorded');
     }
+    Blockly.Toolbox.prototype.onShortcut = this.origToolboxOnShortcut;
+    this.origToolboxOnShortcut = null;
   }
 
   /**
@@ -163,11 +178,20 @@ export class NavigationController {
   }
 
   /**
-   * Keyboard shortcut to go to the previous location when in keyboard
-   * navigation mode.
+   * List all the currently registered shortcuts.
    */
-  protected registerPrevious() {
-    const previousShortcut: ShortcutRegistry.KeyboardShortcut = {
+  listShortcuts() {
+    this.announcer.listShortcuts();
+  }
+
+  /**
+   * Dictionary of KeyboardShortcuts.
+   */
+  protected shortcuts: {
+    [name: string]: ShortcutRegistry.KeyboardShortcut;
+  } = {
+    /** Go to the previous location. */
+    previous:  {
       name: Constants.SHORTCUT_NAMES.PREVIOUS,
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
@@ -199,20 +223,11 @@ export class NavigationController {
             return false;
         }
       },
-    };
+      keyCodes: [KeyCodes.UP],
+    },
 
-    ShortcutRegistry.registry.register(previousShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.UP,
-      previousShortcut.name,
-    );
-  }
-
-  /**
-   * Keyboard shortcut to turn keyboard navigation on or off.
-   */
-  protected registerToggleKeyboardNav() {
-    const toggleKeyboardNavShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /** Turn keyboard navigation on or off. */
+    toggleKeyboardNav: {
       name: Constants.SHORTCUT_NAMES.TOGGLE_KEYBOARD_NAV,
       callback: (workspace) => {
         if (workspace.keyboardAccessibilityMode) {
@@ -222,25 +237,13 @@ export class NavigationController {
         }
         return true;
       },
-    };
+      keyCodes: [
+        createSerializedKey(KeyCodes.K, [KeyCodes.CTRL, KeyCodes.SHIFT]),
+      ],
+    },
 
-    ShortcutRegistry.registry.register(toggleKeyboardNavShortcut);
-    const ctrlShiftK = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.K,
-      [BlocklyUtils.KeyCodes.CTRL, BlocklyUtils.KeyCodes.SHIFT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(
-      ctrlShiftK,
-      toggleKeyboardNavShortcut.name,
-    );
-  }
-
-  /**
-   * Keyboard shortcut to go to the out location when in keyboard navigation
-   * mode.
-   */
-  protected registerOut() {
-    const outShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /** Go to the out location. */
+    out: {
       name: Constants.SHORTCUT_NAMES.OUT,
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
@@ -267,21 +270,11 @@ export class NavigationController {
             return false;
         }
       },
-    };
+      keyCodes: [KeyCodes.LEFT],
+    },
 
-    ShortcutRegistry.registry.register(outShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.LEFT,
-      outShortcut.name,
-    );
-  }
-
-  /**
-   * Keyboard shortcut to go to the next location when in keyboard navigation
-   * mode.
-   */
-  protected registerNext() {
-    const nextShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /** Go to the next location. */
+    next: {
       name: Constants.SHORTCUT_NAMES.NEXT,
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
@@ -313,21 +306,11 @@ export class NavigationController {
             return false;
         }
       },
-    };
+      keyCodes: [KeyCodes.DOWN],
+    },
 
-    ShortcutRegistry.registry.register(nextShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.DOWN,
-      nextShortcut.name,
-    );
-  }
-
-  /**
-   * Keyboard shortcut to go to the in location when in keyboard navigation
-   * mode.
-   */
-  protected registerIn() {
-    const inShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /** Go to the in location. */
+    in: {
       name: Constants.SHORTCUT_NAMES.IN,
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
@@ -356,21 +339,11 @@ export class NavigationController {
             return false;
         }
       },
-    };
+      keyCodes: [KeyCodes.RIGHT],
+    },
 
-    ShortcutRegistry.registry.register(inShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.RIGHT,
-      inShortcut.name,
-    );
-  }
-
-  /**
-   * Keyboard shortcut to connect a block to a marked location when in keyboard
-   * navigation mode.
-   */
-  protected registerInsert() {
-    const insertShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /** Connect a block to a marked location. */
+    insert: {
       name: Constants.SHORTCUT_NAMES.INSERT,
       preconditionFn: (workspace) => {
         return (
@@ -385,20 +358,14 @@ export class NavigationController {
             return false;
         }
       },
-    };
+      keyCodes: [KeyCodes.I],
+    },
 
-    ShortcutRegistry.registry.register(insertShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.I,
-      insertShortcut.name,
-    );
-  }
-
-  /**
-   * Keyboard shortcut to mark a location when in keyboard navigation mode.
-   */
-  protected registerMark() {
-    const markShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /**
+     * Mark the current location, insert a block from the flyout at
+     * the marked location, or press a flyout button.
+     */
+    mark: {
       name: Constants.SHORTCUT_NAMES.MARK,
       preconditionFn: (workspace) => {
         return (
@@ -436,21 +403,11 @@ export class NavigationController {
             return false;
         }
       },
-    };
+      keyCodes: [KeyCodes.ENTER],
+    },
 
-    ShortcutRegistry.registry.register(markShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.ENTER,
-      markShortcut.name,
-    );
-  }
-
-  /**
-   * Keyboard shortcut to disconnect two blocks when in keyboard navigation
-   * mode.
-   */
-  protected registerDisconnect() {
-    const disconnectShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /** Disconnect two blocks. */
+    disconnect: {
       name: Constants.SHORTCUT_NAMES.DISCONNECT,
       preconditionFn: (workspace) => {
         return (
@@ -466,21 +423,11 @@ export class NavigationController {
             return false;
         }
       },
-    };
+      keyCodes: [KeyCodes.X],
+    },
 
-    ShortcutRegistry.registry.register(disconnectShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.X,
-      disconnectShortcut.name,
-    );
-  }
-
-  /**
-   * Keyboard shortcut to focus on the toolbox when in keyboard navigation
-   * mode.
-   */
-  protected registerToolboxFocus() {
-    const focusToolboxShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /** Move focus to or from the toolbox. */
+    focusToolbox: {
       name: Constants.SHORTCUT_NAMES.TOOLBOX,
       preconditionFn: (workspace) => {
         return (
@@ -500,21 +447,11 @@ export class NavigationController {
             return false;
         }
       },
-    };
+      keyCodes: [KeyCodes.T],
+    },
 
-    ShortcutRegistry.registry.register(focusToolboxShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.T,
-      focusToolboxShortcut.name,
-    );
-  }
-
-  /**
-   * Keyboard shortcut to exit the current location and focus on the workspace
-   * when in keyboard navigation mode.
-   */
-  protected registerExit() {
-    const exitShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /** Exit the current location and focus on the workspace. */
+    exit: {
       name: Constants.SHORTCUT_NAMES.EXIT,
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
@@ -531,27 +468,12 @@ export class NavigationController {
             return false;
         }
       },
-    };
+      keyCodes: [KeyCodes.ESC, KeyCodes.E],
+      allowCollision: true,
+    },
 
-    ShortcutRegistry.registry.register(exitShortcut, true);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.ESC,
-      exitShortcut.name,
-      true,
-    );
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.E,
-      exitShortcut.name,
-      true,
-    );
-  }
-
-  /**
-   * Keyboard shortcut to move the cursor on the workspace to the left when in
-   * keyboard navigation mode.
-   */
-  protected registerWorkspaceMoveLeft() {
-    const wsMoveLeftShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /** Move the cursor on the workspace to the left. */
+    wsMoveLeft: {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_LEFT,
       preconditionFn: (workspace) => {
         return (
@@ -561,22 +483,11 @@ export class NavigationController {
       callback: (workspace) => {
         return this.navigation.moveWSCursor(workspace, -1, 0);
       },
-    };
+      keyCodes: [createSerializedKey(KeyCodes.A, [KeyCodes.SHIFT])],
+    },
 
-    ShortcutRegistry.registry.register(wsMoveLeftShortcut);
-    const shiftA = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.A,
-      [BlocklyUtils.KeyCodes.SHIFT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(shiftA, wsMoveLeftShortcut.name);
-  }
-
-  /**
-   * Keyboard shortcut to move the cursor on the workspace to the right when in
-   * keyboard navigation mode.
-   */
-  protected registerWorkspaceMoveRight() {
-    const wsMoveRightShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /** Move the cursor on the workspace to the right. */
+    wsMoveRight: {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_RIGHT,
       preconditionFn: (workspace) => {
         return (
@@ -586,22 +497,11 @@ export class NavigationController {
       callback: (workspace) => {
         return this.navigation.moveWSCursor(workspace, 1, 0);
       },
-    };
+      keyCodes: [createSerializedKey(KeyCodes.D, [KeyCodes.SHIFT])],
+    },
 
-    ShortcutRegistry.registry.register(wsMoveRightShortcut);
-    const shiftD = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.D,
-      [BlocklyUtils.KeyCodes.SHIFT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(shiftD, wsMoveRightShortcut.name);
-  }
-
-  /**
-   * Keyboard shortcut to move the cursor on the workspace up when in keyboard
-   * navigation mode.
-   */
-  protected registerWorkspaceMoveUp() {
-    const wsMoveUpShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /** Move the cursor on the workspace up. */
+    wsMoveUp: {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_UP,
       preconditionFn: (workspace) => {
         return (
@@ -611,22 +511,11 @@ export class NavigationController {
       callback: (workspace) => {
         return this.navigation.moveWSCursor(workspace, 0, -1);
       },
-    };
+      keyCodes: [createSerializedKey(KeyCodes.W, [KeyCodes.SHIFT])],
+    },
 
-    ShortcutRegistry.registry.register(wsMoveUpShortcut);
-    const shiftW = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.W,
-      [BlocklyUtils.KeyCodes.SHIFT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(shiftW, wsMoveUpShortcut.name);
-  }
-
-  /**
-   * Keyboard shortcut to move the cursor on the workspace down when in
-   * keyboard navigation mode.
-   */
-  protected registerWorkspaceMoveDown() {
-    const wsMoveDownShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /** Move the cursor on the workspace down. */
+    wsMoveDown: {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_DOWN,
       preconditionFn: (workspace) => {
         return (
@@ -636,21 +525,11 @@ export class NavigationController {
       callback: (workspace) => {
         return this.navigation.moveWSCursor(workspace, 0, 1);
       },
-    };
+      keyCodes: [createSerializedKey(KeyCodes.S, [KeyCodes.SHIFT])],
+    },
 
-    ShortcutRegistry.registry.register(wsMoveDownShortcut);
-    const shiftW = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.S,
-      [BlocklyUtils.KeyCodes.SHIFT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(shiftW, wsMoveDownShortcut.name);
-  }
-
-  /**
-   * Keyboard shortcut to copy the block the cursor is currently on.
-   */
-  protected registerCopy() {
-    const copyShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /** Copy the block the cursor is currently on. */
+    copy: {
       name: Constants.SHORTCUT_NAMES.COPY,
       preconditionFn: (workspace) => {
         if (
@@ -680,34 +559,19 @@ export class NavigationController {
         this.copyWorkspace = sourceBlock.workspace;
         return !!this.copyData;
       },
-    };
+      keyCodes: [
+        createSerializedKey(KeyCodes.C, [KeyCodes.CTRL]),
+        createSerializedKey(KeyCodes.C, [KeyCodes.ALT]),
+        createSerializedKey(KeyCodes.C, [KeyCodes.META]),
+      ],
+      allowCollision: true,
+    },
 
-    ShortcutRegistry.registry.register(copyShortcut);
-
-    const ctrlC = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.C,
-      [BlocklyUtils.KeyCodes.CTRL],
-    );
-    ShortcutRegistry.registry.addKeyMapping(ctrlC, copyShortcut.name, true);
-
-    const altC = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.C,
-      [BlocklyUtils.KeyCodes.ALT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(altC, copyShortcut.name, true);
-
-    const metaC = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.C,
-      [BlocklyUtils.KeyCodes.META],
-    );
-    ShortcutRegistry.registry.addKeyMapping(metaC, copyShortcut.name, true);
-  }
-
-  /**
-   * Register shortcut to paste the copied block to the marked location.
-   */
-  protected registerPaste() {
-    const pasteShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /**
+     * Paste the copied block, to the marked location if possible or
+     * onto the workspace otherwise.
+     */
+    paste: {
       name: Constants.SHORTCUT_NAMES.PASTE,
       preconditionFn: (workspace) => {
         return (
@@ -720,35 +584,16 @@ export class NavigationController {
         if (!this.copyData || !this.copyWorkspace) return false;
         return this.navigation.paste(this.copyData, this.copyWorkspace);
       },
-    };
+      keyCodes: [
+        createSerializedKey(KeyCodes.V, [KeyCodes.CTRL]),
+        createSerializedKey(KeyCodes.V, [KeyCodes.ALT]),
+        createSerializedKey(KeyCodes.V, [KeyCodes.META]),
+      ],
+      allowCollision: true,
+    },
 
-    ShortcutRegistry.registry.register(pasteShortcut);
-
-    const ctrlV = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.V,
-      [BlocklyUtils.KeyCodes.CTRL],
-    );
-    ShortcutRegistry.registry.addKeyMapping(ctrlV, pasteShortcut.name, true);
-
-    const altV = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.V,
-      [BlocklyUtils.KeyCodes.ALT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(altV, pasteShortcut.name, true);
-
-    const metaV = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.V,
-      [BlocklyUtils.KeyCodes.META],
-    );
-    ShortcutRegistry.registry.addKeyMapping(metaV, pasteShortcut.name, true);
-  }
-
-  /**
-   * Keyboard shortcut to copy and delete the block the cursor is on using
-   * ctrl+x, cmd+x, or alt+x.
-   */
-  protected registerCut() {
-    const cutShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /** Copy and delete the block the cursor is currently on. */
+    cut: {
       name: Constants.SHORTCUT_NAMES.CUT,
       preconditionFn: (workspace) => {
         if (
@@ -780,35 +625,16 @@ export class NavigationController {
         sourceBlock.checkAndDelete();
         return true;
       },
-    };
+      keyCodes: [
+        createSerializedKey(KeyCodes.X, [KeyCodes.CTRL]),
+        createSerializedKey(KeyCodes.X, [KeyCodes.ALT]),
+        createSerializedKey(KeyCodes.X, [KeyCodes.META]),
+      ],
+      allowCollision: true,
+    },
 
-    ShortcutRegistry.registry.register(cutShortcut);
-
-    const ctrlX = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.X,
-      [BlocklyUtils.KeyCodes.CTRL],
-    );
-    ShortcutRegistry.registry.addKeyMapping(ctrlX, cutShortcut.name, true);
-
-    const altX = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.X,
-      [BlocklyUtils.KeyCodes.ALT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(altX, cutShortcut.name, true);
-
-    const metaX = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.X,
-      [BlocklyUtils.KeyCodes.META],
-    );
-    ShortcutRegistry.registry.addKeyMapping(metaX, cutShortcut.name, true);
-  }
-
-  /**
-   * Registers shortcut to delete the block the cursor is on using delete or
-   * backspace.
-   */
-  protected registerDelete() {
-    const deleteShortcut: ShortcutRegistry.KeyboardShortcut = {
+    /** Keyboard shortcut to delete the block the cursor is currently on. */
+    delete: {
       name: Constants.SHORTCUT_NAMES.DELETE,
       preconditionFn: function (workspace) {
         if (
@@ -842,88 +668,40 @@ export class NavigationController {
         sourceBlock.checkAndDelete();
         return true;
       },
-    };
-    ShortcutRegistry.registry.register(deleteShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.DELETE,
-      deleteShortcut.name,
-      true,
-    );
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.BACKSPACE,
-      deleteShortcut.name,
-      true,
-    );
-  }
+      keyCodes: [KeyCodes.DELETE, KeyCodes.BACKSPACE],
+      allowCollision: true,
+    },
 
-  /**
-   * List all of the currently registered shortcuts.
-   */
-  listShortcuts() {
-    this.announcer.listShortcuts();
-  }
-
-  /**
-   * Register a keyboard shortcut to list all current shortcuts.
-   */
-  registerListShortcuts() {
-    const listShortcuts: Blockly.ShortcutRegistry.KeyboardShortcut = {
+    /** List all current shortcuts in the announcer area. */
+    announceShortcuts: {
       name: 'List shortcuts',
-      preconditionFn: (workspace) => {
-        return true;
-      },
       callback: (workspace) => {
         this.announcer.listShortcuts();
         return true;
       },
-    };
+      keyCodes: [KeyCodes.SLASH],
+    },
 
-    ShortcutRegistry.registry.register(listShortcuts);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.SLASH,
-      listShortcuts.name,
-    );
-  }
-
-  /**
-   * Register a keyboard shortcut to announce the current location
-   * of the cursor.
-   */
-  registerAnnounce() {
-    const announceShortcut: Blockly.ShortcutRegistry.KeyboardShortcut = {
-      name: 'Announce',
-      preconditionFn: (workspace) => {
-        return true;
-      },
-      // Print out the type of the current node.
+    /** Announce the current location of the cursor. */
+    announceLocation: {
+      name: 'Announce location',
       callback: (workspace) => {
         const cursor = workspace.getCursor();
-        if (!cursor) {
-          return false;
-        }
+        if (!cursor) return false;
+        // Print out the type of the current node.
         this.announcer.setText(cursor.getCurNode().getType());
         return true;
       },
-    };
+      keyCodes: [KeyCodes.A],
+    },
 
-    ShortcutRegistry.registry.register(announceShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.A,
-      announceShortcut.name,
-    );
-  }
-
-  /**
-   * Register a shortcut to handle going to the next sibling of the
-   * cursor's current location.
-   */
-  registerNextSibling() {
-    const shortcut: Blockly.ShortcutRegistry.KeyboardShortcut = {
+    /** Go to the next sibling of the cursor's current location. */
+    nextSibling: {
       name: 'Go to next sibling',
       preconditionFn: (workspace) => {
-        return true;
+        return workspace.keyboardAccessibilityMode;
       },
-      // Jump to the next node at the same level, when in the workspace
+      // Jump to the next node at the same level, when in the workspace.
       callback: (workspace, e, shortcut) => {
         const cursor = workspace.getCursor() as LineCursor;
 
@@ -940,25 +718,16 @@ export class NavigationController {
         this.announcer.setText('next sibling (no-op)');
         return false;
       },
-    };
+      keyCodes: [KeyCodes.N],
+    },
 
-    ShortcutRegistry.registry.register(shortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.N,
-      shortcut.name,
-    );
-  }
-
-  /**
-   * Register a shortcut to handle going to the previous sibling of the
-   * cursor's current location.
-   */
-  registerPreviousSibling() {
-    const shortcut: Blockly.ShortcutRegistry.KeyboardShortcut = {
+    /** Go to the previous sibling of the cursor's current location. */
+    previousSibling: {
       name: 'Go to previous sibling',
       preconditionFn: (workspace) => {
-        return true;
+        return workspace.keyboardAccessibilityMode;
       },
+      // Jump to the previous node at the same level, when in the workspace.
       callback: (workspace, e, shortcut) => {
         const cursor = workspace.getCursor() as LineCursor;
 
@@ -975,23 +744,14 @@ export class NavigationController {
         this.announcer.setText('previous sibling (no-op)');
         return false;
       },
-    };
+      keyCodes: [KeyCodes.M],
+    },
 
-    ShortcutRegistry.registry.register(shortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.M,
-      shortcut.name,
-    );
-  }
-
-  /**
-   * Register a shortcut to jump to the root of the current stack.
-   */
-  registerJumpToRoot() {
-    const jumpShortcut: Blockly.ShortcutRegistry.KeyboardShortcut = {
+    /** Jump to the root of the current stack. */
+    jumpToRoot: {
       name: 'Jump to root of current stack',
       preconditionFn: (workspace) => {
-        return true;
+        return workspace.keyboardAccessibilityMode;
       },
       // Jump to the root of the current stack.
       callback: (workspace) => {
@@ -1009,21 +769,11 @@ export class NavigationController {
         this.announcer.setText('could not jump to root');
         return false;
       },
-    };
+      keyCodes: [KeyCodes.R],
+    },
 
-    ShortcutRegistry.registry.register(jumpShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.R,
-      jumpShortcut.name,
-    );
-  }
-
-  /**
-   * Register a shortcut to move the cursor out of its current context,
-   * such as a loop block.
-   */
-  registerContextOut() {
-    const shortcut: Blockly.ShortcutRegistry.KeyboardShortcut = {
+    /** Move the cursor out of its current context, such as a loop block. */
+    contextOut: {
       name: 'Context out',
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
@@ -1039,22 +789,11 @@ export class NavigationController {
         this.announcer.setText('context out (no-op)');
         return false;
       },
-    };
+      keyCodes: [createSerializedKey(KeyCodes.O, [KeyCodes.SHIFT])],
+    },
 
-    ShortcutRegistry.registry.register(shortcut);
-    const ctrlShiftO = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.O,
-      [BlocklyUtils.KeyCodes.SHIFT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(ctrlShiftO, shortcut.name);
-  }
-
-  /**
-   * Register a shortcut to move the cursor in a level of context, such as into
-   * a loop.
-   */
-  registerContextIn() {
-    const shortcut: Blockly.ShortcutRegistry.KeyboardShortcut = {
+    /** Move the cursor in a level of context, such as into a loop. */
+    contextIn: {
       name: 'Context in',
       preconditionFn: (workspace) => {
         return workspace.keyboardAccessibilityMode;
@@ -1071,21 +810,11 @@ export class NavigationController {
         this.announcer.setText('context in (no-op)');
         return false;
       },
-    };
+      keyCodes: [createSerializedKey(KeyCodes.I, [KeyCodes.SHIFT])],
+    },
 
-    ShortcutRegistry.registry.register(shortcut);
-    const ctrlShiftI = ShortcutRegistry.registry.createSerializedKey(
-      BlocklyUtils.KeyCodes.I,
-      [BlocklyUtils.KeyCodes.SHIFT],
-    );
-    ShortcutRegistry.registry.addKeyMapping(ctrlShiftI, shortcut.name);
-  }
-
-  /**
-   * Register a shortcut to clean up the workspace.
-   */
-  registerCleanup() {
-    const cleanupShortcut: Blockly.ShortcutRegistry.KeyboardShortcut = {
+    /** Clean up the workspace. */
+    cleanup: {
       name: 'Clean up workspace',
       preconditionFn: (workspace) => {
         return workspace.getTopBlocks(false).length > 0;
@@ -1095,61 +824,29 @@ export class NavigationController {
         this.announcer.setText('clean up');
         return true;
       },
-    };
-
-    ShortcutRegistry.registry.register(cleanupShortcut);
-    ShortcutRegistry.registry.addKeyMapping(
-      BlocklyUtils.KeyCodes.C,
-      cleanupShortcut.name,
-    );
-  }
+      keyCodes: [KeyCodes.C],
+    },
+  };
 
   /**
-   * Registers all default keyboard shortcut items for keyboard navigation. This
-   * should be called once per instance of KeyboardShortcutRegistry.
+   * Registers all default keyboard shortcut items for keyboard
+   * navigation. This should be called once per instance of
+   * KeyboardShortcutRegistry.
    */
   protected registerDefaults() {
-    this.registerPrevious();
-    this.registerNext();
-    this.registerIn();
-    this.registerOut();
-
-    this.registerDisconnect();
-    this.registerExit();
-    this.registerInsert();
-    this.registerMark();
-    this.registerToolboxFocus();
-    this.registerToggleKeyboardNav();
-
-    this.registerWorkspaceMoveDown();
-    this.registerWorkspaceMoveLeft();
-    this.registerWorkspaceMoveUp();
-    this.registerWorkspaceMoveRight();
-
-    this.registerCopy();
-    this.registerPaste();
-    this.registerCut();
-    this.registerDelete();
-
-    this.registerAnnounce();
-    this.registerPreviousSibling();
-    this.registerNextSibling();
-    this.registerJumpToRoot();
-    this.registerListShortcuts();
-    this.registerContextIn();
-    this.registerContextOut();
-
-    this.registerCleanup();
+    for (const shortcut of Object.values(this.shortcuts)) {
+      ShortcutRegistry.registry.register(shortcut);
+    }
   }
 
   /**
    * Removes all the keyboard navigation shortcuts.
    */
   dispose() {
-    const shortcutNames = Object.values(Constants.SHORTCUT_NAMES);
-    for (const name of shortcutNames) {
-      ShortcutRegistry.registry.unregister(name);
+    for (const shortcut of Object.values(this.shortcuts)) {
+      ShortcutRegistry.registry.unregister(shortcut.name);
     }
+
     this.removeShortcutHandlers();
     this.navigation.dispose();
   }
