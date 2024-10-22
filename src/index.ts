@@ -26,9 +26,19 @@ export class KeyboardNavigation {
     navigationController.init();
     navigationController.addWorkspace(workspace);
     // Turns on keyboard navigation.
-    navigationController.enable(workspace);
+    navigationController.setHasAutoNavigationEnabled(true);
     navigationController.listShortcuts();
 
     installCursor(workspace.getMarkerManager());
+
+    // Ensure that only the root SVG group has a tab index.
+    workspace.getInjectionDiv().removeAttribute('tabindex');
+
+    workspace.getSvgGroup().addEventListener('focus', () => {
+      navigationController.setHasFocus(true);
+    });
+    workspace.getSvgGroup().addEventListener('blur', () => {
+      navigationController.setHasFocus(false);
+    });
   }
 }

@@ -28,7 +28,7 @@ export enum SHORTCUT_NAMES {
   IN = 'in',
   OUT = 'out',
   INSERT = 'insert',
-  MARK = 'mark',
+  ENTER_OR_MARK = 'enter_or_mark',
   DISCONNECT = 'disconnect',
   TOOLBOX = 'toolbox',
   EXIT = 'exit',
@@ -43,6 +43,15 @@ export enum SHORTCUT_NAMES {
   MOVE_WS_CURSOR_RIGHT = 'workspace_right',
   TOGGLE_KEYBOARD_NAV = 'toggle_keyboard_nav',
   /* eslint-enable @typescript-eslint/naming-convention */
+  LIST_SHORTCUTS = 'list_shortcuts',
+  ANNOUNCE = 'announce',
+  GO_TO_NEXT_SIBLING = 'go_to_next_sibling',
+  GO_TO_PREVIOUS_SIBLING = 'go_to_previous_sibling',
+  JUMP_TO_ROOT = 'jump_to_root_of_current_stack',
+  CONTEXT_OUT = 'context_out',
+  CONTEXT_IN = 'context_in',
+  CLEAN_UP = 'clean_up_workspace',
+  INTERCEPT_TAB = 'intercept_tab_navigation',
 }
 
 /**
