@@ -27,6 +27,7 @@ import * as Constants from './constants';
 import {Navigation} from './navigation';
 import {Announcer} from './announcer';
 import {LineCursor} from './line_cursor';
+import {ShortcutDialog} from './shortcut_dialog';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -44,6 +45,7 @@ export class NavigationController {
   copyWorkspace: WorkspaceSvg | null = null;
   navigation: Navigation = new Navigation();
   announcer: Announcer = new Announcer();
+  shortcutDialog: ShortcutDialog = new ShortcutDialog();
 
   isAutoNavigationEnabled: boolean = false;
   hasNavigationFocus: boolean = false;
@@ -220,7 +222,7 @@ export class NavigationController {
     [name: string]: ShortcutRegistry.KeyboardShortcut;
   } = {
     /** Go to the previous location. */
-    previous:  {
+    previous: {
       name: Constants.SHORTCUT_NAMES.PREVIOUS,
       preconditionFn: (workspace) => workspace.keyboardAccessibilityMode,
       callback: (workspace, _, shortcut) => {
@@ -367,7 +369,7 @@ export class NavigationController {
     insert: {
       name: Constants.SHORTCUT_NAMES.INSERT,
       preconditionFn: (workspace) =>
-          workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
+        workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
@@ -442,7 +444,7 @@ export class NavigationController {
     disconnect: {
       name: Constants.SHORTCUT_NAMES.DISCONNECT,
       preconditionFn: (workspace) =>
-          workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
+        workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
@@ -459,7 +461,7 @@ export class NavigationController {
     focusToolbox: {
       name: Constants.SHORTCUT_NAMES.TOOLBOX,
       preconditionFn: (workspace) =>
-          workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
+        workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
@@ -507,7 +509,7 @@ export class NavigationController {
     wsMoveLeft: {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_LEFT,
       preconditionFn: (workspace) =>
-          workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
+        workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
       callback: (workspace) => {
         return this.navigation.moveWSCursor(workspace, -1, 0);
       },
@@ -518,7 +520,7 @@ export class NavigationController {
     wsMoveRight: {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_RIGHT,
       preconditionFn: (workspace) =>
-          workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
+        workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
       callback: (workspace) => {
         return this.navigation.moveWSCursor(workspace, 1, 0);
       },
@@ -529,7 +531,7 @@ export class NavigationController {
     wsMoveUp: {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_UP,
       preconditionFn: (workspace) =>
-          workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
+        workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
       callback: (workspace) => {
         return this.navigation.moveWSCursor(workspace, 0, -1);
       },
@@ -540,7 +542,7 @@ export class NavigationController {
     wsMoveDown: {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_DOWN,
       preconditionFn: (workspace) =>
-          workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
+        workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
       callback: (workspace) => {
         return this.navigation.moveWSCursor(workspace, 0, 1);
       },
@@ -593,9 +595,9 @@ export class NavigationController {
     paste: {
       name: Constants.SHORTCUT_NAMES.PASTE,
       preconditionFn: (workspace) =>
-          workspace.keyboardAccessibilityMode &&
-          !workspace.options.readOnly &&
-          !Blockly.Gesture.inProgress(),
+        workspace.keyboardAccessibilityMode &&
+        !workspace.options.readOnly &&
+        !Blockly.Gesture.inProgress(),
       callback: () => {
         if (!this.copyData || !this.copyWorkspace) return false;
         return this.navigation.paste(this.copyData, this.copyWorkspace);
@@ -688,11 +690,11 @@ export class NavigationController {
       allowCollision: true,
     },
 
-    /** List all current shortcuts in the announcer area. */
+    /** List all of the currently registered shortcuts. */
     announceShortcuts: {
       name: Constants.SHORTCUT_NAMES.LIST_SHORTCUTS,
       callback: (workspace) => {
-        this.announcer.listShortcuts();
+        this.shortcutDialog.toggle();
         return true;
       },
       keyCodes: [KeyCodes.SLASH],
@@ -845,7 +847,7 @@ export class NavigationController {
       },
       keyCodes: [
         createSerializedKey(KeyCodes.TAB, [KeyCodes.SHIFT]),
-        KeyCodes.TAB
+        KeyCodes.TAB,
       ],
     },
   };
@@ -859,6 +861,11 @@ export class NavigationController {
     for (const shortcut of Object.values(this.shortcuts)) {
       ShortcutRegistry.registry.register(shortcut);
     }
+
+    // Initalise the shortcut modal with available shortcuts.  Needs
+    // to be done separately rather at construction, as many shortcuts
+    // are not registered at that point.
+    this.shortcutDialog.createModalContent();
   }
 
   /**

@@ -120,27 +120,53 @@ const keyNames = {
   224: 'win',
 };
 
+const modifierKeys = ['control', 'alt', 'meta'];
+
 /**
- * Convert from a serialized key code to a string.
+ * Assign the appropriate class names for the key.
+ * Modifier keys are indicated so they can be switched to a platform specific
+ * key.
+ */
+function getKeyClassName(keyName) {
+  return modifierKeys.includes(keyName.toLowerCase()) ? 'key modifier' : 'key';
+}
+
+function toTitleCase(str) {
+  return str.charAt(0).toUpperCase() + str.substring(1).toLowerCase();
+}
+
+/**
+ * Convert from a serialized key code to a HTML string.
  * This should be the inverse of ShortcutRegistry.createSerializedKey, but
  * should also convert ascii characters to strings.
  * @param {string} keycode The key code as a string of characters separated
  *     by the + character.
  * @returns {string} A single string representing the key code.
  */
-function keyCodeToString(keycode) {
-  let result = '';
+function keyCodeToString(keycode, index) {
+  let result = `<span class="shortcut-combo shortcut-combo-${index}">`;
   const pieces = keycode.split('+');
 
   let piece = pieces[0];
   let strrep = keyNames[piece] ?? piece;
-  result += strrep;
 
-  for (let i = 1; i < pieces.length; i++) {
+  for (let i = 0; i < pieces.length; i++) {
     piece = pieces[i];
     strrep = keyNames[piece] ?? piece;
-    result += `+${strrep}`;
+    const className = getKeyClassName(strrep);
+
+    if (i === pieces.length - 1 && i !== 0) {
+      strrep = strrep.toUpperCase();
+    } else {
+      strrep = toTitleCase(strrep);
+    }
+
+    if (i > 0) {
+      result += '+';
+    }
+    result += `<span class="${className}">${strrep}</span>`;
   }
+  result += '</span>';
   return result;
 }
 
@@ -148,9 +174,11 @@ function keyCodeToString(keycode) {
  * Convert an array of key codes into a comma-separated list of strings
  * @param {Array<string>} keycodeArr The array of key codes to convert.
  * @returns {string} The input array as a comma-separated list of
- *     human-readable strings.
+ *     human-readable strings wrapped in HTML.
  */
 export function keyCodeArrayToString(keycodeArr) {
-  const stringified = keycodeArr.map((keycode) => keyCodeToString(keycode));
-  return stringified.join(', ');
+  const stringified = keycodeArr.map((keycode, index) =>
+    keyCodeToString(keycode, index),
+  );
+  return stringified.join('<span class="separator">/</span>');
 }

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import * as Blockly from 'blockly/core';
 import {ShortcutRegistry} from 'blockly/core';
 // @ts-expect-error No types in js file
 import {keyCodeArrayToString} from './keynames';
@@ -13,6 +14,8 @@ import {keyCodeArrayToString} from './keynames';
  */
 export class Announcer {
   outputDiv: HTMLElement | null;
+  modalContainer: HTMLElement | null = null;
+  shortcutDialog: HTMLElement | null = null;
   /**
    * Constructor for an Announcer.
    */
