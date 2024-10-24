@@ -409,6 +409,35 @@ export class LineCursor extends Marker {
     }
     return this.getRightMostChild(newNode);
   }
+
+  /**
+   * Set the location of the marker and call the update method.
+   * Setting isStack to true will only work if the newLocation is the top most
+   * output or previous connection on a stack.
+   * 
+   * Overrides drawing logic to call `setSelected` if the location is
+   * a block, for testing on October 28 2024.
+   *
+   * @param newNode The new location of the marker.
+   */
+  setCurNode(newNode: ASTNode) {
+    const oldNode = (this as any).curNode;
+    (this as any).curNode = newNode;
+    const drawer = (this as any).drawer;
+    if (newNode?.getType() == ASTNode.types.BLOCK) {
+      if (drawer) {
+        drawer.hide();
+      }
+      const block = newNode.getLocation() as Blockly.BlockSvg;
+      Blockly.common.setSelected(block);
+    } else if (drawer) {
+      if (oldNode?.getType() == ASTNode.types.BLOCK) {
+        Blockly.common.setSelected(null);
+      }
+
+      drawer.draw(oldNode, newNode);
+    }
+  }
 }
 
 export const registrationName = 'LineCursor';
