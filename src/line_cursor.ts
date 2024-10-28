@@ -13,6 +13,7 @@
  * @author aschmiedt@google.com (Abby Schmiedt)
  */
 
+import { FieldColour } from '@blockly/field-colour';
 import * as Blockly from 'blockly/core';
 import {ASTNode, Marker} from 'blockly/core';
 
@@ -424,15 +425,44 @@ export class LineCursor extends Marker {
     const oldNode = (this as any).curNode;
     (this as any).curNode = newNode;
     const drawer = (this as any).drawer;
+    if (!drawer) {
+      console.error('could not find a drawer');
+      return;
+    }
+
+    const newNodeIsFieldColour = newNode?.getType() == ASTNode.types.FIELD && 
+        (newNode.getLocation() as Blockly.Field) instanceof FieldColour;
+    const oldNodeIsFieldColour = oldNode?.getType() == ASTNode.types.FIELD && 
+        (oldNode.getLocation() as Blockly.Field) instanceof FieldColour
+
+
     if (newNode?.getType() == ASTNode.types.BLOCK) {
-      if (drawer) {
-        drawer.hide();
-      }
+      drawer.hide();
       const block = newNode.getLocation() as Blockly.BlockSvg;
       Blockly.common.setSelected(block);
-    } else if (drawer) {
+    }
+    else if (newNodeIsFieldColour) {
+      drawer.hide();
+
       if (oldNode?.getType() == ASTNode.types.BLOCK) {
         Blockly.common.setSelected(null);
+      } else if (oldNodeIsFieldColour) {
+        const field = oldNode.getLocation() as FieldColour;
+        const block = field.getSourceBlock() as Blockly.BlockSvg;
+        block.removeSelect();
+      }
+
+      const field = newNode.getLocation() as FieldColour;
+      const block = field.getSourceBlock() as Blockly.BlockSvg;
+      block.addSelect();
+    }
+    else {
+      if (oldNode?.getType() == ASTNode.types.BLOCK) {
+        Blockly.common.setSelected(null);
+      } else if (oldNodeIsFieldColour) {
+        const field = oldNode.getLocation() as FieldColour;
+        const block = field.getSourceBlock() as Blockly.BlockSvg;
+        block.removeSelect();
       }
 
       drawer.draw(oldNode, newNode);
