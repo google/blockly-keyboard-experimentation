@@ -26,6 +26,18 @@
         width: 100%;
         max-height: 100%;
         position: relative;
+        --outline-width: 3px;
+      }
+
+      .blocklyMainBackground {
+        height: calc(100% - var(--outline-width));
+        width: calc(100% - var(--outline-width));
+      }
+
+      .blocklyFlyout {
+        top: var(--outline-width);
+        left: var(--outline-width);
+        height: calc(100% - calc(var(--outline-width) * 2.5));
       }
 
       pre,
