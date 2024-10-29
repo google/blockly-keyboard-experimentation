@@ -32,8 +32,9 @@ export class KeyboardNavigation {
     this.setGlowTheme();
     installCursor(workspace.getMarkerManager());
 
-    // Ensure that only the root SVG group has a tab index.
+    // Ensure that only the root SVG G (group) has a tab index.
     workspace.getInjectionDiv().removeAttribute('tabindex');
+    workspace.getParentSvg().removeAttribute('tabindex');
 
     workspace.getSvgGroup().addEventListener('focus', () => {
       navigationController.setHasFocus(true);
