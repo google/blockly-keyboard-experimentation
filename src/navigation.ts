@@ -1057,11 +1057,14 @@ export class Navigation {
     if (!cursor) {
       return;
     }
-    const curNode = cursor.getCurNode();
-    if (!curNode.isConnection()) {
-      this.log(
-        'Cannot disconnect blocks when the cursor is not on a connection',
-      );
+    let curNode: Blockly.ASTNode | null = cursor.getCurNode();
+    let wasVisitingConnection = true;
+    while (curNode && !curNode.isConnection()) {
+      curNode = curNode.out();
+      wasVisitingConnection = false;
+    }
+    if (!curNode) {
+      this.log('Unable to find a connection to disconnect');
       return;
     }
     const curConnection = curNode.getLocation() as Blockly.RenderedConnection;
@@ -1087,9 +1090,11 @@ export class Navigation {
     const rootBlock = superiorConnection.getSourceBlock().getRootBlock();
     rootBlock.bringToFront();
 
-    const connectionNode =
-      Blockly.ASTNode.createConnectionNode(superiorConnection);
-    workspace.getCursor()!.setCurNode(connectionNode!);
+    if (wasVisitingConnection) {
+      const connectionNode =
+            Blockly.ASTNode.createConnectionNode(superiorConnection);
+      workspace.getCursor()!.setCurNode(connectionNode!);
+    }
   }
 
   /**
