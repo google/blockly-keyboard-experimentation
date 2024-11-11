@@ -27,7 +27,9 @@ import {runCode, registerRunCodeShortcut} from './runCode';
 function loadScenario(workspace: Blockly.WorkspaceSvg) {
   const scenarioSelector = location.search.match(/scenario=([^&]+)/);
   // Default to the sunny day example.
-  const scenarioString = scenarioSelector ? scenarioSelector[1] : 'simpleCircle';
+  const scenarioString = scenarioSelector
+    ? scenarioSelector[1]
+    : 'simpleCircle';
   const selector = document.getElementById(
     'scenarioSelect',
   ) as HTMLSelectElement;

@@ -43,21 +43,19 @@ export class KeyboardNavigation {
       navigationController.setHasFocus(false);
     });
   }
-  
+
   /**
    * Update the theme to match the selected glow colour to the cursor
    * colour.
    */
   setGlowTheme() {
-    const newTheme = Blockly.Theme.defineTheme('zelosDerived', 
-      {
-        name: 'zelosDerived',
-        base: Blockly.Themes.Zelos,
-        componentStyles: {
-          selectedGlowColour: '#ffa200',
-        }
-      }
-    );
+    const newTheme = Blockly.Theme.defineTheme('zelosDerived', {
+      name: 'zelosDerived',
+      base: Blockly.Themes.Zelos,
+      componentStyles: {
+        selectedGlowColour: '#ffa200',
+      },
+    });
     this.workspace.setTheme(newTheme);
   }
 }

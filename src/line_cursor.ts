@@ -13,7 +13,7 @@
  * @author aschmiedt@google.com (Abby Schmiedt)
  */
 
-import { FieldColour } from '@blockly/field-colour';
+import {FieldColour} from '@blockly/field-colour';
 import * as Blockly from 'blockly/core';
 import {ASTNode, Marker} from 'blockly/core';
 
@@ -415,7 +415,7 @@ export class LineCursor extends Marker {
    * Set the location of the marker and call the update method.
    * Setting isStack to true will only work if the newLocation is the top most
    * output or previous connection on a stack.
-   * 
+   *
    * Overrides drawing logic to call `setSelected` if the location is
    * a block, for testing on October 28 2024.
    *
@@ -430,18 +430,18 @@ export class LineCursor extends Marker {
       return;
     }
 
-    const newNodeIsFieldColour = newNode?.getType() == ASTNode.types.FIELD && 
-        (newNode.getLocation() as Blockly.Field) instanceof FieldColour;
-    const oldNodeIsFieldColour = oldNode?.getType() == ASTNode.types.FIELD && 
-        (oldNode.getLocation() as Blockly.Field) instanceof FieldColour
-
+    const newNodeIsFieldColour =
+      newNode?.getType() == ASTNode.types.FIELD &&
+      (newNode.getLocation() as Blockly.Field) instanceof FieldColour;
+    const oldNodeIsFieldColour =
+      oldNode?.getType() == ASTNode.types.FIELD &&
+      (oldNode.getLocation() as Blockly.Field) instanceof FieldColour;
 
     if (newNode?.getType() == ASTNode.types.BLOCK) {
       drawer.hide();
       const block = newNode.getLocation() as Blockly.BlockSvg;
       Blockly.common.setSelected(block);
-    }
-    else if (newNodeIsFieldColour) {
+    } else if (newNodeIsFieldColour) {
       drawer.hide();
 
       if (oldNode?.getType() == ASTNode.types.BLOCK) {
@@ -455,8 +455,7 @@ export class LineCursor extends Marker {
       const field = newNode.getLocation() as FieldColour;
       const block = field.getSourceBlock() as Blockly.BlockSvg;
       block.addSelect();
-    }
-    else {
+    } else {
       if (oldNode?.getType() == ASTNode.types.BLOCK) {
         Blockly.common.setSelected(null);
       } else if (oldNodeIsFieldColour) {
