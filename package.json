@@ -1,6 +1,6 @@
 {
   "name": "@blockly/keyboard-experiment",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A plugin for keyboard navigation.",
   "scripts": {
     "audit:fix": "blockly-scripts auditFix",
@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "predeploy": "blockly-scripts predeploy",
+    "prepublishOnly": "npm login --registry https://wombat-dressing-room.appspot.com",
     "start": "blockly-scripts start",
     "test": "blockly-scripts test"
   },
