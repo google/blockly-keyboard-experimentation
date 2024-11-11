@@ -216,6 +216,57 @@ const simpleCircle = {
   'inputsInline': true,
 };
 
+const writeTextWithoutShadow = {
+  'type': 'write_text_without_shadow',
+  'tooltip': '',
+  'helpUrl': '',
+  'message0': 'write without shadow %1',
+  'args0': [
+    {
+      'type': 'field_input',
+      'name': 'TEXT',
+      'text': 'bit'
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 225
+};
+
+const writeTextWithShadow = {
+  'type': 'write_text_with_shadow',
+  'tooltip': '',
+  'helpUrl': '',
+  'message0': 'write with shadow %1',
+  'args0': [
+    {
+      'type': 'input_value',
+      'name': 'TEXT',
+      'check': 'String'
+    }
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 225
+};
+
+const textBlock = 
+{
+  'type': 'text_only',
+  'tooltip': '',
+  'helpUrl': '',
+  'message0': '%1',
+  'args0': [
+    {
+      'type': 'field_input',
+      'name': 'TEXT',
+      'text': 'micro'
+    },
+  ],
+  'output': 'String',
+  'colour': 225
+};
+
 // Create the block definitions for all the JSON-only blocks.
 // This does not register their definitions with Blockly.
 const jsonBlocks = Blockly.common.createBlockDefinitionsFromJsonArray([
@@ -225,6 +276,9 @@ const jsonBlocks = Blockly.common.createBlockDefinitionsFromJsonArray([
   ellipse,
   draw_emoji,
   simpleCircle,
+  writeTextWithoutShadow,
+  writeTextWithShadow,
+  textBlock
 ]);
 
 export const blocks = {

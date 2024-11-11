@@ -80,3 +80,26 @@ sketch.stroke(${color});
 sketch.ellipse(150, 150, 50, 50);`;
   return code;
 };
+
+forBlock['text_only'] = function (block, generator) {
+  const code = generator.quote_(block.getFieldValue('TEXT'));
+  return [code, Order.ATOMIC];
+};
+
+forBlock['write_text_with_shadow'] = function (block, generator) {
+  const text = generator.valueToCode(block, 'TEXT', Order.ATOMIC) || `''`;
+  const code = `\nsketch.stroke(0x000000);
+sketch.fill(0x000000);
+sketch.textSize(100);
+sketch.text(${text}, 50, 350);\n`;
+  return code;
+};
+
+forBlock['write_text_without_shadow'] = function (block, generator) {
+  const text = generator.quote_(block.getFieldValue('TEXT'));
+  const code = `\nsketch.stroke(0x000000);
+sketch.fill(0x000000);
+sketch.textSize(100);
+sketch.text(${text}, 50, 350);\n`;
+  return code;
+};
