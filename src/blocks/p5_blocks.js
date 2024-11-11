@@ -225,12 +225,12 @@ const writeTextWithoutShadow = {
     {
       'type': 'field_input',
       'name': 'TEXT',
-      'text': 'bit'
+      'text': 'bit',
     },
   ],
   'previousStatement': null,
   'nextStatement': null,
-  'colour': 225
+  'colour': 225,
 };
 
 const writeTextWithShadow = {
@@ -242,16 +242,15 @@ const writeTextWithShadow = {
     {
       'type': 'input_value',
       'name': 'TEXT',
-      'check': 'String'
-    }
+      'check': 'String',
+    },
   ],
   'previousStatement': null,
   'nextStatement': null,
-  'colour': 225
+  'colour': 225,
 };
 
-const textBlock = 
-{
+const textBlock = {
   'type': 'text_only',
   'tooltip': '',
   'helpUrl': '',
@@ -260,11 +259,11 @@ const textBlock =
     {
       'type': 'field_input',
       'name': 'TEXT',
-      'text': 'micro'
+      'text': 'micro',
     },
   ],
   'output': 'String',
-  'colour': 225
+  'colour': 225,
 };
 
 // Create the block definitions for all the JSON-only blocks.
@@ -278,7 +277,7 @@ const jsonBlocks = Blockly.common.createBlockDefinitionsFromJsonArray([
   simpleCircle,
   writeTextWithoutShadow,
   writeTextWithShadow,
-  textBlock
+  textBlock,
 ]);
 
 export const blocks = {
