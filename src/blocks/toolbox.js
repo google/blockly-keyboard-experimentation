@@ -37,5 +37,20 @@ export const toolbox = {
         },
       },
     },
+    {
+      kind: 'block',
+      type: 'write_text_with_shadow',
+      inputs: {
+        TEXT: {
+          shadow: {
+            type: 'text_only',
+          },
+        },
+      },
+    },
+    {
+      kind: 'block',
+      type: 'write_text_without_shadow',
+    },
   ],
 };
