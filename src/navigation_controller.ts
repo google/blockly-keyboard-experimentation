@@ -533,22 +533,40 @@ export class NavigationController {
       name: Constants.SHORTCUT_NAMES.COPY,
       preconditionFn: (workspace) => {
         if (this.canCurrentlyEdit(workspace)) {
-          const curNode = workspace.getCursor()?.getCurNode();
-          if (curNode && curNode.getSourceBlock()) {
-            const sourceBlock = curNode.getSourceBlock();
-            return !!(
-              !Blockly.Gesture.inProgress() &&
-              sourceBlock &&
-              sourceBlock.isDeletable() &&
-              sourceBlock.isMovable()
-            );
+          switch (this.navigation.getState(workspace)) {
+            case Constants.STATE.WORKSPACE:
+              const curNode = workspace?.getCursor()?.getCurNode();
+              if (curNode && curNode.getSourceBlock()) {
+                const sourceBlock = curNode.getSourceBlock();
+                return !!(
+                  !Blockly.Gesture.inProgress() &&
+                  sourceBlock &&
+                  sourceBlock.isDeletable() &&
+                  sourceBlock.isMovable()
+                );
+              }
+              return false;
+            case Constants.STATE.FLYOUT:
+              const flyoutWorkspace = workspace.getFlyout()?.getWorkspace();
+              const sourceBlock = flyoutWorkspace
+                ?.getCursor()
+                ?.getCurNode()
+                ?.getSourceBlock();
+              return !!(sourceBlock && !Blockly.Gesture.inProgress());
+            default:
+              return false;
           }
         }
         return false;
       },
       callback: (workspace) => {
-        const sourceBlock = workspace
-          .getCursor()
+        const navigationState = this.navigation.getState(workspace);
+        let activeWorkspace: Blockly.WorkspaceSvg | undefined = workspace;
+        if (navigationState == Constants.STATE.FLYOUT) {
+          activeWorkspace = workspace.getFlyout()?.getWorkspace();
+        }
+        const sourceBlock = activeWorkspace
+          ?.getCursor()
           ?.getCurNode()
           .getSourceBlock() as BlockSvg;
         workspace.hideChaff();
@@ -572,9 +590,12 @@ export class NavigationController {
       name: Constants.SHORTCUT_NAMES.PASTE,
       preconditionFn: (workspace) =>
         this.canCurrentlyEdit(workspace) && !Blockly.Gesture.inProgress(),
-      callback: () => {
+      callback: (workspace) => {
         if (!this.copyData || !this.copyWorkspace) return false;
-        return this.navigation.paste(this.copyData, this.copyWorkspace);
+        const pasteWorkspace = this.copyWorkspace.isFlyout
+          ? workspace
+          : this.copyWorkspace;
+        return this.navigation.paste(this.copyData, pasteWorkspace);
       },
       keyCodes: [
         createSerializedKey(KeyCodes.V, [KeyCodes.CTRL]),
