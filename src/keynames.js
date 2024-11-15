@@ -131,7 +131,7 @@ function getKeyClassName(keyName) {
   return modifierKeys.includes(keyName.toLowerCase()) ? 'key modifier' : 'key';
 }
 
-function toTitleCase(str) {
+export function toTitleCase(str) {
   return str.charAt(0).toUpperCase() + str.substring(1).toLowerCase();
 }
 
@@ -155,7 +155,7 @@ function keyCodeToString(keycode, index) {
     strrep = keyNames[piece] ?? piece;
     const className = getKeyClassName(strrep);
 
-    if (i === pieces.length - 1 && i !== 0) {
+    if (i.length === 1) {
       strrep = strrep.toUpperCase();
     } else {
       strrep = toTitleCase(strrep);

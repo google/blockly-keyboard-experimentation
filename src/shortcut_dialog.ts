@@ -8,7 +8,7 @@ import * as Blockly from 'blockly/core';
 import * as Constants from './constants';
 import {ShortcutRegistry} from 'blockly/core';
 // @ts-expect-error No types in js file
-import {keyCodeArrayToString} from './keynames';
+import {keyCodeArrayToString, toTitleCase} from './keynames';
 
 /**
  * Class for handling the shortcuts dialog.
@@ -96,7 +96,7 @@ export class ShortcutDialog {
    * @returns {string}
    */
   getReadableShortcutName(shortcutName: string) {
-    shortcutName = shortcutName.replace(/_/gi, ' ');
+    shortcutName = toTitleCase(shortcutName.replace(/_/gi, ' '));
     return shortcutName;
   }
 
@@ -107,38 +107,38 @@ export class ShortcutDialog {
     const registry = ShortcutRegistry.registry.getRegistry();
 
     let modalContents = `<div class="modal-container">
-  <dialog class="shortcut-modal">
-    <div class="shortcut-container">
-    <div class="header">
-      <button class="close-modal">
-        <span class="material-symbols-outlined">close</span>
-      </button>
-      <h1>Keyboard shortcuts</h1>
-      <p class="intro">
-        <span class="platform">Windows</span>
-      </p>
-    </div>
-    <div class="shortcut-container">
-      <table class="shortcuts">
-        <tbody>
-    `;
+      <dialog class="shortcut-modal">
+        <div class="shortcut-container">
+          <div class="header">
+            <button class="close-modal">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+            <h1>Keyboard shortcuts – <span class="platform">Windows</span></h1>
+          </div>
+          <div class="shortcut-tables">`;
 
     // Display shortcuts by their categories.
     const categoryKeys = Object.keys(Constants.SHORTCUT_CATEGORIES);
+
     for (const key of categoryKeys) {
       const categoryShortcuts: string[] =
         Constants.SHORTCUT_CATEGORIES[
           key as keyof typeof Constants.SHORTCUT_CATEGORIES
         ];
 
+      const shortcuts = Object.keys(registry);
+
       modalContents += `
-          <thead>
-            <tr class="category">
-              <th colspan="2">${key}</th>
-            </tr>
-          </thead>
+        <table class="shortcut-table">
+          <tbody>
+          <tr class="category"><th colspan="3"><h2>${key}</h2></th></tr>
+          <tr>
           `;
-      for (const keyboardShortcut of Object.keys(registry)) {
+
+      for (const keyboardShortcut of shortcuts) {
+        console.log(keyboardShortcut, ShortcutRegistry.registry.getKeyCodesByShortcutName(
+              keyboardShortcut
+            ));
         if (categoryShortcuts.includes(keyboardShortcut)) {
           const codeArray =
             ShortcutRegistry.registry.getKeyCodesByShortcutName(
@@ -150,19 +150,18 @@ export class ShortcutDialog {
               ? keyCodeArrayToString(codeArray.slice(0, 1))
               : keyCodeArrayToString(codeArray);
 
-          modalContents += `<tr>
+          modalContents += `
               <td>${this.getReadableShortcutName(keyboardShortcut)}</td>
               <td>${prettyPrinted}</td>
              </tr>`;
         }
       }
+      modalContents += '</tr></tbody></table>';
     }
     if (this.outputDiv) {
       this.outputDiv.innerHTML =
         modalContents +
-        `\n</tbody>
-          </table>
-        </div>
+        `</div>
       </dialog>
     </div>`;
       this.modalContainer = this.outputDiv.querySelector('.modal-container');
@@ -185,9 +184,9 @@ export class ShortcutDialog {
  **/
 Blockly.Css.register(`
 :root {
-  --divider-border-color: #DADCE0;
-  --key-border-color: #BDC1C6;
-  --shortcut-modal-border-color: #9AA0A6;
+  --divider-border-color: #eee;
+  --key-border-color: #ccc;
+  --shortcut-modal-border-color: #9aa0a6;
 }
 
 .modal-container {
@@ -205,16 +204,15 @@ Blockly.Css.register(`
 .shortcut-modal {
   border: 1px solid var(--shortcut-modal-border-color);
   border-radius: 12px;
-  box-shadow: 6px 6px 32px  rgba(0,0,0,.5);
+  box-shadow: 6px 6px 32px rgba(0,0,0,.5);
   flex-direction: column;
   gap: 12px;
   margin: auto;
   max-height: 82vh;
-  max-width: 800px;
-  min-width: 300px;
+  min-width: 500px;
   padding: 24px 12px 24px 32px;
   position: relative;
-  width: 50%;
+  width: calc(100% - 10em);
   z-index: 99;
 }
 
@@ -235,62 +233,111 @@ Blockly.Css.register(`
 
 .modal-container h1 {
   font-weight: 600;
-  font-size: 1.5em;
+  font-size: 1.2em;
 }
 
 .modal-container {
   background: radial-gradient(rgba(244, 244, 244, 0.43), rgba(75, 75, 75, 0.51));
 }
 
-.shortcuts {
-  width: 100%;
-  font-family: Roboto;
+.shortcut-table {
   border-collapse: collapse;
+  font-family: Roboto;
   font-size: .9em;
+  width: 100%;
 }
 
-.shortcuts th {
+.shortcut-table th {
+  padding-inline-end: 0.5em;
   text-align: left;
-  padding: 1em 0 0.5em;
+  text-wrap: nowrap;
+  vertical-align: baseline;
 }
 
-.shortcuts .key {
-  border-radius: 8px;
-  border: 1px solid var(--key-border-color);
-  display: inline-block;
-  margin: 0 8px;
-  min-width: 2em;
-  padding: .5em .5em;
-  text-align: center;
+.shortcut-table td:first-child {
+  text-wrap: auto;
+  width: 40%;
 }
 
-.shortcuts tr:not(.category, :last-child) {
+.shortcut-table tr:has(+ .category) {
+  --divider-border-color: transparent;
+  margin-end: 1em;
+}
+
+.shortcut-table tr:not(.category, :last-child) {
   border-bottom: 1px solid var(--divider-border-color);
 }
 
-.shortcuts td {
-  padding: .5em 1em .6em 0;
-  text-wrap: nowrap
+.shortcut-table td {
+  padding: 0.2em 1em 0.3em 0;
+  text-wrap: nowrap;
+}
+
+.shortcut-table h2 {
+  border-bottom: 1px solid #999;
+  font-size: 1em;
+  padding-block-end: 0.5em;
+}
+
+.shortcut-table .key {
+  border: 1px solid var(--key-border-color);
+  border-radius: 8px;
+  display: inline-block;
+  margin: 0 8px;
+  min-width: 2em;
+  padding: .3em .5em;
+  text-align: center;
+}
+
+.shortcut-table .separator {
+  color: gray;
+  display: inline-block;
+  padding: 0 0.5em;
 }
 
 .shortcut-container {
+  font-size: 0.95em;
   overflow: auto;
-}
-
-.shortcuts .separator {
-  display: inline-block;
-  padding: 0 0.5em;
-  color: gray;
+  padding-inline-end: .5em;
 }
 
 .shortcut-combo {
-  text-wrap: nowrap;
   display: inline-block;
   padding: 0.25em 0;
+  text-wrap: nowrap;
 }
 
-.shortcuts tr td:first-child {
-  text-transform: capitalize;
+@media (max-width: 800px) {
+  .shortcut-modal {
+    min-width: 450px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .shortcut-tables {
+    align-items: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .shortcut-table {
+    width: calc(50% - 12px);
+  }
+}
+
+@media (min-width: 1420px) {
+  .shortcut-modal {
+    max-width: 1900px
+  }
+
+  .shortcut-table {
+    width: calc(25% - 24px);
+  }
+
+  .shortcut-table td:first-child {
+    width: 45%;
+  }
 }
 
 `);
