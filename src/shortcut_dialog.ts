@@ -108,7 +108,7 @@ export class ShortcutDialog {
 
     let modalContents = `<div class="modal-container">
       <dialog class="shortcut-modal">
-        <div class="shortcut-container">
+        <div class="shortcut-container" tabindex="0">
           <div class="header">
             <button class="close-modal">
               <span class="material-symbols-outlined">close</span>
@@ -298,7 +298,7 @@ Blockly.Css.register(`
 .shortcut-container {
   font-size: 0.95em;
   overflow: auto;
-  padding-inline-end: .5em;
+  padding: 0.5em;
 }
 
 .shortcut-combo {
@@ -339,5 +339,4 @@ Blockly.Css.register(`
     width: 45%;
   }
 }
-
 `);
