@@ -25,8 +25,7 @@ export class KeyboardNavigation {
     const navigationController = new NavigationController();
     navigationController.init();
     navigationController.addWorkspace(workspace);
-    // Turns on keyboard navigation.
-    navigationController.setHasAutoNavigationEnabled(true);
+    navigationController.enable(workspace);
     navigationController.listShortcuts();
 
     this.setGlowTheme();
