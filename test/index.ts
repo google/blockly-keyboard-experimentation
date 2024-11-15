@@ -46,9 +46,13 @@ function loadScenario(workspace: Blockly.WorkspaceSvg) {
  * @returns The created workspace.
  */
 function createWorkspace(): Blockly.WorkspaceSvg {
+  console.log(location.search);
+  const renderer =
+        location.search.includes('geras') ? 'geras' :
+        location.search.includes('thrasos') ? 'thrasos' : 'zelos';
   const options = {
     toolbox: toolbox,
-    renderer: 'zelos',
+    renderer,
   };
   const blocklyDiv = document.getElementById('blocklyDiv')!;
   const workspace = Blockly.inject(blocklyDiv, options);
