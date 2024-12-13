@@ -16,7 +16,7 @@ import {keyCodeArrayToString, toTitleCase} from './keynames';
 export class ShortcutDialog {
   outputDiv: HTMLElement | null;
   modalContainer: HTMLElement | null;
-  shortcutDialog: HTMLElement | null;
+  shortcutDialog: HTMLDialogElement | null;
   open: Boolean;
   closeButton: HTMLElement | null;
   /**
@@ -81,13 +81,12 @@ export class ShortcutDialog {
 
   toggle() {
     if (this.modalContainer && this.shortcutDialog) {
-      this.modalContainer.classList.toggle('open', !this.open);
-      if (this.open) {
-        this.shortcutDialog.removeAttribute('open');
+      // Use built in dialog methods.
+      if (this.shortcutDialog.hasAttribute('open')) {
+        this.shortcutDialog.close();
       } else {
-        this.shortcutDialog.setAttribute('open', '');
+        this.shortcutDialog.showModal();
       }
-      this.open = !this.open;
     }
   }
 
@@ -189,18 +188,6 @@ Blockly.Css.register(`
   --shortcut-modal-border-color: #9aa0a6;
 }
 
-.modal-container {
-  align-items: center;
-  display: none;
-  font-family: Roboto;
-  height: 100%;
-  justify-content: center;
-  left: 0;
-  position: absolute;
-  top: 0;
-  width: 100%;
-}
-
 .shortcut-modal {
   border: 1px solid var(--shortcut-modal-border-color);
   border-radius: 12px;
@@ -216,12 +203,11 @@ Blockly.Css.register(`
   z-index: 99;
 }
 
-.modal-container.open,
 .shortcut-modal[open] {
   display: flex;
 }
 
-.modal-container .close-modal {
+.shortcut-modal .close-modal {
   border: 0;
   background: transparent;
   float: inline-end;
@@ -231,13 +217,22 @@ Blockly.Css.register(`
   right: 24px;
 }
 
-.modal-container h1 {
+.shortcut-modal h1 {
   font-weight: 600;
   font-size: 1.2em;
 }
 
-.modal-container {
+.shortcut-modal:before {
   background: radial-gradient(rgba(244, 244, 244, 0.43), rgba(75, 75, 75, 0.51));
+  align-items: center;
+  display: block;
+  font-family: Roboto;
+  height: 100%;
+  justify-content: center;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
 }
 
 .shortcut-table {
