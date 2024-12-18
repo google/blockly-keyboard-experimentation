@@ -47,7 +47,6 @@ export class NavigationController {
   announcer: Announcer = new Announcer();
   shortcutDialog: ShortcutDialog = new ShortcutDialog();
 
-  isAutoNavigationEnabled: boolean = false;
   hasNavigationFocus: boolean = false;
 
   /**
@@ -139,22 +138,6 @@ export class NavigationController {
   }
 
   /**
-   * Sets whether the navigation controller should automatically intercept tab,
-   * enter, and escape navigation events to ensure that the user needs to
-   * explicitly enter and exit the Blockly environment for keyboard shortcuts to
-   * be enabled.
-   *
-   * This mode has no effect unless setHasFocus is correctly used to communicate
-   * focus gained and lost contexts.
-   *
-   * @param autoNavEnabled whether the controller should automatically
-   *     intercept navigation events.
-   */
-  setHasAutoNavigationEnabled(autoNavEnabled: boolean) {
-    this.isAutoNavigationEnabled = autoNavEnabled;
-  }
-
-  /**
    * Sets whether the navigation controller has focus. This has no side effect
    * unless auto navigation is enabled via setHasAutoNavigationEnabled.
    *
@@ -162,6 +145,34 @@ export class NavigationController {
    */
   setHasFocus(isFocused: boolean) {
     this.hasNavigationFocus = isFocused;
+  }
+
+  /**
+   * Determines whether keyboard navigation should be allowed based on the
+   * current state of the workspace.
+   *
+   * A return value of 'true' generally indicates that the workspace both has
+   * enabled keyboard navigation and is currently in a state (e.g. focus) that
+   * can support keyboard navigation.
+   *
+   * @param workspace the workspace in which keyboard navigation may be allowed.
+   * @returns whether keyboard navigation is currently allowed.
+   */
+  private canCurrentlyNavigate(workspace: WorkspaceSvg) {
+    return workspace.keyboardAccessibilityMode && this.hasNavigationFocus;
+  }
+
+  /**
+   * Determines whether the provided workspace is currently keyboard navigable
+   * and editable.
+   *
+   * For the navigability criteria, see canCurrentlyKeyboardNavigate.
+   *
+   * @param workspace the workspace in which keyboard editing may be allowed.
+   * @returns whether keyboard navigation and editing is currently allowed.
+   */
+  private canCurrentlyEdit(workspace: WorkspaceSvg) {
+    return this.canCurrentlyNavigate(workspace) && !workspace.options.readOnly;
   }
 
   /**
@@ -224,7 +235,7 @@ export class NavigationController {
     /** Go to the previous location. */
     previous: {
       name: Constants.SHORTCUT_NAMES.PREVIOUS,
-      preconditionFn: (workspace) => workspace.keyboardAccessibilityMode,
+      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace, _, shortcut) => {
         const flyout = workspace.getFlyout();
         const toolbox = workspace.getToolbox() as Blockly.Toolbox;
@@ -274,7 +285,7 @@ export class NavigationController {
     /** Go to the out location. */
     out: {
       name: Constants.SHORTCUT_NAMES.OUT,
-      preconditionFn: (workspace) => workspace.keyboardAccessibilityMode,
+      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace, _, shortcut) => {
         const toolbox = workspace.getToolbox() as Blockly.Toolbox;
         let isHandled = false;
@@ -303,7 +314,7 @@ export class NavigationController {
     /** Go to the next location. */
     next: {
       name: Constants.SHORTCUT_NAMES.NEXT,
-      preconditionFn: (workspace) => workspace.keyboardAccessibilityMode,
+      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace, _, shortcut) => {
         const toolbox = workspace.getToolbox() as Blockly.Toolbox;
         const flyout = workspace.getFlyout();
@@ -337,7 +348,7 @@ export class NavigationController {
     /** Go to the in location. */
     in: {
       name: Constants.SHORTCUT_NAMES.IN,
-      preconditionFn: (workspace) => workspace.keyboardAccessibilityMode,
+      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace, _, shortcut) => {
         const toolbox = workspace.getToolbox() as Blockly.Toolbox;
         let isHandled = false;
@@ -368,8 +379,7 @@ export class NavigationController {
     /** Connect a block to a marked location. */
     insert: {
       name: Constants.SHORTCUT_NAMES.INSERT,
-      preconditionFn: (workspace) =>
-        workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
+      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
@@ -385,56 +395,38 @@ export class NavigationController {
      * Mark the current location, insert a block from the flyout at
      * the marked location, or press a flyout button.
      */
-    enter_or_mark: {
-      name: Constants.SHORTCUT_NAMES.ENTER_OR_MARK,
-      preconditionFn: (workspace) => {
-        if (workspace.keyboardAccessibilityMode) {
-          // If keyboard navigation is enabled, 'enter' corresponds to location
-          // marking.
-          return !workspace.options.readOnly;
-        } else {
-          // If keyboard navigation is disabled, 'enter' corresponds to enabling
-          // navigation only if auto-navigation is enabled and it's appropriate
-          // to enable navigation right now (i.e. Blockly has focus).
-          return this.isAutoNavigationEnabled && this.hasNavigationFocus;
-        }
-      },
+    mark: {
+      name: Constants.SHORTCUT_NAMES.MARK,
+      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
       callback: (workspace) => {
-        if (workspace.keyboardAccessibilityMode) {
-          // Handle location marking.
-          let flyoutCursor;
-          let curNode;
-          let nodeType;
+        let flyoutCursor;
+        let curNode;
+        let nodeType;
 
-          switch (this.navigation.getState(workspace)) {
-            case Constants.STATE.WORKSPACE:
-              this.navigation.handleEnterForWS(workspace);
-              return true;
-            case Constants.STATE.FLYOUT:
-              flyoutCursor = this.navigation.getFlyoutCursor(workspace);
-              if (!flyoutCursor) {
-                return false;
-              }
-              curNode = flyoutCursor.getCurNode();
-              nodeType = curNode.getType();
-
-              switch (nodeType) {
-                case ASTNode.types.STACK:
-                  this.navigation.insertFromFlyout(workspace);
-                  break;
-                case ASTNode.types.BUTTON:
-                  this.navigation.triggerButtonCallback(workspace);
-                  break;
-              }
-
-              return true;
-            default:
+        switch (this.navigation.getState(workspace)) {
+          case Constants.STATE.WORKSPACE:
+            this.navigation.handleEnterForWS(workspace);
+            return true;
+          case Constants.STATE.FLYOUT:
+            flyoutCursor = this.navigation.getFlyoutCursor(workspace);
+            if (!flyoutCursor) {
               return false;
-          }
-        } else {
-          // Handling auto-navigation.
-          this.enable(workspace);
-          return true;
+            }
+            curNode = flyoutCursor.getCurNode();
+            nodeType = curNode.getType();
+
+            switch (nodeType) {
+              case ASTNode.types.STACK:
+                this.navigation.insertFromFlyout(workspace);
+                break;
+              case ASTNode.types.BUTTON:
+                this.navigation.triggerButtonCallback(workspace);
+                break;
+            }
+
+            return true;
+          default:
+            return false;
         }
       },
       keyCodes: [KeyCodes.ENTER],
@@ -443,8 +435,7 @@ export class NavigationController {
     /** Disconnect two blocks. */
     disconnect: {
       name: Constants.SHORTCUT_NAMES.DISCONNECT,
-      preconditionFn: (workspace) =>
-        workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
+      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
@@ -460,8 +451,7 @@ export class NavigationController {
     /** Move focus to or from the toolbox. */
     focusToolbox: {
       name: Constants.SHORTCUT_NAMES.TOOLBOX,
-      preconditionFn: (workspace) =>
-        workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
+      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
@@ -481,7 +471,7 @@ export class NavigationController {
     /** Exit the current location and focus on the workspace. */
     exit: {
       name: Constants.SHORTCUT_NAMES.EXIT,
-      preconditionFn: (workspace) => workspace.keyboardAccessibilityMode,
+      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.FLYOUT:
@@ -490,13 +480,6 @@ export class NavigationController {
           case Constants.STATE.TOOLBOX:
             this.navigation.focusWorkspace(workspace);
             return true;
-          case Constants.STATE.WORKSPACE:
-            // 'Esc' in the workspace should disable keyboard navigation and
-            // allow the user to resume tab-based navigation.
-            if (this.isAutoNavigationEnabled) {
-              this.disable(workspace);
-              return true;
-            } else return false;
           default:
             return false;
         }
@@ -508,8 +491,7 @@ export class NavigationController {
     /** Move the cursor on the workspace to the left. */
     wsMoveLeft: {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_LEFT,
-      preconditionFn: (workspace) =>
-        workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
+      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
       callback: (workspace) => {
         return this.navigation.moveWSCursor(workspace, -1, 0);
       },
@@ -519,8 +501,7 @@ export class NavigationController {
     /** Move the cursor on the workspace to the right. */
     wsMoveRight: {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_RIGHT,
-      preconditionFn: (workspace) =>
-        workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
+      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
       callback: (workspace) => {
         return this.navigation.moveWSCursor(workspace, 1, 0);
       },
@@ -530,8 +511,7 @@ export class NavigationController {
     /** Move the cursor on the workspace up. */
     wsMoveUp: {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_UP,
-      preconditionFn: (workspace) =>
-        workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
+      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
       callback: (workspace) => {
         return this.navigation.moveWSCursor(workspace, 0, -1);
       },
@@ -541,8 +521,7 @@ export class NavigationController {
     /** Move the cursor on the workspace down. */
     wsMoveDown: {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_DOWN,
-      preconditionFn: (workspace) =>
-        workspace.keyboardAccessibilityMode && !workspace.options.readOnly,
+      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
       callback: (workspace) => {
         return this.navigation.moveWSCursor(workspace, 0, 1);
       },
@@ -553,10 +532,7 @@ export class NavigationController {
     copy: {
       name: Constants.SHORTCUT_NAMES.COPY,
       preconditionFn: (workspace) => {
-        if (
-          workspace.keyboardAccessibilityMode &&
-          !workspace.options.readOnly
-        ) {
+        if (this.canCurrentlyEdit(workspace)) {
           const curNode = workspace.getCursor()?.getCurNode();
           if (curNode && curNode.getSourceBlock()) {
             const sourceBlock = curNode.getSourceBlock();
@@ -595,9 +571,7 @@ export class NavigationController {
     paste: {
       name: Constants.SHORTCUT_NAMES.PASTE,
       preconditionFn: (workspace) =>
-        workspace.keyboardAccessibilityMode &&
-        !workspace.options.readOnly &&
-        !Blockly.Gesture.inProgress(),
+        this.canCurrentlyEdit(workspace) && !Blockly.Gesture.inProgress(),
       callback: () => {
         if (!this.copyData || !this.copyWorkspace) return false;
         return this.navigation.paste(this.copyData, this.copyWorkspace);
@@ -614,10 +588,7 @@ export class NavigationController {
     cut: {
       name: Constants.SHORTCUT_NAMES.CUT,
       preconditionFn: (workspace) => {
-        if (
-          workspace.keyboardAccessibilityMode &&
-          !workspace.options.readOnly
-        ) {
+        if (this.canCurrentlyEdit(workspace)) {
           const curNode = workspace.getCursor()?.getCurNode();
           if (curNode && curNode.getSourceBlock()) {
             const sourceBlock = curNode.getSourceBlock();
@@ -654,11 +625,8 @@ export class NavigationController {
     /** Keyboard shortcut to delete the block the cursor is currently on. */
     delete: {
       name: Constants.SHORTCUT_NAMES.DELETE,
-      preconditionFn: function (workspace) {
-        if (
-          workspace.keyboardAccessibilityMode &&
-          !workspace.options.readOnly
-        ) {
+      preconditionFn: (workspace) => {
+        if (this.canCurrentlyEdit(workspace)) {
           const curNode = workspace.getCursor()?.getCurNode();
           if (curNode && curNode.getSourceBlock()) {
             const sourceBlock = curNode.getSourceBlock();
@@ -693,7 +661,7 @@ export class NavigationController {
     /** List all of the currently registered shortcuts. */
     announceShortcuts: {
       name: Constants.SHORTCUT_NAMES.LIST_SHORTCUTS,
-      callback: (workspace) => {
+      callback: () => {
         this.shortcutDialog.toggle();
         return true;
       },
@@ -716,7 +684,7 @@ export class NavigationController {
     /** Go to the next sibling of the cursor's current location. */
     nextSibling: {
       name: Constants.SHORTCUT_NAMES.GO_TO_NEXT_SIBLING,
-      preconditionFn: (workspace) => workspace.keyboardAccessibilityMode,
+      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       // Jump to the next node at the same level, when in the workspace.
       callback: (workspace, e, shortcut) => {
         const cursor = workspace.getCursor() as LineCursor;
@@ -740,7 +708,7 @@ export class NavigationController {
     /** Go to the previous sibling of the cursor's current location. */
     previousSibling: {
       name: Constants.SHORTCUT_NAMES.GO_TO_PREVIOUS_SIBLING,
-      preconditionFn: (workspace) => workspace.keyboardAccessibilityMode,
+      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       // Jump to the previous node at the same level, when in the workspace.
       callback: (workspace, e, shortcut) => {
         const cursor = workspace.getCursor() as LineCursor;
@@ -764,7 +732,7 @@ export class NavigationController {
     /** Jump to the root of the current stack. */
     jumpToRoot: {
       name: Constants.SHORTCUT_NAMES.JUMP_TO_ROOT,
-      preconditionFn: (workspace) => workspace.keyboardAccessibilityMode,
+      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       // Jump to the root of the current stack.
       callback: (workspace) => {
         const cursor = workspace.getCursor();
@@ -787,7 +755,7 @@ export class NavigationController {
     /** Move the cursor out of its current context, such as a loop block. */
     contextOut: {
       name: Constants.SHORTCUT_NAMES.CONTEXT_OUT,
-      preconditionFn: (workspace) => workspace.keyboardAccessibilityMode,
+      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace) => {
         if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
           this.announcer.setText('context out');
@@ -805,7 +773,7 @@ export class NavigationController {
     /** Move the cursor in a level of context, such as into a loop. */
     contextIn: {
       name: Constants.SHORTCUT_NAMES.CONTEXT_IN,
-      preconditionFn: (workspace) => workspace.keyboardAccessibilityMode,
+      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       // Print out the type of the current node.
       callback: (workspace) => {
         if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
@@ -831,24 +799,6 @@ export class NavigationController {
         return true;
       },
       keyCodes: [KeyCodes.C],
-    },
-
-    /**
-     * Register a tab override so that tab navigation is disabled while keyboard
-     * navigation is enabled.
-     */
-    interceptTab: {
-      name: Constants.SHORTCUT_NAMES.INTERCEPT_TAB,
-      preconditionFn: (workspace) =>
-        this.isAutoNavigationEnabled && workspace.keyboardAccessibilityMode,
-      callback: (_, event) => {
-        event.preventDefault();
-        return true;
-      },
-      keyCodes: [
-        createSerializedKey(KeyCodes.TAB, [KeyCodes.SHIFT]),
-        KeyCodes.TAB,
-      ],
     },
   };
 

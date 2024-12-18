@@ -28,7 +28,7 @@ export enum SHORTCUT_NAMES {
   IN = 'in',
   OUT = 'out',
   INSERT = 'insert',
-  ENTER_OR_MARK = 'enter_or_mark',
+  MARK = 'mark',
   DISCONNECT = 'disconnect',
   TOOLBOX = 'toolbox',
   EXIT = 'exit',
@@ -51,7 +51,6 @@ export enum SHORTCUT_NAMES {
   CONTEXT_OUT = 'context_out',
   CONTEXT_IN = 'context_in',
   CLEAN_UP = 'clean_up_workspace',
-  INTERCEPT_TAB = 'intercept_tab_navigation',
 }
 
 /**
