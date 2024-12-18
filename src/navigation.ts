@@ -1238,6 +1238,11 @@ export class Navigation {
       nodeType == Blockly.ASTNode.types.WORKSPACE
     ) {
       this.markAtCursor(workspace);
+      if (workspace.getToolbox()) {
+        this.focusToolbox(workspace);
+      } else {
+        this.focusFlyout(workspace);
+      }
     } else if (nodeType == Blockly.ASTNode.types.BLOCK) {
       this.warn('Cannot mark a block.');
     } else if (nodeType == Blockly.ASTNode.types.STACK) {

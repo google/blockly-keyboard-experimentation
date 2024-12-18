@@ -67,7 +67,7 @@ export enum LOGGING_MSG_TYPE {
  * Platform specific modifier key used in shortcuts.
  */
 export enum MODIFIER_KEY {
-  Window = 'Ctrl',
+  Windows = 'Ctrl',
   ChromeOS = 'Ctrl',
   macOS = '⌘ Command',
   Linux = 'Meta',
@@ -82,30 +82,28 @@ export const SHORTCUT_CATEGORIES = {
     'escape',
     'exit',
     'delete',
-    'run_code',
     'toggle_keyboard_nav',
-    'Announce',
-    'List shortcuts',
+    'announce',
+    'list_shortcuts',
     'toolbox',
     'disconnect',
   ],
-  'Editing': ['cut', 'copy', 'paste', 'undo', 'redo', 'mark', 'insert'],
+  'Editing': ['cut', 'copy', 'paste', 'undo', 'redo', 'enter_or_mark', 'insert'],
   'Code navigation': [
     'previous',
     'next',
     'in',
     'out',
-    'Context in',
-    'Context out',
-    'Go to previous sibling',
-    'Go to next sibling',
-    'Jump to root of current stack',
+    'go_to_previous_sibling',
+    'go_to_next_sibling',
+    'jump_to_root_of_current_stack',
   ],
   'Workspace navigation': [
     'workspace_down',
     'workspace_left',
     'workspace_up',
     'workspace_right',
-    'Clean up workspace',
+    'clean_up_workspace',
+    'intercept_tab_navigation'
   ],
 };
