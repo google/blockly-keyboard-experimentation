@@ -535,14 +535,15 @@ export class Navigation {
    * top block on a workspace or to the workspace.
    *
    * @param workspace The workspace to focus on.
+   * @param keepCursorPosition Whether to retain the cursor's previous position.
    */
-  focusWorkspace(workspace: Blockly.WorkspaceSvg) {
+  focusWorkspace(workspace: Blockly.WorkspaceSvg, keepCursorPosition: boolean = false) {
     workspace.hideChaff();
     const reset = !!workspace.getToolbox();
 
     this.resetFlyout(workspace, reset);
     this.setState(workspace, Constants.STATE.WORKSPACE);
-    this.setCursorOnWorkspaceFocus(workspace);
+    this.setCursorOnWorkspaceFocus(workspace, keepCursorPosition);
   }
 
   /**
@@ -551,11 +552,16 @@ export class Navigation {
    * the workspace.
    *
    * @param workspace The main Blockly workspace.
+   * @param keepPosition Whether to retain the cursor's previous position.
    */
-  setCursorOnWorkspaceFocus(workspace: Blockly.WorkspaceSvg) {
+  setCursorOnWorkspaceFocus(workspace: Blockly.WorkspaceSvg, keepPosition: boolean) {
     const topBlocks = workspace.getTopBlocks(true);
     const cursor = workspace.getCursor();
     if (!cursor) {
+      return;
+    }
+    if (cursor.getCurNode() && keepPosition) {
+      // Retain the cursor's previous position since it's set.
       return;
     }
     const wsCoordinates = new Blockly.utils.Coordinate(
@@ -1128,7 +1134,6 @@ export class Navigation {
       !workspace.keyboardAccessibilityMode
     ) {
       workspace.keyboardAccessibilityMode = true;
-      this.focusWorkspace(workspace);
     }
   }
 

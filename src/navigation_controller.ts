@@ -138,13 +138,18 @@ export class NavigationController {
   }
 
   /**
-   * Sets whether the navigation controller has focus. This has no side effect
-   * unless auto navigation is enabled via setHasAutoNavigationEnabled.
+   * Sets whether the navigation controller has focus. This will enable keyboard
+   * navigation if focus is now gained. Additionally, the cursor may be reset if
+   * it hasn't already been positioned in the workspace.
    *
+   * @param workspace the workspace that now has input focus.
    * @param isFocused whether the environment has browser focus.
    */
-  setHasFocus(isFocused: boolean) {
+  setHasFocus(workspace: WorkspaceSvg, isFocused: boolean) {
     this.hasNavigationFocus = isFocused;
+    if (isFocused) {
+      this.navigation.focusWorkspace(workspace, true);
+    }
   }
 
   /**
