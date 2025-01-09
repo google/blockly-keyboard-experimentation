@@ -536,16 +536,12 @@ export class NavigationController {
           switch (this.navigation.getState(workspace)) {
             case Constants.STATE.WORKSPACE:
               const curNode = workspace?.getCursor()?.getCurNode();
-              if (curNode && curNode.getSourceBlock()) {
-                const sourceBlock = curNode.getSourceBlock();
-                return !!(
-                  !Blockly.Gesture.inProgress() &&
-                  sourceBlock &&
-                  sourceBlock.isDeletable() &&
-                  sourceBlock.isMovable()
-                );
-              }
-              return false;
+              const source = curNode?.getSourceBlock();
+	              return !!(
+	                source?.isDeletable() &&
+	                source?.isMovable() &&
+	                !Blockly.Gesture.inProgress()
+	              );
             case Constants.STATE.FLYOUT:
               const flyoutWorkspace = workspace.getFlyout()?.getWorkspace();
               const sourceBlock = flyoutWorkspace
