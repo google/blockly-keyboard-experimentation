@@ -119,7 +119,7 @@ export class LineCursor extends Marker {
    * - An unconnected next statement input.
    * - An unconnected 'next' connection - the "blank line at the end".
    *   This is to facilitate connecting additional blocks to a
-   *   stack/substsack.
+   *   stack/substack.
    *
    * @param node The AST node to check.
    * @returns True if the node should be visited, false otherwise.
@@ -144,7 +144,7 @@ export class LineCursor extends Marker {
 
   /**
    * Returns true iff the given node can be visited by the cursor when
-   * using the left/right arrow keys).  Specifically, if the node is for:
+   * using the left/right arrow keys.  Specifically, if the node is for:
    *
    * - Any block.
    * - Any field.
