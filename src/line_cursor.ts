@@ -129,7 +129,6 @@ export class LineCursor extends Marker {
     if (!node) return false;
     const location = node.getLocation();
     const type = node && node.getType();
-    console.log(`considering: ${type}`);
     switch (type) {
       case ASTNode.types.BLOCK:
         return !((location as Blockly.Block).outputConnection?.isConnected());
@@ -160,7 +159,6 @@ export class LineCursor extends Marker {
     if (!node) return false;
     const location = node.getLocation();
     const type = node && node.getType();
-    console.log(`considering: ${type}`);
     switch (type) {
       case ASTNode.types.BLOCK:
         return true;
@@ -424,7 +422,6 @@ export class LineCursor extends Marker {
    * @param newNode The new location of the marker.
    */
   override setCurNode(newNode: ASTNode) {
-    console.log(`newNode.type: ${newNode.getType()}`);
     const oldNode = this.getCurNode();
     super.setCurNode(newNode);
     const drawer = this.getDrawer();
