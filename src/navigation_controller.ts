@@ -397,11 +397,14 @@ export class NavigationController {
     },
 
     /**
-     * Mark the current location, insert a block from the flyout at
-     * the marked location, or press a flyout button.
+     * Enter key:
+     *
+     * - On the flyout: press a button or choose a block to place.
+     * - On a stack: open a block's context menu or field's editor.
+     * - On the workspace: open the context menu.
      */
-    mark: {
-      name: Constants.SHORTCUT_NAMES.MARK,
+    enter: {
+      name: Constants.SHORTCUT_NAMES.MARK,  // FIXME
       preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
       callback: (workspace) => {
         let flyoutCursor;

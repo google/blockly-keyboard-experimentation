@@ -1231,13 +1231,15 @@ export class Navigation {
    */
   handleEnterForWS(workspace: Blockly.WorkspaceSvg) {
     const cursor = workspace.getCursor();
-    if (!cursor) {
-      return;
-    }
+    if (!cursor) return;
     const curNode = cursor.getCurNode();
     const nodeType = curNode.getType();
     if (nodeType == Blockly.ASTNode.types.FIELD) {
       (curNode.getLocation() as Blockly.Field).showEditor();
+    } else if (nodeType == Blockly.ASTNode.types.BLOCK) {
+      const fakeEvent = new PointerEvent('pointerdown');
+      // FIXME: set coordinates.
+      (curNode.getLocation() as Blockly.BlockSvg).showContextMenu(fakeEvent);
     } else if (
       curNode.isConnection() ||
       nodeType == Blockly.ASTNode.types.WORKSPACE
@@ -1248,8 +1250,6 @@ export class Navigation {
       } else {
         this.focusFlyout(workspace);
       }
-    } else if (nodeType == Blockly.ASTNode.types.BLOCK) {
-      this.warn('Cannot mark a block.');
     } else if (nodeType == Blockly.ASTNode.types.STACK) {
       this.warn('Cannot mark a stack.');
     }
