@@ -124,12 +124,6 @@ export class NavigationController {
    */
   addWorkspace(workspace: WorkspaceSvg) {
     this.navigation.addWorkspace(workspace);
-
-    // Temporary workaround for #136.
-    // TODO(#136): fix in core.
-    workspace.getParentSvg().addEventListener('focus', () => {
-      this.setHasFocus(workspace, true);
-    });
   }
 
   /**
