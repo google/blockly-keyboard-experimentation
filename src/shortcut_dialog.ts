@@ -135,9 +135,6 @@ export class ShortcutDialog {
           `;
 
       for (const keyboardShortcut of shortcuts) {
-        console.log(keyboardShortcut, ShortcutRegistry.registry.getKeyCodesByShortcutName(
-              keyboardShortcut
-            ));
         if (categoryShortcuts.includes(keyboardShortcut)) {
           const codeArray =
             ShortcutRegistry.registry.getKeyCodesByShortcutName(
