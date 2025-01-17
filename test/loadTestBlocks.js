@@ -236,7 +236,7 @@ const simpleCircle = {
                     'type': 'colour_picker',
                     'id': 'gq(POne}j:hVw%C3t{vx',
                     'fields': {
-                      'COLOUR': '#f59b42',
+                      'COLOUR': '#ffff00',
                     },
                   },
                 },
