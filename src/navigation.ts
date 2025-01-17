@@ -1237,8 +1237,7 @@ export class Navigation {
     if (nodeType == Blockly.ASTNode.types.FIELD) {
       (curNode.getLocation() as Blockly.Field).showEditor();
     } else if (nodeType == Blockly.ASTNode.types.BLOCK) {
-      const fakeEvent = new PointerEvent('pointerdown');
-      // FIXME: set coordinates.
+      const fakeEvent = fakeEventForNode(curNode);
       (curNode.getLocation() as Blockly.BlockSvg).showContextMenu(fakeEvent);
     } else if (
       curNode.isConnection() ||
@@ -1332,4 +1331,33 @@ export class Navigation {
       this.removeWorkspace(workspace);
     }
   }
+}
+
+/**
+ * Create a fake PointerEvent for opening the context menu for the
+ * given ASTNode.
+ *
+ * Currently only works for block nodes.
+ *
+ * @param node The node to open the context menu for.
+ * @returns A synthetic pointerdown PointerEvent.
+ */
+function fakeEventForNode(node: Blockly.ASTNode): PointerEvent {
+  if (node.getType() !== Blockly.ASTNode.types.BLOCK) {
+    throw new TypeError('can only create PointerEvents for BLOCK nodes');
+  }
+
+  // Get the location of the top-left corner of the block in
+  // screen coordinates.
+  const block = node.getLocation() as Blockly.BlockSvg;
+  const coords = Blockly.utils.svgMath.wsToScreenCoordinates(
+    block.workspace,
+    block.getRelativeToSurfaceXY(),
+  );
+
+  // Create a fake event for the context menu code to work from.
+  return new PointerEvent('pointerdown', {
+    clientX: coords.x,
+    clientY: coords.y,
+  });
 }
