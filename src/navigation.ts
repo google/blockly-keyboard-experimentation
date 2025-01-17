@@ -1237,8 +1237,7 @@ export class Navigation {
     if (nodeType == Blockly.ASTNode.types.FIELD) {
       (curNode.getLocation() as Blockly.Field).showEditor();
     } else if (nodeType == Blockly.ASTNode.types.BLOCK) {
-      const fakeEvent = fakeEventForNode(curNode);
-      (curNode.getLocation() as Blockly.BlockSvg).showContextMenu(fakeEvent);
+      this.openActionMenu(curNode);
     } else if (
       curNode.isConnection() ||
       nodeType == Blockly.ASTNode.types.WORKSPACE
@@ -1252,6 +1251,58 @@ export class Navigation {
     } else if (nodeType == Blockly.ASTNode.types.STACK) {
       this.warn('Cannot mark a stack.');
     }
+  }
+
+  /**
+   * Show the action menu for a given node.
+   *
+   * The action menu will contain entries for relevant actions for the
+   * node's location.  If the location is a block, this will include
+   * the contents of the block's context menu (if any).
+   */
+  openActionMenu(node: Blockly.ASTNode) {
+    const fakeEvent = fakeEventForNode(node);
+    (node.getLocation() as Blockly.BlockSvg).showContextMenu(fakeEvent);
+
+    let menuOptions: Array<
+      | Blockly.ContextMenuRegistry.ContextMenuOption
+      | Blockly.ContextMenuRegistry.LegacyContextMenuOption
+    > | null = null;
+    let rtl: boolean;
+    let workspace: Blockly.WorkspaceSvg;
+
+    const nodeType = node.getType();
+    switch (nodeType) {
+      case Blockly.ASTNode.types.BLOCK:
+        const block = node.getLocation() as Blockly.BlockSvg;
+        workspace = block.workspace as Blockly.WorkspaceSvg;
+        rtl = block.RTL;
+
+        // Reimplement BlockSvg.prototype.generateContextMenu as that
+        // method is protected.
+        if (!workspace.options.readOnly && !block.contextMenu) {
+          menuOptions =
+            Blockly.ContextMenuRegistry.registry.getContextMenuOptions(
+              Blockly.ContextMenuRegistry.ScopeType.BLOCK,
+              {block},
+            );
+
+          // Allow the block to add or modify menuOptions.
+          if (block.customContextMenu) {
+            block.customContextMenu(menuOptions);
+          }
+        }
+        // End reimplement.
+        break;
+      default:
+        throw new TypeError(
+          `unable to show action menu for ASTNode of type ${nodeType}`,
+        );
+    }
+
+    if (!menuOptions || !menuOptions.length) return;
+
+    Blockly.ContextMenu.show(fakeEvent, menuOptions, rtl, workspace);
   }
 
   /**
@@ -1334,12 +1385,12 @@ export class Navigation {
 }
 
 /**
- * Create a fake PointerEvent for opening the context menu for the
+ * Create a fake PointerEvent for opening the action menu for the
  * given ASTNode.
  *
  * Currently only works for block nodes.
  *
- * @param node The node to open the context menu for.
+ * @param node The node to open the action menu for.
  * @returns A synthetic pointerdown PointerEvent.
  */
 function fakeEventForNode(node: Blockly.ASTNode): PointerEvent {
@@ -1355,7 +1406,7 @@ function fakeEventForNode(node: Blockly.ASTNode): PointerEvent {
     block.getRelativeToSurfaceXY(),
   );
 
-  // Create a fake event for the context menu code to work from.
+  // Create a fake event for the action menu code to work from.
   return new PointerEvent('pointerdown', {
     clientX: coords.x,
     clientY: coords.y,
