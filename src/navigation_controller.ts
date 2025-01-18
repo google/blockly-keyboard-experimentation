@@ -229,7 +229,7 @@ export class NavigationController {
    * Precondition function for deleting a block from keyboard
    * navigation. This precondition is shared between keyboard shortcuts
    * and context menu items.
-   * 
+   *
    * FIXME: This should be better encapsulated.
    *
    * @param workspace The `WorkspaceSvg` where the shortcut was
@@ -251,7 +251,7 @@ export class NavigationController {
    * Callback function for deleting a block from keyboard
    * navigation. This callback is shared between keyboard shortcuts
    * and context menu items.
-   * 
+   *
    * FIXME: This should be better encapsulated.
    *
    * @param workspace The `WorkspaceSvg` where the shortcut was
@@ -260,7 +260,7 @@ export class NavigationController {
    *     if called from a context menu.
    * @returns True if this function successfully handled deletion.
    */
-  protected deleteCallbackFn(workspace: WorkspaceSvg, e: Event|null) {
+  protected deleteCallbackFn(workspace: WorkspaceSvg, e: Event | null) {
     const cursor = workspace.getCursor();
     if (!cursor) {
       return false;
@@ -464,7 +464,7 @@ export class NavigationController {
      * - On the workspace: open the context menu.
      */
     enter: {
-      name: Constants.SHORTCUT_NAMES.MARK,  // FIXME
+      name: Constants.SHORTCUT_NAMES.MARK, // FIXME
       preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
       callback: (workspace) => {
         let flyoutCursor;
@@ -605,11 +605,11 @@ export class NavigationController {
             case Constants.STATE.WORKSPACE:
               const curNode = workspace?.getCursor()?.getCurNode();
               const source = curNode?.getSourceBlock();
-	              return !!(
-	                source?.isDeletable() &&
-	                source?.isMovable() &&
-	                !Blockly.Gesture.inProgress()
-	              );
+              return !!(
+                source?.isDeletable() &&
+                source?.isMovable() &&
+                !Blockly.Gesture.inProgress()
+              );
             case Constants.STATE.FLYOUT:
               const flyoutWorkspace = workspace.getFlyout()?.getWorkspace();
               const sourceBlock = flyoutWorkspace
@@ -866,7 +866,8 @@ export class NavigationController {
    * but only calls the keyboard callback.
    */
   protected registerDeleteAction() {
-    const originalDeleteItem = ContextMenuRegistry.registry.getItem('blockDelete');
+    const originalDeleteItem =
+      ContextMenuRegistry.registry.getItem('blockDelete');
     if (!originalDeleteItem) return;
 
     const deleteItem: ContextMenuRegistry.RegistryItem = {
@@ -881,7 +882,8 @@ export class NavigationController {
 
         // Run the original precondition code, from the context menu option.
         // If the item would be hidden or disabled, respect it.
-        const originalPreconditionResult = originalDeleteItem.preconditionFn(scope);
+        const originalPreconditionResult =
+          originalDeleteItem.preconditionFn(scope);
         if (!ws || originalPreconditionResult != 'enabled') {
           return originalPreconditionResult;
         }
@@ -901,8 +903,8 @@ export class NavigationController {
       },
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'blockDeleteFromContextMenu',
-      weight: 10
-    }
+      weight: 10,
+    };
 
     // FIXME: Decide whether to unregister the original item.
     ContextMenuRegistry.registry.register(deleteItem);
