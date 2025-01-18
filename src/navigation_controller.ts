@@ -230,7 +230,8 @@ export class NavigationController {
    * navigation. This precondition is shared between keyboard shortcuts
    * and context menu items.
    * 
-   * FIXME: This should be better encapsulated
+   * FIXME: This should be better encapsulated.
+   *
    * @param workspace The `WorkspaceSvg` where the shortcut was
    *     invoked.
    * @returns True iff `deleteCallbackFn` function should be called.
@@ -251,7 +252,8 @@ export class NavigationController {
    * navigation. This callback is shared between keyboard shortcuts
    * and context menu items.
    * 
-   * FIXME: This should be better encapsulated
+   * FIXME: This should be better encapsulated.
+   *
    * @param workspace The `WorkspaceSvg` where the shortcut was
    *     invoked.
    * @param e The originating event for a keyboard shortcut, or null
