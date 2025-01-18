@@ -16,6 +16,7 @@ import * as Blockly from 'blockly/core';
 import {
   ASTNode,
   BlockSvg,
+  ContextMenuRegistry,
   ICopyData,
   ShortcutRegistry,
   Toolbox,
@@ -222,6 +223,41 @@ export class NavigationController {
       return (curNode.getLocation() as Blockly.Field).onShortcut(shortcut);
     }
     return false;
+  }
+
+  protected deletePreconditionFn(workspace: WorkspaceSvg) {
+    if (this.canCurrentlyEdit(workspace)) {
+      const curNode = workspace.getCursor()?.getCurNode();
+      if (curNode && curNode.getSourceBlock()) {
+        const sourceBlock = curNode.getSourceBlock();
+        return !!(sourceBlock && sourceBlock.isDeletable());
+      }
+    }
+    return false;
+  }
+
+  protected deleteCallbackFn(workspace: WorkspaceSvg, e: Event|null) {
+    const cursor = workspace.getCursor();
+    if (!cursor) {
+      return false;
+    }
+    const sourceBlock = cursor.getCurNode().getSourceBlock() as BlockSvg;
+    // Delete or backspace.
+    // There is an event if this is triggered from a keyboard shortcut,
+    // but not if it's triggered from a context menu.
+    if (e) {
+      // Stop the browser from going back to the previous page.
+      // Do this first to prevent an error in the delete code from resulting
+      // in data loss.
+      e.preventDefault();
+    }
+    // Don't delete while dragging.  Jeez.
+    if (Blockly.Gesture.inProgress()) {
+      return false;
+    }
+    this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
+    sourceBlock.checkAndDelete();
+    return true;
   }
 
   /**
@@ -650,35 +686,8 @@ export class NavigationController {
     /** Keyboard shortcut to delete the block the cursor is currently on. */
     delete: {
       name: Constants.SHORTCUT_NAMES.DELETE,
-      preconditionFn: (workspace) => {
-        if (this.canCurrentlyEdit(workspace)) {
-          const curNode = workspace.getCursor()?.getCurNode();
-          if (curNode && curNode.getSourceBlock()) {
-            const sourceBlock = curNode.getSourceBlock();
-            return !!(sourceBlock && sourceBlock.isDeletable());
-          }
-        }
-        return false;
-      },
-      callback: (workspace, e) => {
-        const cursor = workspace.getCursor();
-        if (!cursor) {
-          return false;
-        }
-        const sourceBlock = cursor.getCurNode().getSourceBlock() as BlockSvg;
-        // Delete or backspace.
-        // Stop the browser from going back to the previous page.
-        // Do this first to prevent an error in the delete code from resulting
-        // in data loss.
-        e.preventDefault();
-        // Don't delete while dragging.  Jeez.
-        if (Blockly.Gesture.inProgress()) {
-          return false;
-        }
-        this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
-        sourceBlock.checkAndDelete();
-        return true;
-      },
+      preconditionFn: this.deletePreconditionFn,
+      callback: this.deleteCallbackFn,
       keyCodes: [KeyCodes.DELETE, KeyCodes.BACKSPACE],
       allowCollision: true,
     },
@@ -827,6 +836,43 @@ export class NavigationController {
     },
   };
 
+  // Register the delete block action as a context menu item on blocks.
+  protected registerDeleteAction() {
+    const originalDeleteItem = ContextMenuRegistry.registry.getItem('blockDelete');
+    if (!originalDeleteItem) return;
+
+    const deleteItem: ContextMenuRegistry.RegistryItem = {
+      displayText(scope) {
+        return 'Keyboard Navigation: delete';
+      },
+      preconditionFn: (scope) => {
+        const ws = scope.block?.workspace;
+        const originalPreconditionResult = originalDeleteItem.preconditionFn(scope);
+        if (!ws || originalPreconditionResult != 'enabled') {
+          return originalPreconditionResult;
+        }
+
+        // Return enabled if the keyboard shortcut precondition is allowed,
+        // and disabled if the context menu item is valid but the keyboard
+        // shortcut precondition is not met.
+        return this.deletePreconditionFn(ws) ? 'enabled' : 'disabled';
+      },
+      callback: (scope) => {
+
+        const ws = scope.block?.workspace;
+        if (!ws) return;
+
+        return this.deleteCallbackFn(ws, null);
+      },
+      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
+      id: 'blockDeleteFromContextMenu',
+      weight: 10
+    }
+
+    ContextMenuRegistry.registry.register(deleteItem);
+
+  }
+
   /**
    * Registers all default keyboard shortcut items for keyboard
    * navigation. This should be called once per instance of
@@ -836,6 +882,8 @@ export class NavigationController {
     for (const shortcut of Object.values(this.shortcuts)) {
       ShortcutRegistry.registry.register(shortcut);
     }
+
+    this.registerDeleteAction();
 
     // Initalise the shortcut modal with available shortcuts.  Needs
     // to be done separately rather at construction, as many shortcuts
