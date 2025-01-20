@@ -257,9 +257,7 @@ export class NavigationController {
    */
   protected deleteCallbackFn(workspace: WorkspaceSvg, e: Event | null) {
     const cursor = workspace.getCursor();
-    if (!cursor) {
-      return false;
-    }
+    if (!cursor) return false;
     const sourceBlock = cursor.getCurNode().getSourceBlock() as BlockSvg;
     // Delete or backspace.
     // There is an event if this is triggered from a keyboard shortcut,
