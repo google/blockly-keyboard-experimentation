@@ -237,14 +237,9 @@ export class NavigationController {
    * @returns True iff `deleteCallbackFn` function should be called.
    */
   protected deletePreconditionFn(workspace: WorkspaceSvg) {
-    if (this.canCurrentlyEdit(workspace)) {
-      const curNode = workspace.getCursor()?.getCurNode();
-      if (curNode && curNode.getSourceBlock()) {
-        const sourceBlock = curNode.getSourceBlock();
-        return !!(sourceBlock && sourceBlock.isDeletable());
-      }
-    }
-    return false;
+    if (!this.canCurrentlyEdit(workspace)) return false;
+    const sourceBlock = workspace.getCursor()?.getCurNode().getSourceBlock();
+    return !!(sourceBlock?.isDeletable());
   }
 
   /**
