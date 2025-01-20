@@ -269,9 +269,7 @@ export class NavigationController {
       e.preventDefault();
     }
     // Don't delete while dragging.  Jeez.
-    if (Blockly.Gesture.inProgress()) {
-      return false;
-    }
+    if (Blockly.Gesture.inProgress()) false;
     this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
     sourceBlock.checkAndDelete();
     return true;
