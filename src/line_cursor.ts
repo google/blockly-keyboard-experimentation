@@ -131,12 +131,14 @@ export class LineCursor extends Marker {
     const type = node && node.getType();
     switch (type) {
       case ASTNode.types.BLOCK:
-        return !((location as Blockly.Block).outputConnection?.isConnected());
+        return !(location as Blockly.Block).outputConnection?.isConnected();
       case ASTNode.types.INPUT:
-        const connection = (location as Blockly.Connection);
-        return connection.type === Blockly.NEXT_STATEMENT && !connection.isConnected();
+        const connection = location as Blockly.Connection;
+        return connection.type === Blockly.NEXT_STATEMENT;
       case ASTNode.types.NEXT:
-        return !((location as Blockly.Connection).isConnected());
+        return true;
+      case ASTNode.types.PREVIOUS:
+        return !(location as Blockly.Connection).isConnected();
       default:
         return false;
     }
@@ -164,7 +166,7 @@ export class LineCursor extends Marker {
         return true;
       case ASTNode.types.INPUT:
       case ASTNode.types.NEXT:
-        return !((location as Blockly.Connection).isConnected());
+        return !(location as Blockly.Connection).isConnected();
       case ASTNode.types.FIELD:
         return true;
       default:
