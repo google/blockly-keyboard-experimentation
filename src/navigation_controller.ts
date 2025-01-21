@@ -951,6 +951,40 @@ export class NavigationController {
   }
 
   /**
+   * Register the action for inserting above a block.
+   */
+  protected registerInsertAction() {
+    const insertAboveAction: ContextMenuRegistry.RegistryItem = {
+      displayText: (scope) => 'Keyboard Navigation: insert above',
+      preconditionFn: (scope) => {
+        const ws = scope.block?.workspace;
+        if (!ws) return 'hidden';
+
+        if (!scope.block?.previousConnection) return 'hidden';
+
+        return this.canCurrentlyEdit(ws) ? 'enabled' : 'hidden';
+      },
+      callback: (scope) => {
+        const ws = scope.block?.workspace;
+        if (!ws) return false;
+
+        if (this.navigation.getState(ws) == Constants.STATE.WORKSPACE) {
+          // Move the cursor to the previous connection
+          ws.getCursor()?.prev();
+          this.navigation.handleEnterForWS(ws);
+          return true;
+        }
+        return false;
+      },
+      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
+      id: 'blockInsertAbove',
+      weight: 12,
+    }
+    ContextMenuRegistry.registry.register(insertAboveAction);
+  }
+
+
+  /**
    * Registers all default keyboard shortcut items for keyboard
    * navigation. This should be called once per instance of
    * KeyboardShortcutRegistry.
@@ -962,6 +996,7 @@ export class NavigationController {
 
     this.registerDeleteAction();
     this.registerCopyAction();
+    this.registerInsertAction();
 
     // Initalise the shortcut modal with available shortcuts.  Needs
     // to be done separately rather at construction, as many shortcuts
