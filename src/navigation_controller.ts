@@ -239,7 +239,7 @@ export class NavigationController {
   protected deletePreconditionFn(workspace: WorkspaceSvg) {
     if (!this.canCurrentlyEdit(workspace)) return false;
     const sourceBlock = workspace.getCursor()?.getCurNode().getSourceBlock();
-    return !!(sourceBlock?.isDeletable());
+    return !!sourceBlock?.isDeletable();
   }
 
   /**
@@ -273,6 +273,69 @@ export class NavigationController {
     this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
     sourceBlock.checkAndDelete();
     return true;
+  }
+
+  /**
+   * Precondition function for copying a block from keyboard
+   * navigation. This precondition is shared between keyboard shortcuts
+   * and context menu items.
+   *
+   * FIXME: This should be better encapsulated.
+   *
+   * @param workspace The `WorkspaceSvg` where the shortcut was
+   *     invoked.
+   * @returns True iff `deleteCallbackFn` function should be called.
+   */
+  protected blockCopyPreconditionFn(workspace: WorkspaceSvg) {
+    if (this.canCurrentlyEdit(workspace)) {
+      switch (this.navigation.getState(workspace)) {
+        case Constants.STATE.WORKSPACE:
+          const curNode = workspace?.getCursor()?.getCurNode();
+          const source = curNode?.getSourceBlock();
+          return !!(
+            source?.isDeletable() &&
+            source?.isMovable() &&
+            !Blockly.Gesture.inProgress()
+          );
+        case Constants.STATE.FLYOUT:
+          const flyoutWorkspace = workspace.getFlyout()?.getWorkspace();
+          const sourceBlock = flyoutWorkspace
+            ?.getCursor()
+            ?.getCurNode()
+            ?.getSourceBlock();
+          return !!(sourceBlock && !Blockly.Gesture.inProgress());
+        default:
+          return false;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Callback function for copying a block from keyboard
+   * navigation. This callback is shared between keyboard shortcuts
+   * and context menu items.
+   *
+   * FIXME: This should be better encapsulated.
+   *
+   * @param workspace The `WorkspaceSvg` where the shortcut was
+   *     invoked.
+   * @returns True if this function successfully handled copying.
+   */
+  protected blockCopyCallbackFn(workspace: WorkspaceSvg) {
+    const navigationState = this.navigation.getState(workspace);
+    let activeWorkspace: Blockly.WorkspaceSvg | undefined = workspace;
+    if (navigationState == Constants.STATE.FLYOUT) {
+      activeWorkspace = workspace.getFlyout()?.getWorkspace();
+    }
+    const sourceBlock = activeWorkspace
+      ?.getCursor()
+      ?.getCurNode()
+      .getSourceBlock() as BlockSvg;
+    workspace.hideChaff();
+    this.copyData = sourceBlock.toCopyData();
+    this.copyWorkspace = sourceBlock.workspace;
+    return !!this.copyData;
   }
 
   /**
@@ -590,45 +653,8 @@ export class NavigationController {
     /** Copy the block the cursor is currently on. */
     copy: {
       name: Constants.SHORTCUT_NAMES.COPY,
-      preconditionFn: (workspace) => {
-        if (this.canCurrentlyEdit(workspace)) {
-          switch (this.navigation.getState(workspace)) {
-            case Constants.STATE.WORKSPACE:
-              const curNode = workspace?.getCursor()?.getCurNode();
-              const source = curNode?.getSourceBlock();
-              return !!(
-                source?.isDeletable() &&
-                source?.isMovable() &&
-                !Blockly.Gesture.inProgress()
-              );
-            case Constants.STATE.FLYOUT:
-              const flyoutWorkspace = workspace.getFlyout()?.getWorkspace();
-              const sourceBlock = flyoutWorkspace
-                ?.getCursor()
-                ?.getCurNode()
-                ?.getSourceBlock();
-              return !!(sourceBlock && !Blockly.Gesture.inProgress());
-            default:
-              return false;
-          }
-        }
-        return false;
-      },
-      callback: (workspace) => {
-        const navigationState = this.navigation.getState(workspace);
-        let activeWorkspace: Blockly.WorkspaceSvg | undefined = workspace;
-        if (navigationState == Constants.STATE.FLYOUT) {
-          activeWorkspace = workspace.getFlyout()?.getWorkspace();
-        }
-        const sourceBlock = activeWorkspace
-          ?.getCursor()
-          ?.getCurNode()
-          .getSourceBlock() as BlockSvg;
-        workspace.hideChaff();
-        this.copyData = sourceBlock.toCopyData();
-        this.copyWorkspace = sourceBlock.workspace;
-        return !!this.copyData;
-      },
+      preconditionFn: this.blockCopyPreconditionFn,
+      callback: this.blockCopyCallbackFn,
       keyCodes: [
         createSerializedKey(KeyCodes.C, [KeyCodes.CTRL]),
         createSerializedKey(KeyCodes.C, [KeyCodes.ALT]),
@@ -902,6 +928,33 @@ export class NavigationController {
   }
 
   /**
+   * Register the block copy action as a context menu item on blocks.
+   */
+  protected registerCopyAction() {
+    const copyAction: ContextMenuRegistry.RegistryItem = {
+      displayText: (scope) => {
+        return 'Keyboard Navigation: copy';
+      },
+      preconditionFn: (scope) => {
+        const ws = scope.block?.workspace;
+        if (!ws) return 'hidden';
+
+        return this.blockCopyPreconditionFn(ws) ? 'enabled' : 'disabled';
+      },
+      callback: (scope) => {
+        const ws = scope.block?.workspace;
+        if (!ws) return;
+        return this.blockCopyCallbackFn(ws);
+      },
+      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
+      id: 'blockCopyFromContextMenu',
+      weight: 11,
+    };
+
+    ContextMenuRegistry.registry.register(copyAction);
+  }
+
+  /**
    * Registers all default keyboard shortcut items for keyboard
    * navigation. This should be called once per instance of
    * KeyboardShortcutRegistry.
@@ -912,6 +965,7 @@ export class NavigationController {
     }
 
     this.registerDeleteAction();
+    this.registerCopyAction();
 
     // Initalise the shortcut modal with available shortcuts.  Needs
     // to be done separately rather at construction, as many shortcuts
