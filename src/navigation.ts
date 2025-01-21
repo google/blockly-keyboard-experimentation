@@ -1340,7 +1340,7 @@ export class Navigation {
     block: Blockly.BlockSvg,
   ): boolean {
     let isHandled = false;
-    const markedNode = workspace.getMarker(this.MARKER_NAME)?.getCurNode();
+    const markedNode = workspace.getCursor()?.getCurNode();
     if (markedNode) {
       isHandled = this.tryToConnectNodes(
         workspace,
