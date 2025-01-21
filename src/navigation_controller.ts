@@ -930,9 +930,7 @@ export class NavigationController {
    */
   protected registerCopyAction() {
     const copyAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => {
-        return 'Keyboard Navigation: copy';
-      },
+      displayText: (scope) => 'Keyboard Navigation: copy',
       preconditionFn: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return 'hidden';
