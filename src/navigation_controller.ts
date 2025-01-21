@@ -287,28 +287,26 @@ export class NavigationController {
    * @returns True iff `deleteCallbackFn` function should be called.
    */
   protected blockCopyPreconditionFn(workspace: WorkspaceSvg) {
-    if (this.canCurrentlyEdit(workspace)) {
-      switch (this.navigation.getState(workspace)) {
-        case Constants.STATE.WORKSPACE:
-          const curNode = workspace?.getCursor()?.getCurNode();
-          const source = curNode?.getSourceBlock();
-          return !!(
-            source?.isDeletable() &&
-            source?.isMovable() &&
-            !Blockly.Gesture.inProgress()
-          );
-        case Constants.STATE.FLYOUT:
-          const flyoutWorkspace = workspace.getFlyout()?.getWorkspace();
-          const sourceBlock = flyoutWorkspace
-            ?.getCursor()
-            ?.getCurNode()
-            ?.getSourceBlock();
-          return !!(sourceBlock && !Blockly.Gesture.inProgress());
-        default:
-          return false;
-      }
+    if (!this.canCurrentlyEdit(workspace))  return false;
+    switch (this.navigation.getState(workspace)) {
+      case Constants.STATE.WORKSPACE:
+        const curNode = workspace?.getCursor()?.getCurNode();
+        const source = curNode?.getSourceBlock();
+        return !!(
+          source?.isDeletable() &&
+          source?.isMovable() &&
+          !Blockly.Gesture.inProgress()
+        );
+      case Constants.STATE.FLYOUT:
+        const flyoutWorkspace = workspace.getFlyout()?.getWorkspace();
+        const sourceBlock = flyoutWorkspace
+          ?.getCursor()
+          ?.getCurNode()
+          ?.getSourceBlock();
+        return !!(sourceBlock && !Blockly.Gesture.inProgress());
+      default:
+        return false;
     }
-    return false;
   }
 
   /**
