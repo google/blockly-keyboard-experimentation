@@ -5,6 +5,8 @@
  */
 
 import * as Blockly from 'blockly';
+// Import the default blocks.
+import * as libraryBlocks from 'blockly/blocks';
 import {installAllBlocks as installColourBlocks} from '@blockly/field-colour';
 import {KeyboardNavigation} from '../src/index';
 // @ts-expect-error No types in js file
@@ -13,6 +15,8 @@ import {forBlock} from '../src/blocks/p5_generators';
 import {blocks} from '../src/blocks/p5_blocks';
 // @ts-expect-error No types in js file
 import {toolbox} from '../src/blocks/toolbox.js';
+// @ts-expect-error No types in js file
+import toolboxCategories from './toolboxCategories.js';
 
 import {javascriptGenerator} from 'blockly/javascript';
 // @ts-expect-error No types in js file
@@ -47,11 +51,13 @@ function loadScenario(workspace: Blockly.WorkspaceSvg) {
  */
 function createWorkspace(): Blockly.WorkspaceSvg {
   console.log(location.search);
-  const renderer =
-        location.search.includes('geras') ? 'geras' :
-        location.search.includes('thrasos') ? 'thrasos' : 'zelos';
+  const renderer = location.search.includes('geras')
+    ? 'geras'
+    : location.search.includes('thrasos')
+      ? 'thrasos'
+      : 'zelos';
   const options = {
-    toolbox: toolbox,
+    toolbox: toolboxCategories,
     renderer,
   };
   const blocklyDiv = document.getElementById('blocklyDiv')!;
