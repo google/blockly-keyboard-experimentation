@@ -979,10 +979,9 @@ export class NavigationController {
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'blockInsertAbove',
       weight: 12,
-    }
+    };
     ContextMenuRegistry.registry.register(insertAboveAction);
   }
-
 
   /**
    * Registers all default keyboard shortcut items for keyboard
