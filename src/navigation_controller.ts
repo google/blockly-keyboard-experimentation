@@ -287,7 +287,7 @@ export class NavigationController {
    * @returns True iff `deleteCallbackFn` function should be called.
    */
   protected blockCopyPreconditionFn(workspace: WorkspaceSvg) {
-    if (!this.canCurrentlyEdit(workspace))  return false;
+    if (!this.canCurrentlyEdit(workspace)) return false;
     switch (this.navigation.getState(workspace)) {
       case Constants.STATE.WORKSPACE:
         const curNode = workspace?.getCursor()?.getCurNode();
@@ -979,10 +979,9 @@ export class NavigationController {
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'blockInsertAbove',
       weight: 12,
-    }
+    };
     ContextMenuRegistry.registry.register(insertAboveAction);
   }
-
 
   /**
    * Registers all default keyboard shortcut items for keyboard
