@@ -608,7 +608,7 @@ export class Navigation {
     }
     const markerNode = this.getMarker(workspace)!.getCurNode();
     if (
-      !this.tryToConnectMarkerAndCursor(
+      !this.tryToConnectNodes(
         workspace,
         markerNode,
         Blockly.ASTNode.createBlockNode(newBlock)!,
@@ -687,57 +687,54 @@ export class Navigation {
     const cursorNode = workspace.getCursor()!.getCurNode();
 
     if (markerNode && cursorNode) {
-      return this.tryToConnectMarkerAndCursor(
-        workspace,
-        markerNode,
-        cursorNode,
-      );
+      return this.tryToConnectNodes(workspace, markerNode, cursorNode);
     }
     return false;
   }
 
   /**
-   * Tries to connect the given marker and cursor node.
+   * Tries to intelligently connect the blocks or connections
+   * represented by the given nodes, based on node types and locations.
    *
    * @param workspace The main workspace.
-   * @param markerNode The node to try to connect to.
-   * @param cursorNode The node to connect to the markerNode.
+   * @param firstNode The first node to connect.
+   * @param secondNode The second node to connect.
    * @returns True if the key was handled; false if something went
    *     wrong.
    */
-  tryToConnectMarkerAndCursor(
+  tryToConnectNodes(
     workspace: Blockly.WorkspaceSvg,
-    markerNode: Blockly.ASTNode,
-    cursorNode: Blockly.ASTNode,
+    firstNode: Blockly.ASTNode,
+    secondNode: Blockly.ASTNode,
   ): boolean {
-    if (!this.logConnectionWarning(markerNode, cursorNode)) {
+    if (!this.logConnectionWarning(firstNode, secondNode)) {
       return false;
     }
 
-    const markerType = markerNode.getType();
-    const cursorType = cursorNode.getType();
+    const firstType = firstNode.getType();
+    const secondType = secondNode.getType();
 
-    const cursorLoc = cursorNode.getLocation();
-    const markerLoc = markerNode.getLocation();
-    if (markerNode.isConnection() && cursorNode.isConnection()) {
-      const cursorConnection = cursorLoc as Blockly.RenderedConnection;
-      const markerConnection = markerLoc as Blockly.RenderedConnection;
-      return this.connect(cursorConnection, markerConnection);
+    const firstLoc = firstNode.getLocation();
+    const secondLoc = secondNode.getLocation();
+    if (firstNode.isConnection() && secondNode.isConnection()) {
+      const firstAsConnection = firstLoc as Blockly.RenderedConnection;
+      const secondAsConnection = secondLoc as Blockly.RenderedConnection;
+      return this.connect(secondAsConnection, firstAsConnection);
     } else if (
-      markerNode.isConnection() &&
-      (cursorType == Blockly.ASTNode.types.BLOCK ||
-        cursorType == Blockly.ASTNode.types.STACK)
+      firstNode.isConnection() &&
+      (secondType == Blockly.ASTNode.types.BLOCK ||
+        secondType == Blockly.ASTNode.types.STACK)
     ) {
-      const cursorBlock = cursorLoc as Blockly.BlockSvg;
-      const markerConnection = markerLoc as Blockly.RenderedConnection;
-      return this.insertBlock(cursorBlock, markerConnection);
-    } else if (markerType == Blockly.ASTNode.types.WORKSPACE) {
-      const block = cursorNode
-        ? (cursorNode.getSourceBlock() as Blockly.BlockSvg)
+      const firstAsConnection = firstLoc as Blockly.RenderedConnection;
+      const secondAsBlock = secondLoc as Blockly.BlockSvg;
+      return this.insertBlock(secondAsBlock, firstAsConnection);
+    } else if (firstType == Blockly.ASTNode.types.WORKSPACE) {
+      const block = secondNode
+        ? (secondNode.getSourceBlock() as Blockly.BlockSvg)
         : null;
-      return this.moveBlockToWorkspace(block, markerNode);
+      return this.moveBlockToWorkspace(block, firstNode);
     }
-    this.warn('Unexpected state in tryToConnectMarkerAndCursor.');
+    this.warn('Unexpected state in tryToConnectNodes.');
     return false;
   }
 
@@ -1345,7 +1342,7 @@ export class Navigation {
     let isHandled = false;
     const markedNode = workspace.getMarker(this.MARKER_NAME)?.getCurNode();
     if (markedNode) {
-      isHandled = this.tryToConnectMarkerAndCursor(
+      isHandled = this.tryToConnectNodes(
         workspace,
         markedNode,
         Blockly.ASTNode.createBlockNode(block)!,
