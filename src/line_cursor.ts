@@ -13,7 +13,6 @@
  * @author aschmiedt@google.com (Abby Schmiedt)
  */
 
-import {FieldColour} from '@blockly/field-colour';
 import * as Blockly from 'blockly/core';
 import {ASTNode, Marker} from 'blockly/core';
 
