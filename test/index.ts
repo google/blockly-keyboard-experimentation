@@ -10,11 +10,11 @@ import * as libraryBlocks from 'blockly/blocks';
 import {installAllBlocks as installColourBlocks} from '@blockly/field-colour';
 import {KeyboardNavigation} from '../src/index';
 // @ts-expect-error No types in js file
-import {forBlock} from '../src/blocks/p5_generators';
+import {forBlock} from './blocks/p5_generators';
 // @ts-expect-error No types in js file
-import {blocks} from '../src/blocks/p5_blocks';
+import {blocks} from './blocks/p5_blocks';
 // @ts-expect-error No types in js file
-import {toolbox} from '../src/blocks/toolbox.js';
+import {toolbox} from './blocks/toolbox.js';
 // @ts-expect-error No types in js file
 import toolboxCategories from './toolboxCategories.js';
 

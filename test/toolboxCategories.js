@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {p5CategoryContents} from '../src/blocks/toolbox.js';
+import {p5CategoryContents} from './blocks/toolbox.js';
 
 export default {
   kind: 'categoryToolbox',
