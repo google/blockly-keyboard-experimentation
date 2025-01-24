@@ -651,8 +651,8 @@ export class NavigationController {
     /** Copy the block the cursor is currently on. */
     copy: {
       name: Constants.SHORTCUT_NAMES.COPY,
-      preconditionFn: this.blockCopyPreconditionFn,
-      callback: this.blockCopyCallbackFn,
+      preconditionFn: this.blockCopyPreconditionFn.bind(this),
+      callback: this.blockCopyCallbackFn.bind(this),
       keyCodes: [
         createSerializedKey(KeyCodes.C, [KeyCodes.CTRL]),
         createSerializedKey(KeyCodes.C, [KeyCodes.ALT]),
@@ -725,8 +725,8 @@ export class NavigationController {
     /** Keyboard shortcut to delete the block the cursor is currently on. */
     delete: {
       name: Constants.SHORTCUT_NAMES.DELETE,
-      preconditionFn: this.deletePreconditionFn,
-      callback: this.deleteCallbackFn,
+      preconditionFn: this.deletePreconditionFn.bind(this),
+      callback: this.deleteCallbackFn.bind(this),
       keyCodes: [KeyCodes.DELETE, KeyCodes.BACKSPACE],
       allowCollision: true,
     },
