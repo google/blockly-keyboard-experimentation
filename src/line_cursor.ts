@@ -403,7 +403,50 @@ export class LineCursor extends Marker {
   }
 
   /**
-   * Set the location of the marker and draw it.
+   * Get the current location of the cursor.
+   *
+   * Overrides superclass implementation to add a hack that attempts
+   * to detect if the user has moved focus by selecting a block and,
+   * if so, update the cursor location (and any highlighting) to
+   * match.
+   *
+   * This works reasonably well but has some glitches, most notably
+   * that if the cursor is not on a block (e.g. it is on a connection
+   * or the workspace) then it will remain visible in its previous
+   * location until a cursor key is pressed.
+   *
+   * TODO(#97): Remove this hack once Blockly is modified to update
+   * the cursor/focus itself.
+   *
+   * @returns The current field, connection, or block the cursor is on.
+   */
+  override getCurNode(): ASTNode {
+    const curNode = super.getCurNode();
+    const selected = Blockly.common.getSelected();
+    if (
+      (selected?.workspace as Blockly.WorkspaceSvg)
+        ?.getMarkerManager()
+        .getCursor() !== this
+    )
+      return curNode;
+
+    // Selected item is on workspace that this cursor belongs to.
+    const curLocation = curNode?.getLocation();
+    if (curLocation === selected) return curNode;
+
+    // Selected item is not where cursor is.  Try to move cursor.
+    if (!(selected instanceof Blockly.Block)) {
+      console.error('Selected item is not a block.  Ignoring');
+      return curNode;
+    }
+    const newNode = new ASTNode(ASTNode.types.BLOCK, selected);
+    super.setCurNode(newNode);
+    this.updateFocusIndication(curNode, newNode);
+    return newNode;
+  }
+
+  /**
+   * Set the location of the cursor and draw it.
    *
    * Overrides drawing logic to call `setSelected` if the location is
    * a block, or `addSelect` if it's a shadow block (since shadow
@@ -421,11 +464,22 @@ export class LineCursor extends Marker {
    * this selection hack with non-hacky changing of focus once that's
    * possible.
    *
-   * @param newNode The new location of the marker.
+   * @param newNode The new location of the cursor.
    */
   override setCurNode(newNode: ASTNode) {
     const oldNode = this.getCurNode();
     super.setCurNode(newNode);
+    this.updateFocusIndication(oldNode, newNode);
+  }
+
+  /**
+   * Implements fake selection of shadow blocks as described in
+   * documentation for setCurNode.
+   *
+   * @param oldNode The previous node.
+   * @param newNode The newly-selected node.
+   */
+  private updateFocusIndication(oldNode: ASTNode, newNode: ASTNode) {
     const drawer = this.getDrawer();
 
     if (!drawer) {
