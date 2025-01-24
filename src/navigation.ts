@@ -537,7 +537,10 @@ export class Navigation {
    * @param workspace The workspace to focus on.
    * @param keepCursorPosition Whether to retain the cursor's previous position.
    */
-  focusWorkspace(workspace: Blockly.WorkspaceSvg, keepCursorPosition: boolean = false) {
+  focusWorkspace(
+    workspace: Blockly.WorkspaceSvg,
+    keepCursorPosition: boolean = false,
+  ) {
     workspace.hideChaff();
     const reset = !!workspace.getToolbox();
 
@@ -554,7 +557,10 @@ export class Navigation {
    * @param workspace The main Blockly workspace.
    * @param keepPosition Whether to retain the cursor's previous position.
    */
-  setCursorOnWorkspaceFocus(workspace: Blockly.WorkspaceSvg, keepPosition: boolean) {
+  setCursorOnWorkspaceFocus(
+    workspace: Blockly.WorkspaceSvg,
+    keepPosition: boolean,
+  ) {
     const topBlocks = workspace.getTopBlocks(true);
     const cursor = workspace.getCursor();
     if (!cursor) {
@@ -697,42 +703,44 @@ export class Navigation {
    * represented by the given nodes, based on node types and locations.
    *
    * @param workspace The main workspace.
-   * @param firstNode The first node to connect.
-   * @param secondNode The second node to connect.
+   * @param stationaryNode The first node to connect.
+   * @param movingNode The second node to connect.
    * @returns True if the key was handled; false if something went
    *     wrong.
    */
   tryToConnectNodes(
     workspace: Blockly.WorkspaceSvg,
-    firstNode: Blockly.ASTNode,
-    secondNode: Blockly.ASTNode,
+    stationaryNode: Blockly.ASTNode,
+    movingNode: Blockly.ASTNode,
   ): boolean {
-    if (!this.logConnectionWarning(firstNode, secondNode)) {
+    if (!this.logConnectionWarning(stationaryNode, movingNode)) {
       return false;
     }
 
-    const firstType = firstNode.getType();
-    const secondType = secondNode.getType();
+    const stationaryType = stationaryNode.getType();
+    const movingType = movingNode.getType();
 
-    const firstLoc = firstNode.getLocation();
-    const secondLoc = secondNode.getLocation();
-    if (firstNode.isConnection() && secondNode.isConnection()) {
-      const firstAsConnection = firstLoc as Blockly.RenderedConnection;
-      const secondAsConnection = secondLoc as Blockly.RenderedConnection;
-      return this.connect(secondAsConnection, firstAsConnection);
+    const stationaryLoc = stationaryNode.getLocation();
+    const movingLoc = movingNode.getLocation();
+    if (stationaryNode.isConnection() && movingNode.isConnection()) {
+      const stationaryAsConnection =
+        stationaryLoc as Blockly.RenderedConnection;
+      const movingAsConnection = movingLoc as Blockly.RenderedConnection;
+      return this.connect(movingAsConnection, stationaryAsConnection);
     } else if (
-      firstNode.isConnection() &&
-      (secondType == Blockly.ASTNode.types.BLOCK ||
-        secondType == Blockly.ASTNode.types.STACK)
+      stationaryNode.isConnection() &&
+      (movingType == Blockly.ASTNode.types.BLOCK ||
+        movingType == Blockly.ASTNode.types.STACK)
     ) {
-      const firstAsConnection = firstLoc as Blockly.RenderedConnection;
-      const secondAsBlock = secondLoc as Blockly.BlockSvg;
-      return this.insertBlock(secondAsBlock, firstAsConnection);
-    } else if (firstType == Blockly.ASTNode.types.WORKSPACE) {
-      const block = secondNode
-        ? (secondNode.getSourceBlock() as Blockly.BlockSvg)
+      const stationaryAsConnection =
+        stationaryLoc as Blockly.RenderedConnection;
+      const movingAsBlock = movingLoc as Blockly.BlockSvg;
+      return this.insertBlock(movingAsBlock, stationaryAsConnection);
+    } else if (stationaryType == Blockly.ASTNode.types.WORKSPACE) {
+      const block = movingNode
+        ? (movingNode.getSourceBlock() as Blockly.BlockSvg)
         : null;
-      return this.moveBlockToWorkspace(block, firstNode);
+      return this.moveBlockToWorkspace(block, stationaryNode);
     }
     this.warn('Unexpected state in tryToConnectNodes.');
     return false;
@@ -1095,7 +1103,7 @@ export class Navigation {
 
     if (wasVisitingConnection) {
       const connectionNode =
-            Blockly.ASTNode.createConnectionNode(superiorConnection);
+        Blockly.ASTNode.createConnectionNode(superiorConnection);
       workspace.getCursor()!.setCurNode(connectionNode!);
     }
   }
