@@ -403,7 +403,7 @@ export class LineCursor extends Marker {
   }
 
   /**
-   * Get the current location of the marker.
+   * Get the current location of the cursor.
    *
    * Overrides superclass implementation to add a hack that attempts
    * to detect if the user has moved focus by selecting a block and,
@@ -418,7 +418,7 @@ export class LineCursor extends Marker {
    * TODO(#97): Remove this hack once Blockly is modified to update
    * the cursor/focus itself.
    *
-   * @returns The current field, connection, or block the marker is on.
+   * @returns The current field, connection, or block the cursor is on.
    */
   override getCurNode(): ASTNode {
     const curNode = super.getCurNode();
@@ -446,7 +446,7 @@ export class LineCursor extends Marker {
   }
 
   /**
-   * Set the location of the marker and draw it.
+   * Set the location of the cursor and draw it.
    *
    * Overrides drawing logic to call `setSelected` if the location is
    * a block, or `addSelect` if it's a shadow block (since shadow
@@ -464,7 +464,7 @@ export class LineCursor extends Marker {
    * this selection hack with non-hacky changing of focus once that's
    * possible.
    *
-   * @param newNode The new location of the marker.
+   * @param newNode The new location of the cursor.
    */
   override setCurNode(newNode: ASTNode) {
     const oldNode = this.getCurNode();
