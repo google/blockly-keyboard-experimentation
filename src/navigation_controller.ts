@@ -969,9 +969,7 @@ export class NavigationController {
         if (!ws) return false;
 
         if (this.navigation.getState(ws) == Constants.STATE.WORKSPACE) {
-          // Move the cursor to the previous connection
-          ws.getCursor()?.prev();
-          this.navigation.handleEnterForWS(ws);
+          this.navigation.openToolboxOrFlyout(ws);
           return true;
         }
         return false;

@@ -715,25 +715,44 @@ export class Navigation {
 
     const stationaryLoc = stationaryNode.getLocation();
     const movingLoc = movingNode.getLocation();
-    if (stationaryNode.isConnection() && movingNode.isConnection()) {
-      const stationaryAsConnection =
-        stationaryLoc as Blockly.RenderedConnection;
-      const movingAsConnection = movingLoc as Blockly.RenderedConnection;
-      return this.connect(movingAsConnection, stationaryAsConnection);
-    } else if (
-      stationaryNode.isConnection() &&
-      (movingType == Blockly.ASTNode.types.BLOCK ||
-        movingType == Blockly.ASTNode.types.STACK)
-    ) {
-      const stationaryAsConnection =
-        stationaryLoc as Blockly.RenderedConnection;
-      const movingAsBlock = movingLoc as Blockly.BlockSvg;
-      return this.insertBlock(movingAsBlock, stationaryAsConnection);
+
+    if (stationaryNode.isConnection()) {
+      if (movingNode.isConnection()) {
+        const stationaryAsConnection =
+          stationaryLoc as Blockly.RenderedConnection;
+        const movingAsConnection = movingLoc as Blockly.RenderedConnection;
+        return this.connect(movingAsConnection, stationaryAsConnection);
+      }
+      // Connect the moving block to the stationary connection using
+      // the most plausible connection on the moving block.
+      if (
+        movingType == Blockly.ASTNode.types.BLOCK ||
+        movingType == Blockly.ASTNode.types.STACK
+      ) {
+        const stationaryAsConnection =
+          stationaryLoc as Blockly.RenderedConnection;
+        const movingAsBlock = movingLoc as Blockly.BlockSvg;
+        return this.insertBlock(movingAsBlock, stationaryAsConnection);
+      }
     } else if (stationaryType == Blockly.ASTNode.types.WORKSPACE) {
       const block = movingNode
         ? (movingNode.getSourceBlock() as Blockly.BlockSvg)
         : null;
       return this.moveBlockToWorkspace(block, stationaryNode);
+    } else if (
+      stationaryType == Blockly.ASTNode.types.BLOCK &&
+      movingType == Blockly.ASTNode.types.BLOCK
+    ) {
+      // Insert the moving block above the stationary block, if the
+      // appropriate connections exist.
+      const stationaryBlock = stationaryLoc as Blockly.BlockSvg;
+      const movingBlock = movingLoc as Blockly.BlockSvg;
+      if (stationaryBlock.previousConnection) {
+        return this.insertBlock(
+          movingBlock,
+          stationaryBlock.previousConnection,
+        );
+      }
     }
     this.warn('Unexpected state in tryToConnectNodes.');
     return false;
@@ -766,9 +785,6 @@ export class Navigation {
     // Check the marker for invalid types.
     if (markerType == Blockly.ASTNode.types.FIELD) {
       this.warn('Should not have been able to mark a field.');
-      return false;
-    } else if (markerType == Blockly.ASTNode.types.BLOCK) {
-      this.warn('Should not have been able to mark a block.');
       return false;
     } else if (markerType == Blockly.ASTNode.types.STACK) {
       this.warn('Should not have been able to mark a stack.');
@@ -1247,13 +1263,23 @@ export class Navigation {
       curNode.isConnection() ||
       nodeType == Blockly.ASTNode.types.WORKSPACE
     ) {
-      if (workspace.getToolbox()) {
-        this.focusToolbox(workspace);
-      } else {
-        this.focusFlyout(workspace);
-      }
+      this.openToolboxOrFlyout(workspace);
     } else if (nodeType == Blockly.ASTNode.types.STACK) {
       this.warn('Cannot mark a stack.');
+    }
+  }
+
+  /**
+   * Save the current cursor location and open the toolbox or flyout
+   * to select and insert a block.
+   * @param workspace The active workspace.
+   */
+  openToolboxOrFlyout(workspace: Blockly.WorkspaceSvg) {
+    this.markAtCursor(workspace);
+    if (workspace.getToolbox()) {
+      this.focusToolbox(workspace);
+    } else {
+      this.focusFlyout(workspace);
     }
   }
 
