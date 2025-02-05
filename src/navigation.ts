@@ -17,6 +17,7 @@ import {
   registrationType as cursorRegistrationType,
   FlyoutCursor,
 } from './flyout_cursor';
+import { PassiveFocus } from './passive_focus';
 
 /**
  * Class that holds all methods necessary for keyboard navigation to work.
@@ -71,6 +72,10 @@ export class Navigation {
    * Used when removing change listeners in dispose.
    */
   protected workspaces: Blockly.WorkspaceSvg[] = [];
+
+  protected passiveFocusIndicator: PassiveFocus = new PassiveFocus();
+
+  protected markedNode : Blockly.ASTNode | null = null;
 
   /**
    * Constructor for keyboard navigation.
@@ -483,9 +488,9 @@ export class Navigation {
     this.setState(workspace, Constants.STATE.TOOLBOX);
     this.resetFlyout(workspace, false /* shouldHide */);
 
-    if (!this.getMarker(workspace)!.getCurNode()) {
+    //if (!this.getMarker(workspace)!.getCurNode()) {
       this.markAtCursor(workspace);
-    }
+    //}
 
     if (!toolbox.getSelectedItem()) {
       // Find the first item that is selectable.
@@ -510,9 +515,9 @@ export class Navigation {
 
     this.setState(workspace, Constants.STATE.FLYOUT);
 
-    if (!this.getMarker(workspace)!.getCurNode()) {
+    //if (!this.getMarker(workspace)!.getCurNode()) {
       this.markAtCursor(workspace);
-    }
+    //}
 
     if (flyout && flyout.getWorkspace()) {
       const flyoutContents = flyout.getContents();
@@ -612,11 +617,15 @@ export class Navigation {
     if (!newBlock) {
       return;
     }
-    const markerNode = this.getMarker(workspace)!.getCurNode();
+    if (!this.markedNode) {
+      this.warn('No marked node');
+      return;
+    }
+    //const markerNode = this.getMarker(workspace)!.getCurNode();
     if (
       !this.tryToConnectNodes(
         workspace,
-        markerNode,
+        this.markedNode,
         Blockly.ASTNode.createBlockNode(newBlock)!,
       )
     ) {
@@ -689,11 +698,14 @@ export class Navigation {
    *     false otherwise.
    */
   connectMarkerAndCursor(workspace: Blockly.WorkspaceSvg): boolean {
-    const markerNode = this.getMarker(workspace)!.getCurNode();
+    //const markerNode = this.getMarker(workspace)!.getCurNode();
     const cursorNode = workspace.getCursor()!.getCurNode();
 
-    if (markerNode && cursorNode) {
-      return this.tryToConnectNodes(workspace, markerNode, cursorNode);
+    if (this.markedNode && cursorNode) {
+      if (this.tryToConnectNodes(workspace, this.markedNode, cursorNode)) {
+        this.removeMark(workspace);
+        return true;
+      }
     }
     return false;
   }
@@ -1114,7 +1126,10 @@ export class Navigation {
    * @param workspace The workspace.
    */
   markAtCursor(workspace: Blockly.WorkspaceSvg) {
-    this.getMarker(workspace)!.setCurNode(workspace.getCursor()!.getCurNode());
+    const curNode = workspace.getCursor()!.getCurNode()!;
+    this.markedNode = curNode;
+    this.passiveFocusIndicator.show(curNode);
+    // this.getMarker(workspace)!.setCurNode(workspace.getCursor()!.getCurNode());
   }
 
   /**
@@ -1123,8 +1138,11 @@ export class Navigation {
    * @param workspace The workspace.
    */
   removeMark(workspace: Blockly.WorkspaceSvg) {
-    const marker = this.getMarker(workspace);
-    marker?.hide();
+    this.passiveFocusIndicator.hide();
+    this.markedNode = null;
+
+    // const marker = this.getMarker(workspace);
+    // marker?.hide();
   }
 
   /**
@@ -1154,8 +1172,10 @@ export class Navigation {
       workspace.keyboardAccessibilityMode
     ) {
       workspace.keyboardAccessibilityMode = false;
+      this.markAtCursor(workspace);
       workspace.getCursor()!.hide();
-      this.getMarker(workspace)!.hide();
+      // Set the passive focus indicator to the cursor location.
+      //this.getMarker(workspace)!.hide();
       if (this.getFlyoutCursor(workspace)) {
         this.getFlyoutCursor(workspace)!.hide();
       }
@@ -1327,6 +1347,7 @@ export class Navigation {
     ) as Blockly.BlockSvg;
     if (block) {
       isHandled = this.insertPastedBlock(workspace, block);
+      this.removeMark(workspace);
     }
     Blockly.Events.setGroup(false);
     return isHandled;
