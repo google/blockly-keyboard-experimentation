@@ -4,13 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ASTNode, RenderedConnection, BlockSvg} from 'blockly/core';
-import { ConnectionType } from 'blockly/core';
+import {ASTNode, RenderedConnection, BlockSvg, ConnectionType} from 'blockly/core';
 
+/**
+ * A renderer for passive focus on AST node locations on the main workspace.
+ * Responsible for showing and hiding in an ephemeral way. Not 
+ * guaranteed to stay up to date if workspace contents change.
+ * In general, passive focus should be hidden when the main workspace
+ * has active focus.
+ */
 export class PassiveFocus {
-  curNode: ASTNode | null = null;
-
-  initialized: boolean = false;
+  // The node where the indicator is drawn, if any.
+  private curNode: ASTNode | null = null;
 
   constructor() {}
 
@@ -75,8 +80,8 @@ export class PassiveFocus {
    */
   showAtBlock(node: ASTNode) {
     const block = node.getLocation() as BlockSvg;
-    // TODO: Update this to copy the block's path object (or otherwise
-    // acquire it) and change the colour.
+    // Note that this changes rendering but does not change Blockly's 
+    // internal selected state.
     block.addSelect();
   } 
 
@@ -87,8 +92,8 @@ export class PassiveFocus {
    */
   hideAtBlock(node: ASTNode) {
     const block = node.getLocation() as BlockSvg;
-    // TODO: Update this to copy the block's path object (or otherwise
-    // acquire it) and change the colour.
+    // Note that this changes rendering but does not change Blockly's 
+    // internal selected state.
     block.removeSelect();
   }
 

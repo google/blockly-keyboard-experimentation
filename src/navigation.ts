@@ -68,8 +68,15 @@ export class Navigation {
    */
   protected workspaces: Blockly.WorkspaceSvg[] = [];
 
+  /**
+   * An object that renders a passive focus indicator at a specified location.
+   */
   protected passiveFocusIndicator: PassiveFocus = new PassiveFocus();
 
+  /** 
+   * The node that has passive focus when the cursor has moved to the flyout
+   * or toolbox; null if the cursor is moving around the main workspace.
+   */
   protected markedNode : Blockly.ASTNode | null = null;
 
   /**
@@ -465,10 +472,9 @@ export class Navigation {
       return;
     }
 
+    this.markAtCursor(workspace);
     this.setState(workspace, Constants.STATE.TOOLBOX);
     this.resetFlyout(workspace, false /* shouldHide */);
-
-    this.markAtCursor(workspace);
 
     if (!toolbox.getSelectedItem()) {
       // Find the first item that is selectable.
@@ -489,11 +495,10 @@ export class Navigation {
    * @param workspace The workspace the flyout is on.
    */
   focusFlyout(workspace: Blockly.WorkspaceSvg) {
-    const flyout = workspace.getFlyout();
-
-    this.setState(workspace, Constants.STATE.FLYOUT);
-
     this.markAtCursor(workspace);
+
+    const flyout = workspace.getFlyout();
+    this.setState(workspace, Constants.STATE.FLYOUT);
 
     if (flyout && flyout.getWorkspace()) {
       const flyoutContents = flyout.getContents();
@@ -1100,14 +1105,13 @@ export class Navigation {
    * @param workspace The workspace.
    */
   markAtCursor(workspace: Blockly.WorkspaceSvg) {
-    const curNode = workspace.getCursor()!.getCurNode()!;
-    this.markedNode = curNode;
-    this.passiveFocusIndicator.show(curNode);
-    workspace.getCursor()!.hide();
+    const cursor = workspace.getCursor()!;
+    this.markedNode = cursor.getCurNode();
+    this.passiveFocusIndicator.show(this.markedNode);
   }
 
   /**
-   * Removes the passive focus indicator from its current location and hide it.
+   * Removes the passive focus indicator from its current location and hides it.
    *
    * @param workspace The workspace.
    */
