@@ -17,7 +17,7 @@ import {
   registrationType as cursorRegistrationType,
   FlyoutCursor,
 } from './flyout_cursor';
-import { PassiveFocus } from './passive_focus';
+import {PassiveFocus} from './passive_focus';
 
 /**
  * Class that holds all methods necessary for keyboard navigation to work.
@@ -73,11 +73,11 @@ export class Navigation {
    */
   protected passiveFocusIndicator: PassiveFocus = new PassiveFocus();
 
-  /** 
+  /**
    * The node that has passive focus when the cursor has moved to the flyout
    * or toolbox; null if the cursor is moving around the main workspace.
    */
-  protected markedNode : Blockly.ASTNode | null = null;
+  protected markedNode: Blockly.ASTNode | null = null;
 
   /**
    * Constructor for keyboard navigation.

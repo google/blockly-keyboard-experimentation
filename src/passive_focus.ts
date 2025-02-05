@@ -4,11 +4,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ASTNode, RenderedConnection, BlockSvg, ConnectionType} from 'blockly/core';
+import {
+  ASTNode,
+  RenderedConnection,
+  BlockSvg,
+  ConnectionType,
+} from 'blockly/core';
 
 /**
  * A renderer for passive focus on AST node locations on the main workspace.
- * Responsible for showing and hiding in an ephemeral way. Not 
+ * Responsible for showing and hiding in an ephemeral way. Not
  * guaranteed to stay up to date if workspace contents change.
  * In general, passive focus should be hidden when the main workspace
  * has active focus.
@@ -75,31 +80,31 @@ export class PassiveFocus {
 
   /**
    * Show a passive focus indicator on a block.
-   * 
+   *
    * @param node The passively-focused block.
    */
   showAtBlock(node: ASTNode) {
     const block = node.getLocation() as BlockSvg;
-    // Note that this changes rendering but does not change Blockly's 
+    // Note that this changes rendering but does not change Blockly's
     // internal selected state.
     block.addSelect();
-  } 
+  }
 
   /**
    * Hide a passive focus indicator on a block.
-   * 
+   *
    * @param node The passively-focused block.
    */
   hideAtBlock(node: ASTNode) {
     const block = node.getLocation() as BlockSvg;
-    // Note that this changes rendering but does not change Blockly's 
+    // Note that this changes rendering but does not change Blockly's
     // internal selected state.
     block.removeSelect();
   }
 
   /**
    * Show a passive focus indicator on a next connection.
-   * 
+   *
    * @param node The passively-focused connection.
    */
   showAtNext(node: ASTNode) {
@@ -109,7 +114,7 @@ export class PassiveFocus {
 
   /**
    * Hide a passive focus indicator on a next connection.
-   * 
+   *
    * @param node The passively-focused connection.
    */
   hideAtNext(node: ASTNode) {
