@@ -287,7 +287,7 @@ export class NavigationController {
    * @returns True iff `deleteCallbackFn` function should be called.
    */
   protected blockCopyPreconditionFn(workspace: WorkspaceSvg) {
-    if (!this.canCurrentlyEdit(workspace))  return false;
+    if (!this.canCurrentlyEdit(workspace)) return false;
     switch (this.navigation.getState(workspace)) {
       case Constants.STATE.WORKSPACE:
         const curNode = workspace?.getCursor()?.getCurNode();
@@ -976,6 +976,9 @@ export class NavigationController {
     for (const shortcut of Object.values(this.shortcuts)) {
       ShortcutRegistry.registry.unregister(shortcut.name);
     }
+
+    ContextMenuRegistry.registry.unregister('blockDeleteFromContextMenu');
+    ContextMenuRegistry.registry.unregister('blockCopyFromContextMenu');
 
     this.removeShortcutHandlers();
     this.navigation.dispose();
