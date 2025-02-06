@@ -473,6 +473,7 @@ export class Navigation {
     }
 
     this.markAtCursor(workspace);
+    workspace.getCursor()?.hide();
     this.setState(workspace, Constants.STATE.TOOLBOX);
     this.resetFlyout(workspace, false /* shouldHide */);
 
@@ -495,6 +496,7 @@ export class Navigation {
    * @param workspace The workspace the flyout is on.
    */
   focusFlyout(workspace: Blockly.WorkspaceSvg) {
+    workspace.getCursor()?.hide();
     this.markAtCursor(workspace);
 
     const flyout = workspace.getFlyout();
@@ -1240,7 +1242,6 @@ export class Navigation {
       curNode.isConnection() ||
       nodeType == Blockly.ASTNode.types.WORKSPACE
     ) {
-      this.markAtCursor(workspace);
       if (workspace.getToolbox()) {
         this.focusToolbox(workspace);
       } else {
