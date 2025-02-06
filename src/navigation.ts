@@ -1109,7 +1109,12 @@ export class Navigation {
   markAtCursor(workspace: Blockly.WorkspaceSvg) {
     const cursor = workspace.getCursor()!;
     this.markedNode = cursor.getCurNode();
-    this.passiveFocusIndicator.show(this.markedNode);
+
+    // Although it seems like this should never happen, the typings are wrong
+    // in the base Marker class and this can therefore be null.
+    if (this.markedNode) {
+      this.passiveFocusIndicator.show(this.markedNode);
+    }
   }
 
   /**
