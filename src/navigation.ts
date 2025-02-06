@@ -17,6 +17,7 @@ import {
   registrationType as cursorRegistrationType,
   FlyoutCursor,
 } from './flyout_cursor';
+import {PassiveFocus} from './passive_focus';
 
 /**
  * Class that holds all methods necessary for keyboard navigation to work.
@@ -32,11 +33,6 @@ export class Navigation {
    * The distance to move the cursor when the cursor is on the workspace.
    */
   WS_MOVE_DISTANCE = 40;
-
-  /**
-   * The name of the marker to use for keyboard navigation.
-   */
-  MARKER_NAME = 'local_marker_1';
 
   /**
    * The default coordinate to use when focusing on the workspace and no
@@ -73,6 +69,17 @@ export class Navigation {
   protected workspaces: Blockly.WorkspaceSvg[] = [];
 
   /**
+   * An object that renders a passive focus indicator at a specified location.
+   */
+  protected passiveFocusIndicator: PassiveFocus = new PassiveFocus();
+
+  /**
+   * The node that has passive focus when the cursor has moved to the flyout
+   * or toolbox; null if the cursor is moving around the main workspace.
+   */
+  protected markedNode: Blockly.ASTNode | null = null;
+
+  /**
    * Constructor for keyboard navigation.
    */
   constructor() {
@@ -90,9 +97,6 @@ export class Navigation {
   addWorkspace(workspace: Blockly.WorkspaceSvg) {
     this.workspaces.push(workspace);
     const flyout = workspace.getFlyout();
-    workspace
-      .getMarkerManager()
-      .registerMarker(this.MARKER_NAME, new Blockly.Marker());
     workspace.addChangeListener(this.wsChangeWrapper);
 
     if (flyout) {
@@ -116,9 +120,7 @@ export class Navigation {
     if (workspaceIdx > -1) {
       this.workspaces.splice(workspaceIdx, 1);
     }
-    if (workspace.getMarkerManager()) {
-      workspace.getMarkerManager().unregisterMarker(this.MARKER_NAME);
-    }
+    this.passiveFocusIndicator.dispose();
     workspace.removeChangeListener(this.wsChangeWrapper);
 
     if (flyout) {
@@ -144,16 +146,6 @@ export class Navigation {
    */
   getState(workspace: Blockly.WorkspaceSvg): Constants.STATE {
     return this.workspaceStates[workspace.id];
-  }
-
-  /**
-   * Gets the marker created for keyboard navigation.
-   *
-   * @param workspace The workspace to get the marker from.
-   * @returns The marker created for keyboard navigation.
-   */
-  getMarker(workspace: Blockly.WorkspaceSvg): Blockly.Marker | null {
-    return workspace.getMarker(this.MARKER_NAME);
   }
 
   /**
@@ -480,12 +472,10 @@ export class Navigation {
       return;
     }
 
+    this.markAtCursor(workspace);
+    workspace.getCursor()?.hide();
     this.setState(workspace, Constants.STATE.TOOLBOX);
     this.resetFlyout(workspace, false /* shouldHide */);
-
-    if (!this.getMarker(workspace)!.getCurNode()) {
-      this.markAtCursor(workspace);
-    }
 
     if (!toolbox.getSelectedItem()) {
       // Find the first item that is selectable.
@@ -506,13 +496,11 @@ export class Navigation {
    * @param workspace The workspace the flyout is on.
    */
   focusFlyout(workspace: Blockly.WorkspaceSvg) {
+    workspace.getCursor()?.hide();
+    this.markAtCursor(workspace);
+
     const flyout = workspace.getFlyout();
-
     this.setState(workspace, Constants.STATE.FLYOUT);
-
-    if (!this.getMarker(workspace)!.getCurNode()) {
-      this.markAtCursor(workspace);
-    }
 
     if (flyout && flyout.getWorkspace()) {
       const flyoutContents = flyout.getContents();
@@ -612,11 +600,14 @@ export class Navigation {
     if (!newBlock) {
       return;
     }
-    const markerNode = this.getMarker(workspace)!.getCurNode();
+    if (!this.markedNode) {
+      this.warn('No marked node when inserting from flyout.');
+      return;
+    }
     if (
       !this.tryToConnectNodes(
         workspace,
-        markerNode,
+        this.markedNode,
         Blockly.ASTNode.createBlockNode(newBlock)!,
       )
     ) {
@@ -681,19 +672,21 @@ export class Navigation {
   }
 
   /**
-   * Connects the location of the marker and the location of the cursor.
-   * No-op if the marker or cursor node are null.
+   * Connects the location of the marked node and the location of the cursor.
+   * No-op if the marked node or cursor node are null.
    *
    * @param workspace The main workspace.
    * @returns True if the cursor and marker locations were connected,
    *     false otherwise.
    */
   connectMarkerAndCursor(workspace: Blockly.WorkspaceSvg): boolean {
-    const markerNode = this.getMarker(workspace)!.getCurNode();
     const cursorNode = workspace.getCursor()!.getCurNode();
 
-    if (markerNode && cursorNode) {
-      return this.tryToConnectNodes(workspace, markerNode, cursorNode);
+    if (this.markedNode && cursorNode) {
+      if (this.tryToConnectNodes(workspace, this.markedNode, cursorNode)) {
+        this.removeMark(workspace);
+        return true;
+      }
     }
     return false;
   }
@@ -1109,22 +1102,24 @@ export class Navigation {
   }
 
   /**
-   * Moves the marker to the cursor's current location.
+   * Moves the passive focus indicator to the cursor's current location.
    *
    * @param workspace The workspace.
    */
   markAtCursor(workspace: Blockly.WorkspaceSvg) {
-    this.getMarker(workspace)!.setCurNode(workspace.getCursor()!.getCurNode());
+    const cursor = workspace.getCursor()!;
+    this.markedNode = cursor.getCurNode();
+    this.passiveFocusIndicator.show(this.markedNode);
   }
 
   /**
-   * Removes the marker from its current location and hide it.
+   * Removes the passive focus indicator from its current location and hides it.
    *
    * @param workspace The workspace.
    */
   removeMark(workspace: Blockly.WorkspaceSvg) {
-    const marker = this.getMarker(workspace);
-    marker?.hide();
+    this.passiveFocusIndicator.hide();
+    this.markedNode = null;
   }
 
   /**
@@ -1154,8 +1149,8 @@ export class Navigation {
       workspace.keyboardAccessibilityMode
     ) {
       workspace.keyboardAccessibilityMode = false;
+      this.markAtCursor(workspace);
       workspace.getCursor()!.hide();
-      this.getMarker(workspace)!.hide();
       if (this.getFlyoutCursor(workspace)) {
         this.getFlyoutCursor(workspace)!.hide();
       }
@@ -1247,7 +1242,6 @@ export class Navigation {
       curNode.isConnection() ||
       nodeType == Blockly.ASTNode.types.WORKSPACE
     ) {
-      this.markAtCursor(workspace);
       if (workspace.getToolbox()) {
         this.focusToolbox(workspace);
       } else {
@@ -1327,6 +1321,7 @@ export class Navigation {
     ) as Blockly.BlockSvg;
     if (block) {
       isHandled = this.insertPastedBlock(workspace, block);
+      this.removeMark(workspace);
     }
     Blockly.Events.setGroup(false);
     return isHandled;
