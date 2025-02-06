@@ -9,6 +9,7 @@ import {
   RenderedConnection,
   BlockSvg,
   ConnectionType,
+  utils,
 } from 'blockly/core';
 
 /**
@@ -22,11 +23,19 @@ export class PassiveFocus {
   // The node where the indicator is drawn, if any.
   private curNode: ASTNode | null = null;
 
-  constructor() {}
+  // The line drawn to indicate passive focus on a next connection.
+  nextConnectionIndicator: SVGRectElement;
+
+  constructor() {
+    this.nextConnectionIndicator = this.createNextIndicator();
+  }
 
   /** Dispose of this indicator. Do any necessary cleanup. */
   dispose() {
     this.hide();
+    if (this.nextConnectionIndicator) {
+      utils.dom.removeNode(this.nextConnectionIndicator);
+    }
   }
 
   /**
@@ -103,13 +112,48 @@ export class PassiveFocus {
   }
 
   /**
+   * Creates DOM elements for the next connection indicator.
+   *
+   * @returns The root element of the next indicator.
+   */
+  createNextIndicator() {
+    // A horizontal line used to represent a next connection.
+    const indicator = utils.dom.createSvgElement(utils.Svg.RECT, {
+      'width': 100,
+      'height': 5,
+      'class': 'passiveNextIndicator',
+      'stroke': '#4286f4',
+      'fill': '#4286f4',
+    });
+    return indicator;
+  }
+
+  /**
    * Show a passive focus indicator on a next connection.
    *
    * @param node The passively-focused connection.
    */
   showAtNext(node: ASTNode) {
     const connection = node.getLocation() as RenderedConnection;
-    connection.highlight();
+    const targetBlock = connection.getSourceBlock();
+
+    // Make the connection indicator a child of the block's SVG group.
+    const blockSvgRoot = targetBlock.getSvgRoot();
+    blockSvgRoot.appendChild(this.nextConnectionIndicator);
+
+    // Move the indicator relative to the origin of the block's SVG group.
+    let x = 0;
+    const y = connection.getOffsetInBlock().y;
+    const width = targetBlock.getHeightWidth().width;
+    if (targetBlock.workspace.RTL) {
+      x = -width;
+    }
+
+    this.nextConnectionIndicator.setAttribute('x', `${x}`);
+    this.nextConnectionIndicator.setAttribute('y', `${y}`);
+    this.nextConnectionIndicator.setAttribute('width', `${width}`);
+
+    this.nextConnectionIndicator.style.display = '';
   }
 
   /**
@@ -118,7 +162,9 @@ export class PassiveFocus {
    * @param node The passively-focused connection.
    */
   hideAtNext(node: ASTNode) {
-    const connection = node.getLocation() as RenderedConnection;
-    connection.unhighlight();
+    this.nextConnectionIndicator.parentNode?.removeChild(
+      this.nextConnectionIndicator,
+    );
+    this.nextConnectionIndicator.style.display = 'none';
   }
 }
