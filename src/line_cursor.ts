@@ -27,6 +27,7 @@ export class LineCursor extends Marker {
    */
   constructor(public readonly workspace: Blockly.WorkspaceSvg) {
     super();
+    workspace.addChangeListener(this.selectListener.bind(this));
   }
 
   /**
@@ -410,10 +411,14 @@ export class LineCursor extends Marker {
    * if so, update the cursor location (and any highlighting) to
    * match.
    *
-   * This works reasonably well but has some glitches, most notably
-   * that if the cursor is not on a block (e.g. it is on a connection
-   * or the workspace) then it will remain visible in its previous
-   * location until a cursor key is pressed.
+   * Doing this only when getCurNode would naturally be called works
+   * reasonably well but has some glitches, most notably that if the
+   * cursor was not on a block (e.g. it was on a connection or the
+   * workspace) when the user selected a block then it will remain
+   * visible in its previous location until some keyboard navigation occurs.
+   *
+   * To ameliorate this, the LineCursor constructor adds an event
+   * listener that calls getCurNode in response to SELECTED events.
    *
    * TODO(#97): Remove this hack once Blockly is modified to update
    * the cursor/focus itself.
@@ -505,6 +510,13 @@ export class LineCursor extends Marker {
     }
 
     drawer.draw(oldNode, newNode);
+  }
+
+  private selectListener(event: Blockly.Events.Abstract) {
+    if (event.type !== Blockly.Events.SELECTED) return;
+    const selectedEvent = event as Blockly.Events.Selected;
+    if (selectedEvent.workspaceId !== this.workspace.id) return;
+    this.getCurNode();
   }
 }
 
