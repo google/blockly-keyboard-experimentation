@@ -1406,14 +1406,27 @@ function fakeEventForNode(node: Blockly.ASTNode): PointerEvent {
   // Get the location of the top-left corner of the block in
   // screen coordinates.
   const block = node.getLocation() as Blockly.BlockSvg;
-  const coords = Blockly.utils.svgMath.wsToScreenCoordinates(
+  const blockCoords = Blockly.utils.svgMath.wsToScreenCoordinates(
     block.workspace,
     block.getRelativeToSurfaceXY(),
   );
 
+  // Prefer a y position below the first field in the block.
+  const fieldBoundingClientRect = block.inputList
+    .filter((input) => input.isVisible())
+    .flatMap((input) => input.fieldRow)
+    .filter((f) => f.isVisible())[0]
+    ?.getSvgRoot()
+    ?.getBoundingClientRect();
+
+  const clientY =
+    fieldBoundingClientRect && fieldBoundingClientRect.height
+      ? fieldBoundingClientRect.y + fieldBoundingClientRect.height
+      : blockCoords.y + block.height;
+
   // Create a fake event for the action menu code to work from.
   return new PointerEvent('pointerdown', {
-    clientX: coords.x,
-    clientY: coords.y,
+    clientX: blockCoords.x + 5,
+    clientY: clientY + 5,
   });
 }
