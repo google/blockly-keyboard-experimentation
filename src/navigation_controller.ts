@@ -955,7 +955,7 @@ export class NavigationController {
    */
   protected registerInsertAction() {
     const insertAboveAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => 'Keyboard Navigation: insert above',
+      displayText: (scope) => 'Insert block above',
       preconditionFn: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return 'hidden';
