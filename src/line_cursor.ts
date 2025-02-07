@@ -167,7 +167,8 @@ export class LineCursor extends Marker {
       case ASTNode.types.NEXT:
         return !(location as Blockly.Connection).isConnected();
       case ASTNode.types.FIELD:
-        return true;
+        // @ts-expect-error isFullBlockField is a protected method.
+        return !(location as Blockly.Field).isFullBlockField();
       default:
         return false;
     }

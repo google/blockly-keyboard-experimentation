@@ -32,6 +32,7 @@ export enum SHORTCUT_NAMES {
   DISCONNECT = 'disconnect',
   TOOLBOX = 'toolbox',
   EXIT = 'exit',
+  MENU = 'menu',
   COPY = 'keyboard_nav_copy',
   CUT = 'keyboard_nav_cut',
   PASTE = 'keyboard_nav_paste',

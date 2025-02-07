@@ -1242,7 +1242,17 @@ export class Navigation {
     if (nodeType == Blockly.ASTNode.types.FIELD) {
       (curNode.getLocation() as Blockly.Field).showEditor();
     } else if (nodeType == Blockly.ASTNode.types.BLOCK) {
-      this.openActionMenu(curNode);
+      const block = curNode.getLocation() as Blockly.Block;
+      if (!tryShowFullBlockFieldEditor(block)) {
+        const metaKey = navigator.platform.startsWith('Mac') ? 'Cmd' : 'Ctrl';
+        const canMoveInHint = `Press right arrow to move in or ${metaKey} + Enter for more options`;
+        const genericHint = `Press ${metaKey} + Enter for options`;
+        const hint =
+          curNode.in()?.getSourceBlock() === block
+            ? canMoveInHint
+            : genericHint;
+        alert(hint);
+      }
     } else if (
       curNode.isConnection() ||
       nodeType == Blockly.ASTNode.types.WORKSPACE
@@ -1429,4 +1439,23 @@ function fakeEventForNode(node: Blockly.ASTNode): PointerEvent {
     clientX: blockCoords.x + 5,
     clientY: clientY + 5,
   });
+}
+
+/**
+ * If this block has a full block field then show its editor.
+ *
+ * @param block A block.
+ * @returns True if we showed the editor, false otherwise.
+ */
+function tryShowFullBlockFieldEditor(block: Blockly.Block): boolean {
+  for (const input of block.inputList) {
+    for (const field of input.fieldRow) {
+      // @ts-expect-error isFullBlockField is a protected method.
+      if (field.isClickable() && field.isFullBlockField()) {
+        field.showEditor();
+        return true;
+      }
+    }
+  }
+  return false;
 }
