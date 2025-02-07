@@ -23,9 +23,9 @@ export class LineCursor extends Marker {
   override type = 'cursor';
 
   /**
-   * Constructor for a line cursor.
+   * @param workspace The workspace this cursor belongs to.
    */
-  constructor() {
+  constructor(public readonly workspace: Blockly.WorkspaceSvg) {
     super();
   }
 
@@ -423,12 +423,7 @@ export class LineCursor extends Marker {
   override getCurNode(): ASTNode {
     const curNode = super.getCurNode();
     const selected = Blockly.common.getSelected();
-    if (
-      (selected?.workspace as Blockly.WorkspaceSvg)
-        ?.getMarkerManager()
-        .getCursor() !== this
-    )
-      return curNode;
+    if (selected?.workspace !== this.workspace) return curNode;
 
     // Selected item is on workspace that this cursor belongs to.
     const curLocation = curNode?.getLocation();
@@ -523,14 +518,15 @@ export const pluginInfo = {
 };
 
 /**
- * Install this cursor on the marker manager in the same position as
- * the previous cursor.
+ * Install a LineCursor in the specified workspace's marker manager,
+ * in the same position as any existing cursor.
  *
- * @param markerManager The currently active marker manager.
+ * @param workspace The workspace on which to install a LineCursor
  */
-export function installCursor(markerManager: Blockly.MarkerManager) {
+export function installCursor(workspace: Blockly.WorkspaceSvg) {
+  const markerManager = workspace.getMarkerManager();
   const oldCurNode = markerManager.getCursor()?.getCurNode();
-  const lineCursor = new LineCursor();
+  const lineCursor = new LineCursor(workspace);
   markerManager.setCursor(lineCursor);
   if (oldCurNode) {
     markerManager.getCursor()?.setCurNode(oldCurNode);

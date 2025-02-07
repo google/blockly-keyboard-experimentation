@@ -49,7 +49,7 @@ export class KeyboardNavigation {
     this.originalTheme = workspace.getTheme();
     this.setGlowTheme();
     this.originalCursor = workspace.getMarkerManager().getCursor();
-    installCursor(workspace.getMarkerManager());
+    installCursor(workspace);
 
     // Ensure that only the root SVG G (group) has a tab index.
     this.injectionDivTabIndex = workspace
