@@ -89,7 +89,15 @@ export const SHORTCUT_CATEGORIES = {
     'toolbox',
     'disconnect',
   ],
-  'Editing': ['cut', 'copy', 'paste', 'undo', 'redo', 'enter_or_mark', 'insert'],
+  'Editing': [
+    'cut',
+    'copy',
+    'paste',
+    'undo',
+    'redo',
+    'enter_or_mark',
+    'insert',
+  ],
   'Code navigation': [
     'previous',
     'next',
@@ -105,6 +113,6 @@ export const SHORTCUT_CATEGORIES = {
     'workspace_up',
     'workspace_right',
     'clean_up_workspace',
-    'intercept_tab_navigation'
+    'intercept_tab_navigation',
   ],
 };
