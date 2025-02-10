@@ -22,12 +22,49 @@ import {ASTNode, Marker} from 'blockly/core';
 export class LineCursor extends Marker {
   override type = 'cursor';
 
+  /** Has the cursor been installed in a workspace's marker manager? */
+  private installed = false;
+
+  /** Old Cursor instance, saved during installation. */
+  private oldCursor: Blockly.Cursor | null = null;
+
   /**
    * @param workspace The workspace this cursor belongs to.
    */
   constructor(public readonly workspace: Blockly.WorkspaceSvg) {
     super();
-    workspace.addChangeListener(this.selectListener.bind(this));
+    // Bind selectListener to facilitate future install/uninstall.
+    this.selectListener = this.selectListener.bind(this);
+  }
+
+  /**
+   * Install this LineCursor in its workspace's marker manager and set
+   * up the select listener.  The original cursor (if any) is saved
+   * for future use by .uninstall(), and its location is used to set
+   * this one's.
+   */
+  install() {
+    if (this.installed) throw new Error('LineCursor already installed');
+    const markerManager = this.workspace.getMarkerManager();
+    this.oldCursor = markerManager.getCursor();
+    markerManager.setCursor(this);
+    if (this.oldCursor) this.setCurNode(this.oldCursor.getCurNode());
+    this.workspace.addChangeListener(this.selectListener);
+    this.installed = true;
+  }
+
+  /**
+   * Remove the select listener and uninstall this LineCursor from its
+   * workspace's marker manager, restoring any previously-existing
+   * cursor.  Does not attempt to adjust original cursor's location.
+   */
+  uninstall() {
+    if (!this.installed) throw new Error('LineCursor not yet installed');
+    this.workspace.removeChangeListener(this.selectListener.bind(this));
+    if (this.oldCursor) {
+      this.workspace.getMarkerManager().setCursor(this.oldCursor);
+    }
+    this.installed = false;
   }
 
   /**
@@ -528,19 +565,3 @@ Blockly.registry.register(registrationType, registrationName, LineCursor);
 export const pluginInfo = {
   [registrationType.toString()]: registrationName,
 };
-
-/**
- * Install a LineCursor in the specified workspace's marker manager,
- * in the same position as any existing cursor.
- *
- * @param workspace The workspace on which to install a LineCursor
- */
-export function installCursor(workspace: Blockly.WorkspaceSvg) {
-  const markerManager = workspace.getMarkerManager();
-  const oldCurNode = markerManager.getCursor()?.getCurNode();
-  const lineCursor = new LineCursor(workspace);
-  markerManager.setCursor(lineCursor);
-  if (oldCurNode) {
-    markerManager.getCursor()?.setCurNode(oldCurNode);
-  }
-}
