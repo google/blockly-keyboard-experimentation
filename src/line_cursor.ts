@@ -457,8 +457,8 @@ export class LineCursor extends Marker {
    * To ameliorate this, the LineCursor constructor adds an event
    * listener that calls getCurNode in response to SELECTED events.
    *
-   * TODO(#97): Remove this hack once Blockly is modified to update
-   * the cursor/focus itself.
+   * Remove this hack once Blockly is modified to update the
+   * cursor/focus itself.
    *
    * @returns The current field, connection, or block the cursor is on.
    */
@@ -549,6 +549,10 @@ export class LineCursor extends Marker {
     drawer.draw(oldNode, newNode);
   }
 
+  /**
+   * Event listener that syncs the cursor location to the selected
+   * block on SELECTED events.
+   */
   private selectListener(event: Blockly.Events.Abstract) {
     if (event.type !== Blockly.Events.SELECTED) return;
     const selectedEvent = event as Blockly.Events.Selected;
