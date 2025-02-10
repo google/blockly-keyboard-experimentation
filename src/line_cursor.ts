@@ -22,11 +22,49 @@ import {ASTNode, Marker} from 'blockly/core';
 export class LineCursor extends Marker {
   override type = 'cursor';
 
+  /** Has the cursor been installed in a workspace's marker manager? */
+  private installed = false;
+
+  /** Old Cursor instance, saved during installation. */
+  private oldCursor: Blockly.Cursor | null = null;
+
   /**
-   * Constructor for a line cursor.
+   * @param workspace The workspace this cursor belongs to.
    */
-  constructor() {
+  constructor(public readonly workspace: Blockly.WorkspaceSvg) {
     super();
+    // Bind selectListener to facilitate future install/uninstall.
+    this.selectListener = this.selectListener.bind(this);
+  }
+
+  /**
+   * Install this LineCursor in its workspace's marker manager and set
+   * up the select listener.  The original cursor (if any) is saved
+   * for future use by .uninstall(), and its location is used to set
+   * this one's.
+   */
+  install() {
+    if (this.installed) throw new Error('LineCursor already installed');
+    const markerManager = this.workspace.getMarkerManager();
+    this.oldCursor = markerManager.getCursor();
+    markerManager.setCursor(this);
+    if (this.oldCursor) this.setCurNode(this.oldCursor.getCurNode());
+    this.workspace.addChangeListener(this.selectListener);
+    this.installed = true;
+  }
+
+  /**
+   * Remove the select listener and uninstall this LineCursor from its
+   * workspace's marker manager, restoring any previously-existing
+   * cursor.  Does not attempt to adjust original cursor's location.
+   */
+  uninstall() {
+    if (!this.installed) throw new Error('LineCursor not yet installed');
+    this.workspace.removeChangeListener(this.selectListener.bind(this));
+    if (this.oldCursor) {
+      this.workspace.getMarkerManager().setCursor(this.oldCursor);
+    }
+    this.installed = false;
   }
 
   /**
@@ -410,25 +448,24 @@ export class LineCursor extends Marker {
    * if so, update the cursor location (and any highlighting) to
    * match.
    *
-   * This works reasonably well but has some glitches, most notably
-   * that if the cursor is not on a block (e.g. it is on a connection
-   * or the workspace) then it will remain visible in its previous
-   * location until a cursor key is pressed.
+   * Doing this only when getCurNode would naturally be called works
+   * reasonably well but has some glitches, most notably that if the
+   * cursor was not on a block (e.g. it was on a connection or the
+   * workspace) when the user selected a block then it will remain
+   * visible in its previous location until some keyboard navigation occurs.
    *
-   * TODO(#97): Remove this hack once Blockly is modified to update
-   * the cursor/focus itself.
+   * To ameliorate this, the LineCursor constructor adds an event
+   * listener that calls getCurNode in response to SELECTED events.
+   *
+   * Remove this hack once Blockly is modified to update the
+   * cursor/focus itself.
    *
    * @returns The current field, connection, or block the cursor is on.
    */
   override getCurNode(): ASTNode {
     const curNode = super.getCurNode();
     const selected = Blockly.common.getSelected();
-    if (
-      (selected?.workspace as Blockly.WorkspaceSvg)
-        ?.getMarkerManager()
-        .getCursor() !== this
-    )
-      return curNode;
+    if (selected?.workspace !== this.workspace) return curNode;
 
     // Selected item is on workspace that this cursor belongs to.
     const curLocation = curNode?.getLocation();
@@ -511,6 +548,17 @@ export class LineCursor extends Marker {
 
     drawer.draw(oldNode, newNode);
   }
+
+  /**
+   * Event listener that syncs the cursor location to the selected
+   * block on SELECTED events.
+   */
+  private selectListener(event: Blockly.Events.Abstract) {
+    if (event.type !== Blockly.Events.SELECTED) return;
+    const selectedEvent = event as Blockly.Events.Selected;
+    if (selectedEvent.workspaceId !== this.workspace.id) return;
+    this.getCurNode();
+  }
 }
 
 export const registrationName = 'LineCursor';
@@ -521,18 +569,3 @@ Blockly.registry.register(registrationType, registrationName, LineCursor);
 export const pluginInfo = {
   [registrationType.toString()]: registrationName,
 };
-
-/**
- * Install this cursor on the marker manager in the same position as
- * the previous cursor.
- *
- * @param markerManager The currently active marker manager.
- */
-export function installCursor(markerManager: Blockly.MarkerManager) {
-  const oldCurNode = markerManager.getCursor()?.getCurNode();
-  const lineCursor = new LineCursor();
-  markerManager.setCursor(lineCursor);
-  if (oldCurNode) {
-    markerManager.getCursor()?.setCurNode(oldCurNode);
-  }
-}
