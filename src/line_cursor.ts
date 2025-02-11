@@ -185,9 +185,8 @@ export class LineCursor extends Marker {
    *
    * @param node The AST node to check.
    * @returns True if the node should be visited, false otherwise.
-   * @protected
    */
-  validLineNode(node: ASTNode | null): boolean {
+  protected validLineNode(node: ASTNode | null): boolean {
     if (!node) return false;
     const location = node.getLocation();
     const type = node && node.getType();
@@ -217,9 +216,8 @@ export class LineCursor extends Marker {
    *
    * @param node The AST node to check whether it is valid.
    * @returns True if the node should be visited, false otherwise.
-   * @protected
    */
-  validInLineNode(node: ASTNode | null): boolean {
+  protected validInLineNode(node: ASTNode | null): boolean {
     if (!node) return false;
     const location = node.getLocation();
     const type = node && node.getType();
