@@ -101,7 +101,7 @@ export class LineCursor extends Marker {
     if (!curNode) {
       return null;
     }
-    let newNode = this.getNextNode(curNode, this.validLineNode);
+    let newNode = this.getNextNode(curNode, this.validLineNode.bind(this));
 
     if (newNode) {
       this.setCurNode(newNode);
@@ -121,7 +121,7 @@ export class LineCursor extends Marker {
     if (!curNode) {
       return null;
     }
-    const newNode = this.getNextNode(curNode, this.validInLineNode);
+    const newNode = this.getNextNode(curNode, this.validInLineNode.bind(this));
 
     if (newNode) {
       this.setCurNode(newNode);
@@ -140,7 +140,7 @@ export class LineCursor extends Marker {
     if (!curNode) {
       return null;
     }
-    let newNode = this.getPreviousNode(curNode, this.validLineNode);
+    let newNode = this.getPreviousNode(curNode, this.validLineNode.bind(this));
 
     if (newNode) {
       this.setCurNode(newNode);
@@ -160,7 +160,10 @@ export class LineCursor extends Marker {
     if (!curNode) {
       return null;
     }
-    const newNode = this.getPreviousNode(curNode, this.validInLineNode);
+    const newNode = this.getPreviousNode(
+      curNode,
+      this.validInLineNode.bind(this),
+    );
 
     if (newNode) {
       this.setCurNode(newNode);
