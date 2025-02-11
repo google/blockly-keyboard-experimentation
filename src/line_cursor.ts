@@ -183,6 +183,14 @@ export class LineCursor extends Marker {
    *   This is to facilitate connecting additional blocks to a
    *   stack/substack.
    *
+   * If options.stackConnections is true (the default) then allow the
+   * cursor to visit all (useful) stack connection by additionally
+   * returning true for:
+   *
+   *   - Any next statement input
+   *   - Any 'next' connection.
+   *   - An unconnected previous statement input.
+   *
    * @param node The AST node to check.
    * @returns True if the node should be visited, false otherwise.
    */
@@ -195,11 +203,20 @@ export class LineCursor extends Marker {
         return !(location as Blockly.Block).outputConnection?.isConnected();
       case ASTNode.types.INPUT:
         const connection = location as Blockly.Connection;
-        return connection.type === Blockly.NEXT_STATEMENT;
+        return (
+          connection.type === Blockly.NEXT_STATEMENT &&
+          (this.options.stackConnections || !connection.isConnected())
+        );
       case ASTNode.types.NEXT:
-        return true;
+        return (
+          this.options.stackConnections ||
+          !(location as Blockly.Connection).isConnected()
+        );
       case ASTNode.types.PREVIOUS:
-        return !(location as Blockly.Connection).isConnected();
+        return (
+          this.options.stackConnections &&
+          !(location as Blockly.Connection).isConnected()
+        );
       default:
         return false;
     }
