@@ -207,10 +207,11 @@ export class LineCursor extends Marker {
 
   /**
    * Returns true iff the given node can be visited by the cursor when
-   * using the left/right arrow keys.  Specifically, if the node is for:
+   * using the left/right arrow keys.  Specifically, if the node is
+   * for any node for which valideLineNode would return true, plus:
    *
    * - Any block.
-   * - Any field.
+   * - Any field that is not a full block field.
    * - Any unconnected next or input connection.  This is to
    *   facilitate connecting additional blocks.
    *
@@ -219,13 +220,13 @@ export class LineCursor extends Marker {
    */
   protected validInLineNode(node: ASTNode | null): boolean {
     if (!node) return false;
+    if (this.validLineNode(node)) return true;
     const location = node.getLocation();
     const type = node && node.getType();
     switch (type) {
       case ASTNode.types.BLOCK:
         return true;
       case ASTNode.types.INPUT:
-      case ASTNode.types.NEXT:
         return !(location as Blockly.Connection).isConnected();
       case ASTNode.types.FIELD:
         // @ts-expect-error isFullBlockField is a protected method.
