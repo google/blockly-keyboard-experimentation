@@ -16,11 +16,28 @@
 import * as Blockly from 'blockly/core';
 import {ASTNode, Marker} from 'blockly/core';
 
+/** Options object for LineCursor instances. */
+export type CursorOptions = {
+  /**
+   * Can the cursor visit all stack connections (next/previous), or
+   * (if false) only unconnected next connections?
+   */
+  stackConnections: boolean;
+};
+
+/** Default options for LineCursor instances. */
+const defaultOptions: CursorOptions = {
+  stackConnections: true,
+};
+
 /**
  * Class for a line cursor.
  */
 export class LineCursor extends Marker {
   override type = 'cursor';
+
+  /** Options for this line cursor. */
+  private readonly options: CursorOptions;
 
   /** Has the cursor been installed in a workspace's marker manager? */
   private installed = false;
@@ -31,10 +48,15 @@ export class LineCursor extends Marker {
   /**
    * @param workspace The workspace this cursor belongs to.
    */
-  constructor(public readonly workspace: Blockly.WorkspaceSvg) {
+  constructor(
+    public readonly workspace: Blockly.WorkspaceSvg,
+    options?: Partial<CursorOptions>,
+  ) {
     super();
     // Bind selectListener to facilitate future install/uninstall.
     this.selectListener = this.selectListener.bind(this);
+    // Regularise options and apply defaults.
+    this.options = {...defaultOptions, ...options};
   }
 
   /**
