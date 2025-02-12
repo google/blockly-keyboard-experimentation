@@ -6,7 +6,17 @@
 
 import * as Blockly from 'blockly/core';
 import {NavigationController} from './navigation_controller';
-import {LineCursor} from './line_cursor';
+import {CursorOptions, LineCursor} from './line_cursor';
+
+/** Options object for KeyboardNavigation instances. */
+export type NavigationOptions = {
+  cursor: Partial<CursorOptions>;
+};
+
+/** Default options for LineCursor instances. */
+const defaultOptions: NavigationOptions = {
+  cursor: {},
+};
 
 /** Plugin for keyboard navigation. */
 export class KeyboardNavigation {
@@ -39,8 +49,14 @@ export class KeyboardNavigation {
    * @param workspace The workspace that the plugin will
    *     be added to.
    */
-  constructor(workspace: Blockly.WorkspaceSvg) {
+  constructor(
+    workspace: Blockly.WorkspaceSvg,
+    options: Partial<NavigationOptions>,
+  ) {
     this.workspace = workspace;
+
+    // Regularise options and apply defaults.
+    options = {...defaultOptions, ...options};
 
     this.navigationController = new NavigationController();
     this.navigationController.init();
@@ -51,7 +67,7 @@ export class KeyboardNavigation {
     this.originalTheme = workspace.getTheme();
     this.setGlowTheme();
 
-    this.cursor = new LineCursor(workspace);
+    this.cursor = new LineCursor(workspace, options.cursor);
     this.cursor.install();
 
     // Ensure that only the root SVG G (group) has a tab index.
