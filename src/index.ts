@@ -101,12 +101,16 @@ export class KeyboardNavigation {
       this.workspace
         .getParentSvg()
         .setAttribute('tabindex', this.workspaceParentTabIndex);
+    } else {
+      this.workspace.getParentSvg().removeAttribute('tabindex');
     }
 
     if (this.injectionDivTabIndex) {
       this.workspace
         .getInjectionDiv()
         .setAttribute('tabindex', this.injectionDivTabIndex);
+    } else {
+      this.workspace.getInjectionDiv().removeAttribute('tabindex');
     }
 
     this.cursor.uninstall();
