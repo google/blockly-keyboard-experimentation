@@ -752,6 +752,8 @@ export class Navigation {
           movingBlock,
           stationaryBlock.previousConnection,
         );
+      } else if (stationaryBlock.outputConnection) {
+        return this.insertBlock(movingBlock, stationaryBlock.outputConnection);
       }
     }
     this.warn('Unexpected state in tryToConnectNodes.');
