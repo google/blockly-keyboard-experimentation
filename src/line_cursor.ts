@@ -16,11 +16,28 @@
 import * as Blockly from 'blockly/core';
 import {ASTNode, Marker} from 'blockly/core';
 
+/** Options object for LineCursor instances. */
+export type CursorOptions = {
+  /**
+   * Can the cursor visit all stack connections (next/previous), or
+   * (if false) only unconnected next connections?
+   */
+  stackConnections: boolean;
+};
+
+/** Default options for LineCursor instances. */
+const defaultOptions: CursorOptions = {
+  stackConnections: true,
+};
+
 /**
  * Class for a line cursor.
  */
 export class LineCursor extends Marker {
   override type = 'cursor';
+
+  /** Options for this line cursor. */
+  private readonly options: CursorOptions;
 
   /** Has the cursor been installed in a workspace's marker manager? */
   private installed = false;
@@ -31,10 +48,15 @@ export class LineCursor extends Marker {
   /**
    * @param workspace The workspace this cursor belongs to.
    */
-  constructor(public readonly workspace: Blockly.WorkspaceSvg) {
+  constructor(
+    public readonly workspace: Blockly.WorkspaceSvg,
+    options?: Partial<CursorOptions>,
+  ) {
     super();
     // Bind selectListener to facilitate future install/uninstall.
     this.selectListener = this.selectListener.bind(this);
+    // Regularise options and apply defaults.
+    this.options = {...defaultOptions, ...options};
   }
 
   /**
@@ -79,7 +101,7 @@ export class LineCursor extends Marker {
     if (!curNode) {
       return null;
     }
-    let newNode = this.getNextNode(curNode, this.validLineNode);
+    let newNode = this.getNextNode(curNode, this.validLineNode.bind(this));
 
     if (newNode) {
       this.setCurNode(newNode);
@@ -99,7 +121,7 @@ export class LineCursor extends Marker {
     if (!curNode) {
       return null;
     }
-    const newNode = this.getNextNode(curNode, this.validInLineNode);
+    const newNode = this.getNextNode(curNode, this.validInLineNode.bind(this));
 
     if (newNode) {
       this.setCurNode(newNode);
@@ -118,7 +140,7 @@ export class LineCursor extends Marker {
     if (!curNode) {
       return null;
     }
-    let newNode = this.getPreviousNode(curNode, this.validLineNode);
+    let newNode = this.getPreviousNode(curNode, this.validLineNode.bind(this));
 
     if (newNode) {
       this.setCurNode(newNode);
@@ -138,7 +160,10 @@ export class LineCursor extends Marker {
     if (!curNode) {
       return null;
     }
-    const newNode = this.getPreviousNode(curNode, this.validInLineNode);
+    const newNode = this.getPreviousNode(
+      curNode,
+      this.validInLineNode.bind(this),
+    );
 
     if (newNode) {
       this.setCurNode(newNode);
@@ -158,11 +183,18 @@ export class LineCursor extends Marker {
    *   This is to facilitate connecting additional blocks to a
    *   stack/substack.
    *
+   * If options.stackConnections is true (the default) then allow the
+   * cursor to visit all (useful) stack connection by additionally
+   * returning true for:
+   *
+   *   - Any next statement input
+   *   - Any 'next' connection.
+   *   - An unconnected previous statement input.
+   *
    * @param node The AST node to check.
    * @returns True if the node should be visited, false otherwise.
-   * @protected
    */
-  validLineNode(node: ASTNode | null): boolean {
+  protected validLineNode(node: ASTNode | null): boolean {
     if (!node) return false;
     const location = node.getLocation();
     const type = node && node.getType();
@@ -171,11 +203,20 @@ export class LineCursor extends Marker {
         return !(location as Blockly.Block).outputConnection?.isConnected();
       case ASTNode.types.INPUT:
         const connection = location as Blockly.Connection;
-        return connection.type === Blockly.NEXT_STATEMENT;
+        return (
+          connection.type === Blockly.NEXT_STATEMENT &&
+          (this.options.stackConnections || !connection.isConnected())
+        );
       case ASTNode.types.NEXT:
-        return true;
+        return (
+          this.options.stackConnections ||
+          !(location as Blockly.Connection).isConnected()
+        );
       case ASTNode.types.PREVIOUS:
-        return !(location as Blockly.Connection).isConnected();
+        return (
+          this.options.stackConnections &&
+          !(location as Blockly.Connection).isConnected()
+        );
       default:
         return false;
     }
@@ -183,26 +224,26 @@ export class LineCursor extends Marker {
 
   /**
    * Returns true iff the given node can be visited by the cursor when
-   * using the left/right arrow keys.  Specifically, if the node is for:
+   * using the left/right arrow keys.  Specifically, if the node is
+   * for any node for which valideLineNode would return true, plus:
    *
    * - Any block.
-   * - Any field.
+   * - Any field that is not a full block field.
    * - Any unconnected next or input connection.  This is to
    *   facilitate connecting additional blocks.
    *
    * @param node The AST node to check whether it is valid.
    * @returns True if the node should be visited, false otherwise.
-   * @protected
    */
-  validInLineNode(node: ASTNode | null): boolean {
+  protected validInLineNode(node: ASTNode | null): boolean {
     if (!node) return false;
+    if (this.validLineNode(node)) return true;
     const location = node.getLocation();
     const type = node && node.getType();
     switch (type) {
       case ASTNode.types.BLOCK:
         return true;
       case ASTNode.types.INPUT:
-      case ASTNode.types.NEXT:
         return !(location as Blockly.Connection).isConnected();
       case ASTNode.types.FIELD:
         // @ts-expect-error isFullBlockField is a protected method.
