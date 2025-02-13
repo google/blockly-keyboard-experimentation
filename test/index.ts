@@ -24,23 +24,49 @@ import {load} from './loadTestBlocks';
 import {runCode, registerRunCodeShortcut} from './runCode';
 
 /**
- * Load initial workspace state based on the value in the scenario dropdown.
+ * Parse query params for inject and navigation options and update
+ * the fields on the options form to match.
  *
- * @param workspace The workspace to load blocks into.
+ * @returns An options object with keys for each supported option.
  */
-function loadScenario(workspace: Blockly.WorkspaceSvg) {
-  const scenarioSelector = location.search.match(/scenario=([^&]+)/);
-  // Default to the sunny day example.
-  const scenarioString = scenarioSelector
-    ? scenarioSelector[1]
-    : 'simpleCircle';
-  const selector = document.getElementById(
-    'scenarioSelect',
-  ) as HTMLSelectElement;
-  selector.value = scenarioString;
+function getOptions() {
+  const params = new URLSearchParams(window.location.search);
 
-  // Load the initial state from storage and run the code.
-  load(workspace, scenarioString);
+  const scenarioParam = params.get('scenario');
+  const scenario = scenarioParam ?? 'simpleCircle';
+
+  const rendererParam = params.get('renderer');
+  let renderer = 'zelos';
+  // For backwards compatibility with previous behaviour, support
+  // (e.g.) ?geras as well as ?renderer=geras:
+  if (rendererParam) {
+    renderer = rendererParam;
+  } else if (params.get('geras')) {
+    renderer = 'geras';
+  } else if (params.get('thrasos')) {
+    renderer = 'thrasos';
+  }
+
+  const noStackParam = params.get('noStack');
+  const stackConnections = !noStackParam;
+
+  // Update form inputs to match params, but only after the page is
+  // fully loaded as Chrome (at least) tries to restore previous form
+  // values and does so _after_ DOMContentLoaded has fired, which can
+  // result in the form inputs being out-of-sync with the actual
+  // options when doing browswer page navigation.
+  window.addEventListener('load', () => {
+    (document.getElementById('renderer') as HTMLSelectElement).value = renderer;
+    (document.getElementById('scenario') as HTMLSelectElement).value = scenario;
+    (document.getElementById('noStack') as HTMLInputElement).checked =
+      !stackConnections;
+  });
+
+  return {
+    scenario,
+    stackConnections,
+    renderer,
+  };
 }
 
 /**
@@ -50,26 +76,25 @@ function loadScenario(workspace: Blockly.WorkspaceSvg) {
  * @returns The created workspace.
  */
 function createWorkspace(): Blockly.WorkspaceSvg {
-  console.log(location.search);
-  const renderer = location.search.includes('geras')
-    ? 'geras'
-    : location.search.includes('thrasos')
-      ? 'thrasos'
-      : 'zelos';
-  const options = {
+  const {scenario, stackConnections, renderer} = getOptions();
+
+  const injectOptions = {
     toolbox: toolboxCategories,
     renderer,
   };
   const blocklyDiv = document.getElementById('blocklyDiv')!;
-  const workspace = Blockly.inject(blocklyDiv, options);
+  const workspace = Blockly.inject(blocklyDiv, injectOptions);
 
-  new KeyboardNavigation(workspace);
+  const navigationOptions = {
+    cursor: {stackConnections},
+  };
+  new KeyboardNavigation(workspace, navigationOptions);
   registerRunCodeShortcut();
 
   // Disable blocks that aren't inside the setup or draw loops.
   workspace.addChangeListener(Blockly.Events.disableOrphans);
 
-  loadScenario(workspace);
+  load(workspace, scenario);
   runCode();
 
   return workspace;
@@ -88,7 +113,7 @@ function addP5() {
   javascriptGenerator.addReservedWords('sketch');
 }
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
   addP5();
   createWorkspace();
   document.getElementById('run')?.addEventListener('click', runCode);
