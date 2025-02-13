@@ -562,13 +562,8 @@ export class NavigationController {
       preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE: {
-            const node = workspace.getCursor()?.getCurNode();
-            if (node?.getType() === Blockly.ASTNode.types.BLOCK)
-              this.navigation.openActionMenu(node);
-
-            return true;
-          }
+          case Constants.STATE.WORKSPACE:
+            return this.navigation.openActionMenu(workspace);
           default:
             return false;
         }

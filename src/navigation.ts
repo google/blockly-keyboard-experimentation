@@ -1294,33 +1294,34 @@ export class Navigation {
   }
 
   /**
-   * Show the action menu for a given node.
+   * Show the action menu for the current node.
    *
    * The action menu will contain entries for relevant actions for the
    * node's location.  If the location is a block, this will include
    * the contents of the block's context menu (if any).
+   *
+   * Returns true if it is possible to open the action menu in the
+   * current location, even if the menu was not opened due there being
+   * no applicable menu items.
    */
-  openActionMenu(node: Blockly.ASTNode) {
-    const fakeEvent = fakeEventForNode(node);
-    (node.getLocation() as Blockly.BlockSvg).showContextMenu(fakeEvent);
-
+  openActionMenu(workspace: Blockly.WorkspaceSvg): boolean {
     let menuOptions: Array<
       | Blockly.ContextMenuRegistry.ContextMenuOption
       | Blockly.ContextMenuRegistry.LegacyContextMenuOption
     > | null = null;
     let rtl: boolean;
-    let workspace: Blockly.WorkspaceSvg;
 
+    const cursor = workspace.getCursor();
+    if (!cursor) throw new Error('workspace has no cursor');
+    const node = cursor.getCurNode();
     const nodeType = node.getType();
     switch (nodeType) {
       case Blockly.ASTNode.types.BLOCK:
         const block = node.getLocation() as Blockly.BlockSvg;
-        workspace = block.workspace as Blockly.WorkspaceSvg;
         rtl = block.RTL;
-
         // Reimplement BlockSvg.prototype.generateContextMenu as that
         // method is protected.
-        if (!workspace.options.readOnly && !block.contextMenu) {
+        if (!workspace.options.readOnly && block.contextMenu) {
           menuOptions =
             Blockly.ContextMenuRegistry.registry.getContextMenuOptions(
               Blockly.ContextMenuRegistry.ScopeType.BLOCK,
@@ -1328,21 +1329,19 @@ export class Navigation {
             );
 
           // Allow the block to add or modify menuOptions.
-          if (block.customContextMenu) {
-            block.customContextMenu(menuOptions);
-          }
+          block.customContextMenu?.(menuOptions);
         }
         // End reimplement.
         break;
       default:
-        throw new TypeError(
-          `unable to show action menu for ASTNode of type ${nodeType}`,
-        );
+        console.info(`No action menu for ASTNode of type ${nodeType}`);
+        return false;
     }
 
-    if (!menuOptions || !menuOptions.length) return;
-
+    if (!menuOptions?.length) return true;
+    const fakeEvent = fakeEventForNode(node);
     Blockly.ContextMenu.show(fakeEvent, menuOptions, rtl, workspace);
+    return true;
   }
 
   /**
