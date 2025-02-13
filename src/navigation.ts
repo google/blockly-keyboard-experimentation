@@ -724,22 +724,22 @@ export class Navigation {
       // Connect the moving block to the stationary connection using
       // the most plausible connection on the moving block.
       if (
-        movingType == Blockly.ASTNode.types.BLOCK ||
-        movingType == Blockly.ASTNode.types.STACK
+        movingType === Blockly.ASTNode.types.BLOCK ||
+        movingType === Blockly.ASTNode.types.STACK
       ) {
         const stationaryAsConnection =
           stationaryLoc as Blockly.RenderedConnection;
         const movingAsBlock = movingLoc as Blockly.BlockSvg;
         return this.insertBlock(movingAsBlock, stationaryAsConnection);
       }
-    } else if (stationaryType == Blockly.ASTNode.types.WORKSPACE) {
+    } else if (stationaryType === Blockly.ASTNode.types.WORKSPACE) {
       const block = movingNode
         ? (movingNode.getSourceBlock() as Blockly.BlockSvg)
         : null;
       return this.moveBlockToWorkspace(block, stationaryNode);
     } else if (
-      stationaryType == Blockly.ASTNode.types.BLOCK &&
-      movingType == Blockly.ASTNode.types.BLOCK
+      stationaryType === Blockly.ASTNode.types.BLOCK &&
+      movingType === Blockly.ASTNode.types.BLOCK
     ) {
       // Insert the moving block above the stationary block, if the
       // appropriate connections exist.
@@ -783,19 +783,19 @@ export class Navigation {
     const cursorType = cursorNode.getType();
 
     // Check the marker for invalid types.
-    if (markerType == Blockly.ASTNode.types.FIELD) {
+    if (markerType === Blockly.ASTNode.types.FIELD) {
       this.warn('Should not have been able to mark a field.');
       return false;
-    } else if (markerType == Blockly.ASTNode.types.STACK) {
+    } else if (markerType === Blockly.ASTNode.types.STACK) {
       this.warn('Should not have been able to mark a stack.');
       return false;
     }
 
     // Check the cursor for invalid types.
-    if (cursorType == Blockly.ASTNode.types.FIELD) {
+    if (cursorType === Blockly.ASTNode.types.FIELD) {
       this.warn('Cannot attach a field to anything else.');
       return false;
-    } else if (cursorType == Blockly.ASTNode.types.WORKSPACE) {
+    } else if (cursorType === Blockly.ASTNode.types.WORKSPACE) {
       this.warn('Cannot attach a workspace to anything else.');
       return false;
     }
@@ -1255,9 +1255,9 @@ export class Navigation {
     if (!cursor) return;
     const curNode = cursor.getCurNode();
     const nodeType = curNode.getType();
-    if (nodeType == Blockly.ASTNode.types.FIELD) {
+    if (nodeType === Blockly.ASTNode.types.FIELD) {
       (curNode.getLocation() as Blockly.Field).showEditor();
-    } else if (nodeType == Blockly.ASTNode.types.BLOCK) {
+    } else if (nodeType === Blockly.ASTNode.types.BLOCK) {
       const block = curNode.getLocation() as Blockly.Block;
       if (!tryShowFullBlockFieldEditor(block)) {
         const metaKey = navigator.platform.startsWith('Mac') ? 'Cmd' : 'Ctrl';
@@ -1271,10 +1271,10 @@ export class Navigation {
       }
     } else if (
       curNode.isConnection() ||
-      nodeType == Blockly.ASTNode.types.WORKSPACE
+      nodeType === Blockly.ASTNode.types.WORKSPACE
     ) {
       this.openToolboxOrFlyout(workspace);
-    } else if (nodeType == Blockly.ASTNode.types.STACK) {
+    } else if (nodeType === Blockly.ASTNode.types.STACK) {
       this.warn('Cannot mark a stack.');
     }
   }
