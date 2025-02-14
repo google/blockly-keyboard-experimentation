@@ -1356,45 +1356,27 @@ export class Navigation {
    * @returns True if the paste was sucessful, false otherwise.
    */
   paste(copyData: Blockly.ICopyData, workspace: Blockly.WorkspaceSvg): boolean {
-    let isHandled = false;
+    // Do this before clipoard.paste due to cursor/focus workaround in getCurNode.
+    const targetNode = workspace.getCursor()?.getCurNode();
+
     Blockly.Events.setGroup(true);
     const block = Blockly.clipboard.paste(
       copyData,
       workspace,
     ) as Blockly.BlockSvg;
     if (block) {
-      isHandled = this.insertPastedBlock(workspace, block);
+      if (targetNode) {
+        this.tryToConnectNodes(
+          workspace,
+          targetNode,
+          Blockly.ASTNode.createBlockNode(block)!,
+        );
+      }
       this.removeMark(workspace);
+      return true;
     }
     Blockly.Events.setGroup(false);
-    return isHandled;
-  }
-
-  /**
-   * Inserts the pasted block at the marked location if a compatible
-   * connection exists. If no connection has been marked, or there is
-   * not a compatible connection then the block is placed on the
-   * workspace.
-   *
-   * @param workspace The workspace to paste the block on.
-   * @param block The block to paste.
-   * @returns True if the block was pasted to the workspace, false
-   *     otherwise.
-   */
-  insertPastedBlock(
-    workspace: Blockly.WorkspaceSvg,
-    block: Blockly.BlockSvg,
-  ): boolean {
-    let isHandled = false;
-    const targetNode = workspace.getCursor()?.getCurNode();
-    if (targetNode) {
-      isHandled = this.tryToConnectNodes(
-        workspace,
-        targetNode,
-        Blockly.ASTNode.createBlockNode(block)!,
-      );
-    }
-    return isHandled;
+    return false;
   }
 
   /**
