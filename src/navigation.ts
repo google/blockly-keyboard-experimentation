@@ -600,20 +600,18 @@ export class Navigation {
     if (!newBlock) {
       return;
     }
-    if (!this.markedNode) {
-      this.warn('No marked node when inserting from flyout.');
-      return;
-    }
-    if (
-      !this.tryToConnectNodes(
-        workspace,
-        this.markedNode,
-        Blockly.ASTNode.createBlockNode(newBlock)!,
-      )
-    ) {
-      this.warn(
-        'Something went wrong while inserting a block from the flyout.',
-      );
+    if (this.markedNode) {
+      if (
+        !this.tryToConnectNodes(
+          workspace,
+          this.markedNode,
+          Blockly.ASTNode.createBlockNode(newBlock)!,
+        )
+      ) {
+        this.warn(
+          'Something went wrong while inserting a block from the flyout.',
+        );
+      }
     }
 
     this.focusWorkspace(workspace);
