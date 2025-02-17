@@ -245,9 +245,14 @@ export class LineCursor extends Marker {
         return true;
       case ASTNode.types.INPUT:
         return !(location as Blockly.Connection).isConnected();
-      case ASTNode.types.FIELD:
-        // @ts-expect-error isFullBlockField is a protected method.
-        return !(location as Blockly.Field).isFullBlockField();
+      case ASTNode.types.FIELD: {
+        const field = node.getLocation() as Blockly.Field;
+        return !(
+          field.getSourceBlock()?.isSimpleReporter() &&
+          // @ts-expect-error isFullBlockField is a protected method.
+          field.isFullBlockField()
+        );
+      }
       default:
         return false;
     }

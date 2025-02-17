@@ -1458,12 +1458,14 @@ function fakeEventForNode(node: Blockly.ASTNode): PointerEvent {
  * @returns True if we showed the editor, false otherwise.
  */
 function tryShowFullBlockFieldEditor(block: Blockly.Block): boolean {
-  for (const input of block.inputList) {
-    for (const field of input.fieldRow) {
-      // @ts-expect-error isFullBlockField is a protected method.
-      if (field.isClickable() && field.isFullBlockField()) {
-        field.showEditor();
-        return true;
+  if (block.isSimpleReporter()) {
+    for (const input of block.inputList) {
+      for (const field of input.fieldRow) {
+        // @ts-expect-error isFullBlockField is a protected method.
+        if (field.isClickable() && field.isFullBlockField()) {
+          field.showEditor();
+          return true;
+        }
       }
     }
   }
