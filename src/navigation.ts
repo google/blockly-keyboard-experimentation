@@ -1308,7 +1308,7 @@ export class Navigation {
     let menuOptions: Array<
       | Blockly.ContextMenuRegistry.ContextMenuOption
       | Blockly.ContextMenuRegistry.LegacyContextMenuOption
-    > | null = null;
+    > = [];
     let rtl: boolean;
 
     const cursor = workspace.getCursor();
@@ -1333,6 +1333,42 @@ export class Navigation {
         }
         // End reimplement.
         break;
+
+      // case Blockly.ASTNode.types.INPUT:
+      case Blockly.ASTNode.types.NEXT:
+      case Blockly.ASTNode.types.PREVIOUS:
+        const connection = node.getLocation() as Blockly.Connection;
+        rtl = connection.getSourceBlock().RTL;
+
+        // Slightly hacky: get insert action from registry.  Hacky
+        // because registry typings don't include {connection: ...} as
+        // a possible kind of scope.
+        const insertAction =
+          Blockly.ContextMenuRegistry.registry.getItem('insert');
+        if (!insertAction) throw new Error("can't find insert action");
+        const possibleOptions = [insertAction /* etc.*/];
+
+        // Check preconditions and get menu texts.
+        const scope = {
+          connection,
+        } as unknown as Blockly.ContextMenuRegistry.Scope;
+        for (const option of possibleOptions) {
+          const precondition = option.preconditionFn(scope);
+          if (precondition === 'hidden') continue;
+          const displayText =
+            typeof option.displayText === 'function'
+              ? option.displayText(scope)
+              : option.displayText;
+          menuOptions.push({
+            text: displayText,
+            enabled: precondition === 'enabled',
+            callback: option.callback,
+            scope,
+            weight: option.weight,
+          });
+        }
+        break;
+
       default:
         console.info(`No action menu for ASTNode of type ${nodeType}`);
         return false;
@@ -1410,12 +1446,29 @@ export class Navigation {
  * Create a fake PointerEvent for opening the action menu for the
  * given ASTNode.
  *
- * Currently only works for block nodes.
- *
  * @param node The node to open the action menu for.
  * @returns A synthetic pointerdown PointerEvent.
  */
 function fakeEventForNode(node: Blockly.ASTNode): PointerEvent {
+  switch (node.getType()) {
+    case Blockly.ASTNode.types.BLOCK:
+      return fakeEventForBlockNode(node);
+    case Blockly.ASTNode.types.NEXT:
+    case Blockly.ASTNode.types.PREVIOUS:
+      return fakeEventForStackNode(node);
+    default:
+      throw new TypeError('unhandled node type');
+  }
+}
+
+/**
+ * Create a fake PointerEvent for opening the action menu for the
+ * given ASTNode of type BLOCK.
+ *
+ * @param node The node to open the action menu for.
+ * @returns A synthetic pointerdown PointerEvent.
+ */
+function fakeEventForBlockNode(node: Blockly.ASTNode): PointerEvent {
   if (node.getType() !== Blockly.ASTNode.types.BLOCK) {
     throw new TypeError('can only create PointerEvents for BLOCK nodes');
   }
@@ -1446,6 +1499,36 @@ function fakeEventForNode(node: Blockly.ASTNode): PointerEvent {
     clientX: blockCoords.x + 5,
     clientY: clientY + 5,
   });
+}
+
+/**
+ * Create a fake PointerEvent for opening the action menu for the
+ * given ASTNode of type NEXT or PREVIOUS.
+ *
+ * For now this just puts the action menu in the same place as the
+ * context menu for the source block.
+ *
+ * @param node The node to open the action menu for.
+ * @returns A synthetic pointerdown PointerEvent.
+ */
+function fakeEventForStackNode(node: Blockly.ASTNode): PointerEvent {
+  if (
+    node.getType() !== Blockly.ASTNode.types.NEXT &&
+    node.getType() !== Blockly.ASTNode.types.PREVIOUS
+  ) {
+    throw new TypeError(
+      'can only create PointerEvents for NEXT / PREVIOUS nodes',
+    );
+  }
+
+  const connection = node.getLocation() as Blockly.Connection;
+
+  return fakeEventForBlockNode(
+    new Blockly.ASTNode(
+      Blockly.ASTNode.types.BLOCK,
+      connection.getSourceBlock(),
+    ),
+  );
 }
 
 /**
