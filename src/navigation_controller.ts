@@ -16,6 +16,8 @@ import * as Blockly from 'blockly/core';
 import {
   ASTNode,
   BlockSvg,
+  comments,
+  Connection,
   ContextMenuRegistry,
   ICopyData,
   ShortcutRegistry,
@@ -34,6 +36,13 @@ const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
   ShortcutRegistry.registry,
 );
+
+interface Scope {
+  block?: BlockSvg;
+  workspace?: WorkspaceSvg;
+  comment?: comments.RenderedWorkspaceComment;
+  connection?: Connection;
+}
 
 /**
  * Class for registering shortcuts for keyboard navigation.
@@ -978,12 +987,18 @@ export class NavigationController {
    */
   protected registerInsertAction() {
     const insertAboveAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => 'Insert block above',
-      preconditionFn: (scope) => {
-        const ws = scope.block?.workspace;
+      displayText: (scope: Scope) =>
+        scope.block
+          ? 'Insert block above'
+          : scope.connection
+            ? 'Insert block here'
+            : 'Insert',
+      preconditionFn: (scope: Scope) => {
+        const block = scope.block ?? scope.connection?.getSourceBlock();
+        const ws = block?.workspace as WorkspaceSvg | null;
         if (!ws) return 'hidden';
 
-        if (!scope.block?.previousConnection) return 'hidden';
+        // if (!scope.block?.previousConnection) return 'hidden';
 
         return this.canCurrentlyEdit(ws) ? 'enabled' : 'hidden';
       },
@@ -998,7 +1013,7 @@ export class NavigationController {
         return false;
       },
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
-      id: 'blockInsertAbove',
+      id: 'insert',
       weight: 12,
     };
     ContextMenuRegistry.registry.register(insertAboveAction);
