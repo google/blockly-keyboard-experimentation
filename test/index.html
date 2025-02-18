@@ -107,15 +107,32 @@
           <div id="p5output"></div>
           <div id="scenarioForm">
             <form id="options">
-              <label for="scenarioSelect">Scenario:</label>
+              <label for="scenario">Scenario:</label>
               <select
                 name="scenario"
-                id="scenarioSelect"
+                id="scenario"
                 onchange="document.forms.options.submit()">
                 <option value="simpleCircle">simple circle</option>
                 <option value="sun">sun</option>
                 <option value="blank">blank canvas</option>
               </select>
+              <br />
+              <label for="renderer">Renderer:</label>
+              <select
+                name="renderer"
+                id="renderer"
+                onchange="document.forms.options.submit()">
+                <option value="geras">Geras</option>
+                <option value="thrasos">Thrasos</option>
+                <option value="zelos">Zelos</option>
+              </select>
+              <br />
+              <label for="stackConnections">Disable stack connections:</label>
+              <input
+                type="checkbox"
+                name="noStack"
+                id="noStack"
+                onChange="document.forms.options.submit()" />
             </form>
           </div>
         </div>
