@@ -78,7 +78,8 @@ export class KeyboardNavigation {
     this.workspaceParentTabIndex = workspace
       .getParentSvg()
       .getAttribute('tabindex');
-    workspace.getParentSvg().removeAttribute('tabindex');
+    // We add a focus listener below so use -1 so it doesn't become focusable.
+    workspace.getParentSvg().setAttribute('tabindex', '-1');
 
     this.focusListener = () => {
       this.navigationController.setHasFocus(workspace, true);
