@@ -554,6 +554,13 @@ export class Navigation {
     if (!cursor) {
       return;
     }
+
+    if (this.markedNode) {
+      cursor.setCurNode(this.markedNode);
+      this.removeMark(workspace);
+      return;
+    }
+
     if (cursor.getCurNode() && keepPosition) {
       // Retain the cursor's previous position since it's set.
       return;
