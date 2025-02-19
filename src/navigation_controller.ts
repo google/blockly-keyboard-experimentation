@@ -16,6 +16,8 @@ import * as Blockly from 'blockly/core';
 import {
   ASTNode,
   BlockSvg,
+  comments,
+  Connection,
   ContextMenuRegistry,
   ICopyData,
   ShortcutRegistry,
@@ -34,6 +36,13 @@ const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
   ShortcutRegistry.registry,
 );
+
+interface Scope {
+  block?: BlockSvg;
+  workspace?: WorkspaceSvg;
+  comment?: comments.RenderedWorkspaceComment;
+  connection?: Connection;
+}
 
 /**
  * Class for registering shortcuts for keyboard navigation.
@@ -323,7 +332,7 @@ export class NavigationController {
   protected blockCopyCallbackFn(workspace: WorkspaceSvg) {
     const navigationState = this.navigation.getState(workspace);
     let activeWorkspace: Blockly.WorkspaceSvg | undefined = workspace;
-    if (navigationState == Constants.STATE.FLYOUT) {
+    if (navigationState === Constants.STATE.FLYOUT) {
       activeWorkspace = workspace.getFlyout()?.getWorkspace();
     }
     const sourceBlock = activeWorkspace
@@ -373,7 +382,7 @@ export class NavigationController {
             }
             return isHandled;
           case Constants.STATE.TOOLBOX:
-            return toolbox && typeof toolbox.onShortcut == 'function'
+            return toolbox && typeof toolbox.onShortcut === 'function'
               ? toolbox.onShortcut(shortcut)
               : false;
           default:
@@ -418,7 +427,7 @@ export class NavigationController {
             this.navigation.focusToolbox(workspace);
             return true;
           case Constants.STATE.TOOLBOX:
-            return toolbox && typeof toolbox.onShortcut == 'function'
+            return toolbox && typeof toolbox.onShortcut === 'function'
               ? toolbox.onShortcut(shortcut)
               : false;
           default:
@@ -452,7 +461,7 @@ export class NavigationController {
             }
             return isHandled;
           case Constants.STATE.TOOLBOX:
-            return toolbox && typeof toolbox.onShortcut == 'function'
+            return toolbox && typeof toolbox.onShortcut === 'function'
               ? toolbox.onShortcut(shortcut)
               : false;
           default:
@@ -479,7 +488,7 @@ export class NavigationController {
             return isHandled;
           case Constants.STATE.TOOLBOX:
             isHandled =
-              toolbox && typeof toolbox.onShortcut == 'function'
+              toolbox && typeof toolbox.onShortcut === 'function'
                 ? toolbox.onShortcut(shortcut)
                 : false;
             if (!isHandled) {
@@ -562,13 +571,8 @@ export class NavigationController {
       preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE: {
-            const node = workspace.getCursor()?.getCurNode();
-            if (node?.getType() === Blockly.ASTNode.types.BLOCK)
-              this.navigation.openActionMenu(node);
-
-            return true;
-          }
+          case Constants.STATE.WORKSPACE:
+            return this.navigation.openActionMenu(workspace);
           default:
             return false;
         }
@@ -790,7 +794,7 @@ export class NavigationController {
       callback: (workspace, e, shortcut) => {
         const cursor = workspace.getCursor() as LineCursor;
 
-        if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
+        if (this.navigation.getState(workspace) === Constants.STATE.WORKSPACE) {
           if (this.fieldShortcutHandler(workspace, shortcut)) {
             this.announcer.setText('next sibling (handled by field)');
             return true;
@@ -814,7 +818,7 @@ export class NavigationController {
       callback: (workspace, e, shortcut) => {
         const cursor = workspace.getCursor() as LineCursor;
 
-        if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
+        if (this.navigation.getState(workspace) === Constants.STATE.WORKSPACE) {
           if (this.fieldShortcutHandler(workspace, shortcut)) {
             this.announcer.setText('previous sibling (handled by field)');
             return true;
@@ -858,7 +862,7 @@ export class NavigationController {
       name: Constants.SHORTCUT_NAMES.CONTEXT_OUT,
       preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace) => {
-        if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
+        if (this.navigation.getState(workspace) === Constants.STATE.WORKSPACE) {
           this.announcer.setText('context out');
           const cursor = workspace.getCursor() as LineCursor;
           if (cursor.contextOut()) {
@@ -877,7 +881,7 @@ export class NavigationController {
       preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       // Print out the type of the current node.
       callback: (workspace) => {
-        if (this.navigation.getState(workspace) == Constants.STATE.WORKSPACE) {
+        if (this.navigation.getState(workspace) === Constants.STATE.WORKSPACE) {
           const cursor = workspace.getCursor() as LineCursor;
           if (cursor.contextIn()) {
             this.announcer.setText('context in');
@@ -983,12 +987,16 @@ export class NavigationController {
    */
   protected registerInsertAction() {
     const insertAboveAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => 'Insert block above',
-      preconditionFn: (scope) => {
-        const ws = scope.block?.workspace;
+      displayText: (scope: Scope) =>
+        scope.block
+          ? 'Insert block above'
+          : scope.connection
+            ? 'Insert block here'
+            : 'Insert',
+      preconditionFn: (scope: Scope) => {
+        const block = scope.block ?? scope.connection?.getSourceBlock();
+        const ws = block?.workspace as WorkspaceSvg | null;
         if (!ws) return 'hidden';
-
-        if (!scope.block?.previousConnection) return 'hidden';
 
         return this.canCurrentlyEdit(ws) ? 'enabled' : 'hidden';
       },
@@ -996,14 +1004,14 @@ export class NavigationController {
         const ws = scope.block?.workspace;
         if (!ws) return false;
 
-        if (this.navigation.getState(ws) == Constants.STATE.WORKSPACE) {
+        if (this.navigation.getState(ws) === Constants.STATE.WORKSPACE) {
           this.navigation.openToolboxOrFlyout(ws);
           return true;
         }
         return false;
       },
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
-      id: 'blockInsertAbove',
+      id: 'insert',
       weight: 12,
     };
     ContextMenuRegistry.registry.register(insertAboveAction);
