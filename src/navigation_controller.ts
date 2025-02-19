@@ -998,8 +998,6 @@ export class NavigationController {
         const ws = block?.workspace as WorkspaceSvg | null;
         if (!ws) return 'hidden';
 
-        // if (!scope.block?.previousConnection) return 'hidden';
-
         return this.canCurrentlyEdit(ws) ? 'enabled' : 'hidden';
       },
       callback: (scope) => {
