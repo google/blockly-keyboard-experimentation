@@ -538,10 +538,13 @@ export class Navigation {
   }
 
   /**
-   * Moves the cursor to the top connection point on on the first top block.
-   * If the workspace is empty, moves the cursor to the default location on
-   * the workspace.
-   *
+   * Sets the cursor location when focusing the workspace.
+   * Tries the following, in order, stopping after the first success:
+   *  - Resume editing by putting the cursor at the marker location, if any.
+   *  - Resume editing by returning the cursor to its previous location, if any.
+   *  - Move the cursor to the top connection point on on the first top block.
+   *  - Move the cursor to the default location on the workspace.
+   * 
    * @param workspace The main Blockly workspace.
    * @param keepPosition Whether to retain the cursor's previous position.
    */
