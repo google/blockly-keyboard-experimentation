@@ -31,6 +31,7 @@ import {Navigation} from './navigation';
 import {Announcer} from './announcer';
 import {LineCursor} from './line_cursor';
 import {ShortcutDialog} from './shortcut_dialog';
+import {DeleteAction} from './actions/delete';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -56,6 +57,12 @@ export class NavigationController {
   navigation: Navigation = new Navigation();
   announcer: Announcer = new Announcer();
   shortcutDialog: ShortcutDialog = new ShortcutDialog();
+
+  /** Context menu and keyboard action for delete. */
+  deleteAction: DeleteAction = new DeleteAction(
+    this.navigation,
+    this.canCurrentlyEdit.bind(this),
+  );
 
   hasNavigationFocus: boolean = false;
 
@@ -235,56 +242,6 @@ export class NavigationController {
   }
 
   /**
-   * Precondition function for deleting a block from keyboard
-   * navigation. This precondition is shared between keyboard shortcuts
-   * and context menu items.
-   *
-   * FIXME: This should be better encapsulated.
-   *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @returns True iff `deleteCallbackFn` function should be called.
-   */
-  protected deletePreconditionFn(workspace: WorkspaceSvg) {
-    if (!this.canCurrentlyEdit(workspace)) return false;
-    const sourceBlock = workspace.getCursor()?.getCurNode().getSourceBlock();
-    return !!sourceBlock?.isDeletable();
-  }
-
-  /**
-   * Callback function for deleting a block from keyboard
-   * navigation. This callback is shared between keyboard shortcuts
-   * and context menu items.
-   *
-   * FIXME: This should be better encapsulated.
-   *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @param e The originating event for a keyboard shortcut, or null
-   *     if called from a context menu.
-   * @returns True if this function successfully handled deletion.
-   */
-  protected deleteCallbackFn(workspace: WorkspaceSvg, e: Event | null) {
-    const cursor = workspace.getCursor();
-    if (!cursor) return false;
-    const sourceBlock = cursor.getCurNode().getSourceBlock() as BlockSvg;
-    // Delete or backspace.
-    // There is an event if this is triggered from a keyboard shortcut,
-    // but not if it's triggered from a context menu.
-    if (e) {
-      // Stop the browser from going back to the previous page.
-      // Do this first to prevent an error in the delete code from resulting
-      // in data loss.
-      e.preventDefault();
-    }
-    // Don't delete while dragging.  Jeez.
-    if (Blockly.Gesture.inProgress()) false;
-    this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
-    sourceBlock.checkAndDelete();
-    return true;
-  }
-
-  /**
    * Precondition function for copying a block from keyboard
    * navigation. This precondition is shared between keyboard shortcuts
    * and context menu items.
@@ -293,7 +250,7 @@ export class NavigationController {
    *
    * @param workspace The `WorkspaceSvg` where the shortcut was
    *     invoked.
-   * @returns True iff `deleteCallbackFn` function should be called.
+   * @returns True iff `blockCopyCallbackFn` function should be called.
    */
   protected blockCopyPreconditionFn(workspace: WorkspaceSvg) {
     if (!this.canCurrentlyEdit(workspace)) return false;
@@ -754,15 +711,6 @@ export class NavigationController {
       allowCollision: true,
     },
 
-    /** Keyboard shortcut to delete the block the cursor is currently on. */
-    delete: {
-      name: Constants.SHORTCUT_NAMES.DELETE,
-      preconditionFn: this.deletePreconditionFn.bind(this),
-      callback: this.deleteCallbackFn.bind(this),
-      keyCodes: [KeyCodes.DELETE, KeyCodes.BACKSPACE],
-      allowCollision: true,
-    },
-
     /** List all of the currently registered shortcuts. */
     announceShortcuts: {
       name: Constants.SHORTCUT_NAMES.LIST_SHORTCUTS,
@@ -908,56 +856,6 @@ export class NavigationController {
   };
 
   /**
-   * Register the delete block action as a context menu item on blocks.
-   * This function mixes together the keyboard and context menu preconditions
-   * but only calls the keyboard callback.
-   */
-  protected registerDeleteAction() {
-    const originalDeleteItem =
-      ContextMenuRegistry.registry.getItem('blockDelete');
-    if (!originalDeleteItem) return;
-
-    const deleteItem: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => {
-        // FIXME: Consider using the original delete item's display text,
-        // which is dynamic based on the nubmer of blocks to delete.
-        return 'Keyboard Navigation: delete';
-      },
-      preconditionFn: (scope) => {
-        // FIXME: Find a better way to get the workspace, or use `as WorkspaceSvg`.
-        const ws = scope.block?.workspace;
-
-        // Run the original precondition code, from the context menu option.
-        // If the item would be hidden or disabled, respect it.
-        const originalPreconditionResult =
-          originalDeleteItem.preconditionFn(scope);
-        if (!ws || originalPreconditionResult != 'enabled') {
-          return originalPreconditionResult;
-        }
-
-        // Return enabled if the keyboard shortcut precondition is allowed,
-        // and disabled if the context menu precondition is met but the keyboard
-        // shortcut precondition is not met.
-        return this.deletePreconditionFn(ws) ? 'enabled' : 'disabled';
-      },
-      callback: (scope) => {
-        // FIXME: Find a better way to get the workspace, or use `as WorkspaceSvg`.
-        const ws = scope.block?.workspace;
-        if (!ws) return;
-
-        // Delete the block(s), and put the cursor back in a sane location.
-        return this.deleteCallbackFn(ws, null);
-      },
-      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
-      id: 'blockDeleteFromContextMenu',
-      weight: 10,
-    };
-
-    // FIXME: Decide whether to unregister the original item.
-    ContextMenuRegistry.registry.register(deleteItem);
-  }
-
-  /**
    * Register the block copy action as a context menu item on blocks.
    */
   protected registerCopyAction() {
@@ -1026,8 +924,7 @@ export class NavigationController {
     for (const shortcut of Object.values(this.shortcuts)) {
       ShortcutRegistry.registry.register(shortcut);
     }
-
-    this.registerDeleteAction();
+    this.deleteAction.install();
     this.registerCopyAction();
     this.registerInsertAction();
 
@@ -1045,7 +942,7 @@ export class NavigationController {
       ShortcutRegistry.registry.unregister(shortcut.name);
     }
 
-    ContextMenuRegistry.registry.unregister('blockDeleteFromContextMenu');
+    this.deleteAction.uninstall();
     ContextMenuRegistry.registry.unregister('blockCopyFromContextMenu');
 
     this.removeShortcutHandlers();
