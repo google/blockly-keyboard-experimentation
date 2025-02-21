@@ -18,6 +18,7 @@ import {
   FlyoutCursor,
 } from './flyout_cursor';
 import {PassiveFocus} from './passive_focus';
+import {toast} from './toast';
 
 /**
  * Class that holds all methods necessary for keyboard navigation to work.
@@ -544,7 +545,7 @@ export class Navigation {
    *  - Resume editing by returning the cursor to its previous location, if any.
    *  - Move the cursor to the top connection point on on the first top block.
    *  - Move the cursor to the default location on the workspace.
-   * 
+   *
    * @param workspace The main Blockly workspace.
    * @param keepPosition Whether to retain the cursor's previous position.
    */
@@ -1270,14 +1271,14 @@ export class Navigation {
     } else if (nodeType === Blockly.ASTNode.types.BLOCK) {
       const block = curNode.getLocation() as Blockly.Block;
       if (!tryShowFullBlockFieldEditor(block)) {
-        const metaKey = navigator.platform.startsWith('Mac') ? 'Cmd' : 'Ctrl';
+        const metaKey = navigator.platform.startsWith('Mac') ? '⌘' : 'Ctrl';
         const canMoveInHint = `Press right arrow to move in or ${metaKey} + Enter for more options`;
         const genericHint = `Press ${metaKey} + Enter for options`;
-        const hint =
+        const message =
           curNode.in()?.getSourceBlock() === block
             ? canMoveInHint
             : genericHint;
-        alert(hint);
+        toast(workspace, {message});
       }
     } else if (
       curNode.isConnection() ||

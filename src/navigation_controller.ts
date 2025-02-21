@@ -31,6 +31,7 @@ import {Navigation} from './navigation';
 import {Announcer} from './announcer';
 import {LineCursor} from './line_cursor';
 import {ShortcutDialog} from './shortcut_dialog';
+import {toast} from './toast';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -342,6 +343,12 @@ export class NavigationController {
     workspace.hideChaff();
     this.copyData = sourceBlock.toCopyData();
     this.copyWorkspace = sourceBlock.workspace;
+    if (this.copyData) {
+      toast(workspace, {
+        message: `Copied. Press ${navigator.platform.startsWith('Mac') ? '⌘' : 'Ctrl'} + V to paste.`,
+        duration: 3000,
+      });
+    }
     return !!this.copyData;
   }
 
