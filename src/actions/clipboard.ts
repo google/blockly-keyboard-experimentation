@@ -9,7 +9,7 @@ import {
   Gesture,
   ShortcutRegistry,
   utils as BlocklyUtils,
-  ICopyData
+  ICopyData,
 } from 'blockly';
 import * as Constants from '../constants';
 import type {BlockSvg, Workspace, WorkspaceSvg} from 'blockly';
@@ -118,7 +118,6 @@ export class Clipboard {
 
     ShortcutRegistry.registry.register(cutShortcut);
   }
-
 
   private registerPasteContextMenuAction() {
     // TODO: Implement.
