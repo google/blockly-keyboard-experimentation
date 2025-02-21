@@ -87,7 +87,7 @@ export class DeleteAction {
   private registerContextMenuAction() {
     this.oldContextMenuItem =
       ContextMenuRegistry.registry.getItem('blockDelete');
-    
+
     if (!this.oldContextMenuItem) return;
 
     // Unregister the original item..

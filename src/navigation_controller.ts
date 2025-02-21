@@ -32,6 +32,7 @@ import {Announcer} from './announcer';
 import {LineCursor} from './line_cursor';
 import {ShortcutDialog} from './shortcut_dialog';
 import {DeleteAction} from './actions/delete';
+import {Clipboard} from './actions/clipboard';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -60,6 +61,11 @@ export class NavigationController {
 
   /** Context menu and keyboard action for delete. */
   deleteAction: DeleteAction = new DeleteAction(
+    this.navigation,
+    this.canCurrentlyEdit.bind(this),
+  );
+
+  clipboard: Clipboard = new Clipboard(
     this.navigation,
     this.canCurrentlyEdit.bind(this),
   );
@@ -638,78 +644,78 @@ export class NavigationController {
     },
 
     /** Copy the block the cursor is currently on. */
-    copy: {
-      name: Constants.SHORTCUT_NAMES.COPY,
-      preconditionFn: this.blockCopyPreconditionFn.bind(this),
-      callback: this.blockCopyCallbackFn.bind(this),
-      keyCodes: [
-        createSerializedKey(KeyCodes.C, [KeyCodes.CTRL]),
-        createSerializedKey(KeyCodes.C, [KeyCodes.ALT]),
-        createSerializedKey(KeyCodes.C, [KeyCodes.META]),
-      ],
-      allowCollision: true,
-    },
+    // copy: {
+    //   name: Constants.SHORTCUT_NAMES.COPY,
+    //   preconditionFn: this.blockCopyPreconditionFn.bind(this),
+    //   callback: this.blockCopyCallbackFn.bind(this),
+    //   keyCodes: [
+    //     createSerializedKey(KeyCodes.C, [KeyCodes.CTRL]),
+    //     createSerializedKey(KeyCodes.C, [KeyCodes.ALT]),
+    //     createSerializedKey(KeyCodes.C, [KeyCodes.META]),
+    //   ],
+    //   allowCollision: true,
+    // },
 
     /**
      * Paste the copied block, to the marked location if possible or
      * onto the workspace otherwise.
      */
-    paste: {
-      name: Constants.SHORTCUT_NAMES.PASTE,
-      preconditionFn: (workspace) =>
-        this.canCurrentlyEdit(workspace) && !Blockly.Gesture.inProgress(),
-      callback: (workspace) => {
-        if (!this.copyData || !this.copyWorkspace) return false;
-        const pasteWorkspace = this.copyWorkspace.isFlyout
-          ? workspace
-          : this.copyWorkspace;
-        return this.navigation.paste(this.copyData, pasteWorkspace);
-      },
-      keyCodes: [
-        createSerializedKey(KeyCodes.V, [KeyCodes.CTRL]),
-        createSerializedKey(KeyCodes.V, [KeyCodes.ALT]),
-        createSerializedKey(KeyCodes.V, [KeyCodes.META]),
-      ],
-      allowCollision: true,
-    },
+    // paste: {
+    //   name: Constants.SHORTCUT_NAMES.PASTE,
+    //   preconditionFn: (workspace) =>
+    //     this.canCurrentlyEdit(workspace) && !Blockly.Gesture.inProgress(),
+    //   callback: (workspace) => {
+    //     if (!this.copyData || !this.copyWorkspace) return false;
+    //     const pasteWorkspace = this.copyWorkspace.isFlyout
+    //       ? workspace
+    //       : this.copyWorkspace;
+    //     return this.navigation.paste(this.copyData, pasteWorkspace);
+    //   },
+    //   keyCodes: [
+    //     createSerializedKey(KeyCodes.V, [KeyCodes.CTRL]),
+    //     createSerializedKey(KeyCodes.V, [KeyCodes.ALT]),
+    //     createSerializedKey(KeyCodes.V, [KeyCodes.META]),
+    //   ],
+    //   allowCollision: true,
+    // },
 
     /** Copy and delete the block the cursor is currently on. */
-    cut: {
-      name: Constants.SHORTCUT_NAMES.CUT,
-      preconditionFn: (workspace) => {
-        if (this.canCurrentlyEdit(workspace)) {
-          const curNode = workspace.getCursor()?.getCurNode();
-          if (curNode && curNode.getSourceBlock()) {
-            const sourceBlock = curNode.getSourceBlock();
-            return !!(
-              !Blockly.Gesture.inProgress() &&
-              sourceBlock &&
-              sourceBlock.isDeletable() &&
-              sourceBlock.isMovable() &&
-              !sourceBlock.workspace.isFlyout
-            );
-          }
-        }
-        return false;
-      },
-      callback: (workspace) => {
-        const sourceBlock = workspace
-          .getCursor()
-          ?.getCurNode()
-          .getSourceBlock() as BlockSvg;
-        this.copyData = sourceBlock.toCopyData();
-        this.copyWorkspace = sourceBlock.workspace;
-        this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
-        sourceBlock.checkAndDelete();
-        return true;
-      },
-      keyCodes: [
-        createSerializedKey(KeyCodes.X, [KeyCodes.CTRL]),
-        createSerializedKey(KeyCodes.X, [KeyCodes.ALT]),
-        createSerializedKey(KeyCodes.X, [KeyCodes.META]),
-      ],
-      allowCollision: true,
-    },
+    // cut: {
+    //   name: Constants.SHORTCUT_NAMES.CUT,
+    //   preconditionFn: (workspace) => {
+    //     if (this.canCurrentlyEdit(workspace)) {
+    //       const curNode = workspace.getCursor()?.getCurNode();
+    //       if (curNode && curNode.getSourceBlock()) {
+    //         const sourceBlock = curNode.getSourceBlock();
+    //         return !!(
+    //           !Blockly.Gesture.inProgress() &&
+    //           sourceBlock &&
+    //           sourceBlock.isDeletable() &&
+    //           sourceBlock.isMovable() &&
+    //           !sourceBlock.workspace.isFlyout
+    //         );
+    //       }
+    //     }
+    //     return false;
+    //   },
+    //   callback: (workspace) => {
+    //     const sourceBlock = workspace
+    //       .getCursor()
+    //       ?.getCurNode()
+    //       .getSourceBlock() as BlockSvg;
+    //     this.copyData = sourceBlock.toCopyData();
+    //     this.copyWorkspace = sourceBlock.workspace;
+    //     this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
+    //     sourceBlock.checkAndDelete();
+    //     return true;
+    //   },
+    //   keyCodes: [
+    //     createSerializedKey(KeyCodes.X, [KeyCodes.CTRL]),
+    //     createSerializedKey(KeyCodes.X, [KeyCodes.ALT]),
+    //     createSerializedKey(KeyCodes.X, [KeyCodes.META]),
+    //   ],
+    //   allowCollision: true,
+    // },
 
     /** List all of the currently registered shortcuts. */
     announceShortcuts: {
@@ -925,7 +931,10 @@ export class NavigationController {
       ShortcutRegistry.registry.register(shortcut);
     }
     this.deleteAction.install();
-    this.registerCopyAction();
+
+    this.clipboard.install();
+
+    //this.registerCopyAction();
     this.registerInsertAction();
 
     // Initalise the shortcut modal with available shortcuts.  Needs
