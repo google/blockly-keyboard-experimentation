@@ -527,7 +527,7 @@ export class Navigation {
    */
   focusWorkspace(
     workspace: Blockly.WorkspaceSvg,
-    keepCursorPosition: boolean = false,
+    keepCursorPosition = false,
   ) {
     workspace.hideChaff();
     const reset = !!workspace.getToolbox();
@@ -538,13 +538,33 @@ export class Navigation {
   }
 
   /**
+   * Blurs (de-focuses) the workspace's toolbox or flyout, and hides the flyout
+   * if it's currently visible.
+   *
+   * @param workspace The workspace containing the toolbox or flyout.
+   */
+  blurToolboxAndFlyout(workspace: Blockly.WorkspaceSvg) {
+    workspace.hideChaff();
+    const reset = !!workspace.getToolbox();
+
+    this.resetFlyout(workspace, reset);
+    switch (this.getState(workspace)) {
+      case Constants.STATE.FLYOUT:
+      case Constants.STATE.TOOLBOX:
+        // Clear state since neither the flyout nor toolbox are focused anymore.
+        this.setState(workspace, Constants.STATE.NOWHERE);
+        break;
+    }
+  }
+
+  /**
    * Sets the cursor location when focusing the workspace.
    * Tries the following, in order, stopping after the first success:
    *  - Resume editing by putting the cursor at the marker location, if any.
    *  - Resume editing by returning the cursor to its previous location, if any.
    *  - Move the cursor to the top connection point on on the first top block.
    *  - Move the cursor to the default location on the workspace.
-   * 
+   *
    * @param workspace The main Blockly workspace.
    * @param keepPosition Whether to retain the cursor's previous position.
    */
