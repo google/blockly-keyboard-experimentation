@@ -14,6 +14,7 @@
  * The different parts of Blockly that the user navigates between.
  */
 export enum STATE {
+  NOWHERE = 'nowhere',
   WORKSPACE = 'workspace',
   FLYOUT = 'flyout',
   TOOLBOX = 'toolbox',

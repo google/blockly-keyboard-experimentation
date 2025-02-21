@@ -82,14 +82,26 @@ export class KeyboardNavigation {
     workspace.getParentSvg().setAttribute('tabindex', '-1');
 
     this.focusListener = () => {
-      this.navigationController.setHasFocus(workspace, true);
+      this.navigationController.updateWorkspaceFocus(workspace, true);
     };
     this.blurListener = () => {
-      this.navigationController.setHasFocus(workspace, false);
+      this.navigationController.updateWorkspaceFocus(workspace, false);
     };
 
     workspace.getSvgGroup().addEventListener('focus', this.focusListener);
     workspace.getSvgGroup().addEventListener('blur', this.blurListener);
+
+    const toolbox = workspace.getToolbox();
+    if (toolbox != null && toolbox instanceof Blockly.Toolbox) {
+      const contentsDiv = toolbox.HtmlDiv?.querySelector('.blocklyToolboxContents');
+      contentsDiv?.addEventListener('focus', () => {
+        this.navigationController.updateToolboxOrFlyoutFocus(workspace, true);
+      });
+      contentsDiv?.addEventListener('blur', () => {
+        this.navigationController.updateToolboxOrFlyoutFocus(workspace, false);
+      });
+    }
+
     // Temporary workaround for #136.
     // TODO(#136): fix in core.
     workspace.getParentSvg().addEventListener('focus', this.focusListener);
