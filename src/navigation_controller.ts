@@ -916,7 +916,7 @@ export class NavigationController {
       },
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'insert',
-      weight: 12,
+      weight: 9,
     };
     ContextMenuRegistry.registry.register(insertAboveAction);
   }
