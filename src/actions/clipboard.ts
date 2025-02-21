@@ -59,7 +59,9 @@ export class Clipboard {
    * Reinstall the original context menu action if possible.
    */
   uninstall() {
-    ContextMenuRegistry.registry.unregister('blockDeleteFromContextMenu');
+    ContextMenuRegistry.registry.unregister('blockCopyFromContextMenu');
+    ContextMenuRegistry.registry.unregister('blockPasteFromContextMenu');
+    ContextMenuRegistry.registry.unregister('blockCutFromContextMenu');
 
     ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.COPY);
     ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.CUT);
@@ -120,11 +122,51 @@ export class Clipboard {
   }
 
   private registerPasteContextMenuAction() {
-    // TODO: Implement.
+    const pasteAction: ContextMenuRegistry.RegistryItem = {
+      displayText: (scope) => {
+        return 'Paste (' + this.getPlatformPrefix() + ' + V)';
+      },
+      preconditionFn: (scope) => {
+        const ws = scope.block?.workspace;
+        if (!ws) return 'hidden';
+
+        return this.pastePreconditionFn(ws) ? 'enabled' : 'disabled';
+      },
+      callback: (scope) => {
+        const ws = scope.block?.workspace;
+        if (!ws) return;
+        return this.pasteCallbackFn(ws);
+      },
+      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
+      id: 'blockPasteFromContextMenu',
+      weight: 11,
+    };
+
+    ContextMenuRegistry.registry.register(pasteAction);
   }
 
   private registerCutContextMenuAction() {
-    // TODO: Implement.
+    const cutAction: ContextMenuRegistry.RegistryItem = {
+      displayText: (scope) => {
+        return 'Cut (' + this.getPlatformPrefix() + ' + X)';
+      },
+      preconditionFn: (scope) => {
+        const ws = scope.block?.workspace;
+        if (!ws) return 'hidden';
+
+        return this.cutPreconditionFn(ws) ? 'enabled' : 'disabled';
+      },
+      callback: (scope) => {
+        const ws = scope.block?.workspace;
+        if (!ws) return;
+        return this.cutCallbackFn(ws);
+      },
+      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
+      id: 'blockCutFromContextMenu',
+      weight: 11,
+    };
+
+    ContextMenuRegistry.registry.register(cutAction);
   }
 
   /**
@@ -134,7 +176,9 @@ export class Clipboard {
    */
   private registerCopyContextMenuAction() {
     const copyAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => 'Clipboard: copy',
+      displayText: (scope) => {
+        return 'Copy (' + this.getPlatformPrefix() + ' + C)';
+      },
       preconditionFn: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return 'hidden';
@@ -292,5 +336,10 @@ export class Clipboard {
       }
     }
     return false;
+  }
+
+  // TODO: This belongs in the action menu/keyboard shortcut/context menu code.
+  private getPlatformPrefix() {
+    return navigator.platform.startsWith('Mac') ? 'Cmd' : 'Ctrl';
   }
 }
