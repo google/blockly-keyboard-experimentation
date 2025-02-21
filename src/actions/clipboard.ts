@@ -33,6 +33,14 @@ export class Clipboard {
    */
   private canCurrentlyEditFn: (ws: WorkspaceSvg) => boolean;
 
+  /**
+   * Weight for the first of these three items in the context menu.
+   * Changing base weight will change where this group goes in the context
+   * menu; changing individual weights relative to base weight can change
+   * the order within the clipboard group.
+   */
+  private baseWeight = 11;
+
   constructor(
     private navigation: Navigation,
     canEditFn: (ws: WorkspaceSvg) => boolean,
@@ -87,90 +95,7 @@ export class Clipboard {
   }
 
   /**
-   * Paste the copied block, to the marked location if possible or
-   * onto the workspace otherwise.
-   */
-  private registerPasteShortcut() {
-    const pasteShortcut: ShortcutRegistry.KeyboardShortcut = {
-      name: Constants.SHORTCUT_NAMES.PASTE,
-      preconditionFn: this.pastePreconditionFn.bind(this),
-      callback: this.pasteCallbackFn.bind(this),
-      keyCodes: [
-        createSerializedKey(KeyCodes.V, [KeyCodes.CTRL]),
-        createSerializedKey(KeyCodes.V, [KeyCodes.ALT]),
-        createSerializedKey(KeyCodes.V, [KeyCodes.META]),
-      ],
-      allowCollision: true,
-    };
-    ShortcutRegistry.registry.register(pasteShortcut);
-  }
-
-  private registerCutShortcut() {
-    const cutShortcut: ShortcutRegistry.KeyboardShortcut = {
-      name: Constants.SHORTCUT_NAMES.CUT,
-      preconditionFn: this.cutPreconditionFn.bind(this),
-      callback: this.cutCallbackFn.bind(this),
-      keyCodes: [
-        createSerializedKey(KeyCodes.X, [KeyCodes.CTRL]),
-        createSerializedKey(KeyCodes.X, [KeyCodes.ALT]),
-        createSerializedKey(KeyCodes.X, [KeyCodes.META]),
-      ],
-      allowCollision: true,
-    };
-
-    ShortcutRegistry.registry.register(cutShortcut);
-  }
-
-  private registerPasteContextMenuAction() {
-    const pasteAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => {
-        return 'Paste (' + this.getPlatformPrefix() + ' + V)';
-      },
-      preconditionFn: (scope) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return 'hidden';
-
-        return this.pastePreconditionFn(ws) ? 'enabled' : 'disabled';
-      },
-      callback: (scope) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return;
-        return this.pasteCallbackFn(ws);
-      },
-      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
-      id: 'blockPasteFromContextMenu',
-      weight: 11,
-    };
-
-    ContextMenuRegistry.registry.register(pasteAction);
-  }
-
-  private registerCutContextMenuAction() {
-    const cutAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => {
-        return 'Cut (' + this.getPlatformPrefix() + ' + X)';
-      },
-      preconditionFn: (scope) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return 'hidden';
-
-        return this.cutPreconditionFn(ws) ? 'enabled' : 'disabled';
-      },
-      callback: (scope) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return;
-        return this.cutCallbackFn(ws);
-      },
-      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
-      id: 'blockCutFromContextMenu',
-      weight: 11,
-    };
-
-    ContextMenuRegistry.registry.register(cutAction);
-  }
-
-  /**
-   * Register the delete block action as a context menu item on blocks.
+   * Register the copy block action as a context menu item on blocks.
    * This function mixes together the keyboard and context menu preconditions
    * but only calls the keyboard callback.
    */
@@ -192,20 +117,20 @@ export class Clipboard {
       },
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'blockCopyFromContextMenu',
-      weight: 11,
+      weight: this.baseWeight + 1,
     };
 
     ContextMenuRegistry.registry.register(copyAction);
   }
-
+  
   /**
-   * Precondition function for deleting a block from keyboard
+   * Precondition function for copying a block from keyboard
    * navigation. This precondition is shared between keyboard shortcuts
    * and context menu items.
    *
    * @param workspace The `WorkspaceSvg` where the shortcut was
    *     invoked.
-   * @returns True iff `deleteCallbackFn` function should be called.
+   * @returns True iff `copyCallbackFn` function should be called.
    */
   private copyPreconditionFn(workspace: WorkspaceSvg) {
     if (!this.canCurrentlyEditFn(workspace)) return false;
@@ -235,8 +160,6 @@ export class Clipboard {
    * navigation. This callback is shared between keyboard shortcuts
    * and context menu items.
    *
-   * FIXME: This should be better encapsulated.
-   *
    * @param workspace The `WorkspaceSvg` where the shortcut was
    *     invoked.
    * @returns True if this function successfully handled copying.
@@ -257,12 +180,71 @@ export class Clipboard {
     return !!this.copyData;
   }
 
+
+  /**
+   * Create and register the keyboard shortcut for the paste action.
+   */
+  private registerPasteShortcut() {
+    const pasteShortcut: ShortcutRegistry.KeyboardShortcut = {
+      name: Constants.SHORTCUT_NAMES.PASTE,
+      preconditionFn: this.pastePreconditionFn.bind(this),
+      callback: this.pasteCallbackFn.bind(this),
+      keyCodes: [
+        createSerializedKey(KeyCodes.V, [KeyCodes.CTRL]),
+        createSerializedKey(KeyCodes.V, [KeyCodes.ALT]),
+        createSerializedKey(KeyCodes.V, [KeyCodes.META]),
+      ],
+      allowCollision: true,
+    };
+    ShortcutRegistry.registry.register(pasteShortcut);
+  }
+
+  /**
+   * Register the paste block action as a context menu item on blocks.
+   * This function mixes together the keyboard and context menu preconditions
+   * but only calls the keyboard callback.
+   */
+  private registerPasteContextMenuAction() {
+    const pasteAction: ContextMenuRegistry.RegistryItem = {
+      displayText: (scope) => {
+        return 'Paste (' + this.getPlatformPrefix() + ' + V)';
+      },
+      preconditionFn: (scope) => {
+        const ws = scope.block?.workspace;
+        if (!ws) return 'hidden';
+
+        return this.pastePreconditionFn(ws) ? 'enabled' : 'disabled';
+      },
+      callback: (scope) => {
+        const ws = scope.block?.workspace;
+        if (!ws) return;
+        return this.pasteCallbackFn(ws);
+      },
+      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
+      id: 'blockPasteFromContextMenu',
+      weight: this.baseWeight + 2,
+    };
+
+    ContextMenuRegistry.registry.register(pasteAction);
+  }
+
+  /**
+   * Precondition function for pasting a block from keyboard
+   * navigation. This precondition is shared between keyboard shortcuts
+   * and context menu items.
+   *
+   * @param workspace The `WorkspaceSvg` where the shortcut was
+   *     invoked.
+   * @returns True iff `pasteCallbackFn` function should be called.
+   */
+  private pastePreconditionFn(workspace: WorkspaceSvg) {
+    return this.canCurrentlyEditFn(workspace) && !Gesture.inProgress();
+  }
+
   /**
    * Callback function for pasting a block from keyboard
    * navigation. This callback is shared between keyboard shortcuts
    * and context menu items.
-   *
-   * FIXME: This should be better encapsulated.
    *
    * @param workspace The `WorkspaceSvg` where the shortcut was
    *     invoked.
@@ -277,24 +259,57 @@ export class Clipboard {
   }
 
   /**
-   * Precondition function for pasting a block from keyboard
-   * navigation. This precondition is shared between keyboard shortcuts
-   * and context menu items.
-   *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @returns True iff `blockPasteCallbackFn` function should be called.
+   * Create and register the keyboard shortcut for the cut action.
    */
-  private pastePreconditionFn(workspace: WorkspaceSvg) {
-    return this.canCurrentlyEditFn(workspace) && !Gesture.inProgress();
+  private registerCutShortcut() {
+    const cutShortcut: ShortcutRegistry.KeyboardShortcut = {
+      name: Constants.SHORTCUT_NAMES.CUT,
+      preconditionFn: this.cutPreconditionFn.bind(this),
+      callback: this.cutCallbackFn.bind(this),
+      keyCodes: [
+        createSerializedKey(KeyCodes.X, [KeyCodes.CTRL]),
+        createSerializedKey(KeyCodes.X, [KeyCodes.ALT]),
+        createSerializedKey(KeyCodes.X, [KeyCodes.META]),
+      ],
+      allowCollision: true,
+    };
+
+    ShortcutRegistry.registry.register(cutShortcut);
+  }
+
+  /**
+   * Register the cut block action as a context menu item on blocks.
+   * This function mixes together the keyboard and context menu preconditions
+   * but only calls the keyboard callback.
+   */
+  private registerCutContextMenuAction() {
+    const cutAction: ContextMenuRegistry.RegistryItem = {
+      displayText: (scope) => {
+        return 'Cut (' + this.getPlatformPrefix() + ' + X)';
+      },
+      preconditionFn: (scope) => {
+        const ws = scope.block?.workspace;
+        if (!ws) return 'hidden';
+
+        return this.cutPreconditionFn(ws) ? 'enabled' : 'disabled';
+      },
+      callback: (scope) => {
+        const ws = scope.block?.workspace;
+        if (!ws) return;
+        return this.cutCallbackFn(ws);
+      },
+      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
+      id: 'blockCutFromContextMenu',
+      weight: this.baseWeight,
+    };
+
+    ContextMenuRegistry.registry.register(cutAction);
   }
 
   /**
    * Callback function for cutting a block from keyboard
    * navigation. This callback is shared between keyboard shortcuts
    * and context menu items.
-   *
-   * FIXME: This should be better encapsulated.
    *
    * @param workspace The `WorkspaceSvg` where the shortcut was
    *     invoked.
@@ -319,7 +334,7 @@ export class Clipboard {
    *
    * @param workspace The `WorkspaceSvg` where the shortcut was
    *     invoked.
-   * @returns True iff `blockCutCallbackFn` function should be called.
+   * @returns True iff `cutCallbackFn` function should be called.
    */
   private cutPreconditionFn(workspace: WorkspaceSvg) {
     if (this.canCurrentlyEditFn(workspace)) {
@@ -338,7 +353,14 @@ export class Clipboard {
     return false;
   }
 
-  // TODO: This belongs in the action menu/keyboard shortcut/context menu code.
+  /**
+   * Check the platform and return a prefix for the keyboard shortcut.
+   * TODO: https://github.com/google/blockly-keyboard-experimentation/issues/155
+   * This will eventually be the responsibility of the action code ib
+   * Blockly core.
+   *
+   * @returns A platform-appropriate string for the meta key.
+   */
   private getPlatformPrefix() {
     return navigator.platform.startsWith('Mac') ? 'Cmd' : 'Ctrl';
   }
