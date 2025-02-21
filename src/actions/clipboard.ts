@@ -242,6 +242,8 @@ export class Clipboard {
    * @returns True iff `pasteCallbackFn` function should be called.
    */
   private pastePreconditionFn(workspace: WorkspaceSvg) {
+    if (!this.copyData || !this.copyWorkspace) return false;
+  
     return this.canCurrentlyEditFn(workspace) && !Gesture.inProgress();
   }
 
