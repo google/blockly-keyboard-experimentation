@@ -20,6 +20,11 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
   ShortcutRegistry.registry,
 );
 
+/**
+ * Logic and state for cut/copy/paste actions as both keyboard shortcuts
+ * and context menu items.
+ * In the long term, this will likely merge with the clipboard code in core.
+ */
 export class Clipboard {
   /** Data copied by the copy or cut keyboard shortcuts. */
   private copyData: ICopyData | null = null;
@@ -122,7 +127,7 @@ export class Clipboard {
 
     ContextMenuRegistry.registry.register(copyAction);
   }
-  
+
   /**
    * Precondition function for copying a block from keyboard
    * navigation. This precondition is shared between keyboard shortcuts
@@ -179,7 +184,6 @@ export class Clipboard {
     this.copyWorkspace = sourceBlock.workspace;
     return !!this.copyData;
   }
-
 
   /**
    * Create and register the keyboard shortcut for the paste action.

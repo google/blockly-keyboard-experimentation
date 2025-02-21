@@ -50,11 +50,6 @@ interface Scope {
  * Class for registering shortcuts for keyboard navigation.
  */
 export class NavigationController {
-  /** Data copied by the copy or cut keyboard shortcuts. */
-  copyData: ICopyData | null = null;
-
-  /** The workspace a copy or cut keyboard shortcut happened in. */
-  copyWorkspace: WorkspaceSvg | null = null;
   navigation: Navigation = new Navigation();
   announcer: Announcer = new Announcer();
   shortcutDialog: ShortcutDialog = new ShortcutDialog();
@@ -245,67 +240,6 @@ export class NavigationController {
       return (curNode.getLocation() as Blockly.Field).onShortcut(shortcut);
     }
     return false;
-  }
-
-  /**
-   * Precondition function for copying a block from keyboard
-   * navigation. This precondition is shared between keyboard shortcuts
-   * and context menu items.
-   *
-   * FIXME: This should be better encapsulated.
-   *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @returns True iff `blockCopyCallbackFn` function should be called.
-   */
-  protected blockCopyPreconditionFn(workspace: WorkspaceSvg) {
-    if (!this.canCurrentlyEdit(workspace)) return false;
-    switch (this.navigation.getState(workspace)) {
-      case Constants.STATE.WORKSPACE:
-        const curNode = workspace?.getCursor()?.getCurNode();
-        const source = curNode?.getSourceBlock();
-        return !!(
-          source?.isDeletable() &&
-          source?.isMovable() &&
-          !Blockly.Gesture.inProgress()
-        );
-      case Constants.STATE.FLYOUT:
-        const flyoutWorkspace = workspace.getFlyout()?.getWorkspace();
-        const sourceBlock = flyoutWorkspace
-          ?.getCursor()
-          ?.getCurNode()
-          ?.getSourceBlock();
-        return !!(sourceBlock && !Blockly.Gesture.inProgress());
-      default:
-        return false;
-    }
-  }
-
-  /**
-   * Callback function for copying a block from keyboard
-   * navigation. This callback is shared between keyboard shortcuts
-   * and context menu items.
-   *
-   * FIXME: This should be better encapsulated.
-   *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @returns True if this function successfully handled copying.
-   */
-  protected blockCopyCallbackFn(workspace: WorkspaceSvg) {
-    const navigationState = this.navigation.getState(workspace);
-    let activeWorkspace: Blockly.WorkspaceSvg | undefined = workspace;
-    if (navigationState === Constants.STATE.FLYOUT) {
-      activeWorkspace = workspace.getFlyout()?.getWorkspace();
-    }
-    const sourceBlock = activeWorkspace
-      ?.getCursor()
-      ?.getCurNode()
-      .getSourceBlock() as BlockSvg;
-    workspace.hideChaff();
-    this.copyData = sourceBlock.toCopyData();
-    this.copyWorkspace = sourceBlock.workspace;
-    return !!this.copyData;
   }
 
   /**
@@ -643,80 +577,6 @@ export class NavigationController {
       keyCodes: [createSerializedKey(KeyCodes.S, [KeyCodes.SHIFT])],
     },
 
-    /** Copy the block the cursor is currently on. */
-    // copy: {
-    //   name: Constants.SHORTCUT_NAMES.COPY,
-    //   preconditionFn: this.blockCopyPreconditionFn.bind(this),
-    //   callback: this.blockCopyCallbackFn.bind(this),
-    //   keyCodes: [
-    //     createSerializedKey(KeyCodes.C, [KeyCodes.CTRL]),
-    //     createSerializedKey(KeyCodes.C, [KeyCodes.ALT]),
-    //     createSerializedKey(KeyCodes.C, [KeyCodes.META]),
-    //   ],
-    //   allowCollision: true,
-    // },
-
-    /**
-     * Paste the copied block, to the marked location if possible or
-     * onto the workspace otherwise.
-     */
-    // paste: {
-    //   name: Constants.SHORTCUT_NAMES.PASTE,
-    //   preconditionFn: (workspace) =>
-    //     this.canCurrentlyEdit(workspace) && !Blockly.Gesture.inProgress(),
-    //   callback: (workspace) => {
-    //     if (!this.copyData || !this.copyWorkspace) return false;
-    //     const pasteWorkspace = this.copyWorkspace.isFlyout
-    //       ? workspace
-    //       : this.copyWorkspace;
-    //     return this.navigation.paste(this.copyData, pasteWorkspace);
-    //   },
-    //   keyCodes: [
-    //     createSerializedKey(KeyCodes.V, [KeyCodes.CTRL]),
-    //     createSerializedKey(KeyCodes.V, [KeyCodes.ALT]),
-    //     createSerializedKey(KeyCodes.V, [KeyCodes.META]),
-    //   ],
-    //   allowCollision: true,
-    // },
-
-    /** Copy and delete the block the cursor is currently on. */
-    // cut: {
-    //   name: Constants.SHORTCUT_NAMES.CUT,
-    //   preconditionFn: (workspace) => {
-    //     if (this.canCurrentlyEdit(workspace)) {
-    //       const curNode = workspace.getCursor()?.getCurNode();
-    //       if (curNode && curNode.getSourceBlock()) {
-    //         const sourceBlock = curNode.getSourceBlock();
-    //         return !!(
-    //           !Blockly.Gesture.inProgress() &&
-    //           sourceBlock &&
-    //           sourceBlock.isDeletable() &&
-    //           sourceBlock.isMovable() &&
-    //           !sourceBlock.workspace.isFlyout
-    //         );
-    //       }
-    //     }
-    //     return false;
-    //   },
-    //   callback: (workspace) => {
-    //     const sourceBlock = workspace
-    //       .getCursor()
-    //       ?.getCurNode()
-    //       .getSourceBlock() as BlockSvg;
-    //     this.copyData = sourceBlock.toCopyData();
-    //     this.copyWorkspace = sourceBlock.workspace;
-    //     this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
-    //     sourceBlock.checkAndDelete();
-    //     return true;
-    //   },
-    //   keyCodes: [
-    //     createSerializedKey(KeyCodes.X, [KeyCodes.CTRL]),
-    //     createSerializedKey(KeyCodes.X, [KeyCodes.ALT]),
-    //     createSerializedKey(KeyCodes.X, [KeyCodes.META]),
-    //   ],
-    //   allowCollision: true,
-    // },
-
     /** List all of the currently registered shortcuts. */
     announceShortcuts: {
       name: Constants.SHORTCUT_NAMES.LIST_SHORTCUTS,
@@ -862,31 +722,6 @@ export class NavigationController {
   };
 
   /**
-   * Register the block copy action as a context menu item on blocks.
-   */
-  protected registerCopyAction() {
-    const copyAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => 'Keyboard Navigation: copy',
-      preconditionFn: (scope) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return 'hidden';
-
-        return this.blockCopyPreconditionFn(ws) ? 'enabled' : 'disabled';
-      },
-      callback: (scope) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return;
-        return this.blockCopyCallbackFn(ws);
-      },
-      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
-      id: 'blockCopyFromContextMenu',
-      weight: 11,
-    };
-
-    ContextMenuRegistry.registry.register(copyAction);
-  }
-
-  /**
    * Register the action for inserting above a block.
    */
   protected registerInsertAction() {
@@ -934,7 +769,6 @@ export class NavigationController {
 
     this.clipboard.install();
 
-    //this.registerCopyAction();
     this.registerInsertAction();
 
     // Initalise the shortcut modal with available shortcuts.  Needs
@@ -952,7 +786,7 @@ export class NavigationController {
     }
 
     this.deleteAction.uninstall();
-    ContextMenuRegistry.registry.unregister('blockCopyFromContextMenu');
+    this.clipboard.uninstall();
 
     this.removeShortcutHandlers();
     this.navigation.dispose();
