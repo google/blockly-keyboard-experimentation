@@ -96,7 +96,7 @@ export class DeleteAction {
     const deleteItem: ContextMenuRegistry.RegistryItem = {
       displayText: (scope) => {
         if (!this.oldContextMenuItem) {
-          return 'delete';
+          return 'Delete block (Del)';
         }
 
         type DisplayTextFn = (p1: ContextMenuRegistry.Scope) => string;
@@ -104,7 +104,7 @@ export class DeleteAction {
         // of blocks that will be deleted.
         const oldDisplayTextFn = this.oldContextMenuItem
           .displayText as DisplayTextFn;
-        return oldDisplayTextFn(scope);
+        return oldDisplayTextFn(scope) + ' (Del)';
       },
       preconditionFn: (scope) => {
         const ws = scope.block?.workspace;
