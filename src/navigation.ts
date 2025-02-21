@@ -544,7 +544,7 @@ export class Navigation {
    *  - Resume editing by returning the cursor to its previous location, if any.
    *  - Move the cursor to the top connection point on on the first top block.
    *  - Move the cursor to the default location on the workspace.
-   * 
+   *
    * @param workspace The main Blockly workspace.
    * @param keepPosition Whether to retain the cursor's previous position.
    */
@@ -1139,7 +1139,7 @@ export class Navigation {
     // Although it seems like this should never happen, the typings are wrong
     // in the base Marker class and this can therefore be null.
     if (this.markedNode) {
-      this.passiveFocusIndicator.show(this.markedNode);
+      // this.passiveFocusIndicator.show(this.markedNode);
     }
   }
 
@@ -1149,7 +1149,7 @@ export class Navigation {
    * @param workspace The workspace.
    */
   removeMark(workspace: Blockly.WorkspaceSvg) {
-    this.passiveFocusIndicator.hide();
+    // this.passiveFocusIndicator.hide();
     this.markedNode = null;
   }
 

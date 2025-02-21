@@ -159,6 +159,11 @@ export class NavigationController {
     this.hasNavigationFocus = isFocused;
     if (isFocused) {
       this.navigation.focusWorkspace(workspace, true);
+    } else {
+      // Hide cursor to indicate lost focus. Also, mark the current node so that
+      // it can be properly restored upon returning to the workspace.
+      this.navigation.markAtCursor(workspace);
+      workspace.getCursor()?.hide();
     }
   }
 
