@@ -739,8 +739,10 @@ export class NavigationController {
 
         return this.canCurrentlyEdit(ws) ? 'enabled' : 'hidden';
       },
-      callback: (scope) => {
-        const ws = scope.block?.workspace;
+      callback: (scope: Scope) => {
+        let ws =
+          scope.block?.workspace ??
+          (scope.connection?.getSourceBlock().workspace as WorkspaceSvg);
         if (!ws) return false;
 
         if (this.navigation.getState(ws) === Constants.STATE.WORKSPACE) {
