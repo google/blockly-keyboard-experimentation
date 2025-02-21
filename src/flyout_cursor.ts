@@ -17,11 +17,28 @@ import * as Blockly from 'blockly/core';
  * This cursor only allows a user to go to the previous or next stack.
  */
 export class FlyoutCursor extends Blockly.Cursor {
+  private flyout: Blockly.IFlyout;
   /**
    * The constructor for the FlyoutCursor.
    */
-  constructor() {
+  constructor(private readonly workspace: Blockly.WorkspaceSvg | any) {
     super();
+    this.flyout = this.workspace.targetWorkspace.getFlyout();
+  }
+
+  /**
+   * Set correct height to enable edge scrolling
+   */
+  edgeScrollY(newNode: Blockly.ASTNode) {
+    const wsHeight = this.flyout.getHeight();
+    const newNodeBlock: Blockly.Block | any = newNode.getSourceBlock();
+    const BlockBottomToTop =
+      newNodeBlock.getRelativeToSurfaceXY().y + newNodeBlock.height + 10;
+    const scrollY =
+      BlockBottomToTop > wsHeight
+        ? wsHeight - BlockBottomToTop
+        : BlockBottomToTop;
+    this.flyout.getWorkspace().scroll(0, scrollY);
   }
 
   /**
@@ -38,6 +55,7 @@ export class FlyoutCursor extends Blockly.Cursor {
     const newNode = curNode.next();
 
     if (newNode) {
+      this.edgeScrollY(newNode);
       this.setCurNode(newNode);
     }
     return newNode;
@@ -48,8 +66,17 @@ export class FlyoutCursor extends Blockly.Cursor {
    *
    * @returns Always null.
    */
-  override in(): null {
-    return null;
+  override in(): Blockly.ASTNode | null {
+    const curNode = this.getCurNode();
+    if (!curNode) {
+      return null;
+    }
+    const newNode = curNode.in();
+    if (newNode) {
+      this.edgeScrollY(newNode);
+      this.setCurNode(newNode);
+    }
+    return newNode;
   }
 
   /**
@@ -64,8 +91,8 @@ export class FlyoutCursor extends Blockly.Cursor {
       return null;
     }
     const newNode = curNode.prev();
-
     if (newNode) {
+      this.edgeScrollY(newNode);
       this.setCurNode(newNode);
     }
     return newNode;
@@ -76,8 +103,17 @@ export class FlyoutCursor extends Blockly.Cursor {
    *
    * @returns Always null.
    */
-  override out(): null {
-    return null;
+  override out(): Blockly.ASTNode | null {
+    const curNode = this.getCurNode();
+    if (!curNode) {
+      return null;
+    }
+    let newNode = curNode.out();
+    if (newNode) {
+      this.edgeScrollY(newNode);
+      this.setCurNode(newNode);
+    }
+    return newNode;
   }
 }
 
