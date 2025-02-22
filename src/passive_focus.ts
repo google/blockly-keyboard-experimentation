@@ -96,7 +96,11 @@ export class PassiveFocus {
     const block = node.getLocation() as BlockSvg;
     // Note that this changes rendering but does not change Blockly's
     // internal selected state.
-    block.addSelect();
+    // If the block renders selected, the selection highlight is in
+    // front of the block's path and obscures these changes.
+    block.removeSelect();
+
+    utils.dom.addClass(block.pathObject.svgPath, 'passiveBlockFocus');
   }
 
   /**
@@ -106,9 +110,8 @@ export class PassiveFocus {
    */
   hideAtBlock(node: ASTNode) {
     const block = node.getLocation() as BlockSvg;
-    // Note that this changes rendering but does not change Blockly's
-    // internal selected state.
-    block.removeSelect();
+
+    utils.dom.removeClass(block.pathObject.svgPath, 'passiveBlockFocus');
   }
 
   /**
@@ -122,8 +125,6 @@ export class PassiveFocus {
       'width': 100,
       'height': 5,
       'class': 'passiveNextIndicator',
-      'stroke': '#4286f4',
-      'fill': '#4286f4',
     });
     return indicator;
   }
