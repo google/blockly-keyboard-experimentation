@@ -20,7 +20,6 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
   ShortcutRegistry.registry,
 );
 
-
 /**
  * Weight for the first of these three items in the context menu.
  * Changing base weight will change where this group goes in the context
@@ -81,7 +80,6 @@ export class Clipboard {
     ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.COPY);
     ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.PASTE);
   }
-
 
   /**
    * Create and register the keyboard shortcut for the cut action.
@@ -334,7 +332,7 @@ export class Clipboard {
    */
   private pastePrecondition(workspace: WorkspaceSvg) {
     if (!this.copyData || !this.copyWorkspace) return false;
-  
+
     return this.canCurrentlyEdit(workspace) && !Gesture.inProgress();
   }
 
