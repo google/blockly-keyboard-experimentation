@@ -10,6 +10,7 @@
  * @author aschmiedt@google.com (Abby Schmiedt)
  */
 
+import './field_input_monkey_patch';
 import './gesture_monkey_patch';
 
 import * as Blockly from 'blockly/core';
