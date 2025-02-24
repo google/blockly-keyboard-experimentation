@@ -31,7 +31,7 @@ export class DeleteAction {
    * Function provided by the navigation controller to say whether editing
    * is allowed.
    */
-  private canCurrentlyEditFn: (ws: WorkspaceSvg) => boolean;
+  private canCurrentlyEdit: (ws: WorkspaceSvg) => boolean;
 
   /**
    * Registration name for the keyboard shortcut.
@@ -40,9 +40,9 @@ export class DeleteAction {
 
   constructor(
     private navigation: Navigation,
-    canEditFn: (ws: WorkspaceSvg) => boolean,
+    canEdit: (ws: WorkspaceSvg) => boolean,
   ) {
-    this.canCurrentlyEditFn = canEditFn;
+    this.canCurrentlyEdit = canEdit;
   }
 
   /**
@@ -71,8 +71,8 @@ export class DeleteAction {
   private registerShortcut() {
     const deleteShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: this.deleteShortcutName,
-      preconditionFn: this.deletePreconditionFn.bind(this),
-      callback: this.deleteCallbackFn.bind(this),
+      preconditionFn: this.deletePrecondition.bind(this),
+      callback: this.deleteCallback.bind(this),
       keyCodes: [KeyCodes.DELETE, KeyCodes.BACKSPACE],
       allowCollision: true,
     };
@@ -102,9 +102,9 @@ export class DeleteAction {
         type DisplayTextFn = (p1: ContextMenuRegistry.Scope) => string;
         // Use the original item's text, which is dynamic based on the number
         // of blocks that will be deleted.
-        const oldDisplayTextFn = this.oldContextMenuItem
+        const oldDisplayText = this.oldContextMenuItem
           .displayText as DisplayTextFn;
-        return oldDisplayTextFn(scope) + ' (Del)';
+        return oldDisplayText(scope) + ' (Del)';
       },
       preconditionFn: (scope) => {
         const ws = scope.block?.workspace;
@@ -120,14 +120,14 @@ export class DeleteAction {
         // Return enabled if the keyboard shortcut precondition is allowed,
         // and disabled if the context menu precondition is met but the keyboard
         // shortcut precondition is not met.
-        return this.deletePreconditionFn(ws) ? 'enabled' : 'disabled';
+        return this.deletePrecondition(ws) ? 'enabled' : 'disabled';
       },
       callback: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return;
 
         // Delete the block(s), and put the cursor back in a sane location.
-        return this.deleteCallbackFn(ws, null);
+        return this.deleteCallback(ws, null);
       },
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'blockDeleteFromContextMenu',
@@ -144,10 +144,10 @@ export class DeleteAction {
    *
    * @param workspace The `WorkspaceSvg` where the shortcut was
    *     invoked.
-   * @returns True iff `deleteCallbackFn` function should be called.
+   * @returns True iff `deleteCallback` function should be called.
    */
-  private deletePreconditionFn(workspace: WorkspaceSvg) {
-    if (!this.canCurrentlyEditFn(workspace)) return false;
+  private deletePrecondition(workspace: WorkspaceSvg) {
+    if (!this.canCurrentlyEdit(workspace)) return false;
 
     const sourceBlock = workspace.getCursor()?.getCurNode().getSourceBlock();
     return !!sourceBlock?.isDeletable();
@@ -164,7 +164,7 @@ export class DeleteAction {
    *     if called from a context menu.
    * @returns True if this function successfully handled deletion.
    */
-  private deleteCallbackFn(workspace: WorkspaceSvg, e: Event | null) {
+  private deleteCallback(workspace: WorkspaceSvg, e: Event | null) {
     const cursor = workspace.getCursor();
     if (!cursor) return false;
 

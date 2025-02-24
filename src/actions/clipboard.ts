@@ -8,17 +8,26 @@ import {
   ContextMenuRegistry,
   Gesture,
   ShortcutRegistry,
-  utils as BlocklyUtils,
+  utils as blocklyUtils,
   ICopyData,
 } from 'blockly';
 import * as Constants from '../constants';
 import type {BlockSvg, Workspace, WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
 
-const KeyCodes = BlocklyUtils.KeyCodes;
+const KeyCodes = blocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
   ShortcutRegistry.registry,
 );
+
+
+/**
+ * Weight for the first of these three items in the context menu.
+ * Changing base weight will change where this group goes in the context
+ * menu; changing individual weights relative to base weight can change
+ * the order within the clipboard group.
+ */
+const BASE_WEIGHT = 11;
 
 /**
  * Logic and state for cut/copy/paste actions as both keyboard shortcuts
@@ -36,21 +45,13 @@ export class Clipboard {
    * Function provided by the navigation controller to say whether editing
    * is allowed.
    */
-  private canCurrentlyEditFn: (ws: WorkspaceSvg) => boolean;
-
-  /**
-   * Weight for the first of these three items in the context menu.
-   * Changing base weight will change where this group goes in the context
-   * menu; changing individual weights relative to base weight can change
-   * the order within the clipboard group.
-   */
-  private baseWeight = 11;
+  private canCurrentlyEdit: (ws: WorkspaceSvg) => boolean;
 
   constructor(
     private navigation: Navigation,
-    canEditFn: (ws: WorkspaceSvg) => boolean,
+    canEdit: (ws: WorkspaceSvg) => boolean,
   ) {
-    this.canCurrentlyEditFn = canEditFn;
+    this.canCurrentlyEdit = canEdit;
   }
 
   /**
@@ -72,12 +73,12 @@ export class Clipboard {
    * Reinstall the original context menu action if possible.
    */
   uninstall() {
+    ContextMenuRegistry.registry.unregister('blockCutFromContextMenu');
     ContextMenuRegistry.registry.unregister('blockCopyFromContextMenu');
     ContextMenuRegistry.registry.unregister('blockPasteFromContextMenu');
-    ContextMenuRegistry.registry.unregister('blockCutFromContextMenu');
 
-    ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.COPY);
     ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.CUT);
+    ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.COPY);
     ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.PASTE);
   }
 
@@ -87,8 +88,8 @@ export class Clipboard {
   private registerCopyShortcut() {
     const copyShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.COPY,
-      preconditionFn: this.copyPreconditionFn.bind(this),
-      callback: this.copyCallbackFn.bind(this),
+      preconditionFn: this.copyPrecondition.bind(this),
+      callback: this.copyCallback.bind(this),
       keyCodes: [
         createSerializedKey(KeyCodes.C, [KeyCodes.CTRL]),
         createSerializedKey(KeyCodes.C, [KeyCodes.ALT]),
@@ -106,23 +107,21 @@ export class Clipboard {
    */
   private registerCopyContextMenuAction() {
     const copyAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => {
-        return 'Copy (' + this.getPlatformPrefix() + ' + C)';
-      },
+      displayText: (scope) => `Copy (${this.getPlatformPrefix()}C)`,
       preconditionFn: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return 'hidden';
 
-        return this.copyPreconditionFn(ws) ? 'enabled' : 'disabled';
+        return this.copyPrecondition(ws) ? 'enabled' : 'disabled';
       },
       callback: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return;
-        return this.copyCallbackFn(ws);
+        return this.copyCallback(ws);
       },
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'blockCopyFromContextMenu',
-      weight: this.baseWeight + 1,
+      weight: BASE_WEIGHT + 1,
     };
 
     ContextMenuRegistry.registry.register(copyAction);
@@ -135,10 +134,10 @@ export class Clipboard {
    *
    * @param workspace The `WorkspaceSvg` where the shortcut was
    *     invoked.
-   * @returns True iff `copyCallbackFn` function should be called.
+   * @returns True iff `copyCallback` function should be called.
    */
-  private copyPreconditionFn(workspace: WorkspaceSvg) {
-    if (!this.canCurrentlyEditFn(workspace)) return false;
+  private copyPrecondition(workspace: WorkspaceSvg) {
+    if (!this.canCurrentlyEdit(workspace)) return false;
     switch (this.navigation.getState(workspace)) {
       case Constants.STATE.WORKSPACE:
         const curNode = workspace?.getCursor()?.getCurNode();
@@ -169,7 +168,7 @@ export class Clipboard {
    *     invoked.
    * @returns True if this function successfully handled copying.
    */
-  private copyCallbackFn(workspace: WorkspaceSvg) {
+  private copyCallback(workspace: WorkspaceSvg) {
     const navigationState = this.navigation.getState(workspace);
     let activeWorkspace: WorkspaceSvg | undefined = workspace;
     if (navigationState === Constants.STATE.FLYOUT) {
@@ -191,8 +190,8 @@ export class Clipboard {
   private registerPasteShortcut() {
     const pasteShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.PASTE,
-      preconditionFn: this.pastePreconditionFn.bind(this),
-      callback: this.pasteCallbackFn.bind(this),
+      preconditionFn: this.pastePrecondition.bind(this),
+      callback: this.pasteCallback.bind(this),
       keyCodes: [
         createSerializedKey(KeyCodes.V, [KeyCodes.CTRL]),
         createSerializedKey(KeyCodes.V, [KeyCodes.ALT]),
@@ -210,23 +209,21 @@ export class Clipboard {
    */
   private registerPasteContextMenuAction() {
     const pasteAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => {
-        return 'Paste (' + this.getPlatformPrefix() + ' + V)';
-      },
+      displayText: (scope) => `Paste (${this.getPlatformPrefix()}V)`,
       preconditionFn: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return 'hidden';
 
-        return this.pastePreconditionFn(ws) ? 'enabled' : 'disabled';
+        return this.pastePrecondition(ws) ? 'enabled' : 'disabled';
       },
       callback: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return;
-        return this.pasteCallbackFn(ws);
+        return this.pasteCallback(ws);
       },
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'blockPasteFromContextMenu',
-      weight: this.baseWeight + 2,
+      weight: BASE_WEIGHT + 2,
     };
 
     ContextMenuRegistry.registry.register(pasteAction);
@@ -239,12 +236,12 @@ export class Clipboard {
    *
    * @param workspace The `WorkspaceSvg` where the shortcut was
    *     invoked.
-   * @returns True iff `pasteCallbackFn` function should be called.
+   * @returns True iff `pasteCallback` function should be called.
    */
-  private pastePreconditionFn(workspace: WorkspaceSvg) {
+  private pastePrecondition(workspace: WorkspaceSvg) {
     if (!this.copyData || !this.copyWorkspace) return false;
   
-    return this.canCurrentlyEditFn(workspace) && !Gesture.inProgress();
+    return this.canCurrentlyEdit(workspace) && !Gesture.inProgress();
   }
 
   /**
@@ -256,7 +253,7 @@ export class Clipboard {
    *     invoked.
    * @returns True if this function successfully handled pasting.
    */
-  private pasteCallbackFn(workspace: WorkspaceSvg) {
+  private pasteCallback(workspace: WorkspaceSvg) {
     if (!this.copyData || !this.copyWorkspace) return false;
     const pasteWorkspace = this.copyWorkspace.isFlyout
       ? workspace
@@ -270,8 +267,8 @@ export class Clipboard {
   private registerCutShortcut() {
     const cutShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.CUT,
-      preconditionFn: this.cutPreconditionFn.bind(this),
-      callback: this.cutCallbackFn.bind(this),
+      preconditionFn: this.cutPrecondition.bind(this),
+      callback: this.cutCallback.bind(this),
       keyCodes: [
         createSerializedKey(KeyCodes.X, [KeyCodes.CTRL]),
         createSerializedKey(KeyCodes.X, [KeyCodes.ALT]),
@@ -290,23 +287,21 @@ export class Clipboard {
    */
   private registerCutContextMenuAction() {
     const cutAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => {
-        return 'Cut (' + this.getPlatformPrefix() + ' + X)';
-      },
+      displayText: (scope) => `Cut (${this.getPlatformPrefix()}X)`,
       preconditionFn: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return 'hidden';
 
-        return this.cutPreconditionFn(ws) ? 'enabled' : 'disabled';
+        return this.cutPrecondition(ws) ? 'enabled' : 'disabled';
       },
       callback: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return;
-        return this.cutCallbackFn(ws);
+        return this.cutCallback(ws);
       },
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'blockCutFromContextMenu',
-      weight: this.baseWeight,
+      weight: BASE_WEIGHT,
     };
 
     ContextMenuRegistry.registry.register(cutAction);
@@ -321,7 +316,7 @@ export class Clipboard {
    *     invoked.
    * @returns True if this function successfully handled cutting.
    */
-  private cutCallbackFn(workspace: WorkspaceSvg) {
+  private cutCallback(workspace: WorkspaceSvg) {
     const sourceBlock = workspace
       .getCursor()
       ?.getCurNode()
@@ -340,10 +335,10 @@ export class Clipboard {
    *
    * @param workspace The `WorkspaceSvg` where the shortcut was
    *     invoked.
-   * @returns True iff `cutCallbackFn` function should be called.
+   * @returns True iff `cutCallback` function should be called.
    */
-  private cutPreconditionFn(workspace: WorkspaceSvg) {
-    if (this.canCurrentlyEditFn(workspace)) {
+  private cutPrecondition(workspace: WorkspaceSvg) {
+    if (this.canCurrentlyEdit(workspace)) {
       const curNode = workspace.getCursor()?.getCurNode();
       if (curNode && curNode.getSourceBlock()) {
         const sourceBlock = curNode.getSourceBlock();
@@ -368,6 +363,6 @@ export class Clipboard {
    * @returns A platform-appropriate string for the meta key.
    */
   private getPlatformPrefix() {
-    return navigator.platform.startsWith('Mac') ? 'Cmd' : 'Ctrl';
+    return navigator.platform.startsWith('Mac') ? '⌘' : 'Ctrl + ';
   }
 }
