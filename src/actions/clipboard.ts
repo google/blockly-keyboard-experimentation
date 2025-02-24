@@ -82,6 +82,100 @@ export class Clipboard {
     ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.PASTE);
   }
 
+
+  /**
+   * Create and register the keyboard shortcut for the cut action.
+   */
+  private registerCutShortcut() {
+    const cutShortcut: ShortcutRegistry.KeyboardShortcut = {
+      name: Constants.SHORTCUT_NAMES.CUT,
+      preconditionFn: this.cutPrecondition.bind(this),
+      callback: this.cutCallback.bind(this),
+      keyCodes: [
+        createSerializedKey(KeyCodes.X, [KeyCodes.CTRL]),
+        createSerializedKey(KeyCodes.X, [KeyCodes.ALT]),
+        createSerializedKey(KeyCodes.X, [KeyCodes.META]),
+      ],
+      allowCollision: true,
+    };
+
+    ShortcutRegistry.registry.register(cutShortcut);
+  }
+
+  /**
+   * Register the cut block action as a context menu item on blocks.
+   * This function mixes together the keyboard and context menu preconditions
+   * but only calls the keyboard callback.
+   */
+  private registerCutContextMenuAction() {
+    const cutAction: ContextMenuRegistry.RegistryItem = {
+      displayText: (scope) => `Cut (${this.getPlatformPrefix()}X)`,
+      preconditionFn: (scope) => {
+        const ws = scope.block?.workspace;
+        if (!ws) return 'hidden';
+
+        return this.cutPrecondition(ws) ? 'enabled' : 'disabled';
+      },
+      callback: (scope) => {
+        const ws = scope.block?.workspace;
+        if (!ws) return;
+        return this.cutCallback(ws);
+      },
+      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
+      id: 'blockCutFromContextMenu',
+      weight: BASE_WEIGHT,
+    };
+
+    ContextMenuRegistry.registry.register(cutAction);
+  }
+
+  /**
+   * Precondition function for cutting a block from keyboard
+   * navigation. This precondition is shared between keyboard shortcuts
+   * and context menu items.
+   *
+   * @param workspace The `WorkspaceSvg` where the shortcut was
+   *     invoked.
+   * @returns True iff `cutCallback` function should be called.
+   */
+  private cutPrecondition(workspace: WorkspaceSvg) {
+    if (this.canCurrentlyEdit(workspace)) {
+      const curNode = workspace.getCursor()?.getCurNode();
+      if (curNode && curNode.getSourceBlock()) {
+        const sourceBlock = curNode.getSourceBlock();
+        return !!(
+          !Gesture.inProgress() &&
+          sourceBlock &&
+          sourceBlock.isDeletable() &&
+          sourceBlock.isMovable() &&
+          !sourceBlock.workspace.isFlyout
+        );
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Callback function for cutting a block from keyboard
+   * navigation. This callback is shared between keyboard shortcuts
+   * and context menu items.
+   *
+   * @param workspace The `WorkspaceSvg` where the shortcut was
+   *     invoked.
+   * @returns True if this function successfully handled cutting.
+   */
+  private cutCallback(workspace: WorkspaceSvg) {
+    const sourceBlock = workspace
+      .getCursor()
+      ?.getCurNode()
+      .getSourceBlock() as BlockSvg;
+    this.copyData = sourceBlock.toCopyData();
+    this.copyWorkspace = sourceBlock.workspace;
+    this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
+    sourceBlock.checkAndDelete();
+    return true;
+  }
+
   /**
    * Create and register the keyboard shortcut for the copy action.
    */
@@ -259,99 +353,6 @@ export class Clipboard {
       ? workspace
       : this.copyWorkspace;
     return this.navigation.paste(this.copyData, pasteWorkspace);
-  }
-
-  /**
-   * Create and register the keyboard shortcut for the cut action.
-   */
-  private registerCutShortcut() {
-    const cutShortcut: ShortcutRegistry.KeyboardShortcut = {
-      name: Constants.SHORTCUT_NAMES.CUT,
-      preconditionFn: this.cutPrecondition.bind(this),
-      callback: this.cutCallback.bind(this),
-      keyCodes: [
-        createSerializedKey(KeyCodes.X, [KeyCodes.CTRL]),
-        createSerializedKey(KeyCodes.X, [KeyCodes.ALT]),
-        createSerializedKey(KeyCodes.X, [KeyCodes.META]),
-      ],
-      allowCollision: true,
-    };
-
-    ShortcutRegistry.registry.register(cutShortcut);
-  }
-
-  /**
-   * Register the cut block action as a context menu item on blocks.
-   * This function mixes together the keyboard and context menu preconditions
-   * but only calls the keyboard callback.
-   */
-  private registerCutContextMenuAction() {
-    const cutAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => `Cut (${this.getPlatformPrefix()}X)`,
-      preconditionFn: (scope) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return 'hidden';
-
-        return this.cutPrecondition(ws) ? 'enabled' : 'disabled';
-      },
-      callback: (scope) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return;
-        return this.cutCallback(ws);
-      },
-      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
-      id: 'blockCutFromContextMenu',
-      weight: BASE_WEIGHT,
-    };
-
-    ContextMenuRegistry.registry.register(cutAction);
-  }
-
-  /**
-   * Callback function for cutting a block from keyboard
-   * navigation. This callback is shared between keyboard shortcuts
-   * and context menu items.
-   *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @returns True if this function successfully handled cutting.
-   */
-  private cutCallback(workspace: WorkspaceSvg) {
-    const sourceBlock = workspace
-      .getCursor()
-      ?.getCurNode()
-      .getSourceBlock() as BlockSvg;
-    this.copyData = sourceBlock.toCopyData();
-    this.copyWorkspace = sourceBlock.workspace;
-    this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
-    sourceBlock.checkAndDelete();
-    return true;
-  }
-
-  /**
-   * Precondition function for cutting a block from keyboard
-   * navigation. This precondition is shared between keyboard shortcuts
-   * and context menu items.
-   *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @returns True iff `cutCallback` function should be called.
-   */
-  private cutPrecondition(workspace: WorkspaceSvg) {
-    if (this.canCurrentlyEdit(workspace)) {
-      const curNode = workspace.getCursor()?.getCurNode();
-      if (curNode && curNode.getSourceBlock()) {
-        const sourceBlock = curNode.getSourceBlock();
-        return !!(
-          !Gesture.inProgress() &&
-          sourceBlock &&
-          sourceBlock.isDeletable() &&
-          sourceBlock.isMovable() &&
-          !sourceBlock.workspace.isFlyout
-        );
-      }
-    }
-    return false;
   }
 
   /**
