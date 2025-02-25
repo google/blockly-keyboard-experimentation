@@ -728,7 +728,7 @@ export class NavigationController {
   protected registerInsertAction() {
     const insertAboveAction: ContextMenuRegistry.RegistryItem = {
       displayText: (scope: Scope) =>
-        scope.block?.previousConnection ? 'Insert block above' : 'Insert block',
+        scope.block?.previousConnection ? 'Insert Block Above' : 'Insert Block',
       preconditionFn: (scope: Scope) => {
         const block = scope.block ?? scope.connection?.getSourceBlock();
         const ws = block?.workspace as WorkspaceSvg | null;
