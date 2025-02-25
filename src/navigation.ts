@@ -1533,13 +1533,26 @@ function fakeEventForConnectionNode(node: Blockly.ASTNode): PointerEvent {
   }
 
   const connection = node.getLocation() as Blockly.Connection;
+  const block = connection.getSourceBlock();
+  const workspace = block.workspace as Blockly.WorkspaceSvg;
 
-  return fakeEventForBlockNode(
-    new Blockly.ASTNode(
-      Blockly.ASTNode.types.BLOCK,
-      connection.getSourceBlock(),
-    ),
+  if (typeof connection.x !== 'number') {
+    // No coordinates for connection?  Fall back to the parent block.
+    const blockNode = new Blockly.ASTNode(Blockly.ASTNode.types.BLOCK, block);
+    return fakeEventForBlockNode(blockNode);
+  }
+  const connectionWSCoords = new Blockly.utils.Coordinate(
+    connection.x,
+    connection.y,
   );
+  const connectionScreenCoords = Blockly.utils.svgMath.wsToScreenCoordinates(
+    workspace,
+    connectionWSCoords,
+  );
+  return new PointerEvent('pointerdown', {
+    clientX: connectionScreenCoords.x + 5,
+    clientY: connectionScreenCoords.y + 5,
+  });
 }
 
 /**
