@@ -14,6 +14,7 @@ import {
 import * as Constants from '../constants';
 import type {BlockSvg, Workspace, WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
+import { toast } from '../toast';
 
 const KeyCodes = blocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -273,6 +274,12 @@ export class Clipboard {
     workspace.hideChaff();
     this.copyData = sourceBlock.toCopyData();
     this.copyWorkspace = sourceBlock.workspace;
+    if (this.copyData) {
+      toast(workspace, {
+        message: `Copied. Press ${navigator.platform.startsWith('Mac') ? '⌘' : 'Ctrl'} + V to paste.`,
+        duration: 3000,
+      });
+    }
     return !!this.copyData;
   }
 
