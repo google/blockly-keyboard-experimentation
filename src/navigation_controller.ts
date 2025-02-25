@@ -455,7 +455,7 @@ export class NavigationController {
             return false;
         }
       },
-      keyCodes: [KeyCodes.ENTER],
+      keyCodes: [KeyCodes.ENTER, KeyCodes.SPACE],
     },
 
     /**
