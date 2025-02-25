@@ -31,13 +31,13 @@ export class FlyoutCursor extends Blockly.Cursor {
    */
   edgeScrollY(newNode: Blockly.ASTNode) {
     const wsHeight = this.flyout.getHeight();
-    const newNodeBlock: Blockly.Block | any = newNode.getSourceBlock();
-    const BlockBottomToTop =
-      newNodeBlock.getRelativeToSurfaceXY().y + newNodeBlock.height + 10;
+    const block = newNode.getSourceBlock() as Blockly.BlockSvg;
+    const blockHeight =
+      block.getRelativeToSurfaceXY().y + block.height + 10;
     const scrollY =
-      BlockBottomToTop > wsHeight
-        ? wsHeight - BlockBottomToTop
-        : BlockBottomToTop;
+    blockHeight > wsHeight
+        ? wsHeight - blockHeight
+        : blockHeight;
     this.flyout.getWorkspace().scroll(0, scrollY);
   }
 
