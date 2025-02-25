@@ -18,6 +18,7 @@ import {
   BlockSvg,
   comments,
   Connection,
+  ConnectionType,
   ContextMenuRegistry,
   ICopyData,
   ShortcutRegistry,
@@ -727,11 +728,9 @@ export class NavigationController {
   protected registerInsertAction() {
     const insertAboveAction: ContextMenuRegistry.RegistryItem = {
       displayText: (scope: Scope) =>
-        scope.block
+        scope.block?.previousConnection
           ? 'Insert block above'
-          : scope.connection
-            ? 'Insert block here'
-            : 'Insert',
+          : 'Insert block',
       preconditionFn: (scope: Scope) => {
         const block = scope.block ?? scope.connection?.getSourceBlock();
         const ws = block?.workspace as WorkspaceSvg | null;
