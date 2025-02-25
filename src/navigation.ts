@@ -1394,8 +1394,8 @@ export class Navigation {
           new KeyboardEvent('keydown', {
             key: 'ArrowDown',
             code: 'ArrowDown',
-            keyCode: 40,
-            which: 40,
+            keyCode: Blockly.utils.KeyCodes.DOWN,
+            which: Blockly.utils.KeyCodes.DOWN,
             bubbles: true,
             cancelable: true,
           }),
