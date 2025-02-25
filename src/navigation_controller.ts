@@ -49,8 +49,8 @@ interface Scope {
 enum NAVIGATION_FOCUS_MODE {
   /** Indicates that no interactive elements of Blockly currently have focus. */
   NONE = 'none',
-  /** Indicates either the toolbox or a flyout has focus. */
-  TOOLBOX_OR_FLYOUT = 'toolbox_or_flyout',
+  /** Indicates that the toolbox currently has focus. */
+  TOOLBOX = 'toolbox',
   /** Indicates that the main workspace currently has focus. */
   WORKSPACE = 'workspace',
 }
@@ -159,22 +159,21 @@ export class NavigationController {
   }
 
   /**
-   * Sets whether the navigation controller has toolbox or flyout focus. This
-   * will enable keyboard navigation in the toolbox or flyout.
+   * Sets whether the navigation controller has toolbox focus and will enable
+   * keyboard navigation in the toolbox.
    *
-   * @param workspace the workspace that now has toolbox/flyout input focus.
+   * If the workspace doesn't have a toolbox, this function is a no-op.
+   *
+   * @param workspace the workspace that now has toolbox input focus.
    * @param isFocused whether the environment has browser focus.
    */
-  updateToolboxOrFlyoutFocus(workspace: WorkspaceSvg, isFocused: boolean) {
+  updateToolboxFocus(workspace: WorkspaceSvg, isFocused: boolean) {
+    if (!workspace.getToolbox()) return;
     if (isFocused) {
-      if (!workspace.getToolbox()) {
-        this.navigation.focusFlyout(workspace);
-      } else {
-        this.navigation.focusToolbox(workspace);
-      }
-      this.navigationFocus = NAVIGATION_FOCUS_MODE.TOOLBOX_OR_FLYOUT;
+      this.navigation.focusToolbox(workspace);
+      this.navigationFocus = NAVIGATION_FOCUS_MODE.TOOLBOX;
     } else {
-      this.navigation.blurToolboxAndFlyout(workspace);
+      this.navigation.blurToolbox(workspace);
       this.navigationFocus = NAVIGATION_FOCUS_MODE.NONE;
     }
   }
@@ -191,7 +190,9 @@ export class NavigationController {
     if (isFocused) {
       this.navigation.focusWorkspace(workspace, true);
       this.navigationFocus = NAVIGATION_FOCUS_MODE.WORKSPACE;
-    } else this.navigationFocus = NAVIGATION_FOCUS_MODE.NONE;
+    } else {
+      this.navigationFocus = NAVIGATION_FOCUS_MODE.NONE;
+    }
   }
 
   /**
@@ -199,20 +200,20 @@ export class NavigationController {
    * current state of the workspace.
    *
    * A return value of 'true' generally indicates that either the workspace or
-   * toolbox/flyout both has enabled keyboard navigation and is currently in a
-   * state (e.g. focus) that can support keyboard navigation.
+   * toolbox both has enabled keyboard navigation and is currently in a state
+   * (e.g. focus) that can support keyboard navigation.
    *
    * @param workspace the workspace in which keyboard navigation may be allowed.
    * @returns whether keyboard navigation is currently allowed.
    */
   private canCurrentlyNavigate(workspace: WorkspaceSvg) {
-    return this.canCurrentlyNavigateInToolboxOrFlyout(workspace) ||
+    return this.canCurrentlyNavigateInToolbox(workspace) ||
       this.canCurrentlyNavigateInWorkspace(workspace);
   }
 
-  private canCurrentlyNavigateInToolboxOrFlyout(workspace: WorkspaceSvg) {
+  private canCurrentlyNavigateInToolbox(workspace: WorkspaceSvg) {
     return workspace.keyboardAccessibilityMode &&
-      this.navigationFocus == NAVIGATION_FOCUS_MODE.TOOLBOX_OR_FLYOUT;
+      this.navigationFocus == NAVIGATION_FOCUS_MODE.TOOLBOX;
   }
 
   private canCurrentlyNavigateInWorkspace(workspace: WorkspaceSvg) {

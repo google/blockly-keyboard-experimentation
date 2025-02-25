@@ -538,12 +538,16 @@ export class Navigation {
   }
 
   /**
-   * Blurs (de-focuses) the workspace's toolbox or flyout, and hides the flyout
-   * if it's currently visible.
+   * Blurs (de-focuses) the workspace's toolbox, and hides the flyout if it's
+   * currently visible.
    *
-   * @param workspace The workspace containing the toolbox or flyout.
+   * Note that it's up to callers to ensure that this function is only called
+   * when appropriate (i.e. when the workspace actually has a toolbox that's
+   * currently focused).
+   *
+   * @param workspace The workspace containing the toolbox.
    */
-  blurToolboxAndFlyout(workspace: Blockly.WorkspaceSvg) {
+  blurToolbox(workspace: Blockly.WorkspaceSvg) {
     workspace.hideChaff();
     const reset = !!workspace.getToolbox();
 
