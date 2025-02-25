@@ -162,7 +162,9 @@ export class Navigation {
       cursorRegistrationName,
     );
     if (FlyoutCursorClass) {
-      flyoutWorkspace.getMarkerManager().setCursor(new FlyoutCursorClass(flyoutWorkspace));
+      flyoutWorkspace
+        .getMarkerManager()
+        .setCursor(new FlyoutCursorClass(flyoutWorkspace));
     }
   }
 
@@ -544,7 +546,7 @@ export class Navigation {
    *  - Resume editing by returning the cursor to its previous location, if any.
    *  - Move the cursor to the top connection point on on the first top block.
    *  - Move the cursor to the default location on the workspace.
-   * 
+   *
    * @param workspace The main Blockly workspace.
    * @param keepPosition Whether to retain the cursor's previous position.
    */
