@@ -1388,6 +1388,20 @@ export class Navigation {
     if (!menuOptions?.length) return true;
     const fakeEvent = fakeEventForNode(node);
     Blockly.ContextMenu.show(fakeEvent, menuOptions, rtl, workspace);
+    setTimeout(() => {
+      Blockly.WidgetDiv.getDiv()
+        ?.querySelector('.blocklyMenu')
+        ?.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            key: 'ArrowDown',
+            code: 'ArrowDown',
+            keyCode: Blockly.utils.KeyCodes.DOWN,
+            which: Blockly.utils.KeyCodes.DOWN,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+    }, 10);
     return true;
   }
 
