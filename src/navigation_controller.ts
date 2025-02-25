@@ -18,6 +18,7 @@ import {
   BlockSvg,
   comments,
   Connection,
+  ConnectionType,
   ContextMenuRegistry,
   ICopyData,
   ShortcutRegistry,
@@ -727,11 +728,7 @@ export class NavigationController {
   protected registerInsertAction() {
     const insertAboveAction: ContextMenuRegistry.RegistryItem = {
       displayText: (scope: Scope) =>
-        scope.block
-          ? 'Insert block above'
-          : scope.connection
-            ? 'Insert block here'
-            : 'Insert',
+        scope.block?.previousConnection ? 'Insert Block Above' : 'Insert Block',
       preconditionFn: (scope: Scope) => {
         const block = scope.block ?? scope.connection?.getSourceBlock();
         const ws = block?.workspace as WorkspaceSvg | null;
@@ -739,8 +736,10 @@ export class NavigationController {
 
         return this.canCurrentlyEdit(ws) ? 'enabled' : 'hidden';
       },
-      callback: (scope) => {
-        const ws = scope.block?.workspace;
+      callback: (scope: Scope) => {
+        let ws =
+          scope.block?.workspace ??
+          (scope.connection?.getSourceBlock().workspace as WorkspaceSvg);
         if (!ws) return false;
 
         if (this.navigation.getState(ws) === Constants.STATE.WORKSPACE) {
