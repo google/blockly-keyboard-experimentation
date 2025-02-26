@@ -424,7 +424,9 @@ export class NavigationController {
     enter: {
       name: Constants.SHORTCUT_NAMES.MARK, // FIXME
       preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-      callback: (workspace) => {
+      callback: (workspace, event) => {
+        event.preventDefault();
+
         let flyoutCursor;
         let curNode;
         let nodeType;
