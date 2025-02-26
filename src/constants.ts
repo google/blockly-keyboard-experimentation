@@ -78,41 +78,37 @@ export enum MODIFIER_KEY {
  * Categories used to organised the shortcut dialog.
  * Shortcut name should match those obtained from the Blockly shortcut register.
  */
-export const SHORTCUT_CATEGORIES = {
+export const SHORTCUT_CATEGORIES: Record<
+  string,
+  // Also allow undo/redo. Document the non-keyboard-nav versions of others for better text
+  // because temporarily the name in the table is derived from these id-like names.
+  Array<SHORTCUT_NAMES | 'undo' | 'redo' | 'cut' | 'copy' | 'paste' | 'delete'>
+> = {
   'General': [
-    'escape',
-    'exit',
-    'delete',
-    'toggle_keyboard_nav',
-    'announce',
-    'list_shortcuts',
-    'toolbox',
-    'disconnect',
+    SHORTCUT_NAMES.TOOLBOX,
+    SHORTCUT_NAMES.MENU,
+    SHORTCUT_NAMES.EXIT,
+    SHORTCUT_NAMES.CLEAN_UP,
+    SHORTCUT_NAMES.LIST_SHORTCUTS,
+    SHORTCUT_NAMES.TOGGLE_KEYBOARD_NAV,
   ],
   'Editing': [
+    SHORTCUT_NAMES.INSERT,
+    'delete',
+    SHORTCUT_NAMES.DISCONNECT,
     'cut',
     'copy',
     'paste',
     'undo',
     'redo',
-    'enter_or_mark',
-    'insert',
   ],
   'Code navigation': [
-    'previous',
-    'next',
-    'in',
-    'out',
-    'go_to_previous_sibling',
-    'go_to_next_sibling',
-    'jump_to_root_of_current_stack',
-  ],
-  'Workspace navigation': [
-    'workspace_down',
-    'workspace_left',
-    'workspace_up',
-    'workspace_right',
-    'clean_up_workspace',
-    'intercept_tab_navigation',
+    SHORTCUT_NAMES.PREVIOUS,
+    SHORTCUT_NAMES.NEXT,
+    SHORTCUT_NAMES.IN,
+    SHORTCUT_NAMES.OUT,
+    SHORTCUT_NAMES.GO_TO_NEXT_SIBLING,
+    SHORTCUT_NAMES.GO_TO_PREVIOUS_SIBLING,
+    SHORTCUT_NAMES.JUMP_TO_ROOT,
   ],
 };
