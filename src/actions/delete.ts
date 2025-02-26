@@ -90,7 +90,7 @@ export class DeleteAction {
 
     if (!this.oldContextMenuItem) return;
 
-    // Unregister the original item..
+    // Unregister the original item.
     ContextMenuRegistry.registry.unregister(this.oldContextMenuItem.id);
 
     const deleteItem: ContextMenuRegistry.RegistryItem = {

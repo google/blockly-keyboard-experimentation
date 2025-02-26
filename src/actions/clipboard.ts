@@ -12,7 +12,7 @@ import {
   ICopyData,
 } from 'blockly';
 import * as Constants from '../constants';
-import type {BlockSvg, Workspace, WorkspaceSvg} from 'blockly';
+import type {BlockSvg, WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
 
 const KeyCodes = blocklyUtils.KeyCodes;
