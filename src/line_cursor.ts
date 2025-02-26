@@ -593,19 +593,15 @@ export class LineCursor extends Marker {
     let deltaY = 0;
 
     if (bounds.left < viewport.left) {
-      deltaX += viewport.left - bounds.left;
-    }
-
-    if (bounds.right > viewport.right) {
-      deltaX -= bounds.right - viewport.right;
+      deltaX = viewport.left - bounds.left;
+    } else if (bounds.right > viewport.right) {
+      deltaX = viewport.right - bounds.right;
     }
 
     if (bounds.top < viewport.top) {
-      deltaY += viewport.top - bounds.top;
-    }
-
-    if (bounds.bottom > viewport.bottom) {
-      deltaY -= bounds.bottom - viewport.bottom;
+      deltaY = viewport.top - bounds.top;
+    } else if (bounds.bottom > viewport.bottom) {
+      deltaY = viewport.bottom - bounds.bottom;
     }
 
     deltaX *= scale;
