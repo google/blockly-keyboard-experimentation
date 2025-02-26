@@ -162,7 +162,9 @@ export class Navigation {
       cursorRegistrationName,
     );
     if (FlyoutCursorClass) {
-      flyoutWorkspace.getMarkerManager().setCursor(new FlyoutCursorClass());
+      flyoutWorkspace
+        .getMarkerManager()
+        .setCursor(new FlyoutCursorClass(flyout));
     }
   }
 

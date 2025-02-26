@@ -15,6 +15,7 @@
 
 import * as Blockly from 'blockly/core';
 import {ASTNode, Marker} from 'blockly/core';
+import {scrollBoundsIntoView} from './workspace_utilities';
 
 /** Options object for LineCursor instances. */
 export type CursorOptions = {
@@ -553,60 +554,13 @@ export class LineCursor extends Marker {
     const oldNode = this.getCurNode();
     super.setCurNode(newNode);
     if (newNode?.getType() === ASTNode.types.BLOCK) {
-      this.scrollBlockIntoView(newNode.getLocation() as Blockly.BlockSvg);
+      const block = newNode.getLocation() as Blockly.BlockSvg;
+      scrollBoundsIntoView(
+        block.getBoundingRectangleWithoutChildren(),
+        block.workspace,
+      );
     }
     this.updateFocusIndication(oldNode, newNode);
-  }
-
-  /**
-   * Scrolls the provided block into view.
-   *
-   * This is a basic implementation that scrolls just enough to get the block
-   * into bounds. For very small workspaces/high zoom levels the entire block
-   * may not fit, but a decent portion of it should still be visible at least.
-   *
-   * @param block The block to scroll into bounds.
-   */
-  private scrollBlockIntoView(block: Blockly.BlockSvg) {
-    const workspace = block.workspace;
-    const scale = workspace.getScale();
-    const bounds = block.getBoundingRectangleWithoutChildren();
-    const rawViewport = workspace.getMetricsManager().getViewMetrics(true);
-    const viewport = new Blockly.utils.Rect(
-      rawViewport.top,
-      rawViewport.top + rawViewport.height,
-      rawViewport.left,
-      rawViewport.left + rawViewport.width,
-    );
-
-    if (
-      bounds.left >= viewport.left &&
-      bounds.top >= viewport.top &&
-      bounds.right <= viewport.right &&
-      bounds.bottom <= viewport.bottom
-    ) {
-      // Do nothing if the block is fully inside the viewport.
-      return;
-    }
-
-    let deltaX = 0;
-    let deltaY = 0;
-
-    if (bounds.left < viewport.left) {
-      deltaX = viewport.left - bounds.left;
-    } else if (bounds.right > viewport.right) {
-      deltaX = viewport.right - bounds.right;
-    }
-
-    if (bounds.top < viewport.top) {
-      deltaY = viewport.top - bounds.top;
-    } else if (bounds.bottom > viewport.bottom) {
-      deltaY = viewport.bottom - bounds.bottom;
-    }
-
-    deltaX *= scale;
-    deltaY *= scale;
-    workspace.scroll(workspace.scrollX + deltaX, workspace.scrollY + deltaY);
   }
 
   /**
