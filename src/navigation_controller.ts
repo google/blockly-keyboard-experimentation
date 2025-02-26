@@ -121,13 +121,13 @@ export class NavigationController {
     }
     switch (shortcut.name) {
       case Constants.SHORTCUT_NAMES.PREVIOUS:
-        return (this as any).selectPrevious_();
+        return (this as any).selectPrevious();
       case Constants.SHORTCUT_NAMES.OUT:
-        return (this as any).selectParent_();
+        return (this as any).selectParent();
       case Constants.SHORTCUT_NAMES.NEXT:
-        return (this as any).selectNext_();
+        return (this as any).selectNext();
       case Constants.SHORTCUT_NAMES.IN:
-        return (this as any).selectChild_();
+        return (this as any).selectChild();
       default:
         return false;
     }
