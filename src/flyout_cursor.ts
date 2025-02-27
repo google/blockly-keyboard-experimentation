@@ -85,15 +85,22 @@ export class FlyoutCursor extends Blockly.Cursor {
     super.setCurNode(node);
 
     const location = node.getLocation();
+    let bounds: Blockly.utils.Rect | undefined;
     if (
-      !(
-        'getBoundingRectangle' in location &&
-        typeof location.getBoundingRectangle === 'function'
-      )
-    )
-      return;
+      'getBoundingRectangle' in location &&
+      typeof location.getBoundingRectangle === 'function'
+    ) {
+      bounds = location.getBoundingRectangle();
+    } else if (location instanceof Blockly.FlyoutButton) {
+      const {x, y} = location.getPosition();
+      bounds = new Blockly.utils.Rect(
+        y,
+        y + location.height,
+        x,
+        x + location.width,
+      );
+    }
 
-    const bounds = location.getBoundingRectangle();
     if (!(bounds instanceof Blockly.utils.Rect)) return;
 
     scrollBoundsIntoView(bounds, this.flyout.getWorkspace());

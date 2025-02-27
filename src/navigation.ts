@@ -1454,7 +1454,7 @@ export class Navigation {
     );
     if (typeof buttonCallback === 'function') {
       buttonCallback(button);
-    } else {
+    } else if (!button.isLabel()) {
       throw new Error('No callback function found for flyout button.');
     }
   }
