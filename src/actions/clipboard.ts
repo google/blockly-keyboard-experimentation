@@ -303,13 +303,17 @@ export class Clipboard {
     const pasteAction: ContextMenuRegistry.RegistryItem = {
       displayText: (scope) => `Paste (${this.getPlatformPrefix()}V)`,
       preconditionFn: (scope) => {
-        const ws = scope.block?.workspace;
+        const ws =
+          scope.block?.workspace ??
+          (scope as any).connection?.getSourceBlock().workspace;
         if (!ws) return 'hidden';
 
         return this.pastePrecondition(ws) ? 'enabled' : 'disabled';
       },
       callback: (scope) => {
-        const ws = scope.block?.workspace;
+        const ws =
+          scope.block?.workspace ??
+          (scope as any).connection?.getSourceBlock().workspace;
         if (!ws) return;
         return this.pasteCallback(ws);
       },
