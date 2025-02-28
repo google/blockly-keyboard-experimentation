@@ -1365,7 +1365,12 @@ export class Navigation {
         const insertAction =
           Blockly.ContextMenuRegistry.registry.getItem('insert');
         if (!insertAction) throw new Error("can't find insert action");
-        const possibleOptions = [insertAction /* etc.*/];
+
+        const pasteAction = Blockly.ContextMenuRegistry.registry.getItem(
+          'blockPasteFromContextMenu',
+        );
+        if (!pasteAction) throw new Error("can't find paste action");
+        const possibleOptions = [insertAction, pasteAction /* etc.*/];
 
         // Check preconditions and get menu texts.
         const scope = {
