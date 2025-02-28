@@ -80,8 +80,9 @@ export enum MODIFIER_KEY {
  */
 export const SHORTCUT_CATEGORIES: Record<
   string,
-  // Also allow undo/redo. Document the non-keyboard-nav versions of others for better text
-  // because temporarily the name in the table is derived from these id-like names.
+  // Also allow undo/redo. Document the non-keyboard-nav versions of others for
+  // better text because temporarily the name in the table is derived from
+  // these id-like names.
   Array<SHORTCUT_NAMES | 'undo' | 'redo' | 'cut' | 'copy' | 'paste' | 'delete'>
 > = {
   'General': [
