@@ -17,10 +17,12 @@ import * as Blockly from 'blockly/core';
  * @param workspace The workspace to scroll the given bounds into view in.
  */
 export function scrollBoundsIntoView(
-  bounds: Blockly.utils.Rect,
+  originalBounds: Blockly.utils.Rect,
   workspace: Blockly.WorkspaceSvg,
 ) {
   const scale = workspace.getScale();
+
+  const bounds = originalBounds.clone();
 
   // Add some padding to the bounds so the element is scrolled comfortably
   // into view.
