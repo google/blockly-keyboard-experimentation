@@ -609,9 +609,7 @@ export class Navigation {
    */
   insertFromFlyout(workspace: Blockly.WorkspaceSvg) {
     const newBlock = this.createNewBlock(workspace);
-    if (!newBlock) {
-      return;
-    }
+    if (!newBlock) return;
     if (this.markedNode) {
       if (
         !this.tryToConnectNodes(
@@ -627,7 +625,9 @@ export class Navigation {
     }
 
     this.focusWorkspace(workspace);
-    workspace.getCursor()!.setCurNode(Blockly.ASTNode.createTopNode(newBlock)!);
+    workspace
+      .getCursor()!
+      .setCurNode(Blockly.ASTNode.createBlockNode(newBlock)!);
     this.removeMark(workspace);
   }
 

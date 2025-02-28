@@ -524,35 +524,31 @@ export class LineCursor extends Marker {
       return curNode;
     }
     const newNode = new ASTNode(ASTNode.types.BLOCK, selected);
-    super.setCurNode(newNode);
-    this.updateFocusIndication(curNode, newNode);
+    this.setCurNode(newNode);
     return newNode;
   }
 
   /**
    * Set the location of the cursor and draw it.
    *
-   * Overrides drawing logic to call `setSelected` if the location is
-   * a block, or `addSelect` if it's a shadow block (since shadow
-   * blocks can't be selected).
-   *
-   * TODO(#142): The selection and fake-selection code was originally
-   * a hack added for testing on October 28 2024, because the default
-   * drawer behaviour was to draw a box around the block and all
-   * attached child blocks, which was confusing when navigating
-   * stacks.
-   *
-   * Since then we have decided that we probably _do_ in most cases
-   * want navigating to a block to select the block, but more
-   * particularly that we want navigation to move _focus_.  Replace
-   * this selection hack with non-hacky changing of focus once that's
-   * possible.
+   * Overrides normal Marker setCurNode logic to call
+   * this.drawMarker() instead of this.drawer.draw() directly.
    *
    * @param newNode The new location of the cursor.
    */
   override setCurNode(newNode: ASTNode) {
-    const oldNode = this.getCurNode();
+    const oldNode = super.getCurNode();
+    // Kludge: we can't set this.curNode directly, so we have to call
+    // super.setCurNode(...) to do it for us - but that would call
+    // this.drawer.draw(...), so prevent that by temporarily setting
+    // this.drawer to null (which we also can't do directly!)
+    const drawer = this.getDrawer();
+    this.setDrawer(null as any); // Cast required since param is not nullable.
     super.setCurNode(newNode);
+    this.setDrawer(drawer);
+    // Draw this marker the way we want to.
+    this.drawMarker(oldNode, newNode);
+    // Try to scroll cursor into view.
     if (newNode?.getType() === ASTNode.types.BLOCK) {
       const block = newNode.getLocation() as Blockly.BlockSvg;
       scrollBoundsIntoView(
@@ -560,24 +556,48 @@ export class LineCursor extends Marker {
         block.workspace,
       );
     }
-    this.updateFocusIndication(oldNode, newNode);
   }
 
   /**
-   * Implements fake selection of shadow blocks as described in
-   * documentation for setCurNode.
+   * Redraw the current marker.
+   *
+   * Overrides normal Marker drawing logic to use this.drawMarker()
+   * instead of this.drawer.draw() directly.
+   *
+   * This hooks the method used by the renderer to draw the marker,
+   * preventing the marker drawer from showing a marker if we don't
+   * want it to.
+   */
+  override draw() {
+    const curNode = super.getCurNode();
+    this.drawMarker(curNode, curNode);
+  }
+
+  /**
+   * Draw this cursor's marker.
+   *
+   * This is a wrapper around this.drawer.draw (usually implemented by
+   * MarkerSvg.prototype.draw) that will, if newNode is a BLOCK node,
+   * instead call `setSelected` to select it (if it's a regular block)
+   * or `addSelect` (if it's a shadow block, since shadow blocks can't
+   * be selected) instead of using the normal drawer logic.
+   *
+   * TODO(#142): The selection and fake-selection code was originally
+   * a hack added for testing on October 28 2024, because the default
+   * drawer (MarkerSvg) behaviour in Zelos was to draw a box around
+   * the block and all attached child blocks, which was confusing when
+   * navigating stacks.
+   *
+   * Since then we have decided that we probably _do_ in most cases
+   * want navigating to a block to select the block, but more
+   * particularly that we want navigation to move _focus_.  Replace
+   * this selection hack with non-hacky changing of focus once that's
+   * possible.
    *
    * @param oldNode The previous node.
-   * @param newNode The newly-selected node.
+   * @param curNode The current node.
    */
-  private updateFocusIndication(oldNode: ASTNode, newNode: ASTNode) {
-    const drawer = this.getDrawer();
-
-    if (!drawer) {
-      console.error('could not find a drawer');
-      return;
-    }
-
+  private drawMarker(oldNode: ASTNode, curNode: ASTNode) {
     // If old node was a block, unselect it or remove fake selection.
     if (oldNode?.getType() === ASTNode.types.BLOCK) {
       const block = oldNode.getLocation() as Blockly.BlockSvg;
@@ -588,19 +608,25 @@ export class LineCursor extends Marker {
       }
     }
 
-    // If new node is a block, select it or make it look selected.
-    if (newNode?.getType() === ASTNode.types.BLOCK) {
-      drawer.hide();
-      const block = newNode.getLocation() as Blockly.BlockSvg;
-      if (!block.isShadow()) {
-        Blockly.common.setSelected(block);
-      } else {
-        block.addSelect();
-      }
+    // If curNode node is not block, just use the drawer.
+    if (curNode?.getType() !== ASTNode.types.BLOCK) {
+      this.getDrawer()?.draw(oldNode, curNode);
       return;
     }
 
-    drawer.draw(oldNode, newNode);
+    // curNode is a block.  Hide any visible marker SVG and instead
+    // select the block or make it look selected.
+    super.hide(); // Calls this.drawer?.hide().
+    const block = curNode.getLocation() as Blockly.BlockSvg;
+    if (!block.isShadow()) {
+      Blockly.common.setSelected(block);
+    } else {
+      block.addSelect();
+    }
+
+    // Call MarkerSvg.prototype.fireMarkerEvent like
+    // MarkerSvg.prototype.draw would (even though it's private).
+    (this.getDrawer() as any)?.fireMarkerEvent?.(oldNode, curNode);
   }
 
   /**
