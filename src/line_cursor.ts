@@ -487,6 +487,78 @@ export class LineCursor extends Marker {
   }
 
   /**
+   * Prepare for the deletion of a block by moving the cursor out of
+   * the subtree of blocks rooted at that block (if necessary).
+   *
+   * N.B.: When block is deleted, all of the blocks conneccted to that
+   * block's inputs are also deleted, but not blocks connected to its
+   * next connection.
+   *
+   * The cursor is moved to one of the following locations (in order
+   * of preference):
+   *
+   * - The connection to which the deleted block attached, if valid.
+   * - The block connected to the next connection of the deleted block.
+   * - The parent block of the deleted block.
+   * - A location on the workspace beneath the deleted block.
+   *
+   * @param deletedBlock The block that is being deleted.
+   */
+  prepareForDelete(deletedBlock: Blockly.Block) {
+    const curNode = this.getCurNode();
+
+    // See if we need to move the cursor by walking up tee from
+    // curNode to see if we get to deletedBlock.
+    const curBlock = curNode.getSourceBlock();
+    for (let block = curBlock; block !== deletedBlock; block = block.getParent()) {
+      // If we get to top block of stack (or were not on a stack at
+      // all), or discover we are next in stack below deleted block
+      // then no move needed.
+      if (!block || block.getPreviousBlock() === deletedBlock) return;
+    }
+    if (!curBlock) return; // Just for type narrowing.
+
+    // Need to move cursor.  Can we move to connection where
+    // deletedBlock is attached?
+    const parentConnection = deletedBlock.previousConnection?.targetConnection ?? deletedBlock.outputConnection?.targetConnection;
+    if (parentConnection) {
+      const parentNode = Blockly.ASTNode.createConnectionNode(parentConnection)!;
+      if (this.validInLineNode(parentNode)) {
+        console.log('move to parent connection:', parentNode);
+        this.setCurNode(parentNode);
+        return;
+      }
+    }
+    // Can we move to the next block in the stack?
+    const nextBlock = deletedBlock.getNextBlock();
+    if (nextBlock) {
+      const nextNode = Blockly.ASTNode.createBlockNode(nextBlock)!;
+      if (this.validInLineNode(nextNode)) {
+        this.setCurNode(nextNode);
+        console.log('move to next block:', nextNode);
+        return;
+      }
+    }
+    // Can we move to parent block?
+    const parentBlock = deletedBlock.getParent();
+    if (parentBlock) {
+      const parentNode = Blockly.ASTNode.createBlockNode(parentBlock)!;
+      if (this.validInLineNode(parentNode)) {
+        this.setCurNode(parentNode);
+        console.log('move to parent block:', parentNode);
+        return;
+      }
+    }
+    // Move to the workspace.
+    const workspaceNode = Blockly.ASTNode.createWorkspaceNode(
+      this.workspace,
+      curBlock.getRelativeToSurfaceXY(),
+    )!;
+    console.log('move to workspace:', workspaceNode);
+    this.setCurNode(workspaceNode);
+  }
+
+  /**
    * Get the current location of the cursor.
    *
    * Overrides superclass implementation to add a hack that attempts

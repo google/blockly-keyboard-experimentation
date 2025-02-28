@@ -406,61 +406,6 @@ export class Navigation {
   }
 
   /**
-   * Moves the cursor to the appropriate location before a block is deleted.
-   * This is used when the user deletes a block using the delete or backspace
-   * key.
-   *
-   * @param workspace The workspace the block is being deleted on.
-   * @param deletedBlock The block that is being deleted.
-   */
-  moveCursorOnBlockDelete(
-    workspace: Blockly.WorkspaceSvg,
-    deletedBlock: Blockly.BlockSvg,
-  ) {
-    const cursor = workspace.getCursor();
-    if (!cursor) {
-      return;
-    }
-    const curNode = cursor.getCurNode();
-    const block = curNode ? curNode.getSourceBlock() : null;
-
-    if (block === deletedBlock) {
-      // If the block has a parent move the cursor to their connection point.
-      if (block.getParent()) {
-        const topConnection =
-          block.previousConnection || block.outputConnection;
-        if (topConnection?.targetConnection) {
-          cursor.setCurNode(
-            Blockly.ASTNode.createConnectionNode(
-              topConnection.targetConnection,
-            )!,
-          );
-        }
-      } else {
-        // If the block is by itself move the cursor to the workspace.
-        cursor.setCurNode(
-          Blockly.ASTNode.createWorkspaceNode(
-            block.workspace,
-            block.getRelativeToSurfaceXY(),
-          )!,
-        );
-      }
-      // If the cursor is on a block whose parent is being deleted, move the
-      // cursor to the workspace.
-    } else if (
-      block &&
-      deletedBlock.getChildren(false).includes(block as Blockly.BlockSvg)
-    ) {
-      cursor.setCurNode(
-        Blockly.ASTNode.createWorkspaceNode(
-          block.workspace,
-          block.getRelativeToSurfaceXY(),
-        )!,
-      );
-    }
-  }
-
-  /**
    * Sets the navigation state to toolbox and selects the first category in the
    * toolbox. No-op if a toolbox does not exist on the given workspace.
    *
