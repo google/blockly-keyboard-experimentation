@@ -1116,6 +1116,12 @@ export class Navigation {
       this.log('Cannot disconnect a shadow block');
       return;
     }
+
+    if (!inferiorConnection.getSourceBlock().isMovable()) {
+      this.log('Cannot disconnect an immovable block');
+      return;
+    }
+
     superiorConnection.disconnect();
     inferiorConnection.bumpAwayFrom(superiorConnection);
 
