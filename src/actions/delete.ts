@@ -182,8 +182,9 @@ export class DeleteAction {
     // Don't delete while dragging.  Jeez.
     if (Gesture.inProgress()) false;
 
-    if (cursor instanceof LineCursor) cursor.prepareForDelete(sourceBlock);
+    if (cursor instanceof LineCursor) cursor.preDelete(sourceBlock);
     sourceBlock.checkAndDelete();
+    if (cursor instanceof LineCursor) cursor.postDelete();
     return true;
   }
 }

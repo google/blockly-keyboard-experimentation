@@ -170,8 +170,9 @@ export class Clipboard {
     if (!sourceBlock) throw new TypeError('no source block');
     this.copyData = sourceBlock.toCopyData();
     this.copyWorkspace = sourceBlock.workspace;
-    if (cursor instanceof LineCursor) cursor.prepareForDelete(sourceBlock);
+    if (cursor instanceof LineCursor) cursor.preDelete(sourceBlock);
     sourceBlock.checkAndDelete();
+    if (cursor instanceof LineCursor) cursor.postDelete();
     return true;
   }
 

@@ -45,6 +45,9 @@ export class LineCursor extends Marker {
   /** Old Cursor instance, saved during installation. */
   private oldCursor: Blockly.Cursor | null = null;
 
+  /** Locations to try moving the cursor to after a deletion. */
+  private potentialNodes: Blockly.ASTNode[] | null = null;
+  
   /**
    * @param workspace The workspace this cursor belongs to.
    */
@@ -225,7 +228,7 @@ export class LineCursor extends Marker {
   /**
    * Returns true iff the given node can be visited by the cursor when
    * using the left/right arrow keys.  Specifically, if the node is
-   * for any node for which valideLineNode would return true, plus:
+   * any node for which valideLineNode would return true, plus:
    *
    * - Any block.
    * - Any field that is not a full block field.
@@ -256,6 +259,18 @@ export class LineCursor extends Marker {
       default:
         return false;
     }
+  }
+
+  /**
+   * Returns true iff the given node can be visited by the cursor.
+   * Specifically, if the node is any for which validInLineNode woudl
+   * return true, or if it is a workspace node.
+   *
+   * @param node The AST node to check whether it is valid.
+   * @returns True if the node should be visited, false otherwise.
+   */
+  protected validNode(node: ASTNode | null): boolean {
+    return !!node && (this.validInLineNode(node) || node.getType() === ASTNode.types.WORKSPACE);
   }
 
   /**
@@ -487,75 +502,77 @@ export class LineCursor extends Marker {
   }
 
   /**
-   * Prepare for the deletion of a block by moving the cursor out of
-   * the subtree of blocks rooted at that block (if necessary).
+   * Prepare for the deletion of a block by making a list of nodes we
+   * could move the cursor to afterwards and save it to
+   * this.potentialNodes.
+   *
+   * After the deletion has occurred, call postDelete to move it to
+   * the first valid node on that list.
+   *
+   * The locations to try (in order of preference) are:
+   *
+   * - The current location.
+   * - The connection to which the deleted block is attached.
+   * - The block connected to the next connection of the deleted block.
+   * - The parent block of the deleted block.
+   * - A location on the workspace beneath the deleted block.
    *
    * N.B.: When block is deleted, all of the blocks conneccted to that
    * block's inputs are also deleted, but not blocks connected to its
    * next connection.
    *
-   * The cursor is moved to one of the following locations (in order
-   * of preference):
-   *
-   * - The connection to which the deleted block attached, if valid.
-   * - The block connected to the next connection of the deleted block.
-   * - The parent block of the deleted block.
-   * - A location on the workspace beneath the deleted block.
-   *
    * @param deletedBlock The block that is being deleted.
    */
-  prepareForDelete(deletedBlock: Blockly.Block) {
+  preDelete(deletedBlock: Blockly.Block) {
     const curNode = this.getCurNode();
 
-    // See if we need to move the cursor by walking up tee from
-    // curNode to see if we get to deletedBlock.
-    const curBlock = curNode.getSourceBlock();
-    for (let block = curBlock; block !== deletedBlock; block = block.getParent()) {
-      // If we get to top block of stack (or were not on a stack at
-      // all), or discover we are next in stack below deleted block
-      // then no move needed.
-      if (!block || block.getPreviousBlock() === deletedBlock) return;
-    }
-    if (!curBlock) return; // Just for type narrowing.
-
-    // Need to move cursor.  Can we move to connection where
-    // deletedBlock is attached?
+    const nodes: Blockly.ASTNode[] = [curNode];
+   // The connection to which the deleted block is attached.
     const parentConnection = deletedBlock.previousConnection?.targetConnection ?? deletedBlock.outputConnection?.targetConnection;
     if (parentConnection) {
-      const parentNode = Blockly.ASTNode.createConnectionNode(parentConnection)!;
-      if (this.validInLineNode(parentNode)) {
-        console.log('move to parent connection:', parentNode);
-        this.setCurNode(parentNode);
-        return;
-      }
+      const parentNode = Blockly.ASTNode.createConnectionNode(parentConnection);
+      if (parentNode) nodes.push(parentNode)
     }
-    // Can we move to the next block in the stack?
+    // The block connected to the next connection of the deleted block.
     const nextBlock = deletedBlock.getNextBlock();
     if (nextBlock) {
-      const nextNode = Blockly.ASTNode.createBlockNode(nextBlock)!;
-      if (this.validInLineNode(nextNode)) {
-        this.setCurNode(nextNode);
-        console.log('move to next block:', nextNode);
-        return;
-      }
+      const nextNode = Blockly.ASTNode.createBlockNode(nextBlock);
+      if (nextNode) nodes.push(nextNode);
     }
-    // Can we move to parent block?
+    //  The parent block of the deleted block.
     const parentBlock = deletedBlock.getParent();
     if (parentBlock) {
-      const parentNode = Blockly.ASTNode.createBlockNode(parentBlock)!;
-      if (this.validInLineNode(parentNode)) {
-        this.setCurNode(parentNode);
-        console.log('move to parent block:', parentNode);
+      const parentNode = Blockly.ASTNode.createBlockNode(parentBlock);
+      if (parentNode) nodes.push(parentNode);
+    }
+    // A location on the workspace beneath the deleted block.
+    // Move to the workspace.
+    const curBlock = curNode.getSourceBlock();
+    if (curBlock) {
+      const workspaceNode = Blockly.ASTNode.createWorkspaceNode(
+        this.workspace,
+        curBlock.getRelativeToSurfaceXY(),
+      );
+      if (workspaceNode) nodes.push(workspaceNode);
+    }
+    this.potentialNodes = nodes;
+  }
+
+  /**
+   * Move the cursor to the first valid location in
+   * this.potentialNodes, following a block deletion.
+   */
+  postDelete() {
+    const nodes = this.potentialNodes;
+    this.potentialNodes = null;
+    if (!nodes) throw new Error('must call preDelete first');
+    for (const node of nodes) {
+      if (this.validNode(node) && !node.getSourceBlock()?.disposed) {
+        this.setCurNode(node);
         return;
       }
     }
-    // Move to the workspace.
-    const workspaceNode = Blockly.ASTNode.createWorkspaceNode(
-      this.workspace,
-      curBlock.getRelativeToSurfaceXY(),
-    )!;
-    console.log('move to workspace:', workspaceNode);
-    this.setCurNode(workspaceNode);
+    throw new Error('no valid nodes in this.potentialNodes');
   }
 
   /**
