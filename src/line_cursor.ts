@@ -47,7 +47,7 @@ export class LineCursor extends Marker {
 
   /** Locations to try moving the cursor to after a deletion. */
   private potentialNodes: Blockly.ASTNode[] | null = null;
-  
+
   /**
    * @param workspace The workspace this cursor belongs to.
    */
@@ -270,7 +270,10 @@ export class LineCursor extends Marker {
    * @returns True if the node should be visited, false otherwise.
    */
   protected validNode(node: ASTNode | null): boolean {
-    return !!node && (this.validInLineNode(node) || node.getType() === ASTNode.types.WORKSPACE);
+    return (
+      !!node &&
+      (this.validInLineNode(node) || node.getType() === ASTNode.types.WORKSPACE)
+    );
   }
 
   /**
@@ -527,11 +530,13 @@ export class LineCursor extends Marker {
     const curNode = this.getCurNode();
 
     const nodes: Blockly.ASTNode[] = [curNode];
-   // The connection to which the deleted block is attached.
-    const parentConnection = deletedBlock.previousConnection?.targetConnection ?? deletedBlock.outputConnection?.targetConnection;
+    // The connection to which the deleted block is attached.
+    const parentConnection =
+      deletedBlock.previousConnection?.targetConnection ??
+      deletedBlock.outputConnection?.targetConnection;
     if (parentConnection) {
       const parentNode = Blockly.ASTNode.createConnectionNode(parentConnection);
-      if (parentNode) nodes.push(parentNode)
+      if (parentNode) nodes.push(parentNode);
     }
     // The block connected to the next connection of the deleted block.
     const nextBlock = deletedBlock.getNextBlock();
