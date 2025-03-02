@@ -28,7 +28,6 @@ export enum SHORTCUT_NAMES {
   RIGHT = 'righ',
   LEFT = 'left',
   INSERT = 'insert',
-  EDIT = 'edit',
   MARK = 'mark',
   DISCONNECT = 'disconnect',
   TOOLBOX = 'toolbox',

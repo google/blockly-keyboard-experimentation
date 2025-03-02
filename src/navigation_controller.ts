@@ -25,6 +25,7 @@ import * as Constants from './constants';
 import {Announcer} from './announcer';
 import {Clipboard} from './actions/clipboard';
 import {DeleteAction} from './actions/delete';
+import {EditAction} from './actions/edit';
 import {InsertAction} from './actions/insert';
 import {LineCursor} from './line_cursor';
 import {Navigation} from './navigation';
@@ -46,6 +47,11 @@ export class NavigationController {
   /** Context menu and keyboard action for deletion. */
   deleteAction: DeleteAction = new DeleteAction(
     this.navigation,
+    this.canCurrentlyEdit.bind(this),
+  );
+
+  /** Context menu and keyboard action for deletion. */
+  editAction: EditAction = new EditAction(
     this.canCurrentlyEdit.bind(this),
   );
 
@@ -713,6 +719,7 @@ export class NavigationController {
       ShortcutRegistry.registry.register(shortcut);
     }
     this.deleteAction.install();
+    this.editAction.install();
     this.insertAction.install();
 
     this.clipboard.install();
@@ -732,6 +739,7 @@ export class NavigationController {
     }
 
     this.deleteAction.uninstall();
+    this.editAction.uninstall();
     this.insertAction.uninstall();
     this.clipboard.uninstall();
 
