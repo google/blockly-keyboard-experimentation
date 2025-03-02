@@ -22,13 +22,13 @@ import {
 } from 'blockly/core';
 
 import * as Constants from './constants';
-import {Navigation} from './navigation';
 import {Announcer} from './announcer';
-import {LineCursor} from './line_cursor';
-import {ShortcutDialog} from './shortcut_dialog';
+import {Clipboard} from './actions/clipboard';
 import {DeleteAction} from './actions/delete';
 import {InsertAction} from './actions/insert';
-import {Clipboard} from './actions/clipboard';
+import {LineCursor} from './line_cursor';
+import {Navigation} from './navigation';
+import {ShortcutDialog} from './shortcut_dialog';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
