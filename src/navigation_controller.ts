@@ -402,7 +402,7 @@ export class NavigationController {
      * - On the workspace: open the context menu.
      */
     enter: {
-      name: Constants.SHORTCUT_NAMES.MARK, // FIXME
+      name: Constants.SHORTCUT_NAMES.EDIT_OR_CONFIRM,
       preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
       callback: (workspace, event) => {
         event.preventDefault();
