@@ -13,6 +13,7 @@ import {
 } from 'blockly';
 import * as Constants from '../constants';
 import type {BlockSvg, WorkspaceSvg} from 'blockly';
+import {LineCursor} from '../line_cursor';
 import {Navigation} from '../navigation';
 
 const KeyCodes = blocklyUtils.KeyCodes;
@@ -163,14 +164,15 @@ export class Clipboard {
    * @returns True if this function successfully handled cutting.
    */
   private cutCallback(workspace: WorkspaceSvg) {
-    const sourceBlock = workspace
-      .getCursor()
-      ?.getCurNode()
-      .getSourceBlock() as BlockSvg;
+    const cursor = workspace.getCursor();
+    if (!cursor) throw new TypeError('no cursor');
+    const sourceBlock = cursor.getCurNode().getSourceBlock() as BlockSvg | null;
+    if (!sourceBlock) throw new TypeError('no source block');
     this.copyData = sourceBlock.toCopyData();
     this.copyWorkspace = sourceBlock.workspace;
-    this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
+    if (cursor instanceof LineCursor) cursor.preDelete(sourceBlock);
     sourceBlock.checkAndDelete();
+    if (cursor instanceof LineCursor) cursor.postDelete();
     return true;
   }
 

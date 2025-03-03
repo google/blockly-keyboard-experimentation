@@ -88,9 +88,9 @@ export class InsertAction {
     const insertAboveItem: ContextMenuRegistry.RegistryItem = {
       displayText: (scope) => {
         if (scope.block?.previousConnection) {
-          return 'Insert Block Above (I)'
+          return 'Insert Block Above (I)';
         } else {
-          return 'Insert Block (I)'
+          return 'Insert Block (I)';
         }
       },
       preconditionFn: (scope: Scope) => {
