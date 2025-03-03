@@ -515,7 +515,7 @@ export class NavigationController {
             return false;
         }
       },
-      keyCodes: [KeyCodes.ESC, KeyCodes.E],
+      keyCodes: [KeyCodes.ESC],
       allowCollision: true,
     },
 
