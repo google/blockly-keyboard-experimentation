@@ -28,7 +28,7 @@ export enum SHORTCUT_NAMES {
   IN = 'in',
   OUT = 'out',
   INSERT = 'insert',
-  MARK = 'mark',
+  EDIT_OR_CONFIRM = 'edit_or_confirm',
   DISCONNECT = 'disconnect',
   TOOLBOX = 'toolbox',
   EXIT = 'exit',
@@ -87,6 +87,7 @@ export const SHORTCUT_CATEGORIES: Record<
 > = {
   'General': [
     SHORTCUT_NAMES.TOOLBOX,
+    SHORTCUT_NAMES.EDIT_OR_CONFIRM,
     SHORTCUT_NAMES.MENU,
     SHORTCUT_NAMES.EXIT,
     SHORTCUT_NAMES.CLEAN_UP,
