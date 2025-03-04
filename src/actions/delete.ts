@@ -131,7 +131,7 @@ export class DeleteAction {
       },
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'blockDeleteFromContextMenu',
-      weight: 10,
+      weight: 11,
     };
 
     ContextMenuRegistry.registry.register(deleteItem);
