@@ -74,12 +74,6 @@ export class Navigation {
   protected passiveFocusIndicator: PassiveFocus = new PassiveFocus();
 
   /**
-   * The node that has passive focus when the cursor has moved to the flyout
-   * or toolbox; null if the cursor is moving around the main workspace.
-   */
-  protected markedNode: Blockly.ASTNode | null = null;
-
-  /**
    * Constructor for keyboard navigation.
    */
   constructor() {
@@ -418,9 +412,12 @@ export class Navigation {
     if (!toolbox) {
       return;
     }
+    const cursor = workspace.getCursor();
+    if (cursor) {
+      this.passiveFocusIndicator.show(cursor.getCurNode());
+      cursor.hide();
+    }
 
-    this.markAtCursor(workspace);
-    workspace.getCursor()?.hide();
     this.setState(workspace, Constants.STATE.TOOLBOX);
     this.resetFlyout(workspace, false /* shouldHide */);
 
@@ -443,8 +440,11 @@ export class Navigation {
    * @param workspace The workspace the flyout is on.
    */
   focusFlyout(workspace: Blockly.WorkspaceSvg) {
-    workspace.getCursor()?.hide();
-    this.markAtCursor(workspace);
+    const cursor = workspace.getCursor();
+    if (cursor) {
+      this.passiveFocusIndicator.show(cursor.getCurNode());
+      cursor.hide();
+    }
 
     const flyout = workspace.getFlyout();
     this.setState(workspace, Constants.STATE.FLYOUT);
@@ -482,6 +482,9 @@ export class Navigation {
     this.resetFlyout(workspace, reset);
     this.setState(workspace, Constants.STATE.WORKSPACE);
     this.setCursorOnWorkspaceFocus(workspace, keepCursorPosition);
+
+    this.passiveFocusIndicator.hide();
+    workspace.getCursor()?.draw();
   }
 
   /**
@@ -502,12 +505,6 @@ export class Navigation {
     const topBlocks = workspace.getTopBlocks(true);
     const cursor = workspace.getCursor();
     if (!cursor) {
-      return;
-    }
-
-    if (this.markedNode) {
-      cursor.setCurNode(this.markedNode);
-      this.removeMark(workspace);
       return;
     }
 
@@ -553,13 +550,14 @@ export class Navigation {
    *     the block will be placed on.
    */
   insertFromFlyout(workspace: Blockly.WorkspaceSvg) {
+    const stationaryNode = workspace.getCursor()?.getCurNode();
     const newBlock = this.createNewBlock(workspace);
     if (!newBlock) return;
-    if (this.markedNode) {
+    if (stationaryNode) {
       if (
         !this.tryToConnectNodes(
           workspace,
-          this.markedNode,
+          stationaryNode,
           Blockly.ASTNode.createBlockNode(newBlock)!,
         )
       ) {
@@ -573,7 +571,6 @@ export class Navigation {
     workspace
       .getCursor()!
       .setCurNode(Blockly.ASTNode.createBlockNode(newBlock)!);
-    this.removeMark(workspace);
   }
 
   /**
@@ -624,26 +621,6 @@ export class Navigation {
         workspace.getFlyout()!.hide();
       }
     }
-  }
-
-  /**
-   * Connects the location of the marked node and the location of the cursor.
-   * No-op if the marked node or cursor node are null.
-   *
-   * @param workspace The main workspace.
-   * @returns True if the cursor and marker locations were connected,
-   *     false otherwise.
-   */
-  connectMarkerAndCursor(workspace: Blockly.WorkspaceSvg): boolean {
-    const cursorNode = workspace.getCursor()!.getCurNode();
-
-    if (this.markedNode && cursorNode) {
-      if (this.tryToConnectNodes(workspace, this.markedNode, cursorNode)) {
-        this.removeMark(workspace);
-        return true;
-      }
-    }
-    return false;
   }
 
   /**
@@ -1081,32 +1058,6 @@ export class Navigation {
   }
 
   /**
-   * Moves the passive focus indicator to the cursor's current location.
-   *
-   * @param workspace The workspace.
-   */
-  markAtCursor(workspace: Blockly.WorkspaceSvg) {
-    const cursor = workspace.getCursor()!;
-    this.markedNode = cursor.getCurNode();
-
-    // Although it seems like this should never happen, the typings are wrong
-    // in the base Marker class and this can therefore be null.
-    if (this.markedNode) {
-      this.passiveFocusIndicator.show(this.markedNode);
-    }
-  }
-
-  /**
-   * Removes the passive focus indicator from its current location and hides it.
-   *
-   * @param workspace The workspace.
-   */
-  removeMark(workspace: Blockly.WorkspaceSvg) {
-    this.passiveFocusIndicator.hide();
-    this.markedNode = null;
-  }
-
-  /**
    * Enables accessibility mode.
    *
    * @param workspace The workspace to enable keyboard
@@ -1133,7 +1084,6 @@ export class Navigation {
       workspace.keyboardAccessibilityMode
     ) {
       workspace.keyboardAccessibilityMode = false;
-      this.markAtCursor(workspace);
       workspace.getCursor()!.hide();
       if (this.getFlyoutCursor(workspace)) {
         this.getFlyoutCursor(workspace)!.hide();
@@ -1248,7 +1198,6 @@ export class Navigation {
    * @param workspace The active workspace.
    */
   openToolboxOrFlyout(workspace: Blockly.WorkspaceSvg) {
-    this.markAtCursor(workspace);
     if (workspace.getToolbox()) {
       this.focusToolbox(workspace);
     } else {
@@ -1388,7 +1337,6 @@ export class Navigation {
           Blockly.ASTNode.createBlockNode(block)!,
         );
       }
-      this.removeMark(workspace);
       return true;
     }
     Blockly.Events.setGroup(false);
