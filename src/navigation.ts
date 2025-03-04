@@ -511,7 +511,9 @@ export class Navigation {
       return;
     }
 
-    if (cursor.getCurNode() && keepPosition) {
+    // This can happen if blocks are reloaded.
+    const isDisposed = cursor.getCurNode()?.getSourceBlock()?.disposed;
+    if (cursor.getCurNode() && !isDisposed && keepPosition) {
       // Retain the cursor's previous position since it's set.
       return;
     }
