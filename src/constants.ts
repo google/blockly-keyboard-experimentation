@@ -65,16 +65,6 @@ export enum LOGGING_MSG_TYPE {
 }
 
 /**
- * Platform specific modifier key used in shortcuts.
- */
-export enum MODIFIER_KEY {
-  Windows = 'Ctrl',
-  ChromeOS = 'Ctrl',
-  macOS = '⌘ Command',
-  Linux = 'Meta',
-}
-
-/**
  * Categories used to organised the shortcut dialog.
  * Shortcut name should match those obtained from the Blockly shortcut register.
  */
