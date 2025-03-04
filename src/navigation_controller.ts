@@ -51,9 +51,7 @@ export class NavigationController {
   );
 
   /** Context menu and keyboard action for deletion. */
-  editAction: EditAction = new EditAction(
-    this.canCurrentlyEdit.bind(this),
-  );
+  editAction: EditAction = new EditAction(this.canCurrentlyEdit.bind(this));
 
   /** Context menu and keyboard action for insertion. */
   insertAction: InsertAction = new InsertAction(
