@@ -511,10 +511,10 @@ export class Navigation {
       return;
     }
 
-    // This can happen if blocks are reloaded.
-    const isDisposed = cursor.getCurNode()?.getSourceBlock()?.disposed;
-    if (cursor.getCurNode() && !isDisposed && keepPosition) {
-      // Retain the cursor's previous position since it's set.
+    const disposed = cursor.getCurNode()?.getSourceBlock()?.disposed;
+    if (cursor.getCurNode() && !disposed && keepPosition) {
+      // Retain the cursor's previous position since it's set, but only if not
+      // disposed (which can happen when blocks are reloaded).
       return;
     }
     const wsCoordinates = new Blockly.utils.Coordinate(
