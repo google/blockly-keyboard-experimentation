@@ -1139,7 +1139,7 @@ export class Navigation {
     // Although it seems like this should never happen, the typings are wrong
     // in the base Marker class and this can therefore be null.
     if (this.markedNode) {
-      // this.passiveFocusIndicator.show(this.markedNode);
+      this.passiveFocusIndicator.show(this.markedNode);
     }
   }
 
@@ -1149,7 +1149,7 @@ export class Navigation {
    * @param workspace The workspace.
    */
   removeMark(workspace: Blockly.WorkspaceSvg) {
-    // this.passiveFocusIndicator.hide();
+    this.passiveFocusIndicator.hide();
     this.markedNode = null;
   }
 
