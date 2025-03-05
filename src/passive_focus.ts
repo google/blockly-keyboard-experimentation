@@ -94,15 +94,7 @@ export class PassiveFocus {
    */
   showAtBlock(node: ASTNode) {
     const block = node.getLocation() as BlockSvg;
-    // Note that this changes rendering but does not change Blockly's
-    // internal selected state.
-    // If the block renders selected, the selection highlight is in
-    // front of the block's path and obscures these changes.
-    // block.removeSelect();
-
-    console.log('DBG: Show at block');
     utils.dom.addClass(block.pathObject.svgPath, 'passiveBlockFocus');
-    block.pathObject.svgPath.style.strokeDasharray = '5 3';
   }
 
   /**
@@ -112,11 +104,7 @@ export class PassiveFocus {
    */
   hideAtBlock(node: ASTNode) {
     const block = node.getLocation() as BlockSvg;
-
-    // Note that removing the class is insufficient to disable the dash.
-    console.log('DBG: Hide at block');
     utils.dom.removeClass(block.pathObject.svgPath, 'passiveBlockFocus');
-    block.pathObject.svgPath.style.strokeDasharray = 'none';
   }
 
   /**
