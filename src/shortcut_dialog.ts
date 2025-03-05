@@ -34,17 +34,16 @@ export class ShortcutDialog {
   }
 
   getPlatform() {
-    const platform = navigator.platform;
-
-    // Check for Windows platforms
+    const {platform, userAgent} = navigator;
     if (platform.startsWith('Win')) {
       return 'Windows';
     } else if (platform.startsWith('Mac')) {
       return 'macOS';
+    } else if (/\bCrOS\b/.test(userAgent)) {
+      // Order is important because platform matches the Linux case below.
+      return 'ChromeOS';
     } else if (platform.includes('Linux')) {
       return 'Linux';
-    } else if (platform.includes('chromeOS')) {
-      return 'ChromeOS';
     } else {
       return 'Unknown';
     }
@@ -69,11 +68,9 @@ export class ShortcutDialog {
         this.shortcutDialog.querySelectorAll('.key.modifier');
 
       if (modifierKeys.length > 0 && platform) {
-        for (let key of modifierKeys) {
+        for (const key of modifierKeys) {
           key.textContent =
-            Constants.MODIFIER_KEY[
-              platform as keyof typeof Constants.MODIFIER_KEY
-            ];
+            this.getPlatform() === 'macOS' ? '⌘ Command' : 'Ctrl';
         }
       }
     }
