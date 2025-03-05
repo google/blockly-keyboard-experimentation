@@ -36,6 +36,10 @@ export const p5CategoryContents = [
     },
   },
   {
+    kind: 'label',
+    text: 'Writing text',
+  },
+  {
     kind: 'block',
     type: 'write_text_with_shadow',
     inputs: {

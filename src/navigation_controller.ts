@@ -15,11 +15,6 @@ import './gesture_monkey_patch';
 import * as Blockly from 'blockly/core';
 import {
   ASTNode,
-  BlockSvg,
-  comments,
-  Connection,
-  ContextMenuRegistry,
-  ICopyData,
   ShortcutRegistry,
   Toolbox,
   utils as BlocklyUtils,
@@ -31,31 +26,39 @@ import {Navigation} from './navigation';
 import {Announcer} from './announcer';
 import {LineCursor} from './line_cursor';
 import {ShortcutDialog} from './shortcut_dialog';
+import {DeleteAction} from './actions/delete';
+import {InsertAction} from './actions/insert';
+import {Clipboard} from './actions/clipboard';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
   ShortcutRegistry.registry,
 );
 
-interface Scope {
-  block?: BlockSvg;
-  workspace?: WorkspaceSvg;
-  comment?: comments.RenderedWorkspaceComment;
-  connection?: Connection;
-}
-
 /**
  * Class for registering shortcuts for keyboard navigation.
  */
 export class NavigationController {
-  /** Data copied by the copy or cut keyboard shortcuts. */
-  copyData: ICopyData | null = null;
-
-  /** The workspace a copy or cut keyboard shortcut happened in. */
-  copyWorkspace: WorkspaceSvg | null = null;
   navigation: Navigation = new Navigation();
   announcer: Announcer = new Announcer();
   shortcutDialog: ShortcutDialog = new ShortcutDialog();
+
+  /** Context menu and keyboard action for deletion. */
+  deleteAction: DeleteAction = new DeleteAction(
+    this.navigation,
+    this.canCurrentlyEdit.bind(this),
+  );
+
+  /** Context menu and keyboard action for insertion. */
+  insertAction: InsertAction = new InsertAction(
+    this.navigation,
+    this.canCurrentlyEdit.bind(this),
+  );
+
+  clipboard: Clipboard = new Clipboard(
+    this.navigation,
+    this.canCurrentlyEdit.bind(this),
+  );
 
   hasNavigationFocus: boolean = false;
 
@@ -112,13 +115,13 @@ export class NavigationController {
     }
     switch (shortcut.name) {
       case Constants.SHORTCUT_NAMES.PREVIOUS:
-        return (this as any).selectPrevious_();
+        return (this as any).selectPrevious();
       case Constants.SHORTCUT_NAMES.OUT:
-        return (this as any).selectParent_();
+        return (this as any).selectParent();
       case Constants.SHORTCUT_NAMES.NEXT:
-        return (this as any).selectNext_();
+        return (this as any).selectNext();
       case Constants.SHORTCUT_NAMES.IN:
-        return (this as any).selectChild_();
+        return (this as any).selectChild();
       default:
         return false;
     }
@@ -237,117 +240,6 @@ export class NavigationController {
       return (curNode.getLocation() as Blockly.Field).onShortcut(shortcut);
     }
     return false;
-  }
-
-  /**
-   * Precondition function for deleting a block from keyboard
-   * navigation. This precondition is shared between keyboard shortcuts
-   * and context menu items.
-   *
-   * FIXME: This should be better encapsulated.
-   *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @returns True iff `deleteCallbackFn` function should be called.
-   */
-  protected deletePreconditionFn(workspace: WorkspaceSvg) {
-    if (!this.canCurrentlyEdit(workspace)) return false;
-    const sourceBlock = workspace.getCursor()?.getCurNode().getSourceBlock();
-    return !!sourceBlock?.isDeletable();
-  }
-
-  /**
-   * Callback function for deleting a block from keyboard
-   * navigation. This callback is shared between keyboard shortcuts
-   * and context menu items.
-   *
-   * FIXME: This should be better encapsulated.
-   *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @param e The originating event for a keyboard shortcut, or null
-   *     if called from a context menu.
-   * @returns True if this function successfully handled deletion.
-   */
-  protected deleteCallbackFn(workspace: WorkspaceSvg, e: Event | null) {
-    const cursor = workspace.getCursor();
-    if (!cursor) return false;
-    const sourceBlock = cursor.getCurNode().getSourceBlock() as BlockSvg;
-    // Delete or backspace.
-    // There is an event if this is triggered from a keyboard shortcut,
-    // but not if it's triggered from a context menu.
-    if (e) {
-      // Stop the browser from going back to the previous page.
-      // Do this first to prevent an error in the delete code from resulting
-      // in data loss.
-      e.preventDefault();
-    }
-    // Don't delete while dragging.  Jeez.
-    if (Blockly.Gesture.inProgress()) false;
-    this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
-    sourceBlock.checkAndDelete();
-    return true;
-  }
-
-  /**
-   * Precondition function for copying a block from keyboard
-   * navigation. This precondition is shared between keyboard shortcuts
-   * and context menu items.
-   *
-   * FIXME: This should be better encapsulated.
-   *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @returns True iff `deleteCallbackFn` function should be called.
-   */
-  protected blockCopyPreconditionFn(workspace: WorkspaceSvg) {
-    if (!this.canCurrentlyEdit(workspace)) return false;
-    switch (this.navigation.getState(workspace)) {
-      case Constants.STATE.WORKSPACE:
-        const curNode = workspace?.getCursor()?.getCurNode();
-        const source = curNode?.getSourceBlock();
-        return !!(
-          source?.isDeletable() &&
-          source?.isMovable() &&
-          !Blockly.Gesture.inProgress()
-        );
-      case Constants.STATE.FLYOUT:
-        const flyoutWorkspace = workspace.getFlyout()?.getWorkspace();
-        const sourceBlock = flyoutWorkspace
-          ?.getCursor()
-          ?.getCurNode()
-          ?.getSourceBlock();
-        return !!(sourceBlock && !Blockly.Gesture.inProgress());
-      default:
-        return false;
-    }
-  }
-
-  /**
-   * Callback function for copying a block from keyboard
-   * navigation. This callback is shared between keyboard shortcuts
-   * and context menu items.
-   *
-   * FIXME: This should be better encapsulated.
-   *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @returns True if this function successfully handled copying.
-   */
-  protected blockCopyCallbackFn(workspace: WorkspaceSvg) {
-    const navigationState = this.navigation.getState(workspace);
-    let activeWorkspace: Blockly.WorkspaceSvg | undefined = workspace;
-    if (navigationState === Constants.STATE.FLYOUT) {
-      activeWorkspace = workspace.getFlyout()?.getWorkspace();
-    }
-    const sourceBlock = activeWorkspace
-      ?.getCursor()
-      ?.getCurNode()
-      .getSourceBlock() as BlockSvg;
-    workspace.hideChaff();
-    this.copyData = sourceBlock.toCopyData();
-    this.copyWorkspace = sourceBlock.workspace;
-    return !!this.copyData;
   }
 
   /**
@@ -507,21 +399,6 @@ export class NavigationController {
       keyCodes: [KeyCodes.RIGHT],
     },
 
-    /** Connect a block to a marked location. */
-    insert: {
-      name: Constants.SHORTCUT_NAMES.INSERT,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-      callback: (workspace) => {
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE:
-            return this.navigation.connectMarkerAndCursor(workspace);
-          default:
-            return false;
-        }
-      },
-      keyCodes: [KeyCodes.I],
-    },
-
     /**
      * Enter key:
      *
@@ -530,9 +407,11 @@ export class NavigationController {
      * - On the workspace: open the context menu.
      */
     enter: {
-      name: Constants.SHORTCUT_NAMES.MARK, // FIXME
+      name: Constants.SHORTCUT_NAMES.EDIT_OR_CONFIRM,
       preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-      callback: (workspace) => {
+      callback: (workspace, event) => {
+        event.preventDefault();
+
         let flyoutCursor;
         let curNode;
         let nodeType;
@@ -563,7 +442,7 @@ export class NavigationController {
             return false;
         }
       },
-      keyCodes: [KeyCodes.ENTER],
+      keyCodes: [KeyCodes.ENTER, KeyCodes.SPACE],
     },
 
     /**
@@ -641,7 +520,7 @@ export class NavigationController {
             return false;
         }
       },
-      keyCodes: [KeyCodes.ESC, KeyCodes.E],
+      keyCodes: [KeyCodes.ESC],
       allowCollision: true,
     },
 
@@ -683,89 +562,6 @@ export class NavigationController {
         return this.navigation.moveWSCursor(workspace, 0, 1);
       },
       keyCodes: [createSerializedKey(KeyCodes.S, [KeyCodes.SHIFT])],
-    },
-
-    /** Copy the block the cursor is currently on. */
-    copy: {
-      name: Constants.SHORTCUT_NAMES.COPY,
-      preconditionFn: this.blockCopyPreconditionFn.bind(this),
-      callback: this.blockCopyCallbackFn.bind(this),
-      keyCodes: [
-        createSerializedKey(KeyCodes.C, [KeyCodes.CTRL]),
-        createSerializedKey(KeyCodes.C, [KeyCodes.ALT]),
-        createSerializedKey(KeyCodes.C, [KeyCodes.META]),
-      ],
-      allowCollision: true,
-    },
-
-    /**
-     * Paste the copied block, to the marked location if possible or
-     * onto the workspace otherwise.
-     */
-    paste: {
-      name: Constants.SHORTCUT_NAMES.PASTE,
-      preconditionFn: (workspace) =>
-        this.canCurrentlyEdit(workspace) && !Blockly.Gesture.inProgress(),
-      callback: (workspace) => {
-        if (!this.copyData || !this.copyWorkspace) return false;
-        const pasteWorkspace = this.copyWorkspace.isFlyout
-          ? workspace
-          : this.copyWorkspace;
-        return this.navigation.paste(this.copyData, pasteWorkspace);
-      },
-      keyCodes: [
-        createSerializedKey(KeyCodes.V, [KeyCodes.CTRL]),
-        createSerializedKey(KeyCodes.V, [KeyCodes.ALT]),
-        createSerializedKey(KeyCodes.V, [KeyCodes.META]),
-      ],
-      allowCollision: true,
-    },
-
-    /** Copy and delete the block the cursor is currently on. */
-    cut: {
-      name: Constants.SHORTCUT_NAMES.CUT,
-      preconditionFn: (workspace) => {
-        if (this.canCurrentlyEdit(workspace)) {
-          const curNode = workspace.getCursor()?.getCurNode();
-          if (curNode && curNode.getSourceBlock()) {
-            const sourceBlock = curNode.getSourceBlock();
-            return !!(
-              !Blockly.Gesture.inProgress() &&
-              sourceBlock &&
-              sourceBlock.isDeletable() &&
-              sourceBlock.isMovable() &&
-              !sourceBlock.workspace.isFlyout
-            );
-          }
-        }
-        return false;
-      },
-      callback: (workspace) => {
-        const sourceBlock = workspace
-          .getCursor()
-          ?.getCurNode()
-          .getSourceBlock() as BlockSvg;
-        this.copyData = sourceBlock.toCopyData();
-        this.copyWorkspace = sourceBlock.workspace;
-        this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
-        sourceBlock.checkAndDelete();
-        return true;
-      },
-      keyCodes: [
-        createSerializedKey(KeyCodes.X, [KeyCodes.CTRL]),
-        createSerializedKey(KeyCodes.X, [KeyCodes.ALT]),
-        createSerializedKey(KeyCodes.X, [KeyCodes.META]),
-      ],
-      allowCollision: true,
-    },
-
-    /** Keyboard shortcut to delete the block the cursor is currently on. */
-    delete: {
-      name: Constants.SHORTCUT_NAMES.DELETE,
-      preconditionFn: this.deletePreconditionFn.bind(this),
-      callback: this.deleteCallbackFn.bind(this),
-      keyCodes: [KeyCodes.DELETE, KeyCodes.BACKSPACE],
-      allowCollision: true,
     },
 
     /** List all of the currently registered shortcuts. */
@@ -913,116 +709,6 @@ export class NavigationController {
   };
 
   /**
-   * Register the delete block action as a context menu item on blocks.
-   * This function mixes together the keyboard and context menu preconditions
-   * but only calls the keyboard callback.
-   */
-  protected registerDeleteAction() {
-    const originalDeleteItem =
-      ContextMenuRegistry.registry.getItem('blockDelete');
-    if (!originalDeleteItem) return;
-
-    const deleteItem: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => {
-        // FIXME: Consider using the original delete item's display text,
-        // which is dynamic based on the nubmer of blocks to delete.
-        return 'Keyboard Navigation: delete';
-      },
-      preconditionFn: (scope) => {
-        // FIXME: Find a better way to get the workspace, or use `as WorkspaceSvg`.
-        const ws = scope.block?.workspace;
-
-        // Run the original precondition code, from the context menu option.
-        // If the item would be hidden or disabled, respect it.
-        const originalPreconditionResult =
-          originalDeleteItem.preconditionFn(scope);
-        if (!ws || originalPreconditionResult != 'enabled') {
-          return originalPreconditionResult;
-        }
-
-        // Return enabled if the keyboard shortcut precondition is allowed,
-        // and disabled if the context menu precondition is met but the keyboard
-        // shortcut precondition is not met.
-        return this.deletePreconditionFn(ws) ? 'enabled' : 'disabled';
-      },
-      callback: (scope) => {
-        // FIXME: Find a better way to get the workspace, or use `as WorkspaceSvg`.
-        const ws = scope.block?.workspace;
-        if (!ws) return;
-
-        // Delete the block(s), and put the cursor back in a sane location.
-        return this.deleteCallbackFn(ws, null);
-      },
-      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
-      id: 'blockDeleteFromContextMenu',
-      weight: 10,
-    };
-
-    // FIXME: Decide whether to unregister the original item.
-    ContextMenuRegistry.registry.register(deleteItem);
-  }
-
-  /**
-   * Register the block copy action as a context menu item on blocks.
-   */
-  protected registerCopyAction() {
-    const copyAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => 'Keyboard Navigation: copy',
-      preconditionFn: (scope) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return 'hidden';
-
-        return this.blockCopyPreconditionFn(ws) ? 'enabled' : 'disabled';
-      },
-      callback: (scope) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return;
-        return this.blockCopyCallbackFn(ws);
-      },
-      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
-      id: 'blockCopyFromContextMenu',
-      weight: 11,
-    };
-
-    ContextMenuRegistry.registry.register(copyAction);
-  }
-
-  /**
-   * Register the action for inserting above a block.
-   */
-  protected registerInsertAction() {
-    const insertAboveAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope: Scope) =>
-        scope.block
-          ? 'Insert block above'
-          : scope.connection
-            ? 'Insert block here'
-            : 'Insert',
-      preconditionFn: (scope: Scope) => {
-        const block = scope.block ?? scope.connection?.getSourceBlock();
-        const ws = block?.workspace as WorkspaceSvg | null;
-        if (!ws) return 'hidden';
-
-        return this.canCurrentlyEdit(ws) ? 'enabled' : 'hidden';
-      },
-      callback: (scope) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return false;
-
-        if (this.navigation.getState(ws) === Constants.STATE.WORKSPACE) {
-          this.navigation.openToolboxOrFlyout(ws);
-          return true;
-        }
-        return false;
-      },
-      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
-      id: 'insert',
-      weight: 12,
-    };
-    ContextMenuRegistry.registry.register(insertAboveAction);
-  }
-
-  /**
    * Registers all default keyboard shortcut items for keyboard
    * navigation. This should be called once per instance of
    * KeyboardShortcutRegistry.
@@ -1031,10 +717,10 @@ export class NavigationController {
     for (const shortcut of Object.values(this.shortcuts)) {
       ShortcutRegistry.registry.register(shortcut);
     }
+    this.deleteAction.install();
+    this.insertAction.install();
 
-    this.registerDeleteAction();
-    this.registerCopyAction();
-    this.registerInsertAction();
+    this.clipboard.install();
 
     // Initalise the shortcut modal with available shortcuts.  Needs
     // to be done separately rather at construction, as many shortcuts
@@ -1050,8 +736,9 @@ export class NavigationController {
       ShortcutRegistry.registry.unregister(shortcut.name);
     }
 
-    ContextMenuRegistry.registry.unregister('blockDeleteFromContextMenu');
-    ContextMenuRegistry.registry.unregister('blockCopyFromContextMenu');
+    this.deleteAction.uninstall();
+    this.insertAction.uninstall();
+    this.clipboard.uninstall();
 
     this.removeShortcutHandlers();
     this.navigation.dispose();
