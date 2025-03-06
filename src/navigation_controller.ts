@@ -29,6 +29,7 @@ import {ShortcutDialog} from './shortcut_dialog';
 import {DeleteAction} from './actions/delete';
 import {InsertAction} from './actions/insert';
 import {Clipboard} from './actions/clipboard';
+import {NavigationOptions} from './index';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -39,26 +40,17 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
  * Class for registering shortcuts for keyboard navigation.
  */
 export class NavigationController {
-  navigation: Navigation = new Navigation();
+  navigation: Navigation;
   announcer: Announcer = new Announcer();
   shortcutDialog: ShortcutDialog = new ShortcutDialog();
 
   /** Context menu and keyboard action for deletion. */
-  deleteAction: DeleteAction = new DeleteAction(
-    this.navigation,
-    this.canCurrentlyEdit.bind(this),
-  );
+  deleteAction: DeleteAction;
 
   /** Context menu and keyboard action for insertion. */
-  insertAction: InsertAction = new InsertAction(
-    this.navigation,
-    this.canCurrentlyEdit.bind(this),
-  );
+  insertAction: InsertAction;
 
-  clipboard: Clipboard = new Clipboard(
-    this.navigation,
-    this.canCurrentlyEdit.bind(this),
-  );
+  clipboard: Clipboard;
 
   hasNavigationFocus: boolean = false;
 
@@ -69,6 +61,25 @@ export class NavigationController {
   private origToolboxOnShortcut:
     | typeof Blockly.Toolbox.prototype.onShortcut
     | null = null;
+
+  constructor(options: NavigationOptions) {
+    this.navigation = new Navigation(options);
+
+    this.deleteAction = new DeleteAction(
+      this.navigation,
+      this.canCurrentlyEdit.bind(this),
+    );
+
+    this.insertAction = new InsertAction(
+      this.navigation,
+      this.canCurrentlyEdit.bind(this),
+    );
+
+    this.clipboard = new Clipboard(
+      this.navigation,
+      this.canCurrentlyEdit.bind(this),
+    );
+  }
 
   /**
    * Registers the default keyboard shortcuts for keyboard navigation.
@@ -157,10 +168,15 @@ export class NavigationController {
    *
    * @param workspace the workspace that now has input focus.
    * @param isFocused whether the environment has browser focus.
+   * @param isFocusedForFlyoutKeyboardNavigation avoid workspace modifications.
    */
-  setHasFocus(workspace: WorkspaceSvg, isFocused: boolean) {
+  setHasFocus(
+    workspace: WorkspaceSvg,
+    isFocused: boolean,
+    isFocusedForFlyoutKeyboardNavigation = false,
+  ) {
     this.hasNavigationFocus = isFocused;
-    if (isFocused) {
+    if (isFocused && !isFocusedForFlyoutKeyboardNavigation) {
       this.navigation.focusWorkspace(workspace, true);
     }
   }
