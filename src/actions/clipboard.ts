@@ -374,6 +374,7 @@ export class Clipboard {
         );
       }
       this.navigation.removeMark(pasteWorkspace);
+      Events.setGroup(false);
       return true;
     }
     Events.setGroup(false);
