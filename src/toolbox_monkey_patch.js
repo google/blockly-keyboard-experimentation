@@ -6,7 +6,20 @@
 
 import * as Blockly from 'blockly/core';
 
-Blockly.Toolbox.prototype.onKeyDown_ = function () {
-  // Do nothing since keyboard functionality should be entirely handled by the
-  // keyboard navigation plugin.
+let oldOnKeyDownHandler = null;
+
+export function install() {
+  oldOnKeyDownHandler = Blockly.Toolbox.prototype.onKeyDown_;
+  Blockly.Toolbox.prototype.onKeyDown_ = function () {
+    // Do nothing since keyboard functionality should be entirely handled by the
+    // keyboard navigation plugin.
+  };
+};
+
+export function uninstall() {
+  if (!oldOnKeyDownHandler) {
+    throw new Error("Trying to dispose non-inited monkey patch.");
+  }
+  Blockly.Toolbox.prototype.onKeyDown_ = oldOnKeyDownHandler;
+  oldOnKeyDownHandler = null;
 };

@@ -22,6 +22,7 @@ import {javascriptGenerator} from 'blockly/javascript';
 // @ts-expect-error No types in js file
 import {load} from './loadTestBlocks';
 import {runCode, registerRunCodeShortcut} from './runCode';
+import * as ToolboxMonkeyPatch from '../src/toolbox_monkey_patch';
 
 /**
  * Parse query params for inject and navigation options and update
@@ -83,6 +84,7 @@ function createWorkspace(): Blockly.WorkspaceSvg {
     renderer,
   };
   const blocklyDiv = document.getElementById('blocklyDiv')!;
+  ToolboxMonkeyPatch.install();
   const workspace = Blockly.inject(blocklyDiv, injectOptions);
 
   const navigationOptions = {
