@@ -29,6 +29,7 @@ import {ShortcutDialog} from './shortcut_dialog';
 import {DeleteAction} from './actions/delete';
 import {InsertAction} from './actions/insert';
 import {Clipboard} from './actions/clipboard';
+import {ActionMenu} from './actions/action_menu';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -42,6 +43,11 @@ export class NavigationController {
   navigation: Navigation = new Navigation();
   announcer: Announcer = new Announcer();
   shortcutDialog: ShortcutDialog = new ShortcutDialog();
+
+  actionMenu: ActionMenu = new ActionMenu(
+    this.navigation,
+    this.canCurrentlyNavigate.bind(this),
+  );
 
   /** Context menu and keyboard action for deletion. */
   deleteAction: DeleteAction = new DeleteAction(
@@ -440,29 +446,6 @@ export class NavigationController {
       keyCodes: [KeyCodes.ENTER, KeyCodes.SPACE],
     },
 
-    /**
-     * Cmd/Ctrl/Alt+Enter key:
-     *
-     * Shows the action menu.
-     */
-    menu: {
-      name: Constants.SHORTCUT_NAMES.MENU,
-      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-      callback: (workspace) => {
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE:
-            return this.navigation.openActionMenu(workspace);
-          default:
-            return false;
-        }
-      },
-      keyCodes: [
-        createSerializedKey(KeyCodes.ENTER, [KeyCodes.CTRL]),
-        createSerializedKey(KeyCodes.ENTER, [KeyCodes.ALT]),
-        createSerializedKey(KeyCodes.ENTER, [KeyCodes.META]),
-      ],
-    },
-
     /** Disconnect two blocks. */
     disconnect: {
       name: Constants.SHORTCUT_NAMES.DISCONNECT,
@@ -712,6 +695,7 @@ export class NavigationController {
     for (const shortcut of Object.values(this.shortcuts)) {
       ShortcutRegistry.registry.register(shortcut);
     }
+    this.actionMenu.install();
     this.deleteAction.install();
     this.insertAction.install();
 
@@ -731,6 +715,7 @@ export class NavigationController {
       ShortcutRegistry.registry.unregister(shortcut.name);
     }
 
+    this.actionMenu.uninstall();
     this.deleteAction.uninstall();
     this.insertAction.uninstall();
     this.clipboard.uninstall();
