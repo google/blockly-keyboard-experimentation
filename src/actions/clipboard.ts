@@ -5,10 +5,13 @@
  */
 
 import {
+  ASTNode,
   ContextMenuRegistry,
   Gesture,
   ShortcutRegistry,
+  Events,
   utils as blocklyUtils,
+  clipboard,
   ICopyData,
 } from 'blockly';
 import * as Constants from '../constants';
@@ -356,7 +359,25 @@ export class Clipboard {
     const pasteWorkspace = this.copyWorkspace.isFlyout
       ? workspace
       : this.copyWorkspace;
-    return this.navigation.paste(this.copyData, pasteWorkspace);
+
+    // Do this before clipoard.paste due to cursor/focus workaround in getCurNode.
+    const targetNode = pasteWorkspace.getCursor()?.getCurNode();
+
+    Events.setGroup(true);
+    const block = clipboard.paste(this.copyData, pasteWorkspace) as BlockSvg;
+    if (block) {
+      if (targetNode) {
+        this.navigation.tryToConnectNodes(
+          pasteWorkspace,
+          targetNode,
+          ASTNode.createBlockNode(block)!,
+        );
+      }
+      this.navigation.removeMark(pasteWorkspace);
+      return true;
+    }
+    Events.setGroup(false);
+    return false;
   }
 
   /**
