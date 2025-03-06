@@ -1020,64 +1020,6 @@ export class Navigation {
   }
 
   /**
-   * Disconnects the connection that the cursor is pointing to, and bump blocks.
-   * This is a no-op if the connection cannot be broken or if the cursor is not
-   * pointing to a connection.
-   *
-   * @param workspace The workspace.
-   */
-  disconnectBlocks(workspace: Blockly.WorkspaceSvg) {
-    const cursor = workspace.getCursor();
-    if (!cursor) {
-      return;
-    }
-    let curNode: Blockly.ASTNode | null = cursor.getCurNode();
-    let wasVisitingConnection = true;
-    while (curNode && !curNode.isConnection()) {
-      curNode = curNode.out();
-      wasVisitingConnection = false;
-    }
-    if (!curNode) {
-      this.log('Unable to find a connection to disconnect');
-      return;
-    }
-    const curConnection = curNode.getLocation() as Blockly.RenderedConnection;
-    if (!curConnection.isConnected()) {
-      this.log('Cannot disconnect unconnected connection');
-      return;
-    }
-    const superiorConnection = curConnection.isSuperior()
-      ? curConnection
-      : curConnection.targetConnection!;
-
-    const inferiorConnection = curConnection.isSuperior()
-      ? curConnection.targetConnection!
-      : curConnection;
-
-    if (inferiorConnection.getSourceBlock().isShadow()) {
-      this.log('Cannot disconnect a shadow block');
-      return;
-    }
-
-    if (!inferiorConnection.getSourceBlock().isMovable()) {
-      this.log('Cannot disconnect an immovable block');
-      return;
-    }
-
-    superiorConnection.disconnect();
-    inferiorConnection.bumpAwayFrom(superiorConnection);
-
-    const rootBlock = superiorConnection.getSourceBlock().getRootBlock();
-    rootBlock.bringToFront();
-
-    if (wasVisitingConnection) {
-      const connectionNode =
-        Blockly.ASTNode.createConnectionNode(superiorConnection);
-      workspace.getCursor()!.setCurNode(connectionNode!);
-    }
-  }
-
-  /**
    * Moves the passive focus indicator to the cursor's current location.
    *
    * @param workspace The workspace.
