@@ -15,6 +15,7 @@
 
 import * as Blockly from 'blockly/core';
 import {ASTNode, Marker} from 'blockly/core';
+import {scrollBoundsIntoView} from './workspace_utilities';
 
 /** Options object for LineCursor instances. */
 export type CursorOptions = {
@@ -44,6 +45,9 @@ export class LineCursor extends Marker {
 
   /** Old Cursor instance, saved during installation. */
   private oldCursor: Blockly.Cursor | null = null;
+
+  /** Locations to try moving the cursor to after a deletion. */
+  private potentialNodes: Blockly.ASTNode[] | null = null;
 
   /**
    * @param workspace The workspace this cursor belongs to.
@@ -225,7 +229,7 @@ export class LineCursor extends Marker {
   /**
    * Returns true iff the given node can be visited by the cursor when
    * using the left/right arrow keys.  Specifically, if the node is
-   * for any node for which valideLineNode would return true, plus:
+   * any node for which valideLineNode would return true, plus:
    *
    * - Any block.
    * - Any field that is not a full block field.
@@ -256,6 +260,21 @@ export class LineCursor extends Marker {
       default:
         return false;
     }
+  }
+
+  /**
+   * Returns true iff the given node can be visited by the cursor.
+   * Specifically, if the node is any for which validInLineNode woudl
+   * return true, or if it is a workspace node.
+   *
+   * @param node The AST node to check whether it is valid.
+   * @returns True if the node should be visited, false otherwise.
+   */
+  protected validNode(node: ASTNode | null): boolean {
+    return (
+      !!node &&
+      (this.validInLineNode(node) || node.getType() === ASTNode.types.WORKSPACE)
+    );
   }
 
   /**
@@ -487,6 +506,82 @@ export class LineCursor extends Marker {
   }
 
   /**
+   * Prepare for the deletion of a block by making a list of nodes we
+   * could move the cursor to afterwards and save it to
+   * this.potentialNodes.
+   *
+   * After the deletion has occurred, call postDelete to move it to
+   * the first valid node on that list.
+   *
+   * The locations to try (in order of preference) are:
+   *
+   * - The current location.
+   * - The connection to which the deleted block is attached.
+   * - The block connected to the next connection of the deleted block.
+   * - The parent block of the deleted block.
+   * - A location on the workspace beneath the deleted block.
+   *
+   * N.B.: When block is deleted, all of the blocks conneccted to that
+   * block's inputs are also deleted, but not blocks connected to its
+   * next connection.
+   *
+   * @param deletedBlock The block that is being deleted.
+   */
+  preDelete(deletedBlock: Blockly.Block) {
+    const curNode = this.getCurNode();
+
+    const nodes: Blockly.ASTNode[] = [curNode];
+    // The connection to which the deleted block is attached.
+    const parentConnection =
+      deletedBlock.previousConnection?.targetConnection ??
+      deletedBlock.outputConnection?.targetConnection;
+    if (parentConnection) {
+      const parentNode = Blockly.ASTNode.createConnectionNode(parentConnection);
+      if (parentNode) nodes.push(parentNode);
+    }
+    // The block connected to the next connection of the deleted block.
+    const nextBlock = deletedBlock.getNextBlock();
+    if (nextBlock) {
+      const nextNode = Blockly.ASTNode.createBlockNode(nextBlock);
+      if (nextNode) nodes.push(nextNode);
+    }
+    //  The parent block of the deleted block.
+    const parentBlock = deletedBlock.getParent();
+    if (parentBlock) {
+      const parentNode = Blockly.ASTNode.createBlockNode(parentBlock);
+      if (parentNode) nodes.push(parentNode);
+    }
+    // A location on the workspace beneath the deleted block.
+    // Move to the workspace.
+    const curBlock = curNode.getSourceBlock();
+    if (curBlock) {
+      const workspaceNode = Blockly.ASTNode.createWorkspaceNode(
+        this.workspace,
+        curBlock.getRelativeToSurfaceXY(),
+      );
+      if (workspaceNode) nodes.push(workspaceNode);
+    }
+    this.potentialNodes = nodes;
+  }
+
+  /**
+   * Move the cursor to the first valid location in
+   * this.potentialNodes, following a block deletion.
+   */
+  postDelete() {
+    const nodes = this.potentialNodes;
+    this.potentialNodes = null;
+    if (!nodes) throw new Error('must call preDelete first');
+    for (const node of nodes) {
+      if (this.validNode(node) && !node.getSourceBlock()?.disposed) {
+        this.setCurNode(node);
+        return;
+      }
+    }
+    throw new Error('no valid nodes in this.potentialNodes');
+  }
+
+  /**
    * Get the current location of the cursor.
    *
    * Overrides superclass implementation to add a hack that attempts
@@ -523,23 +618,69 @@ export class LineCursor extends Marker {
       return curNode;
     }
     const newNode = new ASTNode(ASTNode.types.BLOCK, selected);
-    super.setCurNode(newNode);
-    this.updateFocusIndication(curNode, newNode);
+    this.setCurNode(newNode);
     return newNode;
   }
 
   /**
    * Set the location of the cursor and draw it.
    *
-   * Overrides drawing logic to call `setSelected` if the location is
-   * a block, or `addSelect` if it's a shadow block (since shadow
-   * blocks can't be selected).
+   * Overrides normal Marker setCurNode logic to call
+   * this.drawMarker() instead of this.drawer.draw() directly.
+   *
+   * @param newNode The new location of the cursor.
+   */
+  override setCurNode(newNode: ASTNode) {
+    const oldNode = super.getCurNode();
+    // Kludge: we can't set this.curNode directly, so we have to call
+    // super.setCurNode(...) to do it for us - but that would call
+    // this.drawer.draw(...), so prevent that by temporarily setting
+    // this.drawer to null (which we also can't do directly!)
+    const drawer = this.getDrawer();
+    this.setDrawer(null as any); // Cast required since param is not nullable.
+    super.setCurNode(newNode);
+    this.setDrawer(drawer);
+    // Draw this marker the way we want to.
+    this.drawMarker(oldNode, newNode);
+    // Try to scroll cursor into view.
+    if (newNode?.getType() === ASTNode.types.BLOCK) {
+      const block = newNode.getLocation() as Blockly.BlockSvg;
+      scrollBoundsIntoView(
+        block.getBoundingRectangleWithoutChildren(),
+        block.workspace,
+      );
+    }
+  }
+
+  /**
+   * Redraw the current marker.
+   *
+   * Overrides normal Marker drawing logic to use this.drawMarker()
+   * instead of this.drawer.draw() directly.
+   *
+   * This hooks the method used by the renderer to draw the marker,
+   * preventing the marker drawer from showing a marker if we don't
+   * want it to.
+   */
+  override draw() {
+    const curNode = super.getCurNode();
+    this.drawMarker(curNode, curNode);
+  }
+
+  /**
+   * Draw this cursor's marker.
+   *
+   * This is a wrapper around this.drawer.draw (usually implemented by
+   * MarkerSvg.prototype.draw) that will, if newNode is a BLOCK node,
+   * instead call `setSelected` to select it (if it's a regular block)
+   * or `addSelect` (if it's a shadow block, since shadow blocks can't
+   * be selected) instead of using the normal drawer logic.
    *
    * TODO(#142): The selection and fake-selection code was originally
    * a hack added for testing on October 28 2024, because the default
-   * drawer behaviour was to draw a box around the block and all
-   * attached child blocks, which was confusing when navigating
-   * stacks.
+   * drawer (MarkerSvg) behaviour in Zelos was to draw a box around
+   * the block and all attached child blocks, which was confusing when
+   * navigating stacks.
    *
    * Since then we have decided that we probably _do_ in most cases
    * want navigating to a block to select the block, but more
@@ -547,29 +688,10 @@ export class LineCursor extends Marker {
    * this selection hack with non-hacky changing of focus once that's
    * possible.
    *
-   * @param newNode The new location of the cursor.
-   */
-  override setCurNode(newNode: ASTNode) {
-    const oldNode = this.getCurNode();
-    super.setCurNode(newNode);
-    this.updateFocusIndication(oldNode, newNode);
-  }
-
-  /**
-   * Implements fake selection of shadow blocks as described in
-   * documentation for setCurNode.
-   *
    * @param oldNode The previous node.
-   * @param newNode The newly-selected node.
+   * @param curNode The current node.
    */
-  private updateFocusIndication(oldNode: ASTNode, newNode: ASTNode) {
-    const drawer = this.getDrawer();
-
-    if (!drawer) {
-      console.error('could not find a drawer');
-      return;
-    }
-
+  private drawMarker(oldNode: ASTNode, curNode: ASTNode) {
     // If old node was a block, unselect it or remove fake selection.
     if (oldNode?.getType() === ASTNode.types.BLOCK) {
       const block = oldNode.getLocation() as Blockly.BlockSvg;
@@ -580,19 +702,25 @@ export class LineCursor extends Marker {
       }
     }
 
-    // If new node is a block, select it or make it look selected.
-    if (newNode?.getType() === ASTNode.types.BLOCK) {
-      drawer.hide();
-      const block = newNode.getLocation() as Blockly.BlockSvg;
-      if (!block.isShadow()) {
-        Blockly.common.setSelected(block);
-      } else {
-        block.addSelect();
-      }
+    // If curNode node is not block, just use the drawer.
+    if (curNode?.getType() !== ASTNode.types.BLOCK) {
+      this.getDrawer()?.draw(oldNode, curNode);
       return;
     }
 
-    drawer.draw(oldNode, newNode);
+    // curNode is a block.  Hide any visible marker SVG and instead
+    // select the block or make it look selected.
+    super.hide(); // Calls this.drawer?.hide().
+    const block = curNode.getLocation() as Blockly.BlockSvg;
+    if (!block.isShadow()) {
+      Blockly.common.setSelected(block);
+    } else {
+      block.addSelect();
+    }
+
+    // Call MarkerSvg.prototype.fireMarkerEvent like
+    // MarkerSvg.prototype.draw would (even though it's private).
+    (this.getDrawer() as any)?.fireMarkerEvent?.(oldNode, curNode);
   }
 
   /**

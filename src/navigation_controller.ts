@@ -15,11 +15,6 @@ import './gesture_monkey_patch';
 import * as Blockly from 'blockly/core';
 import {
   ASTNode,
-  BlockSvg,
-  comments,
-  Connection,
-  ContextMenuRegistry,
-  ICopyData,
   ShortcutRegistry,
   Toolbox,
   utils as BlocklyUtils,
@@ -32,19 +27,13 @@ import {Announcer} from './announcer';
 import {LineCursor} from './line_cursor';
 import {ShortcutDialog} from './shortcut_dialog';
 import {DeleteAction} from './actions/delete';
+import {InsertAction} from './actions/insert';
 import {Clipboard} from './actions/clipboard';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
   ShortcutRegistry.registry,
 );
-
-interface Scope {
-  block?: BlockSvg;
-  workspace?: WorkspaceSvg;
-  comment?: comments.RenderedWorkspaceComment;
-  connection?: Connection;
-}
 
 /** Represents the current focus mode of the navigation controller. */
 enum NAVIGATION_FOCUS_MODE {
@@ -64,8 +53,14 @@ export class NavigationController {
   announcer: Announcer = new Announcer();
   shortcutDialog: ShortcutDialog = new ShortcutDialog();
 
-  /** Context menu and keyboard action for delete. */
+  /** Context menu and keyboard action for deletion. */
   deleteAction: DeleteAction = new DeleteAction(
+    this.navigation,
+    this.canCurrentlyEdit.bind(this),
+  );
+
+  /** Context menu and keyboard action for insertion. */
+  insertAction: InsertAction = new InsertAction(
     this.navigation,
     this.canCurrentlyEdit.bind(this),
   );
@@ -130,13 +125,13 @@ export class NavigationController {
     }
     switch (shortcut.name) {
       case Constants.SHORTCUT_NAMES.PREVIOUS:
-        return (this as any).selectPrevious_();
+        return (this as any).selectPrevious();
       case Constants.SHORTCUT_NAMES.OUT:
-        return (this as any).selectParent_();
+        return (this as any).selectParent();
       case Constants.SHORTCUT_NAMES.NEXT:
-        return (this as any).selectNext_();
+        return (this as any).selectNext();
       case Constants.SHORTCUT_NAMES.IN:
-        return (this as any).selectChild_();
+        return (this as any).selectChild();
       default:
         return false;
     }
@@ -442,21 +437,6 @@ export class NavigationController {
       keyCodes: [KeyCodes.RIGHT],
     },
 
-    /** Connect a block to a marked location. */
-    insert: {
-      name: Constants.SHORTCUT_NAMES.INSERT,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-      callback: (workspace) => {
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE:
-            return this.navigation.connectMarkerAndCursor(workspace);
-          default:
-            return false;
-        }
-      },
-      keyCodes: [KeyCodes.I],
-    },
-
     /**
      * Enter key:
      *
@@ -465,9 +445,11 @@ export class NavigationController {
      * - On the workspace: open the context menu.
      */
     enter: {
-      name: Constants.SHORTCUT_NAMES.MARK, // FIXME
+      name: Constants.SHORTCUT_NAMES.EDIT_OR_CONFIRM,
       preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-      callback: (workspace) => {
+      callback: (workspace, event) => {
+        event.preventDefault();
+
         let flyoutCursor;
         let curNode;
         let nodeType;
@@ -498,7 +480,7 @@ export class NavigationController {
             return false;
         }
       },
-      keyCodes: [KeyCodes.ENTER],
+      keyCodes: [KeyCodes.ENTER, KeyCodes.SPACE],
     },
 
     /**
@@ -576,7 +558,7 @@ export class NavigationController {
             return false;
         }
       },
-      keyCodes: [KeyCodes.ESC, KeyCodes.E],
+      keyCodes: [KeyCodes.ESC],
       allowCollision: true,
     },
 
@@ -765,41 +747,6 @@ export class NavigationController {
   };
 
   /**
-   * Register the action for inserting above a block.
-   */
-  protected registerInsertAction() {
-    const insertAboveAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope: Scope) =>
-        scope.block
-          ? 'Insert block above'
-          : scope.connection
-            ? 'Insert block here'
-            : 'Insert',
-      preconditionFn: (scope: Scope) => {
-        const block = scope.block ?? scope.connection?.getSourceBlock();
-        const ws = block?.workspace as WorkspaceSvg | null;
-        if (!ws) return 'hidden';
-
-        return this.canCurrentlyEdit(ws) ? 'enabled' : 'hidden';
-      },
-      callback: (scope) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return false;
-
-        if (this.navigation.getState(ws) === Constants.STATE.WORKSPACE) {
-          this.navigation.openToolboxOrFlyout(ws);
-          return true;
-        }
-        return false;
-      },
-      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
-      id: 'insert',
-      weight: 9,
-    };
-    ContextMenuRegistry.registry.register(insertAboveAction);
-  }
-
-  /**
    * Registers all default keyboard shortcut items for keyboard
    * navigation. This should be called once per instance of
    * KeyboardShortcutRegistry.
@@ -809,10 +756,9 @@ export class NavigationController {
       ShortcutRegistry.registry.register(shortcut);
     }
     this.deleteAction.install();
+    this.insertAction.install();
 
     this.clipboard.install();
-
-    this.registerInsertAction();
 
     // Initalise the shortcut modal with available shortcuts.  Needs
     // to be done separately rather at construction, as many shortcuts
@@ -829,6 +775,7 @@ export class NavigationController {
     }
 
     this.deleteAction.uninstall();
+    this.insertAction.uninstall();
     this.clipboard.uninstall();
 
     this.removeShortcutHandlers();

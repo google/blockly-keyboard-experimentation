@@ -162,7 +162,9 @@ export class Navigation {
       cursorRegistrationName,
     );
     if (FlyoutCursorClass) {
-      flyoutWorkspace.getMarkerManager().setCursor(new FlyoutCursorClass());
+      flyoutWorkspace
+        .getMarkerManager()
+        .setCursor(new FlyoutCursorClass(flyout));
     }
   }
 
@@ -406,61 +408,6 @@ export class Navigation {
   }
 
   /**
-   * Moves the cursor to the appropriate location before a block is deleted.
-   * This is used when the user deletes a block using the delete or backspace
-   * key.
-   *
-   * @param workspace The workspace the block is being deleted on.
-   * @param deletedBlock The block that is being deleted.
-   */
-  moveCursorOnBlockDelete(
-    workspace: Blockly.WorkspaceSvg,
-    deletedBlock: Blockly.BlockSvg,
-  ) {
-    const cursor = workspace.getCursor();
-    if (!cursor) {
-      return;
-    }
-    const curNode = cursor.getCurNode();
-    const block = curNode ? curNode.getSourceBlock() : null;
-
-    if (block === deletedBlock) {
-      // If the block has a parent move the cursor to their connection point.
-      if (block.getParent()) {
-        const topConnection =
-          block.previousConnection || block.outputConnection;
-        if (topConnection?.targetConnection) {
-          cursor.setCurNode(
-            Blockly.ASTNode.createConnectionNode(
-              topConnection.targetConnection,
-            )!,
-          );
-        }
-      } else {
-        // If the block is by itself move the cursor to the workspace.
-        cursor.setCurNode(
-          Blockly.ASTNode.createWorkspaceNode(
-            block.workspace,
-            block.getRelativeToSurfaceXY(),
-          )!,
-        );
-      }
-      // If the cursor is on a block whose parent is being deleted, move the
-      // cursor to the workspace.
-    } else if (
-      block &&
-      deletedBlock.getChildren(false).includes(block as Blockly.BlockSvg)
-    ) {
-      cursor.setCurNode(
-        Blockly.ASTNode.createWorkspaceNode(
-          block.workspace,
-          block.getRelativeToSurfaceXY(),
-        )!,
-      );
-    }
-  }
-
-  /**
    * Sets the navigation state to toolbox and selects the first category in the
    * toolbox. No-op if a toolbox does not exist on the given workspace.
    *
@@ -588,8 +535,10 @@ export class Navigation {
       return;
     }
 
-    if (cursor.getCurNode() && keepPosition) {
-      // Retain the cursor's previous position since it's set.
+    const disposed = cursor.getCurNode()?.getSourceBlock()?.disposed;
+    if (cursor.getCurNode() && !disposed && keepPosition) {
+      // Retain the cursor's previous position since it's set, but only if not
+      // disposed (which can happen when blocks are reloaded).
       return;
     }
     const wsCoordinates = new Blockly.utils.Coordinate(
@@ -631,9 +580,7 @@ export class Navigation {
    */
   insertFromFlyout(workspace: Blockly.WorkspaceSvg) {
     const newBlock = this.createNewBlock(workspace);
-    if (!newBlock) {
-      return;
-    }
+    if (!newBlock) return;
     if (this.markedNode) {
       if (
         !this.tryToConnectNodes(
@@ -649,7 +596,9 @@ export class Navigation {
     }
 
     this.focusWorkspace(workspace);
-    workspace.getCursor()!.setCurNode(Blockly.ASTNode.createTopNode(newBlock)!);
+    workspace
+      .getCursor()!
+      .setCurNode(Blockly.ASTNode.createBlockNode(newBlock)!);
     this.removeMark(workspace);
   }
 
@@ -1138,6 +1087,12 @@ export class Navigation {
       this.log('Cannot disconnect a shadow block');
       return;
     }
+
+    if (!inferiorConnection.getSourceBlock().isMovable()) {
+      this.log('Cannot disconnect an immovable block');
+      return;
+    }
+
     superiorConnection.disconnect();
     inferiorConnection.bumpAwayFrom(superiorConnection);
 
@@ -1371,6 +1326,7 @@ export class Navigation {
       // case Blockly.ASTNode.types.INPUT:
       case Blockly.ASTNode.types.NEXT:
       case Blockly.ASTNode.types.PREVIOUS:
+      case Blockly.ASTNode.types.INPUT:
         const connection = node.getLocation() as Blockly.Connection;
         rtl = connection.getSourceBlock().RTL;
 
@@ -1380,7 +1336,12 @@ export class Navigation {
         const insertAction =
           Blockly.ContextMenuRegistry.registry.getItem('insert');
         if (!insertAction) throw new Error("can't find insert action");
-        const possibleOptions = [insertAction /* etc.*/];
+
+        const pasteAction = Blockly.ContextMenuRegistry.registry.getItem(
+          'blockPasteFromContextMenu',
+        );
+        if (!pasteAction) throw new Error("can't find paste action");
+        const possibleOptions = [insertAction, pasteAction /* etc.*/];
 
         // Check preconditions and get menu texts.
         const scope = {
@@ -1411,6 +1372,20 @@ export class Navigation {
     if (!menuOptions?.length) return true;
     const fakeEvent = fakeEventForNode(node);
     Blockly.ContextMenu.show(fakeEvent, menuOptions, rtl, workspace);
+    setTimeout(() => {
+      Blockly.WidgetDiv.getDiv()
+        ?.querySelector('.blocklyMenu')
+        ?.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            key: 'ArrowDown',
+            code: 'ArrowDown',
+            keyCode: Blockly.utils.KeyCodes.DOWN,
+            which: Blockly.utils.KeyCodes.DOWN,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+    }, 10);
     return true;
   }
 
@@ -1461,7 +1436,7 @@ export class Navigation {
     );
     if (typeof buttonCallback === 'function') {
       buttonCallback(button);
-    } else {
+    } else if (!button.isLabel()) {
       throw new Error('No callback function found for flyout button.');
     }
   }
@@ -1489,7 +1464,8 @@ function fakeEventForNode(node: Blockly.ASTNode): PointerEvent {
       return fakeEventForBlockNode(node);
     case Blockly.ASTNode.types.NEXT:
     case Blockly.ASTNode.types.PREVIOUS:
-      return fakeEventForStackNode(node);
+    case Blockly.ASTNode.types.INPUT:
+      return fakeEventForConnectionNode(node);
     default:
       throw new TypeError('unhandled node type');
   }
@@ -1537,7 +1513,7 @@ function fakeEventForBlockNode(node: Blockly.ASTNode): PointerEvent {
 
 /**
  * Create a fake PointerEvent for opening the action menu for the
- * given ASTNode of type NEXT or PREVIOUS.
+ * given ASTNode of type NEXT, PREVIOUS or INPUT.
  *
  * For now this just puts the action menu in the same place as the
  * context menu for the source block.
@@ -1545,24 +1521,36 @@ function fakeEventForBlockNode(node: Blockly.ASTNode): PointerEvent {
  * @param node The node to open the action menu for.
  * @returns A synthetic pointerdown PointerEvent.
  */
-function fakeEventForStackNode(node: Blockly.ASTNode): PointerEvent {
+function fakeEventForConnectionNode(node: Blockly.ASTNode): PointerEvent {
   if (
     node.getType() !== Blockly.ASTNode.types.NEXT &&
-    node.getType() !== Blockly.ASTNode.types.PREVIOUS
+    node.getType() !== Blockly.ASTNode.types.PREVIOUS &&
+    node.getType() !== Blockly.ASTNode.types.INPUT
   ) {
-    throw new TypeError(
-      'can only create PointerEvents for NEXT / PREVIOUS nodes',
-    );
+    throw new TypeError('can only create PointerEvents for connection nodes');
   }
 
   const connection = node.getLocation() as Blockly.Connection;
+  const block = connection.getSourceBlock();
+  const workspace = block.workspace as Blockly.WorkspaceSvg;
 
-  return fakeEventForBlockNode(
-    new Blockly.ASTNode(
-      Blockly.ASTNode.types.BLOCK,
-      connection.getSourceBlock(),
-    ),
+  if (typeof connection.x !== 'number') {
+    // No coordinates for connection?  Fall back to the parent block.
+    const blockNode = new Blockly.ASTNode(Blockly.ASTNode.types.BLOCK, block);
+    return fakeEventForBlockNode(blockNode);
+  }
+  const connectionWSCoords = new Blockly.utils.Coordinate(
+    connection.x,
+    connection.y,
   );
+  const connectionScreenCoords = Blockly.utils.svgMath.wsToScreenCoordinates(
+    workspace,
+    connectionWSCoords,
+  );
+  return new PointerEvent('pointerdown', {
+    clientX: connectionScreenCoords.x + 5,
+    clientY: connectionScreenCoords.y + 5,
+  });
 }
 
 /**
