@@ -23,10 +23,10 @@ export enum STATE {
  * Default keyboard navigation shortcut names.
  */
 export enum SHORTCUT_NAMES {
-  PREVIOUS = 'previous',
-  NEXT = 'next',
-  IN = 'in',
-  OUT = 'out',
+  UP = 'up',
+  DOWN = 'down',
+  RIGHT = 'right',
+  LEFT = 'left',
   INSERT = 'insert',
   EDIT_OR_CONFIRM = 'edit_or_confirm',
   DISCONNECT = 'disconnect',

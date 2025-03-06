@@ -22,13 +22,14 @@ import {
 } from 'blockly/core';
 
 import * as Constants from './constants';
-import {Navigation} from './navigation';
 import {Announcer} from './announcer';
-import {LineCursor} from './line_cursor';
-import {ShortcutDialog} from './shortcut_dialog';
-import {DeleteAction} from './actions/delete';
-import {InsertAction} from './actions/insert';
 import {Clipboard} from './actions/clipboard';
+import {DeleteAction} from './actions/delete';
+import {EditAction} from './actions/edit';
+import {InsertAction} from './actions/insert';
+import {LineCursor} from './line_cursor';
+import {Navigation} from './navigation';
+import {ShortcutDialog} from './shortcut_dialog';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -48,6 +49,9 @@ export class NavigationController {
     this.navigation,
     this.canCurrentlyEdit.bind(this),
   );
+
+  /** Context menu and keyboard action for deletion. */
+  editAction: EditAction = new EditAction(this.canCurrentlyEdit.bind(this));
 
   /** Context menu and keyboard action for insertion. */
   insertAction: InsertAction = new InsertAction(
@@ -114,13 +118,13 @@ export class NavigationController {
       return false;
     }
     switch (shortcut.name) {
-      case Constants.SHORTCUT_NAMES.PREVIOUS:
+      case Constants.SHORTCUT_NAMES.UP:
         return (this as any).selectPrevious();
-      case Constants.SHORTCUT_NAMES.OUT:
+      case Constants.SHORTCUT_NAMES.LEFT:
         return (this as any).selectParent();
-      case Constants.SHORTCUT_NAMES.NEXT:
+      case Constants.SHORTCUT_NAMES.DOWN:
         return (this as any).selectNext();
-      case Constants.SHORTCUT_NAMES.IN:
+      case Constants.SHORTCUT_NAMES.RIGHT:
         return (this as any).selectChild();
       default:
         return false;
@@ -250,9 +254,9 @@ export class NavigationController {
   protected shortcuts: {
     [name: string]: ShortcutRegistry.KeyboardShortcut;
   } = {
-    /** Go to the previous location. */
-    previous: {
-      name: Constants.SHORTCUT_NAMES.PREVIOUS,
+    /** Move cursor up. */
+    up: {
+      name: Constants.SHORTCUT_NAMES.UP,
       preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace, _, shortcut) => {
         const flyout = workspace.getFlyout();
@@ -300,9 +304,9 @@ export class NavigationController {
       ],
     },
 
-    /** Go to the out location. */
-    out: {
-      name: Constants.SHORTCUT_NAMES.OUT,
+    /** Move cursor left. */
+    left: {
+      name: Constants.SHORTCUT_NAMES.LEFT,
       preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace, _, shortcut) => {
         const toolbox = workspace.getToolbox() as Blockly.Toolbox;
@@ -329,9 +333,9 @@ export class NavigationController {
       keyCodes: [KeyCodes.LEFT],
     },
 
-    /** Go to the next location. */
-    next: {
-      name: Constants.SHORTCUT_NAMES.NEXT,
+    /** Move cursor down. */
+    down: {
+      name: Constants.SHORTCUT_NAMES.DOWN,
       preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace, _, shortcut) => {
         const toolbox = workspace.getToolbox() as Blockly.Toolbox;
@@ -363,9 +367,9 @@ export class NavigationController {
       keyCodes: [KeyCodes.DOWN],
     },
 
-    /** Go to the in location. */
-    in: {
-      name: Constants.SHORTCUT_NAMES.IN,
+    /** Move cursor right. */
+    right: {
+      name: Constants.SHORTCUT_NAMES.RIGHT,
       preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace, _, shortcut) => {
         const toolbox = workspace.getToolbox() as Blockly.Toolbox;
@@ -713,6 +717,7 @@ export class NavigationController {
       ShortcutRegistry.registry.register(shortcut);
     }
     this.deleteAction.install();
+    this.editAction.install();
     this.insertAction.install();
 
     this.clipboard.install();
@@ -732,6 +737,7 @@ export class NavigationController {
     }
 
     this.deleteAction.uninstall();
+    this.editAction.uninstall();
     this.insertAction.uninstall();
     this.clipboard.uninstall();
 
