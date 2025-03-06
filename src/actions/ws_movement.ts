@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ASTNode, ShortcutRegistry, utils as blocklyUtils} from 'blockly';
+import {ASTNode, ShortcutRegistry, utils as BlocklyUtils} from 'blockly';
 import * as Constants from '../constants';
 import type {WorkspaceSvg} from 'blockly';
 
-const KeyCodes = blocklyUtils.KeyCodes;
+const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
   ShortcutRegistry.registry,
 );
@@ -125,7 +125,7 @@ export class WorkspaceMovement {
     cursor.setCurNode(
       ASTNode.createWorkspaceNode(
         workspace,
-        new blocklyUtils.Coordinate(newX, newY),
+        new BlocklyUtils.Coordinate(newX, newY),
       )!,
     );
     return true;
