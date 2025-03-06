@@ -25,7 +25,7 @@ export enum STATE {
 export enum SHORTCUT_NAMES {
   UP = 'up',
   DOWN = 'down',
-  RIGHT = 'righ',
+  RIGHT = 'right',
   LEFT = 'left',
   INSERT = 'insert',
   MARK = 'mark',
