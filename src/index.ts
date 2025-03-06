@@ -29,6 +29,12 @@ export class KeyboardNavigation {
   /** Event handler run when the workspace loses focus. */
   private blurListener: () => void;
 
+  /** Event handler run when the toolbox gains focus. */
+  private toolboxFocusListener: () => void;
+
+  /** Event handler run when the toolbox loses focus. */
+  private toolboxBlurListener: () => void;
+
   /** Keyboard navigation controller instance for the workspace. */
   private navigationController: NavigationController;
 
@@ -82,14 +88,29 @@ export class KeyboardNavigation {
     workspace.getParentSvg().setAttribute('tabindex', '-1');
 
     this.focusListener = () => {
-      this.navigationController.setHasFocus(workspace, true);
+      this.navigationController.updateWorkspaceFocus(workspace, true);
     };
     this.blurListener = () => {
-      this.navigationController.setHasFocus(workspace, false);
+      this.navigationController.updateWorkspaceFocus(workspace, false);
     };
 
     workspace.getSvgGroup().addEventListener('focus', this.focusListener);
     workspace.getSvgGroup().addEventListener('blur', this.blurListener);
+
+    this.toolboxFocusListener = () => {
+      this.navigationController.updateToolboxFocus(workspace, true);
+    };
+    this.toolboxBlurListener = () => {
+      this.navigationController.updateToolboxFocus(workspace, false);
+    };
+
+    const toolbox = workspace.getToolbox();
+    if (toolbox != null && toolbox instanceof Blockly.Toolbox) {
+      const contentsDiv = toolbox.HtmlDiv?.querySelector('.blocklyToolboxContents');
+      contentsDiv?.addEventListener('focus', this.toolboxFocusListener);
+      contentsDiv?.addEventListener('blur', this.toolboxBlurListener);
+    }
+
     // Temporary workaround for #136.
     // TODO(#136): fix in core.
     workspace.getParentSvg().addEventListener('focus', this.focusListener);
@@ -113,6 +134,13 @@ export class KeyboardNavigation {
     this.workspace
       .getSvgGroup()
       .removeEventListener('focus', this.focusListener);
+
+    const toolbox = this.workspace.getToolbox();
+    if (toolbox != null && toolbox instanceof Blockly.Toolbox) {
+      const contentsDiv = toolbox.HtmlDiv?.querySelector('.blocklyToolboxContents');
+      contentsDiv?.removeEventListener('focus', this.toolboxFocusListener);
+      contentsDiv?.removeEventListener('blur', this.toolboxBlurListener);
+    }
 
     if (this.workspaceParentTabIndex) {
       this.workspace
