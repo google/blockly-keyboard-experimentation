@@ -173,6 +173,12 @@ export class KeyboardNavigation {
     ) {
       this.navigationController.navigation.resetFlyout(this.workspace, true);
     }
+
+  /**
+   * Toggle visibility of a help dialog for the keyboard shortcuts.
+   */
+  toggleShortcutDialog(): void {
+    this.navigationController.shortcutDialog.toggle();
   }
 
   /**
