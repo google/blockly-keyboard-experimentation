@@ -17,6 +17,7 @@ import {
   registrationType as cursorRegistrationType,
   FlyoutCursor,
 } from './flyout_cursor';
+import {NavigationOptions} from './index';
 import {PassiveFocus} from './passive_focus';
 
 /**
@@ -76,8 +77,9 @@ export class Navigation {
 
   /**
    * Constructor for keyboard navigation.
+   * @param options Options.
    */
-  constructor() {
+  constructor(private options: NavigationOptions) {
     this.wsChangeWrapper = this.workspaceChangeListener.bind(this);
     this.flyoutChangeWrapper = this.flyoutChangeListener.bind(this);
   }
@@ -419,7 +421,9 @@ export class Navigation {
     this.setState(workspace, Constants.STATE.TOOLBOX);
     this.resetFlyout(workspace, false /* shouldHide */);
 
-    if (!toolbox.getSelectedItem()) {
+    if (this.options.externalToolbox) {
+      this.options.externalToolbox.focus();
+    } else if (!toolbox.getSelectedItem()) {
       // Find the first item that is selectable.
       const toolboxItems = (toolbox as any).getToolboxItems();
       for (let i = 0, toolboxItem; (toolboxItem = toolboxItems[i]); i++) {
