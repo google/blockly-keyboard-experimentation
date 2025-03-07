@@ -90,10 +90,6 @@ export class KeyboardNavigation {
 
     workspace.getSvgGroup().addEventListener('focus', this.focusListener);
     workspace.getSvgGroup().addEventListener('blur', this.blurListener);
-    // Temporary workaround for #136.
-    // TODO(#136): fix in core.
-    workspace.getParentSvg().addEventListener('focus', this.focusListener);
-    workspace.getParentSvg().addEventListener('blur', this.blurListener);
   }
 
   /**
