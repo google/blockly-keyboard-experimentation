@@ -118,13 +118,13 @@ export class NavigationController {
       return false;
     }
     switch (shortcut.name) {
-      case Constants.SHORTCUT_NAMES.UP:
+      case Constants.SHORTCUT_NAMES.PREVIOUS:
         return (this as any).selectPrevious();
-      case Constants.SHORTCUT_NAMES.LEFT:
+      case Constants.SHORTCUT_NAMES.OUT:
         return (this as any).selectParent();
-      case Constants.SHORTCUT_NAMES.DOWN:
+      case Constants.SHORTCUT_NAMES.NEXT:
         return (this as any).selectNext();
-      case Constants.SHORTCUT_NAMES.RIGHT:
+      case Constants.SHORTCUT_NAMES.IN:
         return (this as any).selectChild();
       default:
         return false;
@@ -254,9 +254,9 @@ export class NavigationController {
   protected shortcuts: {
     [name: string]: ShortcutRegistry.KeyboardShortcut;
   } = {
-    /** Move cursor up. */
-    up: {
-      name: Constants.SHORTCUT_NAMES.UP,
+    /** Go to the previous location. */
+    previous: {
+      name: Constants.SHORTCUT_NAMES.PREVIOUS,
       preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace, _, shortcut) => {
         const flyout = workspace.getFlyout();
@@ -304,9 +304,9 @@ export class NavigationController {
       ],
     },
 
-    /** Move cursor left. */
-    left: {
-      name: Constants.SHORTCUT_NAMES.LEFT,
+    /** Go to the out location. */
+    out: {
+      name: Constants.SHORTCUT_NAMES.OUT,
       preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace, _, shortcut) => {
         const toolbox = workspace.getToolbox() as Blockly.Toolbox;
@@ -333,9 +333,9 @@ export class NavigationController {
       keyCodes: [KeyCodes.LEFT],
     },
 
-    /** Move cursor down. */
-    down: {
-      name: Constants.SHORTCUT_NAMES.DOWN,
+    /** Go to the next location. */
+    next: {
+      name: Constants.SHORTCUT_NAMES.NEXT,
       preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace, _, shortcut) => {
         const toolbox = workspace.getToolbox() as Blockly.Toolbox;
@@ -367,9 +367,9 @@ export class NavigationController {
       keyCodes: [KeyCodes.DOWN],
     },
 
-    /** Move cursor right. */
-    right: {
-      name: Constants.SHORTCUT_NAMES.RIGHT,
+    /** Go to the in location. */
+    in: {
+      name: Constants.SHORTCUT_NAMES.IN,
       preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
       callback: (workspace, _, shortcut) => {
         const toolbox = workspace.getToolbox() as Blockly.Toolbox;
