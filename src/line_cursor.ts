@@ -606,25 +606,87 @@ export class LineCursor extends Marker {
       }
     }
 
-    // If curNode node is not block, just use the drawer.
-    if (curNode?.getType() !== ASTNode.types.BLOCK) {
+    if (this.isValueInputConnection(oldNode)) {
+      this.hideAtInput(oldNode);
+    }
+
+    const curNodeType = curNode?.getType();
+    const isValueInputConnection = this.isValueInputConnection(curNode);
+
+    // If drawing can't be handled locally, just use the drawer.
+    if (curNodeType !== ASTNode.types.BLOCK && !isValueInputConnection) {
       this.getDrawer()?.draw(oldNode, curNode);
       return;
     }
 
-    // curNode is a block.  Hide any visible marker SVG and instead
-    // select the block or make it look selected.
+    // Hide any visible marker SVG and instead do some manual rendering.
     super.hide(); // Calls this.drawer?.hide().
-    const block = curNode.getLocation() as Blockly.BlockSvg;
-    if (!block.isShadow()) {
-      Blockly.common.setSelected(block);
-    } else {
-      block.addSelect();
+
+    if (this.isValueInputConnection(curNode)) {
+      this.showAtInput(curNode);
+    }
+
+    if (curNodeType == ASTNode.types.BLOCK) {
+      const block = curNode.getLocation() as Blockly.BlockSvg;
+      if (!block.isShadow()) {
+        Blockly.common.setSelected(block);
+      } else {
+        block.addSelect();
+      }
     }
 
     // Call MarkerSvg.prototype.fireMarkerEvent like
     // MarkerSvg.prototype.draw would (even though it's private).
     (this.getDrawer() as any)?.fireMarkerEvent?.(oldNode, curNode);
+  }
+
+  /**
+   * Check whether the node represents a value input connection.
+   *
+   * @param node The node to check
+   * @returns True if the node represents a value input connection.
+   */
+  private isValueInputConnection(node: ASTNode) {
+    if (!node) return false;
+    if (node.getType() != ASTNode.types.INPUT) {
+      return false;
+    }
+    const connection = node.getLocation() as Blockly.Connection;
+    return connection.type == Blockly.ConnectionType.INPUT_VALUE;
+  }
+
+  /**
+   * Hide the cursor rendering at the given input node.
+   *
+   * @param node The input node to hide.
+   */
+  private hideAtInput(node: ASTNode) {
+    const inputConnection = node.getLocation() as Blockly.Connection;
+    const sourceBlock = inputConnection.getSourceBlock() as Blockly.BlockSvg;
+    const input = inputConnection.getParentInput();
+    if (input) {
+      const pathObject = sourceBlock.pathObject as Blockly.zelos.PathObject;
+      // @ts-expect-error getOutlinePath is private.
+      const outlinePath = pathObject.getOutlinePath(input.name);
+      Blockly.utils.dom.removeClass(outlinePath, 'inputActiveFocus');
+    }
+  }
+
+  /**
+   * Show the cursor rendering at the given input node.
+   *
+   * @param node The input node to show.
+   */
+  private showAtInput(node: ASTNode) {
+    const inputConnection = node.getLocation() as Blockly.Connection;
+    const sourceBlock = inputConnection.getSourceBlock() as Blockly.BlockSvg;
+    const input = inputConnection.getParentInput();
+    if (input) {
+      const pathObject = sourceBlock.pathObject as Blockly.zelos.PathObject;
+      // @ts-expect-error getOutlinePath is private.
+      const outlinePath = pathObject.getOutlinePath(input.name);
+      Blockly.utils.dom.addClass(outlinePath, 'inputActiveFocus');
+    }
   }
 
   /**
