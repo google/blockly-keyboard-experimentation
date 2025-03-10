@@ -30,6 +30,7 @@ import {DeleteAction} from './actions/delete';
 import {InsertAction} from './actions/insert';
 import {Clipboard} from './actions/clipboard';
 import {WorkspaceMovement} from './actions/ws_movement';
+import {ExitAction} from './actions/exit';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -63,6 +64,11 @@ export class NavigationController {
 
   workspaceMovement: WorkspaceMovement = new WorkspaceMovement(
     this.canCurrentlyEdit.bind(this),
+  );
+
+  exitAction: ExitAction = new ExitAction(
+    this.navigation,
+    this.canCurrentlyNavigate.bind(this),
   );
 
   hasNavigationFocus: boolean = false;
@@ -504,26 +510,6 @@ export class NavigationController {
       keyCodes: [KeyCodes.T],
     },
 
-    /** Exit the current location and focus on the workspace. */
-    exit: {
-      name: Constants.SHORTCUT_NAMES.EXIT,
-      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-      callback: (workspace) => {
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.FLYOUT:
-            this.navigation.focusWorkspace(workspace);
-            return true;
-          case Constants.STATE.TOOLBOX:
-            this.navigation.focusWorkspace(workspace);
-            return true;
-          default:
-            return false;
-        }
-      },
-      keyCodes: [KeyCodes.ESC],
-      allowCollision: true,
-    },
-
     /** List all of the currently registered shortcuts. */
     announceShortcuts: {
       name: Constants.SHORTCUT_NAMES.LIST_SHORTCUTS,
@@ -680,6 +666,7 @@ export class NavigationController {
     this.deleteAction.install();
     this.insertAction.install();
     this.workspaceMovement.install();
+    this.exitAction.install();
 
     this.clipboard.install();
 
@@ -701,6 +688,7 @@ export class NavigationController {
     this.insertAction.uninstall();
     this.clipboard.uninstall();
     this.workspaceMovement.uninstall();
+    this.exitAction.uninstall();
 
     this.removeShortcutHandlers();
     this.navigation.dispose();
