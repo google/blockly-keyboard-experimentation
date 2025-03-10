@@ -30,6 +30,7 @@ import {DeleteAction} from './actions/delete';
 import {InsertAction} from './actions/insert';
 import {Clipboard} from './actions/clipboard';
 import {WorkspaceMovement} from './actions/ws_movement';
+import {ArrowNavigation} from './actions/arrow_navigation';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -63,6 +64,12 @@ export class NavigationController {
 
   workspaceMovement: WorkspaceMovement = new WorkspaceMovement(
     this.canCurrentlyEdit.bind(this),
+  );
+
+  /** Keyboard navigation actions for the arrow keys. */
+  arrowNavigation: ArrowNavigation = new ArrowNavigation(
+    this.navigation,
+    this.canCurrentlyNavigate.bind(this),
   );
 
   hasNavigationFocus: boolean = false;
@@ -219,30 +226,6 @@ export class NavigationController {
   }
 
   /**
-   * Gives the cursor to the field to handle if the cursor is on a field.
-   *
-   * @param workspace The workspace to check.
-   * @param shortcut The shortcut
-   *     to give to the field.
-   * @returns True if the shortcut was handled by the field, false
-   *     otherwise.
-   */
-  protected fieldShortcutHandler(
-    workspace: WorkspaceSvg,
-    shortcut: ShortcutRegistry.KeyboardShortcut,
-  ): boolean {
-    const cursor = workspace.getCursor();
-    if (!cursor || !cursor.getCurNode()) {
-      return false;
-    }
-    const curNode = cursor.getCurNode();
-    if (curNode.getType() === ASTNode.types.FIELD) {
-      return (curNode.getLocation() as Blockly.Field).onShortcut(shortcut);
-    }
-    return false;
-  }
-
-  /**
    * List all the currently registered shortcuts.
    */
   listShortcuts() {
@@ -255,40 +238,6 @@ export class NavigationController {
   protected shortcuts: {
     [name: string]: ShortcutRegistry.KeyboardShortcut;
   } = {
-    /** Go to the previous location. */
-    previous: {
-      name: Constants.SHORTCUT_NAMES.PREVIOUS,
-      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-      callback: (workspace, _, shortcut) => {
-        const flyout = workspace.getFlyout();
-        const toolbox = workspace.getToolbox() as Blockly.Toolbox;
-        let isHandled = false;
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE:
-            isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled) {
-              workspace.getCursor()?.prev();
-              isHandled = true;
-            }
-            return isHandled;
-          case Constants.STATE.FLYOUT:
-            isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled && flyout) {
-              flyout.getWorkspace()?.getCursor()?.prev();
-              isHandled = true;
-            }
-            return isHandled;
-          case Constants.STATE.TOOLBOX:
-            return toolbox && typeof toolbox.onShortcut === 'function'
-              ? toolbox.onShortcut(shortcut)
-              : false;
-          default:
-            return false;
-        }
-      },
-      keyCodes: [KeyCodes.UP],
-    },
-
     /** Turn keyboard navigation on or off. */
     toggleKeyboardNav: {
       name: Constants.SHORTCUT_NAMES.TOGGLE_KEYBOARD_NAV,
@@ -303,100 +252,6 @@ export class NavigationController {
       keyCodes: [
         createSerializedKey(KeyCodes.K, [KeyCodes.CTRL, KeyCodes.SHIFT]),
       ],
-    },
-
-    /** Go to the out location. */
-    out: {
-      name: Constants.SHORTCUT_NAMES.OUT,
-      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-      callback: (workspace, _, shortcut) => {
-        const toolbox = workspace.getToolbox() as Blockly.Toolbox;
-        let isHandled = false;
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE:
-            isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled && workspace) {
-              workspace.getCursor()?.out();
-              isHandled = true;
-            }
-            return isHandled;
-          case Constants.STATE.FLYOUT:
-            this.navigation.focusToolbox(workspace);
-            return true;
-          case Constants.STATE.TOOLBOX:
-            return toolbox && typeof toolbox.onShortcut === 'function'
-              ? toolbox.onShortcut(shortcut)
-              : false;
-          default:
-            return false;
-        }
-      },
-      keyCodes: [KeyCodes.LEFT],
-    },
-
-    /** Go to the next location. */
-    next: {
-      name: Constants.SHORTCUT_NAMES.NEXT,
-      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-      callback: (workspace, _, shortcut) => {
-        const toolbox = workspace.getToolbox() as Blockly.Toolbox;
-        const flyout = workspace.getFlyout();
-        let isHandled = false;
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE:
-            isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled && workspace) {
-              workspace.getCursor()?.next();
-              isHandled = true;
-            }
-            return isHandled;
-          case Constants.STATE.FLYOUT:
-            isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled && flyout) {
-              flyout.getWorkspace()?.getCursor()?.next();
-              isHandled = true;
-            }
-            return isHandled;
-          case Constants.STATE.TOOLBOX:
-            return toolbox && typeof toolbox.onShortcut === 'function'
-              ? toolbox.onShortcut(shortcut)
-              : false;
-          default:
-            return false;
-        }
-      },
-      keyCodes: [KeyCodes.DOWN],
-    },
-
-    /** Go to the in location. */
-    in: {
-      name: Constants.SHORTCUT_NAMES.IN,
-      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-      callback: (workspace, _, shortcut) => {
-        const toolbox = workspace.getToolbox() as Blockly.Toolbox;
-        let isHandled = false;
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE:
-            isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled && workspace) {
-              workspace.getCursor()?.in();
-              isHandled = true;
-            }
-            return isHandled;
-          case Constants.STATE.TOOLBOX:
-            isHandled =
-              toolbox && typeof toolbox.onShortcut === 'function'
-                ? toolbox.onShortcut(shortcut)
-                : false;
-            if (!isHandled) {
-              this.navigation.focusFlyout(workspace);
-            }
-            return true;
-          default:
-            return false;
-        }
-      },
-      keyCodes: [KeyCodes.RIGHT],
     },
 
     /**
@@ -556,7 +411,7 @@ export class NavigationController {
         const cursor = workspace.getCursor() as LineCursor;
 
         if (this.navigation.getState(workspace) === Constants.STATE.WORKSPACE) {
-          if (this.fieldShortcutHandler(workspace, shortcut)) {
+          if (this.arrowNavigation.fieldShortcutHandler(workspace, shortcut)) {
             this.announcer.setText('next sibling (handled by field)');
             return true;
           }
@@ -580,7 +435,7 @@ export class NavigationController {
         const cursor = workspace.getCursor() as LineCursor;
 
         if (this.navigation.getState(workspace) === Constants.STATE.WORKSPACE) {
-          if (this.fieldShortcutHandler(workspace, shortcut)) {
+          if (this.arrowNavigation.fieldShortcutHandler(workspace, shortcut)) {
             this.announcer.setText('previous sibling (handled by field)');
             return true;
           }
@@ -680,6 +535,7 @@ export class NavigationController {
     this.deleteAction.install();
     this.insertAction.install();
     this.workspaceMovement.install();
+    this.arrowNavigation.install();
 
     this.clipboard.install();
 
@@ -701,6 +557,7 @@ export class NavigationController {
     this.insertAction.uninstall();
     this.clipboard.uninstall();
     this.workspaceMovement.uninstall();
+    this.arrowNavigation.uninstall();
 
     this.removeShortcutHandlers();
     this.navigation.dispose();
