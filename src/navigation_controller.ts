@@ -524,16 +524,6 @@ export class NavigationController {
       allowCollision: true,
     },
 
-    /** List all of the currently registered shortcuts. */
-    announceShortcuts: {
-      name: Constants.SHORTCUT_NAMES.LIST_SHORTCUTS,
-      callback: () => {
-        this.shortcutDialog.toggle();
-        return true;
-      },
-      keyCodes: [KeyCodes.SLASH],
-    },
-
     /** Announce the current location of the cursor. */
     announceLocation: {
       name: Constants.SHORTCUT_NAMES.ANNOUNCE,
@@ -682,8 +672,9 @@ export class NavigationController {
     this.workspaceMovement.install();
 
     this.clipboard.install();
+    this.shortcutDialog.install();
 
-    // Initalise the shortcut modal with available shortcuts.  Needs
+    // Initialize the shortcut modal with available shortcuts.  Needs
     // to be done separately rather at construction, as many shortcuts
     // are not registered at that point.
     this.shortcutDialog.createModalContent();
@@ -701,6 +692,7 @@ export class NavigationController {
     this.insertAction.uninstall();
     this.clipboard.uninstall();
     this.workspaceMovement.uninstall();
+    this.shortcutDialog.uninstall();
 
     this.removeShortcutHandlers();
     this.navigation.dispose();
