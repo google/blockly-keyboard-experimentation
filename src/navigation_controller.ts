@@ -30,6 +30,7 @@ import {InsertAction} from './actions/insert';
 import {LineCursor} from './line_cursor';
 import {Navigation} from './navigation';
 import {ShortcutDialog} from './shortcut_dialog';
+import {WorkspaceMovement} from './actions/ws_movement';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -61,6 +62,10 @@ export class NavigationController {
 
   clipboard: Clipboard = new Clipboard(
     this.navigation,
+    this.canCurrentlyEdit.bind(this),
+  );
+
+  workspaceMovement: WorkspaceMovement = new WorkspaceMovement(
     this.canCurrentlyEdit.bind(this),
   );
 
@@ -406,7 +411,7 @@ export class NavigationController {
      * - On the workspace: open the context menu.
      */
     enter: {
-      name: Constants.SHORTCUT_NAMES.MARK, // FIXME
+      name: Constants.SHORTCUT_NAMES.EDIT_OR_CONFIRM,
       preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
       callback: (workspace, event) => {
         event.preventDefault();
@@ -519,48 +524,8 @@ export class NavigationController {
             return false;
         }
       },
-      keyCodes: [KeyCodes.ESC, KeyCodes.E],
+      keyCodes: [KeyCodes.ESC],
       allowCollision: true,
-    },
-
-    /** Move the cursor on the workspace to the left. */
-    wsMoveLeft: {
-      name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_LEFT,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-      callback: (workspace) => {
-        return this.navigation.moveWSCursor(workspace, -1, 0);
-      },
-      keyCodes: [createSerializedKey(KeyCodes.A, [KeyCodes.SHIFT])],
-    },
-
-    /** Move the cursor on the workspace to the right. */
-    wsMoveRight: {
-      name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_RIGHT,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-      callback: (workspace) => {
-        return this.navigation.moveWSCursor(workspace, 1, 0);
-      },
-      keyCodes: [createSerializedKey(KeyCodes.D, [KeyCodes.SHIFT])],
-    },
-
-    /** Move the cursor on the workspace up. */
-    wsMoveUp: {
-      name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_UP,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-      callback: (workspace) => {
-        return this.navigation.moveWSCursor(workspace, 0, -1);
-      },
-      keyCodes: [createSerializedKey(KeyCodes.W, [KeyCodes.SHIFT])],
-    },
-
-    /** Move the cursor on the workspace down. */
-    wsMoveDown: {
-      name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_DOWN,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-      callback: (workspace) => {
-        return this.navigation.moveWSCursor(workspace, 0, 1);
-      },
-      keyCodes: [createSerializedKey(KeyCodes.S, [KeyCodes.SHIFT])],
     },
 
     /** List all of the currently registered shortcuts. */
@@ -719,6 +684,7 @@ export class NavigationController {
     this.deleteAction.install();
     this.editAction.install();
     this.insertAction.install();
+    this.workspaceMovement.install();
 
     this.clipboard.install();
 
@@ -740,6 +706,7 @@ export class NavigationController {
     this.editAction.uninstall();
     this.insertAction.uninstall();
     this.clipboard.uninstall();
+    this.workspaceMovement.uninstall();
 
     this.removeShortcutHandlers();
     this.navigation.dispose();

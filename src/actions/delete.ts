@@ -12,6 +12,7 @@ import {
 } from 'blockly';
 import * as Constants from '../constants';
 import type {BlockSvg, WorkspaceSvg} from 'blockly';
+import {LineCursor} from '../line_cursor';
 import {Navigation} from '../navigation';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
@@ -181,8 +182,9 @@ export class DeleteAction {
     // Don't delete while dragging.  Jeez.
     if (Gesture.inProgress()) false;
 
-    this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
+    if (cursor instanceof LineCursor) cursor.preDelete(sourceBlock);
     sourceBlock.checkAndDelete();
+    if (cursor instanceof LineCursor) cursor.postDelete();
     return true;
   }
 }

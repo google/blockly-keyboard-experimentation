@@ -30,11 +30,6 @@ export class Navigation {
   workspaceStates: {[index: string]: Constants.STATE} = {};
 
   /**
-   * The distance to move the cursor when the cursor is on the workspace.
-   */
-  WS_MOVE_DISTANCE = 40;
-
-  /**
    * The default coordinate to use when focusing on the workspace and no
    * blocks are present. In pixel coordinates, but will be converted to
    * workspace coordinates when used to position the cursor.
@@ -408,61 +403,6 @@ export class Navigation {
   }
 
   /**
-   * Moves the cursor to the appropriate location before a block is deleted.
-   * This is used when the user deletes a block using the delete or backspace
-   * key.
-   *
-   * @param workspace The workspace the block is being deleted on.
-   * @param deletedBlock The block that is being deleted.
-   */
-  moveCursorOnBlockDelete(
-    workspace: Blockly.WorkspaceSvg,
-    deletedBlock: Blockly.BlockSvg,
-  ) {
-    const cursor = workspace.getCursor();
-    if (!cursor) {
-      return;
-    }
-    const curNode = cursor.getCurNode();
-    const block = curNode ? curNode.getSourceBlock() : null;
-
-    if (block === deletedBlock) {
-      // If the block has a parent move the cursor to their connection point.
-      if (block.getParent()) {
-        const topConnection =
-          block.previousConnection || block.outputConnection;
-        if (topConnection?.targetConnection) {
-          cursor.setCurNode(
-            Blockly.ASTNode.createConnectionNode(
-              topConnection.targetConnection,
-            )!,
-          );
-        }
-      } else {
-        // If the block is by itself move the cursor to the workspace.
-        cursor.setCurNode(
-          Blockly.ASTNode.createWorkspaceNode(
-            block.workspace,
-            block.getRelativeToSurfaceXY(),
-          )!,
-        );
-      }
-      // If the cursor is on a block whose parent is being deleted, move the
-      // cursor to the workspace.
-    } else if (
-      block &&
-      deletedBlock.getChildren(false).includes(block as Blockly.BlockSvg)
-    ) {
-      cursor.setCurNode(
-        Blockly.ASTNode.createWorkspaceNode(
-          block.workspace,
-          block.getRelativeToSurfaceXY(),
-        )!,
-      );
-    }
-  }
-
-  /**
    * Sets the navigation state to toolbox and selects the first category in the
    * toolbox. No-op if a toolbox does not exist on the given workspace.
    *
@@ -566,8 +506,10 @@ export class Navigation {
       return;
     }
 
-    if (cursor.getCurNode() && keepPosition) {
-      // Retain the cursor's previous position since it's set.
+    const disposed = cursor.getCurNode()?.getSourceBlock()?.disposed;
+    if (cursor.getCurNode() && !disposed && keepPosition) {
+      // Retain the cursor's previous position since it's set, but only if not
+      // disposed (which can happen when blocks are reloaded).
       return;
     }
     const wsCoordinates = new Blockly.utils.Coordinate(
@@ -1224,43 +1166,6 @@ export class Navigation {
    */
   error(msg: string) {
     console.error(msg);
-  }
-
-  /**
-   * Moves the workspace cursor in the given direction.
-   *
-   * @param workspace The workspace the cursor is on.
-   * @param xDirection -1 to move cursor left. 1 to move cursor right.
-   * @param yDirection -1 to move cursor up. 1 to move cursor down.
-   * @returns True if the current node is a workspace, false
-   *     otherwise.
-   */
-  moveWSCursor(
-    workspace: Blockly.WorkspaceSvg,
-    xDirection: number,
-    yDirection: number,
-  ): boolean {
-    const cursor = workspace.getCursor();
-    if (!cursor) {
-      return false;
-    }
-    const curNode = cursor.getCurNode();
-
-    if (curNode.getType() !== Blockly.ASTNode.types.WORKSPACE) {
-      return false;
-    }
-
-    const wsCoord = curNode.getWsCoordinate();
-    const newX = xDirection * this.WS_MOVE_DISTANCE + wsCoord.x;
-    const newY = yDirection * this.WS_MOVE_DISTANCE + wsCoord.y;
-
-    cursor.setCurNode(
-      Blockly.ASTNode.createWorkspaceNode(
-        workspace,
-        new Blockly.utils.Coordinate(newX, newY),
-      )!,
-    );
-    return true;
   }
 
   /**
