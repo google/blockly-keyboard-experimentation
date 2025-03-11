@@ -55,7 +55,7 @@ export class WorkspaceMovement {
       callback: (workspace) => this.moveWSCursor(workspace, 0, -1),
       keyCodes: [createSerializedKey(KeyCodes.W, [KeyCodes.SHIFT])],
     },
-    
+
     /** Move the cursor on the workspace down. */
     {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_DOWN,
