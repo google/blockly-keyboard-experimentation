@@ -11,6 +11,7 @@
  */
 
 import './gesture_monkey_patch';
+import './toolbox_monkey_patch';
 
 import * as Blockly from 'blockly/core';
 import {
