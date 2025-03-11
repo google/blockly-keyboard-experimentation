@@ -98,14 +98,9 @@ export class WorkspaceMovement {
     yDirection: number,
   ): boolean {
     const cursor = workspace.getCursor();
-    if (!cursor) {
-      return false;
-    }
-    const curNode = cursor.getCurNode();
-
-    if (curNode.getType() !== ASTNode.types.WORKSPACE) {
-      return false;
-    }
+    if (!cursor) return false;
+    const curNode = cursor?.getCurNode();
+    if (curNode.getType() !== ASTNode.types.WORKSPACE) return false;
 
     const wsCoord = curNode.getWsCoordinate();
     const newX = xDirection * this.WS_MOVE_DISTANCE + wsCoord.x;
