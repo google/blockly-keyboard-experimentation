@@ -30,11 +30,6 @@ export class Navigation {
   workspaceStates: {[index: string]: Constants.STATE} = {};
 
   /**
-   * The distance to move the cursor when the cursor is on the workspace.
-   */
-  WS_MOVE_DISTANCE = 40;
-
-  /**
    * The default coordinate to use when focusing on the workspace and no
    * blocks are present. In pixel coordinates, but will be converted to
    * workspace coordinates when used to position the cursor.
@@ -530,6 +525,15 @@ export class Navigation {
     }
 
     if (this.markedNode) {
+      // Note that this hide happens twice, one before setCurNode() and once in
+      // removeMark. The latter is actually a logical no-op because setCurNode()
+      // will trigger a selection update of the currently marked node (if it's a
+      // block) and that, in turn, clones the underlying block's
+      // pathObject.svgPath. Since svgPath is updated to remove any passive
+      // focus indicator after selection clones it, the effect of removing the
+      // indicator doesn't do anything (hence it needs to be done *before*
+      // selection is added in order to immediately take effect).
+      this.passiveFocusIndicator.hide();
       cursor.setCurNode(this.markedNode);
       this.removeMark(workspace);
       return;
@@ -1195,43 +1199,6 @@ export class Navigation {
    */
   error(msg: string) {
     console.error(msg);
-  }
-
-  /**
-   * Moves the workspace cursor in the given direction.
-   *
-   * @param workspace The workspace the cursor is on.
-   * @param xDirection -1 to move cursor left. 1 to move cursor right.
-   * @param yDirection -1 to move cursor up. 1 to move cursor down.
-   * @returns True if the current node is a workspace, false
-   *     otherwise.
-   */
-  moveWSCursor(
-    workspace: Blockly.WorkspaceSvg,
-    xDirection: number,
-    yDirection: number,
-  ): boolean {
-    const cursor = workspace.getCursor();
-    if (!cursor) {
-      return false;
-    }
-    const curNode = cursor.getCurNode();
-
-    if (curNode.getType() !== Blockly.ASTNode.types.WORKSPACE) {
-      return false;
-    }
-
-    const wsCoord = curNode.getWsCoordinate();
-    const newX = xDirection * this.WS_MOVE_DISTANCE + wsCoord.x;
-    const newY = yDirection * this.WS_MOVE_DISTANCE + wsCoord.y;
-
-    cursor.setCurNode(
-      Blockly.ASTNode.createWorkspaceNode(
-        workspace,
-        new Blockly.utils.Coordinate(newX, newY),
-      )!,
-    );
-    return true;
   }
 
   /**
