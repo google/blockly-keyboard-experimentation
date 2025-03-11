@@ -5,11 +5,11 @@
  */
 
 import * as Constants from '../constants';
-import {ASTNode, ShortcutRegistry, utils as BlocklyUtils} from 'blockly';
-import type {Block, WorkspaceSvg} from 'blockly';
+import {ASTNode, Connection, ShortcutRegistry, common, utils} from 'blockly';
+import type {Block, BlockSvg, WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
 
-const KeyCodes = BlocklyUtils.KeyCodes;
+const KeyCodes = utils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
   ShortcutRegistry.registry,
 );
@@ -148,11 +148,15 @@ export class Mover {
    * @returns True iff we can beign a move.
    */
   canMove(workspace: WorkspaceSvg) {
-    // TODO: also check if current block is movable.
-    return (
+    const cursor = workspace?.getCursor();
+    const curNode = cursor?.getCurNode();
+    const block = curNode?.getSourceBlock();
+
+    return !!(
       this.navigation.getState(workspace) === Constants.STATE.WORKSPACE &&
       this.canCurrentlyEdit(workspace) &&
-      !this.moves.has(workspace)
+      !this.moves.has(workspace) && // No move in progress.
+      block?.isMovable()
     );
   }
 
@@ -179,12 +183,17 @@ export class Mover {
   startMove(workspace: WorkspaceSvg) {
     const cursor = workspace?.getCursor();
     const curNode = cursor?.getCurNode();
-    const block = curNode?.getSourceBlock();
-    if (!block || !block.isMovable()) return false;
+    const block = curNode?.getSourceBlock() as BlockSvg | null;
+    if (!cursor || !block) throw new Error('precondition failure');
 
+    // Select and focus block.
+    common.setSelected(block);
+    cursor.setCurNode(ASTNode.createBlockNode(block)!);
+
+    // Additional implementation goes here.
     console.log('startMove');
 
-    this.moves.set(workspace, {});
+    this.moves.set(workspace, new MoveInfo(block));
     return true;
   }
 
@@ -198,7 +207,10 @@ export class Mover {
    */
   finishMove(workspace: WorkspaceSvg) {
     if (!workspace) return false;
+    const info = this.moves.get(workspace);
+    if (!info) throw new Error('no move info for workspace');
 
+    // Additional implementation goes here.
     console.log('finishMove');
 
     this.moves.delete(workspace);
@@ -215,7 +227,10 @@ export class Mover {
    */
   abortMove(workspace: WorkspaceSvg) {
     if (!workspace) return false;
+    const info = this.moves.get(workspace);
+    if (!info) throw new Error('no move info for workspace');
 
+    // Additional implementation goes here.
     console.log('abortMove');
 
     this.moves.delete(workspace);
@@ -262,4 +277,14 @@ export class Mover {
  * Information about the currently in-progress move for a given
  * Workspace.
  */
-type MoveInfo = {};
+export class MoveInfo {
+  public readonly parentNext: Connection | null;
+  public readonly parentInput: Connection | null;
+  public readonly startLocation: utils.Coordinate | null;
+
+  constructor(public readonly block: Block) {
+    this.parentNext = block.previousConnection?.targetConnection ?? null;
+    this.parentInput = block.outputConnection?.targetConnection ?? null;
+    this.startLocation = block.getRelativeToSurfaceXY();
+  }
+}
