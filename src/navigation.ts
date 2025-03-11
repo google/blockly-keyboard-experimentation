@@ -501,6 +501,15 @@ export class Navigation {
     }
 
     if (this.markedNode) {
+      // Note that this hide happens twice, one before setCurNode() and once in
+      // removeMark. The latter is actually a logical no-op because setCurNode()
+      // will trigger a selection update of the currently marked node (if it's a
+      // block) and that, in turn, clones the underlying block's
+      // pathObject.svgPath. Since svgPath is updated to remove any passive
+      // focus indicator after selection clones it, the effect of removing the
+      // indicator doesn't do anything (hence it needs to be done *before*
+      // selection is added in order to immediately take effect).
+      this.passiveFocusIndicator.hide();
       cursor.setCurNode(this.markedNode);
       this.removeMark(workspace);
       return;
