@@ -330,6 +330,7 @@ export class NavigationController {
           case Constants.STATE.WORKSPACE:
             isHandled = this.fieldShortcutHandler(workspace, shortcut);
             if (!isHandled && workspace) {
+              console.log('Pre cursor next, cursor: ', workspace.getCursor());
               workspace.getCursor()?.next();
               isHandled = true;
             }

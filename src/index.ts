@@ -88,8 +88,8 @@ export class KeyboardNavigation {
       this.navigationController.setHasFocus(workspace, false);
     };
 
-    workspace.getSvgGroup().addEventListener('focus', this.focusListener);
-    workspace.getSvgGroup().addEventListener('blur', this.blurListener);
+    workspace.getSvgGroup().addEventListener('focusin', this.focusListener);
+    workspace.getSvgGroup().addEventListener('focusout', this.blurListener);
     // Temporary workaround for #136.
     // TODO(#136): fix in core.
     workspace.getParentSvg().addEventListener('focus', this.focusListener);

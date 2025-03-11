@@ -712,6 +712,8 @@ export class LineCursor extends Marker {
     // select the block or make it look selected.
     super.hide(); // Calls this.drawer?.hide().
     const block = curNode.getLocation() as Blockly.BlockSvg;
+    block.getSvgRoot().setAttribute('tabindex', '0');
+    block.getSvgRoot().focus();
     if (!block.isShadow()) {
       Blockly.common.setSelected(block);
     } else {
