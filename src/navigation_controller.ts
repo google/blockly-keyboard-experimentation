@@ -238,22 +238,6 @@ export class NavigationController {
   protected shortcuts: {
     [name: string]: ShortcutRegistry.KeyboardShortcut;
   } = {
-    /** Turn keyboard navigation on or off. */
-    toggleKeyboardNav: {
-      name: Constants.SHORTCUT_NAMES.TOGGLE_KEYBOARD_NAV,
-      callback: (workspace) => {
-        if (workspace.keyboardAccessibilityMode) {
-          this.navigation.disableKeyboardAccessibility(workspace);
-        } else {
-          this.navigation.enableKeyboardAccessibility(workspace);
-        }
-        return true;
-      },
-      keyCodes: [
-        createSerializedKey(KeyCodes.K, [KeyCodes.CTRL, KeyCodes.SHIFT]),
-      ],
-    },
-
     /**
      * Enter key:
      *
