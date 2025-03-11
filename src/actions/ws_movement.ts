@@ -33,65 +33,54 @@ export class WorkspaceMovement {
     this.canCurrentlyEdit = canEdit;
   }
 
+  private shortcuts: ShortcutRegistry.KeyboardShortcut[] = [
+    /** Move the cursor on the workspace to the left. */
+    {
+      name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_LEFT,
+      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
+      callback: (workspace) => this.moveWSCursor(workspace, -1, 0),
+      keyCodes: [createSerializedKey(KeyCodes.A, [KeyCodes.SHIFT])],
+    },
+    /** Move the cursor on the workspace to the right. */
+    {
+      name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_RIGHT,
+      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
+      callback: (workspace) => this.moveWSCursor(workspace, 1, 0),
+      keyCodes: [createSerializedKey(KeyCodes.D, [KeyCodes.SHIFT])],
+    },
+    /** Move the cursor on the workspace up. */
+    {
+      name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_UP,
+      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
+      callback: (workspace) => this.moveWSCursor(workspace, 0, -1),
+      keyCodes: [createSerializedKey(KeyCodes.W, [KeyCodes.SHIFT])],
+    },
+    
+    /** Move the cursor on the workspace down. */
+    {
+      name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_DOWN,
+      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
+      callback: (workspace) => this.moveWSCursor(workspace, 0, 1),
+      keyCodes: [createSerializedKey(KeyCodes.S, [KeyCodes.SHIFT])],
+    },
+  ];
+
   /**
-   * Install these actions as both keyboard shortcuts and context menu items.
+   * Install the shortcuts.
    */
   install() {
-    const shortcutList: {
-      [name: string]: ShortcutRegistry.KeyboardShortcut;
-    } = {
-      /** Move the cursor on the workspace to the left. */
-      wsMoveLeft: {
-        name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_LEFT,
-        preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-        callback: (workspace) => this.moveWSCursor(workspace, -1, 0),
-        keyCodes: [createSerializedKey(KeyCodes.A, [KeyCodes.SHIFT])],
-      },
-      /** Move the cursor on the workspace to the right. */
-      wsMoveRight: {
-        name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_RIGHT,
-        preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-        callback: (workspace) => this.moveWSCursor(workspace, 1, 0),
-        keyCodes: [createSerializedKey(KeyCodes.D, [KeyCodes.SHIFT])],
-      },
-
-      /** Move the cursor on the workspace up. */
-      wsMoveUp: {
-        name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_UP,
-        preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-        callback: (workspace) => this.moveWSCursor(workspace, 0, -1),
-        keyCodes: [createSerializedKey(KeyCodes.W, [KeyCodes.SHIFT])],
-      },
-
-      /** Move the cursor on the workspace down. */
-      wsMoveDown: {
-        name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_DOWN,
-        preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-        callback: (workspace) => this.moveWSCursor(workspace, 0, 1),
-        keyCodes: [createSerializedKey(KeyCodes.S, [KeyCodes.SHIFT])],
-      },
-    };
-    for (const shortcut of Object.values(shortcutList)) {
+    for (const shortcut of this.shortcuts) {
       ShortcutRegistry.registry.register(shortcut);
     }
   }
 
   /**
-   * Uninstall these actions.
+   * Uninstall the shortcuts.
    */
   uninstall() {
-    ShortcutRegistry.registry.unregister(
-      Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_LEFT,
-    );
-    ShortcutRegistry.registry.unregister(
-      Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_RIGHT,
-    );
-    ShortcutRegistry.registry.unregister(
-      Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_UP,
-    );
-    ShortcutRegistry.registry.unregister(
-      Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_DOWN,
-    );
+    for (const shortcut of this.shortcuts) {
+      ShortcutRegistry.registry.unregister(shortcut.name);
+    }
   }
 
   /**
