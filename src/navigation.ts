@@ -448,13 +448,15 @@ export class Navigation {
       const flyoutContents = flyout.getContents();
       const firstFlyoutItem = flyoutContents[0];
       if (!firstFlyoutItem) return;
-      if (firstFlyoutItem.button) {
+      if (firstFlyoutItem.getType() === 'button') {
         const astNode = Blockly.ASTNode.createButtonNode(
-          firstFlyoutItem.button,
+          firstFlyoutItem.getElement() as Blockly.FlyoutButton,
         );
         this.getFlyoutCursor(workspace)!.setCurNode(astNode!);
-      } else if (firstFlyoutItem.block) {
-        const astNode = Blockly.ASTNode.createStackNode(firstFlyoutItem.block);
+      } else if (firstFlyoutItem.getType() === 'block') {
+        const astNode = Blockly.ASTNode.createStackNode(
+          firstFlyoutItem.getElement() as Blockly.BlockSvg,
+        );
         this.getFlyoutCursor(workspace)!.setCurNode(astNode!);
       }
     }
