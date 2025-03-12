@@ -34,6 +34,7 @@ import {WorkspaceMovement} from './actions/ws_movement';
 import {ExitAction} from './actions/exit';
 import {EnterAction} from './actions/enter';
 import {DisconnectAction} from './actions/disconnect';
+import {ActionMenu} from './actions/action_menu';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -93,6 +94,11 @@ export class NavigationController {
   enterAction: EnterAction = new EnterAction(
     this.navigation,
     this.canCurrentlyEdit.bind(this),
+  );
+
+  actionMenu: ActionMenu = new ActionMenu(
+    this.navigation,
+    this.canCurrentlyNavigate.bind(this),
   );
 
   navigationFocus: NAVIGATION_FOCUS_MODE = NAVIGATION_FOCUS_MODE.NONE;
@@ -457,29 +463,6 @@ export class NavigationController {
       keyCodes: [KeyCodes.RIGHT],
     },
 
-    /**
-     * Cmd/Ctrl/Alt+Enter key:
-     *
-     * Shows the action menu.
-     */
-    menu: {
-      name: Constants.SHORTCUT_NAMES.MENU,
-      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-      callback: (workspace) => {
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE:
-            return this.navigation.openActionMenu(workspace);
-          default:
-            return false;
-        }
-      },
-      keyCodes: [
-        createSerializedKey(KeyCodes.ENTER, [KeyCodes.CTRL]),
-        createSerializedKey(KeyCodes.ENTER, [KeyCodes.ALT]),
-        createSerializedKey(KeyCodes.ENTER, [KeyCodes.META]),
-      ],
-    },
-
     /** Move focus to or from the toolbox. */
     focusToolbox: {
       name: Constants.SHORTCUT_NAMES.TOOLBOX,
@@ -540,6 +523,7 @@ export class NavigationController {
     this.exitAction.install();
     this.enterAction.install();
     this.disconnectAction.install();
+    this.actionMenu.install();
 
     this.clipboard.install();
     this.shortcutDialog.install();
@@ -565,6 +549,7 @@ export class NavigationController {
     this.workspaceMovement.uninstall();
     this.exitAction.uninstall();
     this.enterAction.uninstall();
+    this.actionMenu.uninstall();
     this.shortcutDialog.uninstall();
 
     this.removeShortcutHandlers();
