@@ -469,7 +469,7 @@ export class Navigation {
    */
   focusWorkspace(
     workspace: Blockly.WorkspaceSvg,
-    keepCursorPosition: boolean = false,
+    keepCursorPosition = false,
   ) {
     workspace.hideChaff();
     const reset = !!workspace.getToolbox();
@@ -477,6 +477,30 @@ export class Navigation {
     this.resetFlyout(workspace, reset);
     this.setState(workspace, Constants.STATE.WORKSPACE);
     this.setCursorOnWorkspaceFocus(workspace, keepCursorPosition);
+  }
+
+  /**
+   * Blurs (de-focuses) the workspace's toolbox, and hides the flyout if it's
+   * currently visible.
+   *
+   * Note that it's up to callers to ensure that this function is only called
+   * when appropriate (i.e. when the workspace actually has a toolbox that's
+   * currently focused).
+   *
+   * @param workspace The workspace containing the toolbox.
+   */
+  blurToolbox(workspace: Blockly.WorkspaceSvg) {
+    workspace.hideChaff();
+    const reset = !!workspace.getToolbox();
+
+    this.resetFlyout(workspace, reset);
+    switch (this.getState(workspace)) {
+      case Constants.STATE.FLYOUT:
+      case Constants.STATE.TOOLBOX:
+        // Clear state since neither the flyout nor toolbox are focused anymore.
+        this.setState(workspace, Constants.STATE.NOWHERE);
+        break;
+    }
   }
 
   /**
@@ -501,6 +525,15 @@ export class Navigation {
     }
 
     if (this.markedNode) {
+      // Note that this hide happens twice, one before setCurNode() and once in
+      // removeMark. The latter is actually a logical no-op because setCurNode()
+      // will trigger a selection update of the currently marked node (if it's a
+      // block) and that, in turn, clones the underlying block's
+      // pathObject.svgPath. Since svgPath is updated to remove any passive
+      // focus indicator after selection clones it, the effect of removing the
+      // indicator doesn't do anything (hence it needs to be done *before*
+      // selection is added in order to immediately take effect).
+      this.passiveFocusIndicator.hide();
       cursor.setCurNode(this.markedNode);
       this.removeMark(workspace);
       return;
@@ -538,74 +571,6 @@ export class Navigation {
     const cursor = flyout ? flyout.getWorkspace().getCursor() : null;
 
     return cursor as FlyoutCursor;
-  }
-
-  /**
-   * Inserts a block from the flyout.
-   * Tries to find a connection on the block to connect to the marked
-   * location. If no connection has been marked, or there is not a compatible
-   * connection then the block is placed on the workspace.
-   *
-   * @param workspace The main workspace. The workspace
-   *     the block will be placed on.
-   */
-  insertFromFlyout(workspace: Blockly.WorkspaceSvg) {
-    const newBlock = this.createNewBlock(workspace);
-    if (!newBlock) return;
-    if (this.markedNode) {
-      if (
-        !this.tryToConnectNodes(
-          workspace,
-          this.markedNode,
-          Blockly.ASTNode.createBlockNode(newBlock)!,
-        )
-      ) {
-        this.warn(
-          'Something went wrong while inserting a block from the flyout.',
-        );
-      }
-    }
-
-    this.focusWorkspace(workspace);
-    workspace
-      .getCursor()!
-      .setCurNode(Blockly.ASTNode.createBlockNode(newBlock)!);
-    this.removeMark(workspace);
-  }
-
-  /**
-   * Creates a new block based on the current block the flyout cursor is on.
-   *
-   * @param workspace The main workspace. The workspace
-   *     the block will be placed on.
-   * @returns The newly created block.
-   */
-  createNewBlock(workspace: Blockly.WorkspaceSvg): Blockly.BlockSvg | null {
-    const flyout = workspace.getFlyout();
-    if (!flyout || !flyout.isVisible()) {
-      this.warn(
-        'Trying to insert from the flyout when the flyout does not ' +
-          ' exist or is not visible',
-      );
-      return null;
-    }
-
-    const curBlock = this.getFlyoutCursor(workspace)!
-      .getCurNode()
-      .getLocation() as Blockly.BlockSvg;
-    if (!curBlock.isEnabled()) {
-      this.warn("Can't insert a disabled block.");
-      return null;
-    }
-
-    const newBlock = flyout.createBlock(curBlock);
-    // Render to get the sizing right.
-    newBlock.render();
-    // Connections are not tracked when the block is first created.  Normally
-    // there's enough time for them to become tracked in the user's mouse
-    // movements, but not here.
-    newBlock.setConnectionTracking(true);
-    return newBlock;
   }
 
   /**
@@ -1020,64 +985,6 @@ export class Navigation {
   }
 
   /**
-   * Disconnects the connection that the cursor is pointing to, and bump blocks.
-   * This is a no-op if the connection cannot be broken or if the cursor is not
-   * pointing to a connection.
-   *
-   * @param workspace The workspace.
-   */
-  disconnectBlocks(workspace: Blockly.WorkspaceSvg) {
-    const cursor = workspace.getCursor();
-    if (!cursor) {
-      return;
-    }
-    let curNode: Blockly.ASTNode | null = cursor.getCurNode();
-    let wasVisitingConnection = true;
-    while (curNode && !curNode.isConnection()) {
-      curNode = curNode.out();
-      wasVisitingConnection = false;
-    }
-    if (!curNode) {
-      this.log('Unable to find a connection to disconnect');
-      return;
-    }
-    const curConnection = curNode.getLocation() as Blockly.RenderedConnection;
-    if (!curConnection.isConnected()) {
-      this.log('Cannot disconnect unconnected connection');
-      return;
-    }
-    const superiorConnection = curConnection.isSuperior()
-      ? curConnection
-      : curConnection.targetConnection!;
-
-    const inferiorConnection = curConnection.isSuperior()
-      ? curConnection.targetConnection!
-      : curConnection;
-
-    if (inferiorConnection.getSourceBlock().isShadow()) {
-      this.log('Cannot disconnect a shadow block');
-      return;
-    }
-
-    if (!inferiorConnection.getSourceBlock().isMovable()) {
-      this.log('Cannot disconnect an immovable block');
-      return;
-    }
-
-    superiorConnection.disconnect();
-    inferiorConnection.bumpAwayFrom(superiorConnection);
-
-    const rootBlock = superiorConnection.getSourceBlock().getRootBlock();
-    rootBlock.bringToFront();
-
-    if (wasVisitingConnection) {
-      const connectionNode =
-        Blockly.ASTNode.createConnectionNode(superiorConnection);
-      workspace.getCursor()!.setCurNode(connectionNode!);
-    }
-  }
-
-  /**
    * Moves the passive focus indicator to the cursor's current location.
    *
    * @param workspace The workspace.
@@ -1166,40 +1073,6 @@ export class Navigation {
    */
   error(msg: string) {
     console.error(msg);
-  }
-
-  /**
-   * Handles hitting the enter key on the workspace.
-   *
-   * @param workspace The workspace.
-   */
-  handleEnterForWS(workspace: Blockly.WorkspaceSvg) {
-    const cursor = workspace.getCursor();
-    if (!cursor) return;
-    const curNode = cursor.getCurNode();
-    const nodeType = curNode.getType();
-    if (nodeType === Blockly.ASTNode.types.FIELD) {
-      (curNode.getLocation() as Blockly.Field).showEditor();
-    } else if (nodeType === Blockly.ASTNode.types.BLOCK) {
-      const block = curNode.getLocation() as Blockly.Block;
-      if (!tryShowFullBlockFieldEditor(block)) {
-        const metaKey = navigator.platform.startsWith('Mac') ? 'Cmd' : 'Ctrl';
-        const canMoveInHint = `Press right arrow to move in or ${metaKey} + Enter for more options`;
-        const genericHint = `Press ${metaKey} + Enter for options`;
-        const hint =
-          curNode.in()?.getSourceBlock() === block
-            ? canMoveInHint
-            : genericHint;
-        alert(hint);
-      }
-    } else if (
-      curNode.isConnection() ||
-      nodeType === Blockly.ASTNode.types.WORKSPACE
-    ) {
-      this.openToolboxOrFlyout(workspace);
-    } else if (nodeType === Blockly.ASTNode.types.STACK) {
-      this.warn('Cannot mark a stack.');
-    }
   }
 
   /**
@@ -1356,26 +1229,6 @@ export class Navigation {
   }
 
   /**
-   * Triggers a flyout button's callback.
-   *
-   * @param workspace The main workspace. The workspace
-   *     containing a flyout with a button.
-   */
-  triggerButtonCallback(workspace: Blockly.WorkspaceSvg) {
-    const button = this.getFlyoutCursor(workspace)!
-      .getCurNode()
-      .getLocation() as Blockly.FlyoutButton;
-    const buttonCallback = (workspace as any).flyoutButtonCallbacks.get(
-      (button as any).callbackKey,
-    );
-    if (typeof buttonCallback === 'function') {
-      buttonCallback(button);
-    } else if (!button.isLabel()) {
-      throw new Error('No callback function found for flyout button.');
-    }
-  }
-
-  /**
    * Removes the change listeners on all registered workspaces.
    */
   dispose() {
@@ -1485,25 +1338,4 @@ function fakeEventForConnectionNode(node: Blockly.ASTNode): PointerEvent {
     clientX: connectionScreenCoords.x + 5,
     clientY: connectionScreenCoords.y + 5,
   });
-}
-
-/**
- * If this block has a full block field then show its editor.
- *
- * @param block A block.
- * @returns True if we showed the editor, false otherwise.
- */
-function tryShowFullBlockFieldEditor(block: Blockly.Block): boolean {
-  if (block.isSimpleReporter()) {
-    for (const input of block.inputList) {
-      for (const field of input.fieldRow) {
-        // @ts-expect-error isFullBlockField is a protected method.
-        if (field.isClickable() && field.isFullBlockField()) {
-          field.showEditor();
-          return true;
-        }
-      }
-    }
-  }
-  return false;
 }
