@@ -31,6 +31,7 @@ import {DeleteAction} from './actions/delete';
 import {InsertAction} from './actions/insert';
 import {Clipboard} from './actions/clipboard';
 import {WorkspaceMovement} from './actions/ws_movement';
+import {DisconnectAction} from './actions/disconnect';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -63,6 +64,12 @@ export class NavigationController {
 
   /** Context menu and keyboard action for insertion. */
   insertAction: InsertAction = new InsertAction(
+    this.navigation,
+    this.canCurrentlyEdit.bind(this),
+  );
+
+  /** Keyboard shortcut for disconnection. */
+  disconnectAction: DisconnectAction = new DisconnectAction(
     this.navigation,
     this.canCurrentlyEdit.bind(this),
   );
@@ -501,22 +508,6 @@ export class NavigationController {
       ],
     },
 
-    /** Disconnect two blocks. */
-    disconnect: {
-      name: Constants.SHORTCUT_NAMES.DISCONNECT,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-      callback: (workspace) => {
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE:
-            this.navigation.disconnectBlocks(workspace);
-            return true;
-          default:
-            return false;
-        }
-      },
-      keyCodes: [KeyCodes.X],
-    },
-
     /** Move focus to or from the toolbox. */
     focusToolbox: {
       name: Constants.SHORTCUT_NAMES.TOOLBOX,
@@ -703,6 +694,7 @@ export class NavigationController {
     this.deleteAction.install();
     this.insertAction.install();
     this.workspaceMovement.install();
+    this.disconnectAction.install();
 
     this.clipboard.install();
     this.shortcutDialog.install();
@@ -723,6 +715,7 @@ export class NavigationController {
 
     this.deleteAction.uninstall();
     this.insertAction.uninstall();
+    this.disconnectAction.uninstall();
     this.clipboard.uninstall();
     this.workspaceMovement.uninstall();
     this.shortcutDialog.uninstall();
