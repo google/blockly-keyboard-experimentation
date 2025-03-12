@@ -32,6 +32,7 @@ import {InsertAction} from './actions/insert';
 import {Clipboard} from './actions/clipboard';
 import {WorkspaceMovement} from './actions/ws_movement';
 import {ExitAction} from './actions/exit';
+import {EnterAction} from './actions/enter';
 import {DisconnectAction} from './actions/disconnect';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
@@ -87,9 +88,12 @@ export class NavigationController {
   exitAction: ExitAction = new ExitAction(
     this.navigation,
     this.canCurrentlyNavigate.bind(this),
+
+  enterAction: EnterAction = new EnterAction(
+    this.navigation,
+    this.canCurrentlyEdit.bind(this),
   );
 
-  hasNavigationFocus: boolean = false;
   navigationFocus: NAVIGATION_FOCUS_MODE = NAVIGATION_FOCUS_MODE.NONE;
 
   /**
@@ -447,52 +451,6 @@ export class NavigationController {
     },
 
     /**
-     * Enter key:
-     *
-     * - On the flyout: press a button or choose a block to place.
-     * - On a stack: open a block's context menu or field's editor.
-     * - On the workspace: open the context menu.
-     */
-    enter: {
-      name: Constants.SHORTCUT_NAMES.EDIT_OR_CONFIRM,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-      callback: (workspace, event) => {
-        event.preventDefault();
-
-        let flyoutCursor;
-        let curNode;
-        let nodeType;
-
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE:
-            this.navigation.handleEnterForWS(workspace);
-            return true;
-          case Constants.STATE.FLYOUT:
-            flyoutCursor = this.navigation.getFlyoutCursor(workspace);
-            if (!flyoutCursor) {
-              return false;
-            }
-            curNode = flyoutCursor.getCurNode();
-            nodeType = curNode.getType();
-
-            switch (nodeType) {
-              case ASTNode.types.STACK:
-                this.navigation.insertFromFlyout(workspace);
-                break;
-              case ASTNode.types.BUTTON:
-                this.navigation.triggerButtonCallback(workspace);
-                break;
-            }
-
-            return true;
-          default:
-            return false;
-        }
-      },
-      keyCodes: [KeyCodes.ENTER, KeyCodes.SPACE],
-    },
-
-    /**
      * Cmd/Ctrl/Alt+Enter key:
      *
      * Shows the action menu.
@@ -682,6 +640,7 @@ export class NavigationController {
     this.insertAction.install();
     this.workspaceMovement.install();
     this.exitAction.install();
+    this.enterAction.install();
     this.disconnectAction.install();
 
     this.clipboard.install();
@@ -707,6 +666,7 @@ export class NavigationController {
     this.clipboard.uninstall();
     this.workspaceMovement.uninstall();
     this.exitAction.uninstall();
+    this.enterAction.uninstall();
     this.shortcutDialog.uninstall();
 
     this.removeShortcutHandlers();
