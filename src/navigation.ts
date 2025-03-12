@@ -1357,38 +1357,6 @@ export class Navigation {
   }
 
   /**
-   * Pastes the copied block to the marked location if possible or
-   * onto the workspace otherwise.
-   *
-   * @param copyData The data to paste into the workspace.
-   * @param workspace The workspace to paste the data into.
-   * @returns True if the paste was sucessful, false otherwise.
-   */
-  paste(copyData: Blockly.ICopyData, workspace: Blockly.WorkspaceSvg): boolean {
-    // Do this before clipoard.paste due to cursor/focus workaround in getCurNode.
-    const targetNode = workspace.getCursor()?.getCurNode();
-
-    Blockly.Events.setGroup(true);
-    const block = Blockly.clipboard.paste(
-      copyData,
-      workspace,
-    ) as Blockly.BlockSvg;
-    if (block) {
-      if (targetNode) {
-        this.tryToConnectNodes(
-          workspace,
-          targetNode,
-          Blockly.ASTNode.createBlockNode(block)!,
-        );
-      }
-      this.removeMark(workspace);
-      return true;
-    }
-    Blockly.Events.setGroup(false);
-    return false;
-  }
-
-  /**
    * Triggers a flyout button's callback.
    *
    * @param workspace The main workspace. The workspace
