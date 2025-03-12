@@ -20,7 +20,7 @@ export class ShortcutDialog {
   open: boolean;
   closeButton: HTMLElement | null;
   /**
-   * Constructor for an Announcer.
+   * Constructor for a dialog that displays available keyboard shortcuts.
    */
   constructor() {
     // For testing purposes, this assumes that the page has a

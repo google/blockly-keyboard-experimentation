@@ -24,7 +24,6 @@ import {
 
 import * as Constants from './constants';
 import {Navigation} from './navigation';
-import {Announcer} from './announcer';
 import {LineCursor} from './line_cursor';
 import {ShortcutDialog} from './shortcut_dialog';
 import {DeleteAction} from './actions/delete';
@@ -56,7 +55,6 @@ enum NAVIGATION_FOCUS_MODE {
  */
 export class NavigationController {
   navigation: Navigation = new Navigation();
-  announcer: Announcer = new Announcer();
   shortcutDialog: ShortcutDialog = new ShortcutDialog();
 
   /** Context menu and keyboard action for deletion. */
@@ -323,13 +321,6 @@ export class NavigationController {
   }
 
   /**
-   * List all the currently registered shortcuts.
-   */
-  listShortcuts() {
-    this.announcer.listShortcuts();
-  }
-
-  /**
    * Dictionary of KeyboardShortcuts.
    */
   protected shortcuts: {
@@ -483,25 +474,12 @@ export class NavigationController {
       keyCodes: [KeyCodes.T],
     },
 
-    /** Announce the current location of the cursor. */
-    announceLocation: {
-      name: Constants.SHORTCUT_NAMES.ANNOUNCE,
-      callback: (workspace) => {
-        const cursor = workspace.getCursor();
-        if (!cursor) return false;
-        // Print out the type of the current node.
-        this.announcer.setText(cursor.getCurNode().getType());
-        return true;
-      },
-      keyCodes: [KeyCodes.A],
-    },
     /** Clean up the workspace. */
     cleanup: {
       name: Constants.SHORTCUT_NAMES.CLEAN_UP,
       preconditionFn: (workspace) => workspace.getTopBlocks(false).length > 0,
       callback: (workspace) => {
         workspace.cleanUp();
-        this.announcer.setText('clean up');
         return true;
       },
       keyCodes: [KeyCodes.C],
