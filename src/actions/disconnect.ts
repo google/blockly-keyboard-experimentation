@@ -6,6 +6,7 @@
 
 import {
   ASTNode,
+  BlockSvg,
   RenderedConnection,
   ShortcutRegistry,
   utils as BlocklyUtils,
@@ -92,6 +93,19 @@ export class DisconnectAction {
     let curNode: ASTNode | null = cursor.getCurNode();
     let wasVisitingConnection = true;
     while (curNode && !curNode.isConnection()) {
+      const location = curNode.getLocation();
+      if (location instanceof BlockSvg) {
+        const previous = location.previousConnection;
+        const output = location.outputConnection;
+        if (previous?.isConnected()) {
+          curNode = ASTNode.createConnectionNode(previous);
+          break;
+        } else if (output?.isConnected()) {
+          curNode = ASTNode.createConnectionNode(output);
+          break;
+        }
+      }
+
       curNode = curNode.out();
       wasVisitingConnection = false;
     }
