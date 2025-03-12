@@ -11,6 +11,7 @@
  */
 
 import './gesture_monkey_patch';
+import './toolbox_monkey_patch';
 
 import * as Blockly from 'blockly/core';
 import {
@@ -31,11 +32,22 @@ import {InsertAction} from './actions/insert';
 import {Clipboard} from './actions/clipboard';
 import {WorkspaceMovement} from './actions/ws_movement';
 import {ExitAction} from './actions/exit';
+import {DisconnectAction} from './actions/disconnect';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
   ShortcutRegistry.registry,
 );
+
+/** Represents the current focus mode of the navigation controller. */
+enum NAVIGATION_FOCUS_MODE {
+  /** Indicates that no interactive elements of Blockly currently have focus. */
+  NONE = 'none',
+  /** Indicates that the toolbox currently has focus. */
+  TOOLBOX = 'toolbox',
+  /** Indicates that the main workspace currently has focus. */
+  WORKSPACE = 'workspace',
+}
 
 /**
  * Class for registering shortcuts for keyboard navigation.
@@ -57,6 +69,12 @@ export class NavigationController {
     this.canCurrentlyEdit.bind(this),
   );
 
+  /** Keyboard shortcut for disconnection. */
+  disconnectAction: DisconnectAction = new DisconnectAction(
+    this.navigation,
+    this.canCurrentlyEdit.bind(this),
+  );
+
   clipboard: Clipboard = new Clipboard(
     this.navigation,
     this.canCurrentlyEdit.bind(this),
@@ -72,6 +90,7 @@ export class NavigationController {
   );
 
   hasNavigationFocus: boolean = false;
+  navigationFocus: NAVIGATION_FOCUS_MODE = NAVIGATION_FOCUS_MODE.NONE;
 
   /**
    * Original Toolbox.prototype.onShortcut method, saved by
@@ -162,17 +181,44 @@ export class NavigationController {
   }
 
   /**
-   * Sets whether the navigation controller has focus. This will enable keyboard
-   * navigation if focus is now gained. Additionally, the cursor may be reset if
-   * it hasn't already been positioned in the workspace.
+   * Sets whether the navigation controller has toolbox focus and will enable
+   * keyboard navigation in the toolbox.
    *
-   * @param workspace the workspace that now has input focus.
+   * If the workspace doesn't have a toolbox, this function is a no-op.
+   *
+   * @param workspace the workspace that now has toolbox input focus.
    * @param isFocused whether the environment has browser focus.
    */
-  setHasFocus(workspace: WorkspaceSvg, isFocused: boolean) {
-    this.hasNavigationFocus = isFocused;
+  updateToolboxFocus(workspace: WorkspaceSvg, isFocused: boolean) {
+    if (!workspace.getToolbox()) return;
+    if (isFocused) {
+      this.navigation.focusToolbox(workspace);
+      this.navigationFocus = NAVIGATION_FOCUS_MODE.TOOLBOX;
+    } else {
+      this.navigation.blurToolbox(workspace);
+      this.navigationFocus = NAVIGATION_FOCUS_MODE.NONE;
+    }
+  }
+
+  /**
+   * Sets whether the navigation controller has workspace focus. This will
+   * enable keyboard navigation within the workspace. Additionally, the cursor
+   * may be reset if it hasn't already been positioned in the workspace.
+   *
+   * @param workspace the workspace that now has workspace input focus.
+   * @param isFocused whether the environment has browser focus.
+   */
+  updateWorkspaceFocus(workspace: WorkspaceSvg, isFocused: boolean) {
     if (isFocused) {
       this.navigation.focusWorkspace(workspace, true);
+      this.navigationFocus = NAVIGATION_FOCUS_MODE.WORKSPACE;
+    } else {
+      this.navigationFocus = NAVIGATION_FOCUS_MODE.NONE;
+
+      // Hide cursor to indicate lost focus. Also, mark the current node so that
+      // it can be properly restored upon returning to the workspace.
+      this.navigation.markAtCursor(workspace);
+      workspace.getCursor()?.hide();
     }
   }
 
@@ -180,15 +226,26 @@ export class NavigationController {
    * Determines whether keyboard navigation should be allowed based on the
    * current state of the workspace.
    *
-   * A return value of 'true' generally indicates that the workspace both has
-   * enabled keyboard navigation and is currently in a state (e.g. focus) that
-   * can support keyboard navigation.
+   * A return value of 'true' generally indicates that either the workspace or
+   * toolbox both has enabled keyboard navigation and is currently in a state
+   * (e.g. focus) that can support keyboard navigation.
    *
    * @param workspace the workspace in which keyboard navigation may be allowed.
    * @returns whether keyboard navigation is currently allowed.
    */
   private canCurrentlyNavigate(workspace: WorkspaceSvg) {
-    return workspace.keyboardAccessibilityMode && this.hasNavigationFocus;
+    return this.canCurrentlyNavigateInToolbox(workspace) ||
+      this.canCurrentlyNavigateInWorkspace(workspace);
+  }
+
+  private canCurrentlyNavigateInToolbox(workspace: WorkspaceSvg) {
+    return workspace.keyboardAccessibilityMode &&
+      this.navigationFocus == NAVIGATION_FOCUS_MODE.TOOLBOX;
+  }
+
+  private canCurrentlyNavigateInWorkspace(workspace: WorkspaceSvg) {
+    return workspace.keyboardAccessibilityMode &&
+      this.navigationFocus == NAVIGATION_FOCUS_MODE.WORKSPACE;
   }
 
   /**
@@ -293,22 +350,6 @@ export class NavigationController {
         }
       },
       keyCodes: [KeyCodes.UP],
-    },
-
-    /** Turn keyboard navigation on or off. */
-    toggleKeyboardNav: {
-      name: Constants.SHORTCUT_NAMES.TOGGLE_KEYBOARD_NAV,
-      callback: (workspace) => {
-        if (workspace.keyboardAccessibilityMode) {
-          this.navigation.disableKeyboardAccessibility(workspace);
-        } else {
-          this.navigation.enableKeyboardAccessibility(workspace);
-        }
-        return true;
-      },
-      keyCodes: [
-        createSerializedKey(KeyCodes.K, [KeyCodes.CTRL, KeyCodes.SHIFT]),
-      ],
     },
 
     /** Go to the out location. */
@@ -474,22 +515,6 @@ export class NavigationController {
       ],
     },
 
-    /** Disconnect two blocks. */
-    disconnect: {
-      name: Constants.SHORTCUT_NAMES.DISCONNECT,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-      callback: (workspace) => {
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE:
-            this.navigation.disconnectBlocks(workspace);
-            return true;
-          default:
-            return false;
-        }
-      },
-      keyCodes: [KeyCodes.X],
-    },
-
     /** Move focus to or from the toolbox. */
     focusToolbox: {
       name: Constants.SHORTCUT_NAMES.TOOLBOX,
@@ -508,16 +533,6 @@ export class NavigationController {
         }
       },
       keyCodes: [KeyCodes.T],
-    },
-
-    /** List all of the currently registered shortcuts. */
-    announceShortcuts: {
-      name: Constants.SHORTCUT_NAMES.LIST_SHORTCUTS,
-      callback: () => {
-        this.shortcutDialog.toggle();
-        return true;
-      },
-      keyCodes: [KeyCodes.SLASH],
     },
 
     /** Announce the current location of the cursor. */
@@ -667,10 +682,12 @@ export class NavigationController {
     this.insertAction.install();
     this.workspaceMovement.install();
     this.exitAction.install();
+    this.disconnectAction.install();
 
     this.clipboard.install();
+    this.shortcutDialog.install();
 
-    // Initalise the shortcut modal with available shortcuts.  Needs
+    // Initialize the shortcut modal with available shortcuts.  Needs
     // to be done separately rather at construction, as many shortcuts
     // are not registered at that point.
     this.shortcutDialog.createModalContent();
@@ -686,9 +703,11 @@ export class NavigationController {
 
     this.deleteAction.uninstall();
     this.insertAction.uninstall();
+    this.disconnectAction.uninstall();
     this.clipboard.uninstall();
     this.workspaceMovement.uninstall();
     this.exitAction.uninstall();
+    this.shortcutDialog.uninstall();
 
     this.removeShortcutHandlers();
     this.navigation.dispose();
