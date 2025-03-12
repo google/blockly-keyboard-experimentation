@@ -88,6 +88,7 @@ export class NavigationController {
   exitAction: ExitAction = new ExitAction(
     this.navigation,
     this.canCurrentlyNavigate.bind(this),
+  );
 
   enterAction: EnterAction = new EnterAction(
     this.navigation,
@@ -238,18 +239,24 @@ export class NavigationController {
    * @returns whether keyboard navigation is currently allowed.
    */
   private canCurrentlyNavigate(workspace: WorkspaceSvg) {
-    return this.canCurrentlyNavigateInToolbox(workspace) ||
-      this.canCurrentlyNavigateInWorkspace(workspace);
+    return (
+      this.canCurrentlyNavigateInToolbox(workspace) ||
+      this.canCurrentlyNavigateInWorkspace(workspace)
+    );
   }
 
   private canCurrentlyNavigateInToolbox(workspace: WorkspaceSvg) {
-    return workspace.keyboardAccessibilityMode &&
-      this.navigationFocus == NAVIGATION_FOCUS_MODE.TOOLBOX;
+    return (
+      workspace.keyboardAccessibilityMode &&
+      this.navigationFocus == NAVIGATION_FOCUS_MODE.TOOLBOX
+    );
   }
 
   private canCurrentlyNavigateInWorkspace(workspace: WorkspaceSvg) {
-    return workspace.keyboardAccessibilityMode &&
-      this.navigationFocus == NAVIGATION_FOCUS_MODE.WORKSPACE;
+    return (
+      workspace.keyboardAccessibilityMode &&
+      this.navigationFocus == NAVIGATION_FOCUS_MODE.WORKSPACE
+    );
   }
 
   /**
