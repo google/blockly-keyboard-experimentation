@@ -304,13 +304,6 @@ export class NavigationController {
   }
 
   /**
-   * List all the currently registered shortcuts.
-   */
-  listShortcuts() {
-    this.announcer.listShortcuts();
-  }
-
-  /**
    * Dictionary of KeyboardShortcuts.
    */
   protected shortcuts: {
