@@ -652,6 +652,22 @@ export class LineCursor extends Marker {
     }
   }
 
+  override hide(): void {
+    super.hide();
+
+    // If there's a block currently selected, remove the selection since the
+    // cursor should now be hidden.
+    const curNode = this.getCurNode();
+    if (curNode && curNode.getType() === ASTNode.types.BLOCK) {
+      const block = curNode.getLocation() as Blockly.BlockSvg;
+      if (!block.isShadow()) {
+        Blockly.common.setSelected(null);
+      } else {
+        block.removeSelect();
+      }
+    }
+  }
+
   /**
    * Redraw the current marker.
    *

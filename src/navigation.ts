@@ -469,7 +469,7 @@ export class Navigation {
    */
   focusWorkspace(
     workspace: Blockly.WorkspaceSvg,
-    keepCursorPosition: boolean = false,
+    keepCursorPosition = false,
   ) {
     workspace.hideChaff();
     const reset = !!workspace.getToolbox();
@@ -477,6 +477,30 @@ export class Navigation {
     this.resetFlyout(workspace, reset);
     this.setState(workspace, Constants.STATE.WORKSPACE);
     this.setCursorOnWorkspaceFocus(workspace, keepCursorPosition);
+  }
+
+  /**
+   * Blurs (de-focuses) the workspace's toolbox, and hides the flyout if it's
+   * currently visible.
+   *
+   * Note that it's up to callers to ensure that this function is only called
+   * when appropriate (i.e. when the workspace actually has a toolbox that's
+   * currently focused).
+   *
+   * @param workspace The workspace containing the toolbox.
+   */
+  blurToolbox(workspace: Blockly.WorkspaceSvg) {
+    workspace.hideChaff();
+    const reset = !!workspace.getToolbox();
+
+    this.resetFlyout(workspace, reset);
+    switch (this.getState(workspace)) {
+      case Constants.STATE.FLYOUT:
+      case Constants.STATE.TOOLBOX:
+        // Clear state since neither the flyout nor toolbox are focused anymore.
+        this.setState(workspace, Constants.STATE.NOWHERE);
+        break;
+    }
   }
 
   /**
@@ -501,6 +525,15 @@ export class Navigation {
     }
 
     if (this.markedNode) {
+      // Note that this hide happens twice, one before setCurNode() and once in
+      // removeMark. The latter is actually a logical no-op because setCurNode()
+      // will trigger a selection update of the currently marked node (if it's a
+      // block) and that, in turn, clones the underlying block's
+      // pathObject.svgPath. Since svgPath is updated to remove any passive
+      // focus indicator after selection clones it, the effect of removing the
+      // indicator doesn't do anything (hence it needs to be done *before*
+      // selection is added in order to immediately take effect).
+      this.passiveFocusIndicator.hide();
       cursor.setCurNode(this.markedNode);
       this.removeMark(workspace);
       return;
@@ -949,64 +982,6 @@ export class Navigation {
     }
     this.warn('This block can not be inserted at the marked location.');
     return false;
-  }
-
-  /**
-   * Disconnects the connection that the cursor is pointing to, and bump blocks.
-   * This is a no-op if the connection cannot be broken or if the cursor is not
-   * pointing to a connection.
-   *
-   * @param workspace The workspace.
-   */
-  disconnectBlocks(workspace: Blockly.WorkspaceSvg) {
-    const cursor = workspace.getCursor();
-    if (!cursor) {
-      return;
-    }
-    let curNode: Blockly.ASTNode | null = cursor.getCurNode();
-    let wasVisitingConnection = true;
-    while (curNode && !curNode.isConnection()) {
-      curNode = curNode.out();
-      wasVisitingConnection = false;
-    }
-    if (!curNode) {
-      this.log('Unable to find a connection to disconnect');
-      return;
-    }
-    const curConnection = curNode.getLocation() as Blockly.RenderedConnection;
-    if (!curConnection.isConnected()) {
-      this.log('Cannot disconnect unconnected connection');
-      return;
-    }
-    const superiorConnection = curConnection.isSuperior()
-      ? curConnection
-      : curConnection.targetConnection!;
-
-    const inferiorConnection = curConnection.isSuperior()
-      ? curConnection.targetConnection!
-      : curConnection;
-
-    if (inferiorConnection.getSourceBlock().isShadow()) {
-      this.log('Cannot disconnect a shadow block');
-      return;
-    }
-
-    if (!inferiorConnection.getSourceBlock().isMovable()) {
-      this.log('Cannot disconnect an immovable block');
-      return;
-    }
-
-    superiorConnection.disconnect();
-    inferiorConnection.bumpAwayFrom(superiorConnection);
-
-    const rootBlock = superiorConnection.getSourceBlock().getRootBlock();
-    rootBlock.bringToFront();
-
-    if (wasVisitingConnection) {
-      const connectionNode =
-        Blockly.ASTNode.createConnectionNode(superiorConnection);
-      workspace.getCursor()!.setCurNode(connectionNode!);
-    }
   }
 
   /**
