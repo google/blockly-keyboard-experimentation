@@ -469,7 +469,7 @@ export class Navigation {
    */
   focusWorkspace(
     workspace: Blockly.WorkspaceSvg,
-    keepCursorPosition: boolean = false,
+    keepCursorPosition = false,
   ) {
     workspace.hideChaff();
     const reset = !!workspace.getToolbox();
@@ -477,6 +477,30 @@ export class Navigation {
     this.resetFlyout(workspace, reset);
     this.setState(workspace, Constants.STATE.WORKSPACE);
     this.setCursorOnWorkspaceFocus(workspace, keepCursorPosition);
+  }
+
+  /**
+   * Blurs (de-focuses) the workspace's toolbox, and hides the flyout if it's
+   * currently visible.
+   *
+   * Note that it's up to callers to ensure that this function is only called
+   * when appropriate (i.e. when the workspace actually has a toolbox that's
+   * currently focused).
+   *
+   * @param workspace The workspace containing the toolbox.
+   */
+  blurToolbox(workspace: Blockly.WorkspaceSvg) {
+    workspace.hideChaff();
+    const reset = !!workspace.getToolbox();
+
+    this.resetFlyout(workspace, reset);
+    switch (this.getState(workspace)) {
+      case Constants.STATE.FLYOUT:
+      case Constants.STATE.TOOLBOX:
+        // Clear state since neither the flyout nor toolbox are focused anymore.
+        this.setState(workspace, Constants.STATE.NOWHERE);
+        break;
+    }
   }
 
   /**
