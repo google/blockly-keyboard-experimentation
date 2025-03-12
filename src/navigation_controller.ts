@@ -31,6 +31,7 @@ import {DeleteAction} from './actions/delete';
 import {InsertAction} from './actions/insert';
 import {Clipboard} from './actions/clipboard';
 import {WorkspaceMovement} from './actions/ws_movement';
+import {ExitAction} from './actions/exit';
 import {EnterAction} from './actions/enter';
 import {DisconnectAction} from './actions/disconnect';
 
@@ -84,12 +85,15 @@ export class NavigationController {
     this.canCurrentlyEdit.bind(this),
   );
 
+  exitAction: ExitAction = new ExitAction(
+    this.navigation,
+    this.canCurrentlyNavigate.bind(this),
+
   enterAction: EnterAction = new EnterAction(
     this.navigation,
     this.canCurrentlyEdit.bind(this),
   );
 
-  hasNavigationFocus: boolean = false;
   navigationFocus: NAVIGATION_FOCUS_MODE = NAVIGATION_FOCUS_MODE.NONE;
 
   /**
@@ -489,26 +493,6 @@ export class NavigationController {
       keyCodes: [KeyCodes.T],
     },
 
-    /** Exit the current location and focus on the workspace. */
-    exit: {
-      name: Constants.SHORTCUT_NAMES.EXIT,
-      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-      callback: (workspace) => {
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.FLYOUT:
-            this.navigation.focusWorkspace(workspace);
-            return true;
-          case Constants.STATE.TOOLBOX:
-            this.navigation.focusWorkspace(workspace);
-            return true;
-          default:
-            return false;
-        }
-      },
-      keyCodes: [KeyCodes.ESC],
-      allowCollision: true,
-    },
-
     /** Announce the current location of the cursor. */
     announceLocation: {
       name: Constants.SHORTCUT_NAMES.ANNOUNCE,
@@ -655,6 +639,7 @@ export class NavigationController {
     this.deleteAction.install();
     this.insertAction.install();
     this.workspaceMovement.install();
+    this.exitAction.install();
     this.enterAction.install();
     this.disconnectAction.install();
 
@@ -680,6 +665,7 @@ export class NavigationController {
     this.disconnectAction.uninstall();
     this.clipboard.uninstall();
     this.workspaceMovement.uninstall();
+    this.exitAction.uninstall();
     this.enterAction.uninstall();
     this.shortcutDialog.uninstall();
 
