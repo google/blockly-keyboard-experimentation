@@ -68,7 +68,6 @@ export class KeyboardNavigation {
     this.navigationController.init();
     this.navigationController.addWorkspace(workspace);
     this.navigationController.enable(workspace);
-    this.navigationController.listShortcuts();
 
     this.originalTheme = workspace.getTheme();
     this.setGlowTheme();
@@ -106,7 +105,9 @@ export class KeyboardNavigation {
 
     const toolbox = workspace.getToolbox();
     if (toolbox != null && toolbox instanceof Blockly.Toolbox) {
-      const contentsDiv = toolbox.HtmlDiv?.querySelector('.blocklyToolboxContents');
+      const contentsDiv = toolbox.HtmlDiv?.querySelector(
+        '.blocklyToolboxContents',
+      );
       contentsDiv?.addEventListener('focus', this.toolboxFocusListener);
       contentsDiv?.addEventListener('blur', this.toolboxBlurListener);
     }
@@ -137,7 +138,9 @@ export class KeyboardNavigation {
 
     const toolbox = this.workspace.getToolbox();
     if (toolbox != null && toolbox instanceof Blockly.Toolbox) {
-      const contentsDiv = toolbox.HtmlDiv?.querySelector('.blocklyToolboxContents');
+      const contentsDiv = toolbox.HtmlDiv?.querySelector(
+        '.blocklyToolboxContents',
+      );
       contentsDiv?.removeEventListener('focus', this.toolboxFocusListener);
       contentsDiv?.removeEventListener('blur', this.toolboxBlurListener);
     }

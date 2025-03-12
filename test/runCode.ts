@@ -38,8 +38,6 @@ export function registerRunCodeShortcut() {
     preconditionFn: (workspace: Blockly.WorkspaceSvg) => {
       return true;
     },
-    // List out the current shortcuts.
-    // Adds a table to the announcer area.
     callback: (workspace: Blockly.WorkspaceSvg) => {
       runCode();
       return true;
