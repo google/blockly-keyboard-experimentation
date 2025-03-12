@@ -574,74 +574,6 @@ export class Navigation {
   }
 
   /**
-   * Inserts a block from the flyout.
-   * Tries to find a connection on the block to connect to the marked
-   * location. If no connection has been marked, or there is not a compatible
-   * connection then the block is placed on the workspace.
-   *
-   * @param workspace The main workspace. The workspace
-   *     the block will be placed on.
-   */
-  insertFromFlyout(workspace: Blockly.WorkspaceSvg) {
-    const newBlock = this.createNewBlock(workspace);
-    if (!newBlock) return;
-    if (this.markedNode) {
-      if (
-        !this.tryToConnectNodes(
-          workspace,
-          this.markedNode,
-          Blockly.ASTNode.createBlockNode(newBlock)!,
-        )
-      ) {
-        this.warn(
-          'Something went wrong while inserting a block from the flyout.',
-        );
-      }
-    }
-
-    this.focusWorkspace(workspace);
-    workspace
-      .getCursor()!
-      .setCurNode(Blockly.ASTNode.createBlockNode(newBlock)!);
-    this.removeMark(workspace);
-  }
-
-  /**
-   * Creates a new block based on the current block the flyout cursor is on.
-   *
-   * @param workspace The main workspace. The workspace
-   *     the block will be placed on.
-   * @returns The newly created block.
-   */
-  createNewBlock(workspace: Blockly.WorkspaceSvg): Blockly.BlockSvg | null {
-    const flyout = workspace.getFlyout();
-    if (!flyout || !flyout.isVisible()) {
-      this.warn(
-        'Trying to insert from the flyout when the flyout does not ' +
-          ' exist or is not visible',
-      );
-      return null;
-    }
-
-    const curBlock = this.getFlyoutCursor(workspace)!
-      .getCurNode()
-      .getLocation() as Blockly.BlockSvg;
-    if (!curBlock.isEnabled()) {
-      this.warn("Can't insert a disabled block.");
-      return null;
-    }
-
-    const newBlock = flyout.createBlock(curBlock);
-    // Render to get the sizing right.
-    newBlock.render();
-    // Connections are not tracked when the block is first created.  Normally
-    // there's enough time for them to become tracked in the user's mouse
-    // movements, but not here.
-    newBlock.setConnectionTracking(true);
-    return newBlock;
-  }
-
-  /**
    * Hides the flyout cursor and optionally hides the flyout.
    *
    * @param workspace The workspace.
@@ -1144,40 +1076,6 @@ export class Navigation {
   }
 
   /**
-   * Handles hitting the enter key on the workspace.
-   *
-   * @param workspace The workspace.
-   */
-  handleEnterForWS(workspace: Blockly.WorkspaceSvg) {
-    const cursor = workspace.getCursor();
-    if (!cursor) return;
-    const curNode = cursor.getCurNode();
-    const nodeType = curNode.getType();
-    if (nodeType === Blockly.ASTNode.types.FIELD) {
-      (curNode.getLocation() as Blockly.Field).showEditor();
-    } else if (nodeType === Blockly.ASTNode.types.BLOCK) {
-      const block = curNode.getLocation() as Blockly.Block;
-      if (!tryShowFullBlockFieldEditor(block)) {
-        const metaKey = navigator.platform.startsWith('Mac') ? 'Cmd' : 'Ctrl';
-        const canMoveInHint = `Press right arrow to move in or ${metaKey} + Enter for more options`;
-        const genericHint = `Press ${metaKey} + Enter for options`;
-        const hint =
-          curNode.in()?.getSourceBlock() === block
-            ? canMoveInHint
-            : genericHint;
-        alert(hint);
-      }
-    } else if (
-      curNode.isConnection() ||
-      nodeType === Blockly.ASTNode.types.WORKSPACE
-    ) {
-      this.openToolboxOrFlyout(workspace);
-    } else if (nodeType === Blockly.ASTNode.types.STACK) {
-      this.warn('Cannot mark a stack.');
-    }
-  }
-
-  /**
    * Save the current cursor location and open the toolbox or flyout
    * to select and insert a block.
    * @param workspace The active workspace.
@@ -1299,23 +1197,35 @@ export class Navigation {
   }
 
   /**
-   * Triggers a flyout button's callback.
+   * Pastes the copied block to the marked location if possible or
+   * onto the workspace otherwise.
    *
-   * @param workspace The main workspace. The workspace
-   *     containing a flyout with a button.
+   * @param copyData The data to paste into the workspace.
+   * @param workspace The workspace to paste the data into.
+   * @returns True if the paste was sucessful, false otherwise.
    */
-  triggerButtonCallback(workspace: Blockly.WorkspaceSvg) {
-    const button = this.getFlyoutCursor(workspace)!
-      .getCurNode()
-      .getLocation() as Blockly.FlyoutButton;
-    const buttonCallback = (workspace as any).flyoutButtonCallbacks.get(
-      (button as any).callbackKey,
-    );
-    if (typeof buttonCallback === 'function') {
-      buttonCallback(button);
-    } else if (!button.isLabel()) {
-      throw new Error('No callback function found for flyout button.');
+  paste(copyData: Blockly.ICopyData, workspace: Blockly.WorkspaceSvg): boolean {
+    // Do this before clipoard.paste due to cursor/focus workaround in getCurNode.
+    const targetNode = workspace.getCursor()?.getCurNode();
+
+    Blockly.Events.setGroup(true);
+    const block = Blockly.clipboard.paste(
+      copyData,
+      workspace,
+    ) as Blockly.BlockSvg;
+    if (block) {
+      if (targetNode) {
+        this.tryToConnectNodes(
+          workspace,
+          targetNode,
+          Blockly.ASTNode.createBlockNode(block)!,
+        );
+      }
+      this.removeMark(workspace);
+      return true;
     }
+    Blockly.Events.setGroup(false);
+    return false;
   }
 
   /**
@@ -1428,25 +1338,4 @@ function fakeEventForConnectionNode(node: Blockly.ASTNode): PointerEvent {
     clientX: connectionScreenCoords.x + 5,
     clientY: connectionScreenCoords.y + 5,
   });
-}
-
-/**
- * If this block has a full block field then show its editor.
- *
- * @param block A block.
- * @returns True if we showed the editor, false otherwise.
- */
-function tryShowFullBlockFieldEditor(block: Blockly.Block): boolean {
-  if (block.isSimpleReporter()) {
-    for (const input of block.inputList) {
-      for (const field of input.fieldRow) {
-        // @ts-expect-error isFullBlockField is a protected method.
-        if (field.isClickable() && field.isFullBlockField()) {
-          field.showEditor();
-          return true;
-        }
-      }
-    }
-  }
-  return false;
 }
