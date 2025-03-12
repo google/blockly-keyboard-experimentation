@@ -24,7 +24,6 @@ import {
 
 import * as Constants from './constants';
 import {Navigation} from './navigation';
-import {Announcer} from './announcer';
 import {LineCursor} from './line_cursor';
 import {ShortcutDialog} from './shortcut_dialog';
 import {DeleteAction} from './actions/delete';
@@ -35,6 +34,7 @@ import {ArrowNavigation} from './actions/arrow_navigation';
 import {ExitAction} from './actions/exit';
 import {EnterAction} from './actions/enter';
 import {DisconnectAction} from './actions/disconnect';
+import {ActionMenu} from './actions/action_menu';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -56,7 +56,6 @@ enum NAVIGATION_FOCUS_MODE {
  */
 export class NavigationController {
   navigation: Navigation = new Navigation();
-  announcer: Announcer = new Announcer();
   shortcutDialog: ShortcutDialog = new ShortcutDialog();
 
   /** Context menu and keyboard action for deletion. */
@@ -100,6 +99,11 @@ export class NavigationController {
   enterAction: EnterAction = new EnterAction(
     this.navigation,
     this.canCurrentlyEdit.bind(this),
+  );
+
+  actionMenu: ActionMenu = new ActionMenu(
+    this.navigation,
+    this.canCurrentlyNavigate.bind(this),
   );
 
   navigationFocus: NAVIGATION_FOCUS_MODE = NAVIGATION_FOCUS_MODE.NONE;
@@ -246,18 +250,24 @@ export class NavigationController {
    * @returns whether keyboard navigation is currently allowed.
    */
   private canCurrentlyNavigate(workspace: WorkspaceSvg) {
-    return this.canCurrentlyNavigateInToolbox(workspace) ||
-      this.canCurrentlyNavigateInWorkspace(workspace);
+    return (
+      this.canCurrentlyNavigateInToolbox(workspace) ||
+      this.canCurrentlyNavigateInWorkspace(workspace)
+    );
   }
 
   private canCurrentlyNavigateInToolbox(workspace: WorkspaceSvg) {
-    return workspace.keyboardAccessibilityMode &&
-      this.navigationFocus == NAVIGATION_FOCUS_MODE.TOOLBOX;
+    return (
+      workspace.keyboardAccessibilityMode &&
+      this.navigationFocus == NAVIGATION_FOCUS_MODE.TOOLBOX
+    );
   }
 
   private canCurrentlyNavigateInWorkspace(workspace: WorkspaceSvg) {
-    return workspace.keyboardAccessibilityMode &&
-      this.navigationFocus == NAVIGATION_FOCUS_MODE.WORKSPACE;
+    return (
+      workspace.keyboardAccessibilityMode &&
+      this.navigationFocus == NAVIGATION_FOCUS_MODE.WORKSPACE
+    );
   }
 
   /**
@@ -306,29 +316,6 @@ export class NavigationController {
   protected shortcuts: {
     [name: string]: ShortcutRegistry.KeyboardShortcut;
   } = {
-    /**
-     * Cmd/Ctrl/Alt+Enter key:
-     *
-     * Shows the action menu.
-     */
-    menu: {
-      name: Constants.SHORTCUT_NAMES.MENU,
-      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-      callback: (workspace) => {
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE:
-            return this.navigation.openActionMenu(workspace);
-          default:
-            return false;
-        }
-      },
-      keyCodes: [
-        createSerializedKey(KeyCodes.ENTER, [KeyCodes.CTRL]),
-        createSerializedKey(KeyCodes.ENTER, [KeyCodes.ALT]),
-        createSerializedKey(KeyCodes.ENTER, [KeyCodes.META]),
-      ],
-    },
-
     /** Move focus to or from the toolbox. */
     focusToolbox: {
       name: Constants.SHORTCUT_NAMES.TOOLBOX,
@@ -349,26 +336,12 @@ export class NavigationController {
       keyCodes: [KeyCodes.T],
     },
 
-    /** Announce the current location of the cursor. */
-    announceLocation: {
-      name: Constants.SHORTCUT_NAMES.ANNOUNCE,
-      callback: (workspace) => {
-        const cursor = workspace.getCursor();
-        if (!cursor) return false;
-        // Print out the type of the current node.
-        this.announcer.setText(cursor.getCurNode().getType());
-        return true;
-      },
-      keyCodes: [KeyCodes.A],
-    },
-
     /** Clean up the workspace. */
     cleanup: {
       name: Constants.SHORTCUT_NAMES.CLEAN_UP,
       preconditionFn: (workspace) => workspace.getTopBlocks(false).length > 0,
       callback: (workspace) => {
         workspace.cleanUp();
-        this.announcer.setText('clean up');
         return true;
       },
       keyCodes: [KeyCodes.C],
@@ -391,6 +364,7 @@ export class NavigationController {
     this.exitAction.install();
     this.enterAction.install();
     this.disconnectAction.install();
+    this.actionMenu.install();
 
     this.clipboard.install();
     this.shortcutDialog.install();
@@ -417,6 +391,7 @@ export class NavigationController {
     this.arrowNavigation.uninstall();
     this.exitAction.uninstall();
     this.enterAction.uninstall();
+    this.actionMenu.uninstall();
     this.shortcutDialog.uninstall();
 
     this.removeShortcutHandlers();
