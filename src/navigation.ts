@@ -672,28 +672,9 @@ export class Navigation {
   }
 
   /**
-<<<<<<< HEAD
-=======
-   * Hides the flyout cursor and optionally hides the flyout.
-   *
-   * @param workspace The workspace.
-   * @param shouldHide True if the flyout should be hidden.
-   */
-  resetFlyout(workspace: Blockly.WorkspaceSvg, shouldHide: boolean) {
-    if (this.getFlyoutCursor(workspace)) {
-      this.getFlyoutCursor(workspace)!.hide();
-      if (shouldHide) {
-        workspace.getFlyout()!.hide();
-      }
-    }
-  }
-
-  /**
->>>>>>> f14f250 (chore: simplify tryToConnectNodes)
    * Tries to intelligently connect the blocks or connections
    * represented by the given nodes, based on node types and locations.
    *
-   * @param workspace The main workspace.
    * @param stationaryNode The first node to connect.
    * @param movingBlock The block we're moving.
    * @returns True if the key was handled; false if something went
@@ -715,15 +696,37 @@ export class Navigation {
     } else if (stationaryType === Blockly.ASTNode.types.WORKSPACE) {
       return this.moveBlockToWorkspace(movingBlock, stationaryNode);
     } else if (stationaryType === Blockly.ASTNode.types.BLOCK) {
-      // Insert the moving block above the stationary block, if the
-      // appropriate connections exist.
       const stationaryBlock = stationaryLoc as Blockly.BlockSvg;
-      if (stationaryBlock.previousConnection) {
+
+      // 1. Connect blocks to first compatible input
+      const inputType = movingBlock.outputConnection
+        ? Blockly.inputs.inputTypes.VALUE
+        : Blockly.inputs.inputTypes.STATEMENT;
+      const compatibleInputs = stationaryBlock.inputList.filter(
+        (input) => input.type === inputType,
+      );
+      const input = compatibleInputs.length > 0 ? compatibleInputs[0] : null;
+      let connection = input?.connection;
+      if (connection) {
+        if (inputType === Blockly.inputs.inputTypes.STATEMENT) {
+          while (connection.targetBlock()?.nextConnection) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            connection = connection.targetBlock()!.nextConnection!;
+          }
+        }
         return this.insertBlock(
           movingBlock,
-          stationaryBlock.previousConnection,
+          connection as Blockly.RenderedConnection,
         );
-      } else if (stationaryBlock.outputConnection) {
+      }
+
+      // 2. Connect statement blocks to next connection.
+      if (stationaryBlock.nextConnection && !movingBlock.outputConnection) {
+        return this.insertBlock(movingBlock, stationaryBlock.nextConnection);
+      }
+
+      // 3. Output connection. This will wrap around or displace.
+      if (stationaryBlock.outputConnection) {
         return this.insertBlock(movingBlock, stationaryBlock.outputConnection);
       }
     }
