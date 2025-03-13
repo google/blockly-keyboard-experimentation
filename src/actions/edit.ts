@@ -19,9 +19,15 @@ import {NavigationController} from '../navigation_controller';
 const KeyCodes = BlocklyUtils.KeyCodes;
 
 /**
- * Action to edit a block—this just moves the cursor to the first
- * field or input (if there is one), as an aid to navigational
- * discoverability.
+ * Action to edit a block.  This just moves the cursor to the first
+ * field or input (if there is one), and exists as an aid to
+ * navigational discoverability:
+ *
+ * Any time there is a cursor position that can be accessed by
+ * pressing the right-arrow key, which isn't accessible by pressing
+ * the down-arrow key (these positions are typically fields and value
+ * inputs), a context menu item "Edit Block contents (→︎)" will be
+ * shown in the block context menu.
  *
  * N.B.: This item is shown any time the cursor is on a block and not
  * in the rightmost position 'on the current line'; that means that
