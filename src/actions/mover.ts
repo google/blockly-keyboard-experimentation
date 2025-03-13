@@ -106,25 +106,37 @@ export class Mover {
       name: 'Move left, unconstrained',
       preconditionFn: (workspace) => this.isMoving(workspace),
       callback: (workspace) => this.moveUnconstrained(workspace, -1, 0),
-      keyCodes: [createSerializedKey(KeyCodes.LEFT, [KeyCodes.ALT])],
+      keyCodes: [
+        createSerializedKey(KeyCodes.LEFT, [KeyCodes.ALT]),
+        createSerializedKey(KeyCodes.LEFT, [KeyCodes.CTRL]),
+      ],
     },
     {
       name: 'Move right, unconstraind',
       preconditionFn: (workspace) => this.isMoving(workspace),
       callback: (workspace) => this.moveUnconstrained(workspace, 1, 0),
-      keyCodes: [createSerializedKey(KeyCodes.RIGHT, [KeyCodes.ALT])],
+      keyCodes: [
+        createSerializedKey(KeyCodes.RIGHT, [KeyCodes.ALT]),
+        createSerializedKey(KeyCodes.RIGHT, [KeyCodes.CTRL]),
+      ],
     },
     {
       name: 'Move up unconstrained',
       preconditionFn: (workspace) => this.isMoving(workspace),
       callback: (workspace) => this.moveUnconstrained(workspace, 0, -1),
-      keyCodes: [createSerializedKey(KeyCodes.UP, [KeyCodes.ALT])],
+      keyCodes: [
+        createSerializedKey(KeyCodes.UP, [KeyCodes.ALT]),
+        createSerializedKey(KeyCodes.UP, [KeyCodes.CTRL]),
+      ],
     },
     {
       name: 'Move down, unconstrained',
       preconditionFn: (workspace) => this.isMoving(workspace),
       callback: (workspace) => this.moveUnconstrained(workspace, 0, 1),
-      keyCodes: [createSerializedKey(KeyCodes.DOWN, [KeyCodes.ALT])],
+      keyCodes: [
+        createSerializedKey(KeyCodes.DOWN, [KeyCodes.ALT]),
+        createSerializedKey(KeyCodes.DOWN, [KeyCodes.CTRL]),
+      ],
     },
   ];
 
