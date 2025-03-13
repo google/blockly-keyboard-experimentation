@@ -129,7 +129,7 @@ export class DragMover extends Mover {
     // Not yet implemented.  Absorb keystroke to avoid moving cursor.
     alert(`Constrained movement not implemented.
 
-Use alt+arrow (option+arrow on macOS) for unconstrained move.
+Use ctrl+arrow or alt+arrow (option+arrow on macOS) for unconstrained move.
 Use enter to complete the move, or escape to abort.`);
     return true;
   }
