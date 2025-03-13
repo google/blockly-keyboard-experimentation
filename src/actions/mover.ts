@@ -5,7 +5,14 @@
  */
 
 import * as Constants from '../constants';
-import {ASTNode, Connection, ShortcutRegistry, common, utils} from 'blockly';
+import {
+  ASTNode,
+  Connection,
+  ContextMenuRegistry,
+  ShortcutRegistry,
+  common,
+  utils,
+} from 'blockly';
 import type {Block, BlockSvg, WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
 
@@ -121,6 +128,25 @@ export class Mover {
     },
   ];
 
+  menuItems: ContextMenuRegistry.RegistryItem[] = [
+    {
+      displayText: 'Move Block (M)',
+      preconditionFn: (scope) => {
+        const workspace = scope.block?.workspace as WorkspaceSvg | null;
+        if (!workspace) return 'hidden';
+        return this.canMove(workspace, scope.block) ? 'enabled' : 'disabled';
+      },
+      callback: (scope) => {
+        const workspace = scope.block?.workspace as WorkspaceSvg | null;
+        if (!workspace) return false;
+        this.startMove(workspace, scope.block);
+      },
+      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
+      id: 'move',
+      weight: 8.5,
+    },
+  ];
+
   /**
    * Install the actions as both keyboard shortcuts and (where
    * applicable) context menu items.
@@ -128,6 +154,9 @@ export class Mover {
   install() {
     for (const shortcut of this.shortcuts) {
       ShortcutRegistry.registry.register(shortcut);
+    }
+    for (const menuItem of this.menuItems) {
+      ContextMenuRegistry.registry.register(menuItem);
     }
   }
 
@@ -138,19 +167,25 @@ export class Mover {
     for (const shortcut of this.shortcuts) {
       ShortcutRegistry.registry.unregister(shortcut.name);
     }
+    for (const menuItem of this.menuItems) {
+      ContextMenuRegistry.registry.unregister(menuItem.id);
+    }
   }
 
   /**
-   * Returns true iff we are able to begin moving a block on the given
-   * workspace.
+   * Returns true iff we are able to begin moving the given block (or,
+   * if no block supplied, the block wich currently has focus) on the
+   * given workspace.
    *
    * @param workspace The workspace to move on.
    * @returns True iff we can beign a move.
    */
-  canMove(workspace: WorkspaceSvg) {
-    const cursor = workspace?.getCursor();
-    const curNode = cursor?.getCurNode();
-    const block = curNode?.getSourceBlock();
+  canMove(workspace: WorkspaceSvg, block?: Block) {
+    if (!block) {
+      const cursor = workspace?.getCursor();
+      const curNode = cursor?.getCurNode();
+      block = curNode?.getSourceBlock() ?? undefined;
+    }
 
     return !!(
       this.navigation.getState(workspace) === Constants.STATE.WORKSPACE &&
@@ -180,14 +215,16 @@ export class Mover {
    * @param workspace The workspace we might be moving on.
    * @returns True iff a move has successfully begun.
    */
-  startMove(workspace: WorkspaceSvg) {
+  startMove(workspace: WorkspaceSvg, block?: Block) {
     const cursor = workspace?.getCursor();
-    const curNode = cursor?.getCurNode();
-    const block = curNode?.getSourceBlock() as BlockSvg | null;
+    if (!block) {
+      const curNode = cursor?.getCurNode();
+      block = curNode?.getSourceBlock() ?? undefined;
+    }
     if (!cursor || !block) throw new Error('precondition failure');
 
     // Select and focus block.
-    common.setSelected(block);
+    common.setSelected(block as BlockSvg);
     cursor.setCurNode(ASTNode.createBlockNode(block)!);
 
     // Additional implementation goes here.
