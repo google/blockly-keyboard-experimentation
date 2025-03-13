@@ -329,7 +329,7 @@ export class Mover {
 export class MoveInfo {
   public readonly parentNext: Connection | null;
   public readonly parentInput: Connection | null;
-  public readonly startLocation: utils.Coordinate | null;
+  public readonly startLocation: utils.Coordinate;
 
   constructor(public readonly block: Block) {
     this.parentNext = block.previousConnection?.targetConnection ?? null;

@@ -9,11 +9,12 @@ import {
   ASTNode,
   Connection,
   ShortcutRegistry,
+  WorkspaceSvg,
   common,
   registry,
   utils,
 } from 'blockly';
-import type {Block, BlockSvg, IDragger, WorkspaceSvg} from 'blockly';
+import type {Block, BlockSvg, IDragger} from 'blockly';
 import {Mover, MoveInfo} from './mover';
 import {Navigation} from '../navigation';
 
@@ -64,8 +65,10 @@ export class DragMover extends Mover {
     if (!DraggerClass) throw new Error('no Dragger registered');
     const dragger = new DraggerClass(block, workspace);
     // Record that a move is in progress and start dragging.
-    this.moves.set(workspace, new DragMoveInfo(block, dragger));
-    dragger.onDragStart(new PointerEvent('pointerdown'));
+    const info = new DragMoveInfo(block, dragger);
+    this.moves.set(workspace, info);
+    // Begin drag.
+    dragger.onDragStart(info.fakePointerEvent('pointerdown'));
     return true;
   }
 
@@ -83,7 +86,7 @@ export class DragMover extends Mover {
     if (!info) throw new Error('no move info for workspace');
 
     info.dragger.onDragEnd(
-      new PointerEvent('pointerup'),
+      info.fakePointerEvent('pointerup'),
       new utils.Coordinate(0, 0),
     );
 
@@ -107,7 +110,7 @@ export class DragMover extends Mover {
     // Monkey patch dragger to trigger call to draggable.revertDrag.
     (info.dragger as any).shouldReturnToStart = () => true;
     info.dragger.onDragEnd(
-      new PointerEvent('pointerup'),
+      info.fakePointerEvent('pointerup'),
       new utils.Coordinate(0, 0),
     );
 
@@ -157,7 +160,7 @@ Use enter to complete the move, or escape to abort.`);
     info.totalDelta.y +=
       yDirection * this.UNCONSTRAINED_MOVE_DISTANCE * workspace.scale;
 
-    info.dragger.onDrag(new PointerEvent('pointermove'), info.totalDelta);
+    info.dragger.onDrag(info.fakePointerEvent('pointermove'), info.totalDelta);
     return true;
   }
 }
@@ -176,4 +179,23 @@ class DragMoveInfo extends MoveInfo {
   ) {
     super(block);
   }
+
+  /** Create fake pointer event for dragging. */
+  fakePointerEvent(type: string): PointerEvent {
+    const workspace = this.block.workspace;
+    if (!(workspace instanceof WorkspaceSvg)) throw new TypeError();
+    
+    const blockCoords = utils.svgMath.wsToScreenCoordinates(
+      workspace,
+      new utils.Coordinate(
+        this.startLocation.x + this.totalDelta.x,
+        this.startLocation.y + this.totalDelta.y,
+      ),
+    );
+    return new PointerEvent(type, {
+      clientX: blockCoords.x,
+      clientY: blockCoords.y,
+    });
+  }
+
 }
