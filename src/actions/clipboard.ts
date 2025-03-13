@@ -376,12 +376,7 @@ export class Clipboard {
     const block = clipboard.paste(this.copyData, pasteWorkspace) as BlockSvg;
     if (block) {
       if (targetNode) {
-        this.navigation.tryToConnectNodes(
-          pasteWorkspace,
-          targetNode,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          ASTNode.createBlockNode(block)!,
-        );
+        this.navigation.tryToConnectBlock(targetNode, block);
       }
       Events.setGroup(false);
       return true;
