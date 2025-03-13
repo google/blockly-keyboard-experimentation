@@ -34,7 +34,7 @@ import {ExitAction} from './actions/exit';
 import {EnterAction} from './actions/enter';
 import {DisconnectAction} from './actions/disconnect';
 import {ActionMenu} from './actions/action_menu';
-import {Mover} from './actions/mover';
+import {DragMover as Mover} from './actions/drag_mover';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
