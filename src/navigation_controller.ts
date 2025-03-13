@@ -30,6 +30,7 @@ import {DeleteAction} from './actions/delete';
 import {InsertAction} from './actions/insert';
 import {Clipboard} from './actions/clipboard';
 import {WorkspaceMovement} from './actions/ws_movement';
+import {ArrowNavigation} from './actions/arrow_navigation';
 import {ExitAction} from './actions/exit';
 import {EnterAction} from './actions/enter';
 import {DisconnectAction} from './actions/disconnect';
@@ -82,6 +83,12 @@ export class NavigationController {
 
   workspaceMovement: WorkspaceMovement = new WorkspaceMovement(
     this.canCurrentlyEdit.bind(this),
+  );
+
+  /** Keyboard navigation actions for the arrow keys. */
+  arrowNavigation: ArrowNavigation = new ArrowNavigation(
+    this.navigation,
+    this.canCurrentlyNavigate.bind(this),
   );
 
   exitAction: ExitAction = new ExitAction(
@@ -153,13 +160,13 @@ export class NavigationController {
       return false;
     }
     switch (shortcut.name) {
-      case Constants.SHORTCUT_NAMES.PREVIOUS:
+      case Constants.SHORTCUT_NAMES.UP:
         return (this as any).selectPrevious();
-      case Constants.SHORTCUT_NAMES.OUT:
+      case Constants.SHORTCUT_NAMES.LEFT:
         return (this as any).selectParent();
-      case Constants.SHORTCUT_NAMES.NEXT:
+      case Constants.SHORTCUT_NAMES.DOWN:
         return (this as any).selectNext();
-      case Constants.SHORTCUT_NAMES.IN:
+      case Constants.SHORTCUT_NAMES.RIGHT:
         return (this as any).selectChild();
       default:
         return false;
@@ -297,163 +304,11 @@ export class NavigationController {
   }
 
   /**
-   * Gives the cursor to the field to handle if the cursor is on a field.
-   *
-   * @param workspace The workspace to check.
-   * @param shortcut The shortcut
-   *     to give to the field.
-   * @returns True if the shortcut was handled by the field, false
-   *     otherwise.
-   */
-  protected fieldShortcutHandler(
-    workspace: WorkspaceSvg,
-    shortcut: ShortcutRegistry.KeyboardShortcut,
-  ): boolean {
-    const cursor = workspace.getCursor();
-    if (!cursor || !cursor.getCurNode()) {
-      return false;
-    }
-    const curNode = cursor.getCurNode();
-    if (curNode.getType() === ASTNode.types.FIELD) {
-      return (curNode.getLocation() as Blockly.Field).onShortcut(shortcut);
-    }
-    return false;
-  }
-
-  /**
    * Dictionary of KeyboardShortcuts.
    */
   protected shortcuts: {
     [name: string]: ShortcutRegistry.KeyboardShortcut;
   } = {
-    /** Go to the previous location. */
-    previous: {
-      name: Constants.SHORTCUT_NAMES.PREVIOUS,
-      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-      callback: (workspace, _, shortcut) => {
-        const flyout = workspace.getFlyout();
-        const toolbox = workspace.getToolbox() as Blockly.Toolbox;
-        let isHandled = false;
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE:
-            isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled) {
-              workspace.getCursor()?.prev();
-              isHandled = true;
-            }
-            return isHandled;
-          case Constants.STATE.FLYOUT:
-            isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled && flyout) {
-              flyout.getWorkspace()?.getCursor()?.prev();
-              isHandled = true;
-            }
-            return isHandled;
-          case Constants.STATE.TOOLBOX:
-            return toolbox && typeof toolbox.onShortcut === 'function'
-              ? toolbox.onShortcut(shortcut)
-              : false;
-          default:
-            return false;
-        }
-      },
-      keyCodes: [KeyCodes.UP],
-    },
-
-    /** Go to the out location. */
-    out: {
-      name: Constants.SHORTCUT_NAMES.OUT,
-      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-      callback: (workspace, _, shortcut) => {
-        const toolbox = workspace.getToolbox() as Blockly.Toolbox;
-        let isHandled = false;
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE:
-            isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled && workspace) {
-              workspace.getCursor()?.out();
-              isHandled = true;
-            }
-            return isHandled;
-          case Constants.STATE.FLYOUT:
-            this.navigation.focusToolbox(workspace);
-            return true;
-          case Constants.STATE.TOOLBOX:
-            return toolbox && typeof toolbox.onShortcut === 'function'
-              ? toolbox.onShortcut(shortcut)
-              : false;
-          default:
-            return false;
-        }
-      },
-      keyCodes: [KeyCodes.LEFT],
-    },
-
-    /** Go to the next location. */
-    next: {
-      name: Constants.SHORTCUT_NAMES.NEXT,
-      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-      callback: (workspace, _, shortcut) => {
-        const toolbox = workspace.getToolbox() as Blockly.Toolbox;
-        const flyout = workspace.getFlyout();
-        let isHandled = false;
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE:
-            isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled && workspace) {
-              workspace.getCursor()?.next();
-              isHandled = true;
-            }
-            return isHandled;
-          case Constants.STATE.FLYOUT:
-            isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled && flyout) {
-              flyout.getWorkspace()?.getCursor()?.next();
-              isHandled = true;
-            }
-            return isHandled;
-          case Constants.STATE.TOOLBOX:
-            return toolbox && typeof toolbox.onShortcut === 'function'
-              ? toolbox.onShortcut(shortcut)
-              : false;
-          default:
-            return false;
-        }
-      },
-      keyCodes: [KeyCodes.DOWN],
-    },
-
-    /** Go to the in location. */
-    in: {
-      name: Constants.SHORTCUT_NAMES.IN,
-      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-      callback: (workspace, _, shortcut) => {
-        const toolbox = workspace.getToolbox() as Blockly.Toolbox;
-        let isHandled = false;
-        switch (this.navigation.getState(workspace)) {
-          case Constants.STATE.WORKSPACE:
-            isHandled = this.fieldShortcutHandler(workspace, shortcut);
-            if (!isHandled && workspace) {
-              workspace.getCursor()?.in();
-              isHandled = true;
-            }
-            return isHandled;
-          case Constants.STATE.TOOLBOX:
-            isHandled =
-              toolbox && typeof toolbox.onShortcut === 'function'
-                ? toolbox.onShortcut(shortcut)
-                : false;
-            if (!isHandled) {
-              this.navigation.focusFlyout(workspace);
-            }
-            return true;
-          default:
-            return false;
-        }
-      },
-      keyCodes: [KeyCodes.RIGHT],
-    },
-
     /** Move focus to or from the toolbox. */
     focusToolbox: {
       name: Constants.SHORTCUT_NAMES.TOOLBOX,
@@ -498,6 +353,7 @@ export class NavigationController {
     this.deleteAction.install();
     this.insertAction.install();
     this.workspaceMovement.install();
+    this.arrowNavigation.install();
     this.exitAction.install();
     this.enterAction.install();
     this.disconnectAction.install();
@@ -525,6 +381,7 @@ export class NavigationController {
     this.disconnectAction.uninstall();
     this.clipboard.uninstall();
     this.workspaceMovement.uninstall();
+    this.arrowNavigation.uninstall();
     this.exitAction.uninstall();
     this.enterAction.uninstall();
     this.actionMenu.uninstall();
