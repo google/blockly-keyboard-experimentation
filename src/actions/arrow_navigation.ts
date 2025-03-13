@@ -53,9 +53,9 @@ export class ArrowNavigation {
     const shortcuts: {
       [name: string]: ShortcutRegistry.KeyboardShortcut;
     } = {
-      /** Go to the in location. */
-      in: {
-        name: Constants.SHORTCUT_NAMES.IN,
+      /** Go to the next location to the right. */
+      right: {
+        name: Constants.SHORTCUT_NAMES.RIGHT,
         preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
         callback: (workspace, _, shortcut) => {
           const toolbox = workspace.getToolbox() as Toolbox;
@@ -84,9 +84,9 @@ export class ArrowNavigation {
         keyCodes: [KeyCodes.RIGHT],
       },
 
-      /** Go to the out location. */
-      out: {
-        name: Constants.SHORTCUT_NAMES.OUT,
+      /** Go to the next location to the left. */
+      left: {
+        name: Constants.SHORTCUT_NAMES.LEFT,
         preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
         callback: (workspace, _, shortcut) => {
           const toolbox = workspace.getToolbox() as Toolbox;
@@ -113,9 +113,9 @@ export class ArrowNavigation {
         keyCodes: [KeyCodes.LEFT],
       },
 
-      /** Go to the next location. */
-      next: {
-        name: Constants.SHORTCUT_NAMES.NEXT,
+      /** Go down to the next location. */
+      down: {
+        name: Constants.SHORTCUT_NAMES.DOWN,
         preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
         callback: (workspace, _, shortcut) => {
           const toolbox = workspace.getToolbox() as Toolbox;
@@ -146,9 +146,9 @@ export class ArrowNavigation {
         },
         keyCodes: [KeyCodes.DOWN],
       },
-      /** Go to the previous location. */
-      previous: {
-        name: Constants.SHORTCUT_NAMES.PREVIOUS,
+      /** Go up to the previous location. */
+      up: {
+        name: Constants.SHORTCUT_NAMES.UP,
         preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
         callback: (workspace, _, shortcut) => {
           const flyout = workspace.getFlyout();
@@ -190,9 +190,9 @@ export class ArrowNavigation {
    * Removes all the arrow navigation shortcuts.
    */
   uninstall() {
-    ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.IN);
-    ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.OUT);
-    ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.NEXT);
-    ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.PREVIOUS);
+    ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.LEFT);
+    ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.RIGHT);
+    ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.DOWN);
+    ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.UP);
   }
 }
