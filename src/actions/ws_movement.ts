@@ -55,13 +55,21 @@ export class WorkspaceMovement {
       callback: (workspace) => this.moveWSCursor(workspace, 0, -1),
       keyCodes: [createSerializedKey(KeyCodes.W, [KeyCodes.SHIFT])],
     },
-    
+
     /** Move the cursor on the workspace down. */
     {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_DOWN,
       preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
       callback: (workspace) => this.moveWSCursor(workspace, 0, 1),
       keyCodes: [createSerializedKey(KeyCodes.S, [KeyCodes.SHIFT])],
+    },
+
+    /** Move the cursor to the workspace. */
+    {
+      name: Constants.SHORTCUT_NAMES.CREATE_WS_CURSOR,
+      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
+      callback: (workspace) => this.createWSCursor(workspace),
+      keyCodes: [KeyCodes.W],
     },
   ];
 
@@ -112,6 +120,24 @@ export class WorkspaceMovement {
         new BlocklyUtils.Coordinate(newX, newY),
       )!,
     );
+    return true;
+  }
+
+  /**
+   * Moves the cursor to the workspace near the origin.
+   *
+   * @param workspace The workspace the cursor is on.
+   */
+  createWSCursor(workspace: WorkspaceSvg) {
+    const workspaceNode = ASTNode.createWorkspaceNode(
+      workspace,
+      new BlocklyUtils.Coordinate(10, 10),
+    );
+    const cursor = workspace.getCursor();
+
+    if (!cursor || !workspaceNode) return false;
+
+    cursor.setCurNode(workspaceNode);
     return true;
   }
 }
