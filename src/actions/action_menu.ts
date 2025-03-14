@@ -15,7 +15,7 @@ import {
   WidgetDiv,
 } from 'blockly';
 import * as Constants from '../constants';
-import type {BlockSvg, WorkspaceSvg} from 'blockly';
+import type {BlockSvg, RenderedConnection, WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
@@ -226,7 +226,9 @@ export class ActionMenu {
       case ASTNode.types.NEXT:
       case ASTNode.types.PREVIOUS:
       case ASTNode.types.INPUT:
-        return this.fakeEventForConnectionNode(node);
+        return this.fakeEventForConnectionNode(
+          node.getLocation() as RenderedConnection,
+        );
       default:
         throw new TypeError('unhandled node type');
     }
@@ -269,24 +271,17 @@ export class ActionMenu {
 
   /**
    * Create a fake PointerEvent for opening the action menu for the
-   * given ASTNode of type NEXT, PREVIOUS or INPUT.
+   * given connection.
    *
    * For now this just puts the action menu in the same place as the
    * context menu for the source block.
    *
-   * @param node The node to open the action menu for.
+   * @param connection The node to open the action menu for.
    * @returns A synthetic pointerdown PointerEvent.
    */
-  private fakeEventForConnectionNode(node: ASTNode): PointerEvent {
-    if (
-      node.getType() !== ASTNode.types.NEXT &&
-      node.getType() !== ASTNode.types.PREVIOUS &&
-      node.getType() !== ASTNode.types.INPUT
-    ) {
-      throw new TypeError('can only create PointerEvents for connection nodes');
-    }
-
-    const connection = node.getLocation() as Connection;
+  private fakeEventForConnectionNode(
+    connection: RenderedConnection,
+  ): PointerEvent {
     const block = connection.getSourceBlock() as BlockSvg;
     const workspace = block.workspace as WorkspaceSvg;
 
