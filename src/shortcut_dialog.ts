@@ -20,7 +20,7 @@ export class ShortcutDialog {
   open: boolean;
   closeButton: HTMLElement | null;
   /**
-   * Constructor for an Announcer.
+   * Constructor for a dialog that displays available keyboard shortcuts.
    */
   constructor() {
     // For testing purposes, this assumes that the page has a
@@ -157,6 +157,31 @@ export class ShortcutDialog {
         });
       }
     }
+  }
+
+  /**
+   * Registers an action to list shortcuts with the shortcut registry.
+   */
+  install() {
+    /** List all of the currently registered shortcuts. */
+    const announceShortcut: ShortcutRegistry.KeyboardShortcut = {
+      name: Constants.SHORTCUT_NAMES.LIST_SHORTCUTS,
+      callback: () => {
+        this.toggle();
+        return true;
+      },
+      keyCodes: [Blockly.utils.KeyCodes.SLASH],
+    };
+    ShortcutRegistry.registry.register(announceShortcut);
+  }
+
+  /**
+   * Unregisters the action to list shortcuts.
+   */
+  uninstall() {
+    ShortcutRegistry.registry.unregister(
+      Constants.SHORTCUT_NAMES.LIST_SHORTCUTS,
+    );
   }
 }
 

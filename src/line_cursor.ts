@@ -294,134 +294,6 @@ export class LineCursor extends Marker {
   }
 
   /**
-   * Moves the cursor to the next sibling that is at the same level
-   * of nesting.
-   *
-   * @returns The next sibling node, or null if the current node
-   *     is not set or there is no next sibling node.
-   */
-  nextSibling(): ASTNode | null {
-    const curNode = this.getCurNode();
-    if (!curNode) {
-      return null;
-    }
-    let newNode = null;
-    switch (curNode.getType()) {
-      case ASTNode.types.STACK: {
-        // TODO: Make navigateBetweenStacks public
-        newNode = (curNode as any).navigateBetweenStacks(true);
-        break;
-      }
-      case ASTNode.types.WORKSPACE: {
-        break;
-      }
-      default: {
-        const block = curNode.getSourceBlock();
-        const nextBlock = block?.getNextBlock();
-        if (nextBlock) {
-          newNode = ASTNode.createBlockNode(nextBlock);
-        }
-        break;
-      }
-    }
-
-    if (newNode) {
-      this.setCurNode(newNode);
-    }
-    return newNode;
-  }
-
-  /**
-   * Moves the cursor to the previous sibling that is at the same level
-   * of nesting.
-   *
-   * @returns The previous sibling node, or null if the current node
-   *     is not set or there is no previous sibling node.
-   */
-  previousSibling(): ASTNode | null {
-    const curNode = this.getCurNode();
-    if (!curNode) {
-      return null;
-    }
-    let newNode = null;
-    switch (curNode.getType()) {
-      case ASTNode.types.STACK: {
-        // TODO: Make navigateBetweenStacks public.
-        newNode = (curNode as any).navigateBetweenStacks(false);
-        break;
-      }
-      case ASTNode.types.WORKSPACE: {
-        break;
-      }
-      default: {
-        const block = curNode.getSourceBlock();
-        // TODO: Decide what this should do if the source block is
-        // the first block inside a statement input.
-        // TODO: Decide what this should do if the source block
-        // has an output instead of a previous.
-        const prevBlock = block?.getPreviousBlock();
-        if (prevBlock) {
-          newNode = ASTNode.createBlockNode(prevBlock);
-        }
-        break;
-      }
-    }
-
-    if (newNode) {
-      this.setCurNode(newNode);
-    }
-    return newNode;
-  }
-
-  /**
-   * Moves the cursor out by one level of nesting.
-   *
-   * @returns The new node the cursor points to, or null if
-   * one could not be found.
-   */
-  contextOut(): ASTNode | null {
-    const curNode = this.getCurNode();
-    if (!curNode) {
-      return null;
-    }
-
-    // Returns null at the workspace level.
-    // TODO: Decide where the cursor goes from the workspace level.
-    const newNode = curNode.out();
-    if (newNode) {
-      this.setCurNode(newNode);
-    }
-    return newNode;
-  }
-
-  /**
-   * Moves the cursor in by one level of nesting.
-   *
-   * @returns The new node the cursor points to, or null if
-   * one could not be found.
-   */
-  contextIn(): ASTNode | null {
-    let curNode: ASTNode | null = this.getCurNode();
-    if (!curNode) {
-      return null;
-    }
-    // If we are on a previous or output connection, go to the block level
-    // before performing next operation.
-    if (
-      curNode.getType() === ASTNode.types.PREVIOUS ||
-      curNode.getType() === ASTNode.types.OUTPUT
-    ) {
-      curNode = curNode.next();
-    }
-    const newNode = curNode?.in() ?? null;
-
-    if (newNode) {
-      this.setCurNode(newNode);
-    }
-    return newNode;
-  }
-
-  /**
    * Uses pre order traversal to navigate the Blockly AST. This will allow
    * a user to easily navigate the entire Blockly AST without having to go in
    * and out levels on the tree.
@@ -665,6 +537,22 @@ export class LineCursor extends Marker {
         block.getBoundingRectangleWithoutChildren(),
         block.workspace,
       );
+    }
+  }
+
+  override hide(): void {
+    super.hide();
+
+    // If there's a block currently selected, remove the selection since the
+    // cursor should now be hidden.
+    const curNode = this.getCurNode();
+    if (curNode && curNode.getType() === ASTNode.types.BLOCK) {
+      const block = curNode.getLocation() as Blockly.BlockSvg;
+      if (!block.isShadow()) {
+        Blockly.common.setSelected(null);
+      } else {
+        block.removeSelect();
+      }
     }
   }
 

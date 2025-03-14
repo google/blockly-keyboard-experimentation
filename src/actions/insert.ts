@@ -14,15 +14,9 @@ import {
 import * as Constants from '../constants';
 import type {BlockSvg, WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
+import {Scope} from './action_menu';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
-
-interface Scope {
-  block?: BlockSvg;
-  workspace?: WorkspaceSvg;
-  comment?: comments.RenderedWorkspaceComment;
-  connection?: Connection;
-}
 
 /**
  * Action to insert a block into the workspace.
