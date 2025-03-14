@@ -49,6 +49,9 @@ export class LineCursor extends Marker {
   /** Locations to try moving the cursor to after a deletion. */
   private potentialNodes: Blockly.ASTNode[] | null = null;
 
+  /** Whether the renderer is zelos-style. */
+  private isZelos: boolean = false;
+
   /**
    * @param workspace The workspace this cursor belongs to.
    */
@@ -61,6 +64,8 @@ export class LineCursor extends Marker {
     this.selectListener = this.selectListener.bind(this);
     // Regularise options and apply defaults.
     this.options = {...defaultOptions, ...options};
+
+    this.isZelos = workspace.getRenderer() instanceof Blockly.zelos.Renderer;
   }
 
   /**
@@ -606,15 +611,16 @@ export class LineCursor extends Marker {
       }
     }
 
-    if (this.isValueInputConnection(oldNode)) {
+    if (this.isZelos && this.isValueInputConnection(oldNode)) {
       this.hideAtInput(oldNode);
     }
 
     const curNodeType = curNode?.getType();
-    const isValueInputConnection = this.isValueInputConnection(curNode);
+    const isZelosInputConnection =
+      this.isZelos && this.isValueInputConnection(curNode);
 
     // If drawing can't be handled locally, just use the drawer.
-    if (curNodeType !== ASTNode.types.BLOCK && !isValueInputConnection) {
+    if (curNodeType !== ASTNode.types.BLOCK && !isZelosInputConnection) {
       this.getDrawer()?.draw(oldNode, curNode);
       return;
     }
@@ -622,7 +628,7 @@ export class LineCursor extends Marker {
     // Hide any visible marker SVG and instead do some manual rendering.
     super.hide(); // Calls this.drawer?.hide().
 
-    if (this.isValueInputConnection(curNode)) {
+    if (isZelosInputConnection) {
       this.showAtInput(curNode);
     } else if (curNodeType === ASTNode.types.BLOCK) {
       const block = curNode.getLocation() as Blockly.BlockSvg;
