@@ -23,12 +23,13 @@ import {
 } from 'blockly/core';
 
 import * as Constants from './constants';
-import {Navigation} from './navigation';
-import {LineCursor} from './line_cursor';
-import {ShortcutDialog} from './shortcut_dialog';
-import {DeleteAction} from './actions/delete';
-import {InsertAction} from './actions/insert';
 import {Clipboard} from './actions/clipboard';
+import {DeleteAction} from './actions/delete';
+import {EditAction} from './actions/edit';
+import {InsertAction} from './actions/insert';
+import {LineCursor} from './line_cursor';
+import {Navigation} from './navigation';
+import {ShortcutDialog} from './shortcut_dialog';
 import {WorkspaceMovement} from './actions/ws_movement';
 import {ArrowNavigation} from './actions/arrow_navigation';
 import {ExitAction} from './actions/exit';
@@ -63,6 +64,9 @@ export class NavigationController {
     this.navigation,
     this.canCurrentlyEdit.bind(this),
   );
+
+  /** Context menu and keyboard action for deletion. */
+  editAction: EditAction = new EditAction(this.canCurrentlyEdit.bind(this));
 
   /** Context menu and keyboard action for insertion. */
   insertAction: InsertAction = new InsertAction(
@@ -351,6 +355,7 @@ export class NavigationController {
       ShortcutRegistry.registry.register(shortcut);
     }
     this.deleteAction.install();
+    this.editAction.install();
     this.insertAction.install();
     this.workspaceMovement.install();
     this.arrowNavigation.install();
@@ -377,6 +382,7 @@ export class NavigationController {
     }
 
     this.deleteAction.uninstall();
+    this.editAction.uninstall();
     this.insertAction.uninstall();
     this.disconnectAction.uninstall();
     this.clipboard.uninstall();

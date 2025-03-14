@@ -30,7 +30,7 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
  * menu; changing individual weights relative to base weight can change
  * the order within the clipboard group.
  */
-const BASE_WEIGHT = 11;
+const BASE_WEIGHT = 12;
 
 /**
  * Logic and state for cut/copy/paste actions as both keyboard shortcuts

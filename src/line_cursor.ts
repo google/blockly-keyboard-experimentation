@@ -176,6 +176,22 @@ export class LineCursor extends Marker {
   }
 
   /**
+   * Returns true iff the node to which we would navigate if in() were
+   * called, which will be a validInLineNode, is also a validLineNode
+   * - in effect, if the LineCursor is at the end of the 'current
+   * line' of the program.
+   */
+  public atEndOfLine(): boolean {
+    const curNode = this.getCurNode();
+    if (!curNode) return false;
+    const rightNode = this.getNextNode(
+      curNode,
+      this.validInLineNode.bind(this),
+    );
+    return this.validLineNode(rightNode);
+  }
+
+  /**
    * Returns true iff the given node represents the "beginning of a
    * new line of code" (and thus can be visited by pressing the
    * up/down arrow keys).  Specifically, if the node is for:
