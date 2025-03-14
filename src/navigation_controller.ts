@@ -23,7 +23,6 @@ import {
 } from 'blockly/core';
 
 import * as Constants from './constants';
-import {Announcer} from './announcer';
 import {Clipboard} from './actions/clipboard';
 import {DeleteAction} from './actions/delete';
 import {EditAction} from './actions/edit';
