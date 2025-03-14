@@ -624,9 +624,7 @@ export class LineCursor extends Marker {
 
     if (this.isValueInputConnection(curNode)) {
       this.showAtInput(curNode);
-    }
-
-    if (curNodeType == ASTNode.types.BLOCK) {
+    } else if (curNodeType === ASTNode.types.BLOCK) {
       const block = curNode.getLocation() as Blockly.BlockSvg;
       if (!block.isShadow()) {
         Blockly.common.setSelected(block);
@@ -647,12 +645,9 @@ export class LineCursor extends Marker {
    * @returns True if the node represents a value input connection.
    */
   private isValueInputConnection(node: ASTNode) {
-    if (!node) return false;
-    if (node.getType() != ASTNode.types.INPUT) {
-      return false;
-    }
+    if (node?.getType() !== ASTNode.types.INPUT) return false;
     const connection = node.getLocation() as Blockly.Connection;
-    return connection.type == Blockly.ConnectionType.INPUT_VALUE;
+    return connection.type === Blockly.ConnectionType.INPUT_VALUE;
   }
 
   /**
