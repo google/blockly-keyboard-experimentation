@@ -4,7 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ASTNode, ShortcutRegistry, utils as BlocklyUtils} from 'blockly/core';
+import {
+  ASTNode,
+  ShortcutRegistry,
+  utils as BlocklyUtils,
+  dialog,
+} from 'blockly/core';
 
 import type {
   Block,
@@ -101,7 +106,7 @@ export class EnterAction {
           curNode.in()?.getSourceBlock() === block
             ? canMoveInHint
             : genericHint;
-        alert(hint);
+        dialog.alert(hint);
       }
     } else if (curNode.isConnection() || nodeType === ASTNode.types.WORKSPACE) {
       this.navigation.openToolboxOrFlyout(workspace);
