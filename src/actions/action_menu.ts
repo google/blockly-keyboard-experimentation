@@ -140,34 +140,7 @@ export class ActionMenu {
         // Slightly hacky: get insert action from registry.  Hacky
         // because registry typings don't include {connection: ...} as
         // a possible kind of scope.
-        const insertAction = ContextMenuRegistry.registry.getItem('insert');
-        if (!insertAction) throw new Error("can't find insert action");
-
-        const pasteAction = ContextMenuRegistry.registry.getItem(
-          'blockPasteFromContextMenu',
-        );
-        if (!pasteAction) throw new Error("can't find paste action");
-        const possibleOptions = [insertAction, pasteAction /* etc.*/];
-
-        // Check preconditions and get menu texts.
-        const scope = {
-          connection,
-        } as unknown as ContextMenuRegistry.Scope;
-        for (const option of possibleOptions) {
-          const precondition = option.preconditionFn(scope);
-          if (precondition === 'hidden') continue;
-          const displayText =
-            typeof option.displayText === 'function'
-              ? option.displayText(scope)
-              : option.displayText;
-          menuOptions.push({
-            text: displayText,
-            enabled: precondition === 'enabled',
-            callback: option.callback,
-            scope,
-            weight: option.weight,
-          });
-        }
+        this.addConnectionItems(connection, menuOptions);
         break;
 
       default:
@@ -196,6 +169,50 @@ export class ActionMenu {
   }
 
   /**
+   * Add menu items for a context menu on a connection scope.
+   *
+   * @param connection The connection on which the menu is shown.
+   * @param menuOptions The list of options, which may be modified by this method.
+   */
+  private addConnectionItems(
+    connection: Connection,
+    menuOptions: (
+      | ContextMenuRegistry.ContextMenuOption
+      | ContextMenuRegistry.LegacyContextMenuOption
+    )[],
+  ) {
+    const insertAction = ContextMenuRegistry.registry.getItem('insert');
+    if (!insertAction) throw new Error("can't find insert action");
+
+    const pasteAction = ContextMenuRegistry.registry.getItem(
+      'blockPasteFromContextMenu',
+    );
+    if (!pasteAction) throw new Error("can't find paste action");
+    const possibleOptions = [insertAction, pasteAction /* etc.*/];
+
+    // Check preconditions and get menu texts.
+    const scope = {
+      connection,
+    } as unknown as ContextMenuRegistry.Scope;
+    for (const option of possibleOptions) {
+      const precondition = option.preconditionFn(scope);
+      if (precondition === 'hidden') continue;
+      const displayText =
+        typeof option.displayText === 'function'
+          ? option.displayText(scope)
+          : option.displayText;
+      menuOptions.push({
+        text: displayText,
+        enabled: precondition === 'enabled',
+        callback: option.callback,
+        scope,
+        weight: option.weight,
+      });
+    }
+    return menuOptions;
+  }
+
+  /**
    * Create a fake PointerEvent for opening the action menu for the
    * given ASTNode.
    *
@@ -205,7 +222,7 @@ export class ActionMenu {
   private fakeEventForNode(node: ASTNode): PointerEvent {
     switch (node.getType()) {
       case ASTNode.types.BLOCK:
-        return this.fakeEventForBlockNode(node);
+        return this.fakeEventForBlock(node.getLocation() as BlockSvg);
       case ASTNode.types.NEXT:
       case ASTNode.types.PREVIOUS:
       case ASTNode.types.INPUT:
@@ -216,20 +233,15 @@ export class ActionMenu {
   }
 
   /**
-   * Create a fake PointerEvent for opening the action menu for the
-   * given ASTNode of type BLOCK.
+   * Create a fake PointerEvent for opening the action menu on the specified
+   * block.
    *
-   * @param node The node to open the action menu for.
+   * @param block The block to open the action menu for.
    * @returns A synthetic pointerdown PointerEvent.
    */
-  private fakeEventForBlockNode(node: ASTNode): PointerEvent {
-    if (node.getType() !== ASTNode.types.BLOCK) {
-      throw new TypeError('can only create PointerEvents for BLOCK nodes');
-    }
-
+  private fakeEventForBlock(block: BlockSvg) {
     // Get the location of the top-left corner of the block in
     // screen coordinates.
-    const block = node.getLocation() as BlockSvg;
     const blockCoords = BlocklyUtils.svgMath.wsToScreenCoordinates(
       block.workspace,
       block.getRelativeToSurfaceXY(),
@@ -275,13 +287,12 @@ export class ActionMenu {
     }
 
     const connection = node.getLocation() as Connection;
-    const block = connection.getSourceBlock();
+    const block = connection.getSourceBlock() as BlockSvg;
     const workspace = block.workspace as WorkspaceSvg;
 
     if (typeof connection.x !== 'number') {
       // No coordinates for connection?  Fall back to the parent block.
-      const blockNode = new ASTNode(ASTNode.types.BLOCK, block);
-      return this.fakeEventForBlockNode(blockNode);
+      return this.fakeEventForBlock(block);
     }
     const connectionWSCoords = new BlocklyUtils.Coordinate(
       connection.x,
