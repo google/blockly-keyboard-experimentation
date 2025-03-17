@@ -80,8 +80,18 @@
         margin-top: 10px;
       }
 
-      #scenarioForm {
-        padding-top: 7px;
+      #options {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 1rem;
+      }
+      #options select,
+      #options label {
+        flex: 0 1 50%;
+      }
+      #options > * {
+        display: flex;
       }
 
       thead {
@@ -107,8 +117,8 @@
         <button id="run">Run Code!</button>
         <div id="output">
           <div id="p5output"></div>
-          <div id="scenarioForm">
-            <form id="options">
+          <form id="options">
+            <div>
               <label for="scenario">Scenario:</label>
               <select
                 name="scenario"
@@ -118,7 +128,18 @@
                 <option value="sun">sun</option>
                 <option value="blank">blank canvas</option>
               </select>
-              <br />
+            </div>
+            <div>
+              <label for="toolbox">Toolbox:</label>
+              <select
+                name="toolbox"
+                id="toolbox"
+                onchange="document.forms.options.submit()">
+                <option value="toolbox">toolbox</option>
+                <option value="flyout">flyout</option>
+              </select>
+            </div>
+            <div>
               <label for="renderer">Renderer:</label>
               <select
                 name="renderer"
@@ -128,15 +149,16 @@
                 <option value="thrasos">Thrasos</option>
                 <option value="zelos">Zelos</option>
               </select>
-              <br />
+            </div>
+            <div>
               <label for="stackConnections">Disable stack connections:</label>
               <input
                 type="checkbox"
                 name="noStack"
                 id="noStack"
                 onChange="document.forms.options.submit()" />
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
       </div>
       <div id="blocklyDiv"></div>
