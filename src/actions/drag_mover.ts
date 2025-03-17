@@ -257,20 +257,26 @@ export class DragMover extends Mover {
     //   // down
     // up
     while (potential && !candidateConnection) {
-      if (delta.x == 0 && delta.y == -1) {
+      if ((delta.x == 0 && delta.y == -1) || (delta.x == -1 && delta.y == 0)) {
         // @ts-expect-error accessing protected and private properties.
         potential = cursor!.getPreviousNode(potential, (node) => {
           console.log('check if valid');
           // @ts-expect-error isConnectionType is private.
           return node && ASTNode.isConnectionType(node.getType());
         });
-      } else if (delta.x == 0 && delta.y == 1) {
+      } else if (
+        (delta.x == 0 && delta.y == 1) ||
+        (delta.x == 1 && delta.y == 0)
+      ) {
         // @ts-expect-error accessing protected and private properties.
         potential = cursor!.getNextNode(potential, (node) => {
           console.log('check if valid');
           // @ts-expect-error isConnectionType is private.
           return node && ASTNode.isConnectionType(node.getType());
         });
+      } else {
+        console.log('how did we get here');
+        return null;
       }
       console.log('potential is now ' + potential?.getType());
 
