@@ -75,28 +75,28 @@ export class Mover {
     {
       name: 'Move left, constrained',
       preconditionFn: (workspace) => this.isMoving(workspace),
-      callback: (workspace) => this.moveConstrained(workspace /* , ...*/),
+      callback: (workspace) => this.moveConstrained(workspace, -1, 0),
       keyCodes: [KeyCodes.LEFT],
       allowCollision: true,
     },
     {
       name: 'Move right unconstraind',
       preconditionFn: (workspace) => this.isMoving(workspace),
-      callback: (workspace) => this.moveConstrained(workspace /* , ... */),
+      callback: (workspace) => this.moveConstrained(workspace, 1, 0),
       keyCodes: [KeyCodes.RIGHT],
       allowCollision: true,
     },
     {
       name: 'Move up, constrained',
       preconditionFn: (workspace) => this.isMoving(workspace),
-      callback: (workspace) => this.moveConstrained(workspace /* , ... */),
+      callback: (workspace) => this.moveConstrained(workspace, 0, -1),
       keyCodes: [KeyCodes.UP],
       allowCollision: true,
     },
     {
       name: 'Move down constrained',
       preconditionFn: (workspace) => this.isMoving(workspace),
-      callback: (workspace) => this.moveConstrained(workspace /* , ... */),
+      callback: (workspace) => this.moveConstrained(workspace, 0, 1),
       keyCodes: [KeyCodes.DOWN],
       allowCollision: true,
     },
@@ -291,12 +291,15 @@ export class Mover {
    * constrained to valid attachment points (if any).
    *
    * @param workspace The workspace to move on.
+   * @param xDirection -1 to move left. 1 to move right.
+   * @param yDirection -1 to move up. 1 to move down.
    * @returns True iff this action applies and has been performed.
    */
   moveConstrained(
     workspace: WorkspaceSvg,
-    /* ... */
-  ) {
+    xDirection: number,
+    yDirection: number,
+  ): boolean {
     console.log('moveConstrained');
     // Not yet implemented.  Absorb keystroke to avoid moving cursor.
     return true;
