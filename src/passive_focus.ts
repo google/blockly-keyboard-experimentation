@@ -50,16 +50,16 @@ export class PassiveFocus {
     // If old node was a block, unselect it or remove fake selection.
     if (type === ASTNode.types.BLOCK) {
       this.hideAtBlock(this.curNode);
-      return;
     } else if (this.curNode.isConnection()) {
       const curNodeAsConnection = location as RenderedConnection;
       const connectionType = curNodeAsConnection.type;
       if (connectionType === ConnectionType.NEXT_STATEMENT) {
         this.hideAtNext(this.curNode);
-        return;
       }
+    } else {
+      console.log('Could not hide passive focus indicator');
     }
-    console.log('Could not hide passive focus indicator');
+    this.curNode = null;
   }
 
   /**
@@ -160,5 +160,9 @@ export class PassiveFocus {
       this.nextConnectionIndicator,
     );
     this.nextConnectionIndicator.style.display = 'none';
+  }
+
+  isVisible(): boolean {
+    return !!this.curNode;
   }
 }

@@ -144,7 +144,6 @@ export class EnterAction {
 
     this.navigation.focusWorkspace(workspace);
     workspace.getCursor()!.setCurNode(ASTNode.createBlockNode(newBlock)!);
-    this.navigation.removeMark(workspace);
   }
 
   /**

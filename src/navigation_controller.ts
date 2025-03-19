@@ -15,7 +15,6 @@ import './toolbox_monkey_patch';
 
 import * as Blockly from 'blockly/core';
 import {
-  ASTNode,
   ShortcutRegistry,
   Toolbox,
   utils as BlocklyUtils,
@@ -27,7 +26,6 @@ import {Clipboard} from './actions/clipboard';
 import {DeleteAction} from './actions/delete';
 import {EditAction} from './actions/edit';
 import {InsertAction} from './actions/insert';
-import {LineCursor} from './line_cursor';
 import {Navigation} from './navigation';
 import {ShortcutDialog} from './shortcut_dialog';
 import {WorkspaceMovement} from './actions/ws_movement';
@@ -38,25 +36,13 @@ import {DisconnectAction} from './actions/disconnect';
 import {ActionMenu} from './actions/action_menu';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
-const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
-  ShortcutRegistry.registry,
-);
-
-/** Represents the current focus mode of the navigation controller. */
-enum NAVIGATION_FOCUS_MODE {
-  /** Indicates that no interactive elements of Blockly currently have focus. */
-  NONE = 'none',
-  /** Indicates that the toolbox currently has focus. */
-  TOOLBOX = 'toolbox',
-  /** Indicates that the main workspace currently has focus. */
-  WORKSPACE = 'workspace',
-}
 
 /**
  * Class for registering shortcuts for keyboard navigation.
  */
 export class NavigationController {
-  navigation: Navigation = new Navigation();
+  private navigation: Navigation = new Navigation();
+
   shortcutDialog: ShortcutDialog = new ShortcutDialog();
 
   /** Context menu and keyboard action for deletion. */
@@ -109,8 +95,6 @@ export class NavigationController {
     this.navigation,
     this.canCurrentlyNavigate.bind(this),
   );
-
-  navigationFocus: NAVIGATION_FOCUS_MODE = NAVIGATION_FOCUS_MODE.NONE;
 
   /**
    * Original Toolbox.prototype.onShortcut method, saved by
@@ -200,46 +184,40 @@ export class NavigationController {
     this.navigation.removeWorkspace(workspace);
   }
 
-  /**
-   * Sets whether the navigation controller has toolbox focus and will enable
-   * keyboard navigation in the toolbox.
-   *
-   * If the workspace doesn't have a toolbox, this function is a no-op.
-   *
-   * @param workspace the workspace that now has toolbox input focus.
-   * @param isFocused whether the environment has browser focus.
-   */
-  updateToolboxFocus(workspace: WorkspaceSvg, isFocused: boolean) {
-    if (!workspace.getToolbox()) return;
-    if (isFocused) {
-      this.navigation.focusToolbox(workspace);
-      this.navigationFocus = NAVIGATION_FOCUS_MODE.TOOLBOX;
-    } else {
-      this.navigation.blurToolbox(workspace);
-      this.navigationFocus = NAVIGATION_FOCUS_MODE.NONE;
-    }
+  focusWorkspace(workspace: WorkspaceSvg) {
+    this.navigation.focusWorkspace(workspace);
   }
 
-  /**
-   * Sets whether the navigation controller has workspace focus. This will
-   * enable keyboard navigation within the workspace. Additionally, the cursor
-   * may be reset if it hasn't already been positioned in the workspace.
-   *
-   * @param workspace the workspace that now has workspace input focus.
-   * @param isFocused whether the environment has browser focus.
-   */
-  updateWorkspaceFocus(workspace: WorkspaceSvg, isFocused: boolean) {
-    if (isFocused) {
-      this.navigation.focusWorkspace(workspace, true);
-      this.navigationFocus = NAVIGATION_FOCUS_MODE.WORKSPACE;
-    } else {
-      this.navigationFocus = NAVIGATION_FOCUS_MODE.NONE;
+  handleFocusWorkspace(workspace: Blockly.WorkspaceSvg) {
+    this.navigation.handleFocusWorkspace(workspace);
+  }
 
-      // Hide cursor to indicate lost focus. Also, mark the current node so that
-      // it can be properly restored upon returning to the workspace.
-      this.navigation.markAtCursor(workspace);
-      workspace.getCursor()?.hide();
-    }
+  handleBlurWorkspace(workspace: Blockly.WorkspaceSvg) {
+    this.navigation.handleBlurWorkspace(workspace);
+  }
+
+  focusToolbox(workspace: Blockly.WorkspaceSvg) {
+    this.navigation.focusToolbox(workspace);
+  }
+
+  handleFocusToolbox(workspace: Blockly.WorkspaceSvg) {
+    this.navigation.handleFocusToolbox(workspace);
+  }
+
+  handleBlurToolbox(workspace: Blockly.WorkspaceSvg, closeFlyout: boolean) {
+    this.navigation.handleBlurToolbox(workspace, closeFlyout);
+  }
+
+  focusFlyout(workspace: Blockly.WorkspaceSvg) {
+    this.navigation.focusFlyout(workspace);
+  }
+
+  handleFocusFlyout(workspace: Blockly.WorkspaceSvg) {
+    this.navigation.handleFocusFlyout(workspace);
+  }
+
+  handleBlurFlyout(workspace: Blockly.WorkspaceSvg, closeFlyout: boolean) {
+    this.navigation.handleBlurFlyout(workspace, closeFlyout);
   }
 
   /**
@@ -255,22 +233,8 @@ export class NavigationController {
    */
   private canCurrentlyNavigate(workspace: WorkspaceSvg) {
     return (
-      this.canCurrentlyNavigateInToolbox(workspace) ||
-      this.canCurrentlyNavigateInWorkspace(workspace)
-    );
-  }
-
-  private canCurrentlyNavigateInToolbox(workspace: WorkspaceSvg) {
-    return (
       workspace.keyboardAccessibilityMode &&
-      this.navigationFocus == NAVIGATION_FOCUS_MODE.TOOLBOX
-    );
-  }
-
-  private canCurrentlyNavigateInWorkspace(workspace: WorkspaceSvg) {
-    return (
-      workspace.keyboardAccessibilityMode &&
-      this.navigationFocus == NAVIGATION_FOCUS_MODE.WORKSPACE
+      this.navigation.getState(workspace) !== Constants.STATE.NOWHERE
     );
   }
 

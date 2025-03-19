@@ -275,10 +275,13 @@ export class Clipboard {
       ?.getCursor()
       ?.getCurNode()
       .getSourceBlock() as BlockSvg;
-    workspace.hideChaff();
     this.copyData = sourceBlock.toCopyData();
     this.copyWorkspace = sourceBlock.workspace;
-    return !!this.copyData;
+    const copied = !!this.copyData;
+    if (copied && navigationState === Constants.STATE.FLYOUT) {
+      this.navigation.focusWorkspace(workspace);
+    }
+    return copied;
   }
 
   /**
@@ -373,7 +376,6 @@ export class Clipboard {
           ASTNode.createBlockNode(block)!,
         );
       }
-      this.navigation.removeMark(pasteWorkspace);
       Events.setGroup(false);
       return true;
     }

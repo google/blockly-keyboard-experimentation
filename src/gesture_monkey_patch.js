@@ -5,55 +5,27 @@
  */
 
 /**
- * @fileoverview Overrides methods on Blockly.Gesture in order to allow users
- * to move the cursor to blocks or the workspace using shift click.
- * TODO(google/blockly#4584): We do not have a way to do this currently without
- * monkey patching Blockly.
+ * @fileoverview Overrides methods on Blockly.Gesture to integrate focus mangagement
+ * with the gesture handling.
  * @author aschmiedt@google.com (Abby Schmiedt)
  */
 
 import * as Blockly from 'blockly/core';
 
-const oldDoWorkspaceClick = Blockly.Gesture.prototype.doWorkspaceClick_;
+const oldDispose = Blockly.Gesture.prototype.dispose;
 
 /**
- * Execute a workspace click. When in accessibility mode shift clicking will
- * move the cursor.
- * @param {!Event} e A mouse up or touch end event.
+ * Intercept the end of a gesture and ensure the workspace is focused.
+ * See also the listener is index.ts that subverts the markFocused call
+ * in `doStart`.
  * @this {Blockly.Gesture}
  * @override
  */
-Blockly.Gesture.prototype.doWorkspaceClick_ = function (e) {
-  oldDoWorkspaceClick.call(this, e);
-  const ws = this.creatorWorkspace_;
-  if (e.shiftKey && ws.keyboardAccessibilityMode) {
-    const screenCoord = new Blockly.utils.Coordinate(e.clientX, e.clientY);
-    const wsCoord = Blockly.utils.svgMath.screenToWsCoordinates(
-      ws,
-      screenCoord,
-    );
-    const wsNode = Blockly.ASTNode.createWorkspaceNode(ws, wsCoord);
-    ws.getCursor().setCurNode(wsNode);
+Blockly.Gesture.prototype.dispose = function () {
+  // This is a bit of a cludge and focus management needs to be better
+  // integrated with Gesture. The intent is to move focus at the end of a drag.
+  if (this.isDragging()) {
+    this.creatorWorkspace?.getSvgGroup().focus();
   }
-};
-
-const oldDoBlockClick = Blockly.Gesture.prototype.doBlockClick_;
-
-/**
- * Execute a block click. When in accessibility mode shift clicking will move
- * the cursor to the block.
- * @this {Blockly.Gesture}
- * @override
- */
-Blockly.Gesture.prototype.doBlockClick_ = function (e) {
-  oldDoBlockClick.call(this, e);
-  if (
-    !this.targetBlock_.isInFlyout &&
-    this.mostRecentEvent_.shiftKey &&
-    this.targetBlock_.workspace.keyboardAccessibilityMode
-  ) {
-    this.creatorWorkspace_
-      .getCursor()
-      .setCurNode(Blockly.ASTNode.createTopNode(this.targetBlock_));
-  }
+  oldDispose.call(this);
 };
