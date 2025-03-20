@@ -492,11 +492,15 @@ export class LineCursor extends Marker {
         !(newNode.getLocation() as Blockly.BlockSvg).isShadow()
       ) {
         if (Blockly.common.getSelected() !== newNode.getLocation()) {
+          Blockly.Events.disable();
           Blockly.common.setSelected(newNode.getLocation() as Blockly.BlockSvg);
+          Blockly.Events.enable();
         }
       } else {
         if (Blockly.common.getSelected()) {
+          Blockly.Events.disable();
           Blockly.common.setSelected(null);
+          Blockly.Events.enable();
         }
       }
     }
@@ -668,12 +672,7 @@ export class LineCursor extends Marker {
           this.setCurNode(node, true);
         }
       }
-    } else if (
-      this.getCurNode()?.getType() === ASTNode.types.BLOCK &&
-      !(this.getCurNode().getLocation() as Blockly.BlockSvg).isShadow()
-    ) {
-      // This does mean other cursor types remain if you click on the workspace
-      // background. Ideally gesture would be handling this with more context.
+    } else {
       this.setCurNode(null as never, true);
     }
   }
