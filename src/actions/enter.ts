@@ -93,6 +93,7 @@ export class EnterAction {
     const cursor = workspace.getCursor();
     if (!cursor) return;
     const curNode = cursor.getCurNode();
+    if (!curNode) return;
     const nodeType = curNode.getType();
     if (nodeType === ASTNode.types.FIELD) {
       (curNode.getLocation() as Field).showEditor();
