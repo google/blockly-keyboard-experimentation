@@ -364,7 +364,7 @@ export class Clipboard {
       : this.copyWorkspace;
 
     // Do this before clipoard.paste due to cursor/focus workaround in getCurNode.
-    const targetNode = pasteWorkspace.getCursor()?.getCurNode();
+    const targetNode = this.navigation.getStationaryNode(pasteWorkspace);
 
     Events.setGroup(true);
     const block = clipboard.paste(this.copyData, pasteWorkspace) as BlockSvg;
@@ -377,6 +377,7 @@ export class Clipboard {
         );
       }
       Events.setGroup(false);
+      this.navigation.focusWorkspace(workspace);
       return true;
     }
     Events.setGroup(false);
