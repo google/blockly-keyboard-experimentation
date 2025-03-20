@@ -28,7 +28,7 @@ export class KeyboardNavigation {
   private focusListener: (e: Event) => void;
 
   /** Event handler run when the workspace loses focus. */
-  private blurListener: () => void;
+  private blurListener: (e: Event) => void;
 
   /** Event handler run when the toolbox gains focus. */
   private toolboxFocusListener: () => void;
@@ -129,8 +129,14 @@ export class KeyboardNavigation {
         this.navigationController.handleFocusWorkspace(workspace);
       }
     };
-    this.blurListener = () => {
-      this.navigationController.handleBlurWorkspace(workspace);
+    this.blurListener = (e: Event) => {
+      const relatedTarget = (e as FocusEvent).relatedTarget;
+      if (
+        relatedTarget !== this.workspace.getParentSvg() &&
+        relatedTarget !== this.workspace.getSvgGroup()
+      ) {
+        this.navigationController.handleBlurWorkspace(workspace);
+      }
     };
 
     workspace.getSvgGroup().addEventListener('focus', this.focusListener);

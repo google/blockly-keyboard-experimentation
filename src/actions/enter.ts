@@ -125,7 +125,7 @@ export class EnterAction {
    *     the block will be placed on.
    */
   private insertFromFlyout(workspace: WorkspaceSvg) {
-    const stationaryNode = workspace.getCursor()?.getCurNode();
+    const stationaryNode = this.navigation.getStationaryNode(workspace);
     const newBlock = this.createNewBlock(workspace);
     if (!newBlock) return;
     if (stationaryNode) {

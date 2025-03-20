@@ -64,7 +64,9 @@ export class ArrowNavigation {
             case Constants.STATE.WORKSPACE:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled && workspace) {
-                workspace.getCursor()?.in();
+                if (!this.navigation.defaultCursorPositionIfNeeded(workspace)) {
+                  workspace.getCursor()?.in();
+                }
                 isHandled = true;
               }
               return isHandled;
@@ -95,7 +97,9 @@ export class ArrowNavigation {
             case Constants.STATE.WORKSPACE:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled && workspace) {
-                workspace.getCursor()?.out();
+                if (!this.navigation.defaultCursorPositionIfNeeded(workspace)) {
+                  workspace.getCursor()?.out();
+                }
                 isHandled = true;
               }
               return isHandled;
@@ -125,7 +129,9 @@ export class ArrowNavigation {
             case Constants.STATE.WORKSPACE:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled && workspace) {
-                workspace.getCursor()?.next();
+                if (!this.navigation.defaultCursorPositionIfNeeded(workspace)) {
+                  workspace.getCursor()?.next();
+                }
                 isHandled = true;
               }
               return isHandled;
@@ -158,7 +164,14 @@ export class ArrowNavigation {
             case Constants.STATE.WORKSPACE:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled) {
-                workspace.getCursor()?.prev();
+                if (
+                  !this.navigation.defaultCursorPositionIfNeeded(
+                    workspace,
+                    'last',
+                  )
+                ) {
+                  workspace.getCursor()?.prev();
+                }
                 isHandled = true;
               }
               return isHandled;

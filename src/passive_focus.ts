@@ -30,6 +30,15 @@ export class PassiveFocus {
     this.nextConnectionIndicator = this.createNextIndicator();
   }
 
+  /**
+   * Get the current passive focus node.
+   *
+   * @returns the node or null.
+   */
+  getCurNode(): ASTNode | null {
+    return this.curNode;
+  }
+
   /** Dispose of this indicator. Do any necessary cleanup. */
   dispose() {
     this.hide();
@@ -104,7 +113,11 @@ export class PassiveFocus {
    */
   hideAtBlock(node: ASTNode) {
     const block = node.getLocation() as BlockSvg;
-    utils.dom.removeClass(block.pathObject.svgPath, 'passiveBlockFocus');
+    // When a block is selected we can end up with a duplicate svgPath.
+    const svgPaths = block.getSvgRoot().querySelectorAll('.passiveBlockFocus');
+    svgPaths.forEach((svgPath) =>
+      utils.dom.removeClass(svgPath, 'passiveBlockFocus'),
+    );
   }
 
   /**

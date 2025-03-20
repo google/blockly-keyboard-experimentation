@@ -143,6 +143,18 @@ export class Navigation {
   }
 
   /**
+   * Gets the node to use as context for insert operations.
+   *
+   * @param workspace The main workspace.
+   */
+  getStationaryNode(workspace: Blockly.WorkspaceSvg) {
+    return (
+      this.passiveFocusIndicator.getCurNode() ??
+      workspace.getCursor()?.getCurNode()
+    );
+  }
+
+  /**
    * Adds all event listeners and cursors to the flyout that are needed for
    * keyboard navigation to work.
    *
@@ -386,13 +398,19 @@ export class Navigation {
     this.setState(workspace, Constants.STATE.WORKSPACE);
     if (!Blockly.Gesture.inProgress()) {
       workspace.hideChaff();
+      // This will make a selection which would interfere with any gesture.
+      this.defaultCursorPositionIfNeeded(workspace);
     }
-    this.setCursorOnWorkspaceFocus(workspace, true);
 
     const cursor = workspace.getCursor();
     if (cursor) {
+      const passiveFocusNode = this.passiveFocusIndicator.getCurNode();
       this.passiveFocusIndicator.hide();
-      cursor.draw();
+      // If there's a gesture then it will either set the node or be a click
+      // that should not set one.
+      if (!Blockly.Gesture.inProgress() && passiveFocusNode) {
+        cursor.setCurNode(passiveFocusNode);
+      }
     }
   }
 
@@ -405,10 +423,11 @@ export class Navigation {
     this.setState(workspace, Constants.STATE.NOWHERE);
     const cursor = workspace.getCursor();
     if (cursor) {
-      cursor.hide();
       if (cursor.getCurNode()) {
         this.passiveFocusIndicator.show(cursor.getCurNode());
       }
+      // It's initially null so this is a valid state despite the types.
+      cursor.setCurNode(null as never);
     }
   }
 
@@ -546,36 +565,38 @@ export class Navigation {
   /**
    * Sets the cursor location when focusing the workspace.
    * Tries the following, in order, stopping after the first success:
-   *  - Resume editing by putting the cursor at the marker location, if any.
-   *  - Resume editing by returning the cursor to its previous location, if any.
+   *  - Resume editing by returning the cursor to its previous location, if valid.
    *  - Move the cursor to the top connection point on on the first top block.
    *  - Move the cursor to the default location on the workspace.
    *
    * @param workspace The main Blockly workspace.
-   * @param keepPosition Whether to retain the cursor's previous position.
+   * @return true if the cursor location was defaulted.
    */
-  setCursorOnWorkspaceFocus(
+  defaultCursorPositionIfNeeded(
     workspace: Blockly.WorkspaceSvg,
-    keepPosition: boolean,
+    prefer: 'first' | 'last' = 'first',
   ) {
     const topBlocks = workspace.getTopBlocks(true);
     const cursor = workspace.getCursor();
     if (!cursor) {
       return;
     }
-
     const disposed = cursor.getCurNode()?.getSourceBlock()?.disposed;
-    if (cursor.getCurNode() && !disposed && keepPosition) {
+    if (cursor.getCurNode() && !disposed) {
       // Retain the cursor's previous position since it's set, but only if not
       // disposed (which can happen when blocks are reloaded).
-      return;
+      return false;
     }
     const wsCoordinates = new Blockly.utils.Coordinate(
       this.DEFAULT_WS_COORDINATE.x / workspace.scale,
       this.DEFAULT_WS_COORDINATE.y / workspace.scale,
     );
     if (topBlocks.length > 0) {
-      cursor.setCurNode(Blockly.ASTNode.createTopNode(topBlocks[0])!);
+      cursor.setCurNode(
+        Blockly.ASTNode.createTopNode(
+          topBlocks[prefer === 'first' ? 0 : topBlocks.length - 1],
+        )!,
+      );
     } else {
       const wsNode = Blockly.ASTNode.createWorkspaceNode(
         workspace,
@@ -583,6 +604,7 @@ export class Navigation {
       );
       cursor.setCurNode(wsNode!);
     }
+    return true;
   }
 
   /**
