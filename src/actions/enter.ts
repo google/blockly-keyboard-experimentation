@@ -64,7 +64,7 @@ export class EnterAction {
               return false;
             }
             curNode = flyoutCursor.getCurNode();
-            nodeType = curNode.getType();
+            nodeType = curNode?.getType();
 
             switch (nodeType) {
               case ASTNode.types.STACK:
@@ -157,7 +157,8 @@ export class EnterAction {
     const button = this.navigation
       .getFlyoutCursor(workspace)!
       .getCurNode()
-      .getLocation() as FlyoutButton;
+      ?.getLocation() as FlyoutButton | undefined;
+    if (!button) return;
     const buttonCallback = (workspace as any).flyoutButtonCallbacks.get(
       (button as any).callbackKey,
     );
@@ -209,8 +210,8 @@ export class EnterAction {
     const curBlock = this.navigation
       .getFlyoutCursor(workspace)!
       .getCurNode()
-      .getLocation() as BlockSvg;
-    if (!curBlock.isEnabled()) {
+      ?.getLocation() as BlockSvg | undefined;
+    if (!curBlock?.isEnabled()) {
       console.warn("Can't insert a disabled block.");
       return null;
     }

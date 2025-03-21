@@ -111,6 +111,7 @@ export class ActionMenu {
     const cursor = workspace.getCursor();
     if (!cursor) throw new Error('workspace has no cursor');
     const node = cursor.getCurNode();
+    if (!node) throw new Error('No node is currently selected');
     const nodeType = node.getType();
     switch (nodeType) {
       case ASTNode.types.BLOCK:
@@ -195,16 +196,16 @@ export class ActionMenu {
       connection,
     } as unknown as ContextMenuRegistry.Scope;
     for (const option of possibleOptions) {
-      const precondition = option.preconditionFn(scope);
+      const precondition = option.preconditionFn?.(scope);
       if (precondition === 'hidden') continue;
       const displayText =
-        typeof option.displayText === 'function'
+        (typeof option.displayText === 'function'
           ? option.displayText(scope)
-          : option.displayText;
+          : option.displayText) ?? '';
       menuOptions.push({
         text: displayText,
         enabled: precondition === 'enabled',
-        callback: option.callback,
+        callback: option.callback!,
         scope,
         weight: option.weight,
       });
