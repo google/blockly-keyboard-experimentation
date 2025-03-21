@@ -591,13 +591,13 @@ export class LineCursor extends Marker {
       }
     }
 
-    if (this.isZelos && this.isValueInputConnection(oldNode)) {
+    if (this.isZelos && oldNode && this.isValueInputConnection(oldNode)) {
       this.hideAtInput(oldNode);
     }
 
     const curNodeType = curNode?.getType();
     const isZelosInputConnection =
-      this.isZelos && this.isValueInputConnection(curNode);
+      this.isZelos && curNode && this.isValueInputConnection(curNode);
 
     // If drawing can't be handled locally, just use the drawer.
     if (curNodeType !== ASTNode.types.BLOCK && !isZelosInputConnection) {
@@ -610,7 +610,7 @@ export class LineCursor extends Marker {
 
     if (isZelosInputConnection) {
       this.showAtInput(curNode);
-    } else if (curNodeType === ASTNode.types.BLOCK) {
+    } else if (curNode && curNodeType === ASTNode.types.BLOCK) {
       const block = curNode.getLocation() as Blockly.BlockSvg;
       if (!block.isShadow()) {
         // Selection should already be in sync.

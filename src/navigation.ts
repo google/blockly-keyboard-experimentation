@@ -423,11 +423,12 @@ export class Navigation {
     this.setState(workspace, Constants.STATE.NOWHERE);
     const cursor = workspace.getCursor();
     if (cursor) {
-      if (cursor.getCurNode()) {
-        this.passiveFocusIndicator.show(cursor.getCurNode());
+      const curNode = cursor.getCurNode();
+      if (curNode) {
+        this.passiveFocusIndicator.show(curNode);
       }
       // It's initially null so this is a valid state despite the types.
-      cursor.setCurNode(null as never);
+      cursor.setCurNode(null);
     }
   }
 
@@ -544,20 +545,21 @@ export class Navigation {
     const flyoutCursor = this.getFlyoutCursor(workspace);
     if (!flyoutCursor) return;
 
-    if (
-      flyoutCursor.getCurNode() &&
-      !this.isFlyoutItemDisposed(flyoutCursor.getCurNode())
-    )
-      return;
+    const curNode = flyoutCursor.getCurNode();
+    if (curNode && !this.isFlyoutItemDisposed(curNode)) return;
 
     const flyoutContents = flyout.getContents();
     const firstFlyoutItem = flyoutContents[0];
     if (!firstFlyoutItem) return;
-    if (firstFlyoutItem.button) {
-      const astNode = Blockly.ASTNode.createButtonNode(firstFlyoutItem.button);
+    if (firstFlyoutItem.getElement() instanceof Blockly.FlyoutButton) {
+      const astNode = Blockly.ASTNode.createButtonNode(
+        firstFlyoutItem.getElement() as Blockly.FlyoutButton,
+      );
       flyoutCursor.setCurNode(astNode!);
-    } else if (firstFlyoutItem.block) {
-      const astNode = Blockly.ASTNode.createStackNode(firstFlyoutItem.block);
+    } else if (firstFlyoutItem.getElement() instanceof Blockly.BlockSvg) {
+      const astNode = Blockly.ASTNode.createStackNode(
+        firstFlyoutItem.getElement() as Blockly.BlockSvg,
+      );
       flyoutCursor.setCurNode(astNode!);
     }
   }
