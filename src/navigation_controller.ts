@@ -196,6 +196,13 @@ export class NavigationController {
     this.navigation.handleBlurWorkspace(workspace);
   }
 
+  handleFocusOutWidgetDropdownDiv(
+    workspace: Blockly.WorkspaceSvg,
+    relatedTarget: EventTarget | null,
+  ) {
+    this.navigation.handleFocusOutWidgetDropdownDiv(workspace, relatedTarget);
+  }
+
   focusToolbox(workspace: Blockly.WorkspaceSvg) {
     this.navigation.focusToolbox(workspace);
   }

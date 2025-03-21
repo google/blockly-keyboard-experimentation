@@ -150,7 +150,7 @@ export class DeleteAction {
   private deletePrecondition(workspace: WorkspaceSvg) {
     if (!this.canCurrentlyEdit(workspace)) return false;
 
-    const sourceBlock = workspace.getCursor()?.getCurNode().getSourceBlock();
+    const sourceBlock = workspace.getCursor()?.getCurNode()?.getSourceBlock();
     return !!sourceBlock?.isDeletable();
   }
 

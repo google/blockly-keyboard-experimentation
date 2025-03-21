@@ -415,19 +415,55 @@ export class Navigation {
   }
 
   /**
-   * Clears the navigation state and switches to using the passive focus indicator.
+   * Clears navigation state and switches to using the passive focus indicator
+   * if it is not the context menu / field input that is causing blur.
    *
    * @param workspace The workspace that has lost focus.
+   * @param ignorePopUpDivs Whether to skip the focus indicator change when
+   *     the widget/dropdown divs are open.
    */
-  handleBlurWorkspace(workspace: Blockly.WorkspaceSvg) {
+  handleBlurWorkspace(
+    workspace: Blockly.WorkspaceSvg,
+    ignorePopUpDivs = false,
+  ) {
     this.setState(workspace, Constants.STATE.NOWHERE);
     const cursor = workspace.getCursor();
-    if (cursor) {
+    const popUpDivsShowing =
+      Blockly.WidgetDiv.isVisible() || Blockly.DropDownDiv.isVisible();
+    if (cursor && (ignorePopUpDivs || !popUpDivsShowing)) {
       if (cursor.getCurNode()) {
         this.passiveFocusIndicator.show(cursor.getCurNode());
       }
       // It's initially null so this is a valid state despite the types.
       cursor.setCurNode(null as never);
+    }
+  }
+
+  /**
+   * Handle the widget or dropdown div losing focus (via focusout).
+   *
+   * Because we skip the widget/dropdown div cases in `handleBlurWorkspace` we need
+   * to catch them here.
+   *
+   * @param workspace The workspace.
+   * @param relatedTarget The related target (newly focused element if any).
+   */
+  handleFocusOutWidgetDropdownDiv(
+    workspace: Blockly.WorkspaceSvg,
+    relatedTarget: EventTarget | null,
+  ) {
+    if (relatedTarget === null) {
+      // Workaround:
+      // Skip document.body/null case until these blur bugs are fixed to avoid
+      // flipping to passive focus as the user moves their mouse over the
+      // dropdown/widget at the cost of clicks on body showing the wrong focus
+      // style.
+      // https://github.com/google/blockly-samples/issues/2498
+      // https://github.com/google/blockly/issues/8819
+      return;
+    }
+    if (relatedTarget !== getWorkspaceElement(workspace)) {
+      this.handleBlurWorkspace(workspace, true);
     }
   }
 

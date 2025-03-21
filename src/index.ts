@@ -30,6 +30,9 @@ export class KeyboardNavigation {
   /** Event handler run when the workspace loses focus. */
   private blurListener: (e: Event) => void;
 
+  /** Event handler run when the widget or dropdown div loses focus. */
+  private widgetDropDownDivFocusOutListener: (e: Event) => void;
+
   /** Event handler run when the toolbox gains focus. */
   private toolboxFocusListener: () => void;
 
@@ -142,6 +145,22 @@ export class KeyboardNavigation {
     workspace.getSvgGroup().addEventListener('focus', this.focusListener);
     workspace.getSvgGroup().addEventListener('blur', this.blurListener);
 
+    this.widgetDropDownDivFocusOutListener = (e: Event) => {
+      this.navigationController.handleFocusOutWidgetDropdownDiv(
+        workspace,
+        (e as FocusEvent).relatedTarget,
+      );
+    };
+
+    Blockly.WidgetDiv.getDiv()?.addEventListener(
+      'focusout',
+      this.widgetDropDownDivFocusOutListener,
+    );
+    Blockly.DropDownDiv.getContentDiv()?.addEventListener(
+      'focusout',
+      this.widgetDropDownDivFocusOutListener,
+    );
+
     const toolboxElement = getToolboxElement(workspace);
     this.toolboxFocusListener = () => {
       this.navigationController.handleFocusToolbox(workspace);
@@ -196,6 +215,15 @@ export class KeyboardNavigation {
     this.workspace
       .getSvgGroup()
       .removeEventListener('focus', this.focusListener);
+
+    Blockly.WidgetDiv.getDiv()?.removeEventListener(
+      'focusout',
+      this.widgetDropDownDivFocusOutListener,
+    );
+    Blockly.DropDownDiv.getContentDiv()?.removeEventListener(
+      'focusout',
+      this.widgetDropDownDivFocusOutListener,
+    );
 
     const toolboxElement = getToolboxElement(this.workspace);
     toolboxElement?.removeEventListener('focus', this.toolboxFocusListener);

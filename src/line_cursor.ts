@@ -475,20 +475,56 @@ export class LineCursor extends Marker {
   }
 
   /**
+   * Get the current location of the cursor.
+   *
+   * Overrides normal Marker getCurNode to update the current node from the selected
+   * block. We typically update the node from the selection via a listener but
+   * that is not called immediately when `Gesture` calls `Blockly.common.setSelected`.
+   * In particular the listener runs after showing the context menu.
+   *
+   * @returns The current field, connection, or block the cursor is on.
+   */
+  override getCurNode(): ASTNode {
+    const curNode = super.getCurNode();
+    let selected = Blockly.common.getSelected();
+    if (
+      selected === null &&
+      curNode?.getType() === Blockly.ASTNode.types.BLOCK
+    ) {
+      // Selection says our curNode is not selected anymore.
+      // this.setCurNode(null as never, true);
+      return super.getCurNode();
+    }
+    if (selected?.workspace !== this.workspace) return curNode;
+    // Selection has a block in our workspace.
+    if (selected instanceof Blockly.BlockSvg) {
+      if (selected.isShadow()) {
+        // Although the shadow block is selected it's the parent that has the
+        // visual selection.
+        selected = selected.getParent();
+      }
+      if (selected) {
+        this.setCurNode(new ASTNode(ASTNode.types.BLOCK, selected), true);
+      }
+    }
+
+    return super.getCurNode();
+  }
+
+  /**
    * Set the location of the cursor and draw it.
    *
    * Overrides normal Marker setCurNode logic to call
    * this.drawMarker() instead of this.drawer.draw() directly.
    *
    * @param newNode The new location of the cursor.
+   * @param selectionUpToDate If false (the default) we'll update the selection too.
    */
-  override setCurNode(newNode: ASTNode, selectionInSync = false) {
-    if (newNode?.getLocation() === this.getCurNode()?.getLocation()) {
-      return;
-    }
-    if (!selectionInSync) {
+  override setCurNode(newNode: ASTNode, selectionUpToDate = false) {
+    if (!selectionUpToDate) {
       if (
         newNode?.getType() === ASTNode.types.BLOCK &&
+        // For shadow blocks we need to clear the selection that's drawn on their parent.
         !(newNode.getLocation() as Blockly.BlockSvg).isShadow()
       ) {
         if (Blockly.common.getSelected() !== newNode.getLocation()) {
@@ -659,22 +695,16 @@ export class LineCursor extends Marker {
   /**
    * Event listener that syncs the cursor location to the selected
    * block on SELECTED events.
+   *
+   * @param event The `Selected` event.
    */
   private selectListener(event: Blockly.Events.Abstract) {
     if (event.type !== Blockly.Events.SELECTED) return;
     const selectedEvent = event as Blockly.Events.Selected;
     if (selectedEvent.workspaceId !== this.workspace.id) return;
-    if (selectedEvent.newElementId) {
-      const block = this.workspace.getBlockById(selectedEvent.newElementId);
-      if (block) {
-        const node = ASTNode.createBlockNode(block);
-        if (node) {
-          this.setCurNode(node, true);
-        }
-      }
-    } else {
-      this.setCurNode(null as never, true);
-    }
+    // This runs too late so the logic to update the selection is in
+    // `getCurNode`.
+    this.getCurNode();
   }
 }
 
