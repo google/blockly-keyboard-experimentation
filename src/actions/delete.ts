@@ -150,7 +150,7 @@ export class DeleteAction {
   private deletePrecondition(workspace: WorkspaceSvg) {
     if (!this.canCurrentlyEdit(workspace)) return false;
 
-    const sourceBlock = workspace.getCursor()?.getCurNode().getSourceBlock();
+    const sourceBlock = workspace.getCursor()?.getCurNode()?.getSourceBlock();
     return !!sourceBlock?.isDeletable();
   }
 
@@ -169,7 +169,10 @@ export class DeleteAction {
     const cursor = workspace.getCursor();
     if (!cursor) return false;
 
-    const sourceBlock = cursor.getCurNode().getSourceBlock() as BlockSvg;
+    const sourceBlock = cursor
+      .getCurNode()
+      ?.getSourceBlock() as BlockSvg | null;
+    if (!sourceBlock) return false;
     // Delete or backspace.
     // There is an event if this is triggered from a keyboard shortcut,
     // but not if it's triggered from a context menu.

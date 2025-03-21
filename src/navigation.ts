@@ -338,14 +338,14 @@ export class Navigation {
     if (
       !cursor ||
       !cursor.getCurNode() ||
-      !cursor.getCurNode().getSourceBlock()
+      !cursor.getCurNode()?.getSourceBlock()
     ) {
       return;
     }
 
     const curNode = cursor.getCurNode();
-    const sourceBlock = curNode.getSourceBlock()!;
-    if (sourceBlock.id === deletedBlockId || ids.includes(sourceBlock.id)) {
+    const sourceBlock = curNode?.getSourceBlock()!;
+    if (sourceBlock?.id === deletedBlockId || ids.includes(sourceBlock?.id)) {
       cursor.setCurNode(
         Blockly.ASTNode.createWorkspaceNode(
           workspace,
