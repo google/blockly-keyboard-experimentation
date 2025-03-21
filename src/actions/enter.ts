@@ -93,6 +93,7 @@ export class EnterAction {
     const cursor = workspace.getCursor();
     if (!cursor) return;
     const curNode = cursor.getCurNode();
+    if (!curNode) return;
     const nodeType = curNode.getType();
     if (nodeType === ASTNode.types.FIELD) {
       (curNode.getLocation() as Field).showEditor();
@@ -125,7 +126,7 @@ export class EnterAction {
    *     the block will be placed on.
    */
   private insertFromFlyout(workspace: WorkspaceSvg) {
-    const stationaryNode = workspace.getCursor()?.getCurNode();
+    const stationaryNode = this.navigation.getStationaryNode(workspace);
     const newBlock = this.createNewBlock(workspace);
     if (!newBlock) return;
     if (stationaryNode) {
@@ -144,7 +145,6 @@ export class EnterAction {
 
     this.navigation.focusWorkspace(workspace);
     workspace.getCursor()!.setCurNode(ASTNode.createBlockNode(newBlock)!);
-    this.navigation.removeMark(workspace);
   }
 
   /**

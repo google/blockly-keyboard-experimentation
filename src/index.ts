@@ -7,6 +7,7 @@
 import * as Blockly from 'blockly/core';
 import {NavigationController} from './navigation_controller';
 import {CursorOptions, LineCursor} from './line_cursor';
+import {getFlyoutElement, getToolboxElement} from './workspace_utilities';
 
 /** Options object for KeyboardNavigation instances. */
 export type NavigationOptions = {
@@ -24,16 +25,22 @@ export class KeyboardNavigation {
   protected workspace: Blockly.WorkspaceSvg;
 
   /** Event handler run when the workspace gains focus. */
-  private focusListener: () => void;
+  private focusListener: (e: Event) => void;
 
   /** Event handler run when the workspace loses focus. */
-  private blurListener: () => void;
+  private blurListener: (e: Event) => void;
 
   /** Event handler run when the toolbox gains focus. */
   private toolboxFocusListener: () => void;
 
   /** Event handler run when the toolbox loses focus. */
-  private toolboxBlurListener: () => void;
+  private toolboxBlurListener: (e: Event) => void;
+
+  /** Event handler run when the flyout gains focus. */
+  private flyoutFocusListener: () => void;
+
+  /** Event handler run when the flyout loses focus. */
+  private flyoutBlurListener: (e: Event) => void;
 
   /** Keyboard navigation controller instance for the workspace. */
   private navigationController: NavigationController;
@@ -86,31 +93,85 @@ export class KeyboardNavigation {
     // We add a focus listener below so use -1 so it doesn't become focusable.
     workspace.getParentSvg().setAttribute('tabindex', '-1');
 
-    this.focusListener = () => {
-      this.navigationController.updateWorkspaceFocus(workspace, true);
+    // Move the flyout for logical tab order.
+    const flyoutElement = getFlyoutElement(workspace);
+    flyoutElement?.parentElement?.insertBefore(
+      flyoutElement,
+      workspace.getParentSvg(),
+    );
+    // Allow tab to the flyout only when there's no toolbox.
+    if (workspace.getToolbox() && flyoutElement) {
+      flyoutElement.tabIndex = -1;
+    }
+
+    this.focusListener = (e: Event) => {
+      if (e.currentTarget === this.workspace.getParentSvg()) {
+        // Starting a gesture unconditionally calls markFocused on the parent SVG
+        // but we really don't want to move to the workspace (and close the
+        // flyout) if all you did was click in a flyout, potentially on a
+        // button. See also `gesture_monkey_patch.js`.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const gestureInternals = this.workspace.currentGesture_ as any;
+        const gestureFlyout = gestureInternals?.flyout;
+        const gestureFlyoutAutoClose = gestureFlyout?.autoClose;
+        const gestureOnBlock = gestureInternals?.startBlock;
+        if (
+          // When clicking on flyout that cannot close.
+          (gestureFlyout && !gestureFlyoutAutoClose) ||
+          // When clicking on a block in a flyout that can close.
+          (gestureFlyout && gestureFlyoutAutoClose && !gestureOnBlock)
+        ) {
+          this.navigationController.focusFlyout(workspace);
+        } else {
+          this.navigationController.focusWorkspace(workspace);
+        }
+      } else {
+        this.navigationController.handleFocusWorkspace(workspace);
+      }
     };
-    this.blurListener = () => {
-      this.navigationController.updateWorkspaceFocus(workspace, false);
+    this.blurListener = (e: Event) => {
+      const relatedTarget = (e as FocusEvent).relatedTarget;
+      if (
+        relatedTarget !== this.workspace.getParentSvg() &&
+        relatedTarget !== this.workspace.getSvgGroup()
+      ) {
+        this.navigationController.handleBlurWorkspace(workspace);
+      }
     };
 
     workspace.getSvgGroup().addEventListener('focus', this.focusListener);
     workspace.getSvgGroup().addEventListener('blur', this.blurListener);
 
+    const toolboxElement = getToolboxElement(workspace);
     this.toolboxFocusListener = () => {
-      this.navigationController.updateToolboxFocus(workspace, true);
+      this.navigationController.handleFocusToolbox(workspace);
     };
-    this.toolboxBlurListener = () => {
-      this.navigationController.updateToolboxFocus(workspace, false);
-    };
-
-    const toolbox = workspace.getToolbox();
-    if (toolbox != null && toolbox instanceof Blockly.Toolbox) {
-      const contentsDiv = toolbox.HtmlDiv?.querySelector(
-        '.blocklyToolboxContents',
+    this.toolboxBlurListener = (e: Event) => {
+      this.navigationController.handleBlurToolbox(
+        workspace,
+        this.shouldCloseFlyoutOnBlur(
+          (e as FocusEvent).relatedTarget,
+          flyoutElement,
+        ),
       );
-      contentsDiv?.addEventListener('focus', this.toolboxFocusListener);
-      contentsDiv?.addEventListener('blur', this.toolboxBlurListener);
-    }
+    };
+    toolboxElement?.addEventListener('focus', this.toolboxFocusListener);
+    toolboxElement?.addEventListener('blur', this.toolboxBlurListener);
+
+    this.flyoutFocusListener = () => {
+      this.navigationController.handleFocusFlyout(workspace);
+    };
+    this.flyoutBlurListener = (e: Event) => {
+      this.navigationController.handleBlurFlyout(
+        workspace,
+        this.shouldCloseFlyoutOnBlur(
+          (e as FocusEvent).relatedTarget,
+          toolboxElement,
+        ),
+      );
+    };
+    flyoutElement?.addEventListener('focus', this.flyoutFocusListener);
+    flyoutElement?.addEventListener('blur', this.flyoutBlurListener);
 
     // Temporary workaround for #136.
     // TODO(#136): fix in core.
@@ -136,14 +197,13 @@ export class KeyboardNavigation {
       .getSvgGroup()
       .removeEventListener('focus', this.focusListener);
 
-    const toolbox = this.workspace.getToolbox();
-    if (toolbox != null && toolbox instanceof Blockly.Toolbox) {
-      const contentsDiv = toolbox.HtmlDiv?.querySelector(
-        '.blocklyToolboxContents',
-      );
-      contentsDiv?.removeEventListener('focus', this.toolboxFocusListener);
-      contentsDiv?.removeEventListener('blur', this.toolboxBlurListener);
-    }
+    const toolboxElement = getToolboxElement(this.workspace);
+    toolboxElement?.removeEventListener('focus', this.toolboxFocusListener);
+    toolboxElement?.removeEventListener('blur', this.toolboxBlurListener);
+
+    const flyoutElement = getFlyoutElement(this.workspace);
+    flyoutElement?.removeEventListener('focus', this.flyoutFocusListener);
+    flyoutElement?.removeEventListener('blur', this.flyoutBlurListener);
 
     if (this.workspaceParentTabIndex) {
       this.workspace
@@ -188,5 +248,33 @@ export class KeyboardNavigation {
       },
     });
     this.workspace.setTheme(newTheme);
+  }
+
+  /**
+   * Identify whether we should close the flyout when the toolbox or flyout
+   * blurs. If a gesture is in progerss or we're moving from one the other
+   * then we leave it open.
+   *
+   * @param relatedTarget The related target from the event on the flyout or toolbox.
+   * @param container The other element of flyout or toolbox (opposite to the event).
+   * @returns true if the flyout should be closed, false otherwise.
+   */
+  private shouldCloseFlyoutOnBlur(
+    relatedTarget: EventTarget | null,
+    container: Element | null,
+  ) {
+    if (Blockly.Gesture.inProgress()) {
+      return false;
+    }
+    if (!relatedTarget) {
+      return false;
+    }
+    if (
+      relatedTarget instanceof Node &&
+      container?.contains(relatedTarget as Node)
+    ) {
+      return false;
+    }
+    return true;
   }
 }

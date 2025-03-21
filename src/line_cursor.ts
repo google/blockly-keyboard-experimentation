@@ -15,7 +15,7 @@
 
 import * as Blockly from 'blockly/core';
 import {ASTNode, Marker} from 'blockly/core';
-import {scrollBoundsIntoView} from './workspace_utilities';
+import {getWorkspaceElement, scrollBoundsIntoView} from './workspace_utilities';
 
 /** Options object for LineCursor instances. */
 export type CursorOptions = {
@@ -475,47 +475,6 @@ export class LineCursor extends Marker {
   }
 
   /**
-   * Get the current location of the cursor.
-   *
-   * Overrides superclass implementation to add a hack that attempts
-   * to detect if the user has moved focus by selecting a block and,
-   * if so, update the cursor location (and any highlighting) to
-   * match.
-   *
-   * Doing this only when getCurNode would naturally be called works
-   * reasonably well but has some glitches, most notably that if the
-   * cursor was not on a block (e.g. it was on a connection or the
-   * workspace) when the user selected a block then it will remain
-   * visible in its previous location until some keyboard navigation occurs.
-   *
-   * To ameliorate this, the LineCursor constructor adds an event
-   * listener that calls getCurNode in response to SELECTED events.
-   *
-   * Remove this hack once Blockly is modified to update the
-   * cursor/focus itself.
-   *
-   * @returns The current field, connection, or block the cursor is on.
-   */
-  override getCurNode(): ASTNode {
-    const curNode = super.getCurNode();
-    const selected = Blockly.common.getSelected();
-    if (selected?.workspace !== this.workspace) return curNode;
-
-    // Selected item is on workspace that this cursor belongs to.
-    const curLocation = curNode?.getLocation();
-    if (curLocation === selected) return curNode;
-
-    // Selected item is not where cursor is.  Try to move cursor.
-    if (!(selected instanceof Blockly.Block)) {
-      console.error('Selected item is not a block.  Ignoring');
-      return curNode;
-    }
-    const newNode = new ASTNode(ASTNode.types.BLOCK, selected);
-    this.setCurNode(newNode);
-    return newNode;
-  }
-
-  /**
    * Set the location of the cursor and draw it.
    *
    * Overrides normal Marker setCurNode logic to call
@@ -523,7 +482,29 @@ export class LineCursor extends Marker {
    *
    * @param newNode The new location of the cursor.
    */
-  override setCurNode(newNode: ASTNode) {
+  override setCurNode(newNode: ASTNode, selectionInSync = false) {
+    if (newNode?.getLocation() === this.getCurNode()?.getLocation()) {
+      return;
+    }
+    if (!selectionInSync) {
+      if (
+        newNode?.getType() === ASTNode.types.BLOCK &&
+        !(newNode.getLocation() as Blockly.BlockSvg).isShadow()
+      ) {
+        if (Blockly.common.getSelected() !== newNode.getLocation()) {
+          Blockly.Events.disable();
+          Blockly.common.setSelected(newNode.getLocation() as Blockly.BlockSvg);
+          Blockly.Events.enable();
+        }
+      } else {
+        if (Blockly.common.getSelected()) {
+          Blockly.Events.disable();
+          Blockly.common.setSelected(null);
+          Blockly.Events.enable();
+        }
+      }
+    }
+
     const oldNode = super.getCurNode();
     // Kludge: we can't set this.curNode directly, so we have to call
     // super.setCurNode(...) to do it for us - but that would call
@@ -533,6 +514,7 @@ export class LineCursor extends Marker {
     this.setDrawer(null as any); // Cast required since param is not nullable.
     super.setCurNode(newNode);
     this.setDrawer(drawer);
+
     // Draw this marker the way we want to.
     this.drawMarker(oldNode, newNode);
     // Try to scroll cursor into view.
@@ -542,22 +524,6 @@ export class LineCursor extends Marker {
         block.getBoundingRectangleWithoutChildren(),
         block.workspace,
       );
-    }
-  }
-
-  override hide(): void {
-    super.hide();
-
-    // If there's a block currently selected, remove the selection since the
-    // cursor should now be hidden.
-    const curNode = this.getCurNode();
-    if (curNode && curNode.getType() === ASTNode.types.BLOCK) {
-      const block = curNode.getLocation() as Blockly.BlockSvg;
-      if (!block.isShadow()) {
-        Blockly.common.setSelected(null);
-      } else {
-        block.removeSelect();
-      }
     }
   }
 
@@ -605,7 +571,7 @@ export class LineCursor extends Marker {
     if (oldNode?.getType() === ASTNode.types.BLOCK) {
       const block = oldNode.getLocation() as Blockly.BlockSvg;
       if (!block.isShadow()) {
-        Blockly.common.setSelected(null);
+        // Selection should already be in sync.
       } else {
         block.removeSelect();
       }
@@ -633,7 +599,7 @@ export class LineCursor extends Marker {
     } else if (curNodeType === ASTNode.types.BLOCK) {
       const block = curNode.getLocation() as Blockly.BlockSvg;
       if (!block.isShadow()) {
-        Blockly.common.setSelected(block);
+        // Selection should already be in sync.
       } else {
         block.addSelect();
       }
@@ -698,7 +664,17 @@ export class LineCursor extends Marker {
     if (event.type !== Blockly.Events.SELECTED) return;
     const selectedEvent = event as Blockly.Events.Selected;
     if (selectedEvent.workspaceId !== this.workspace.id) return;
-    this.getCurNode();
+    if (selectedEvent.newElementId) {
+      const block = this.workspace.getBlockById(selectedEvent.newElementId);
+      if (block) {
+        const node = ASTNode.createBlockNode(block);
+        if (node) {
+          this.setCurNode(node, true);
+        }
+      }
+    } else {
+      this.setCurNode(null as never, true);
+    }
   }
 }
 

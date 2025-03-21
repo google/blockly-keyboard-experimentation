@@ -17,6 +17,11 @@ import {
   registrationType as cursorRegistrationType,
   FlyoutCursor,
 } from './flyout_cursor';
+import {
+  getFlyoutElement,
+  getToolboxElement,
+  getWorkspaceElement,
+} from './workspace_utilities';
 import {PassiveFocus} from './passive_focus';
 
 /**
@@ -66,13 +71,7 @@ export class Navigation {
   /**
    * An object that renders a passive focus indicator at a specified location.
    */
-  protected passiveFocusIndicator: PassiveFocus = new PassiveFocus();
-
-  /**
-   * The node that has passive focus when the cursor has moved to the flyout
-   * or toolbox; null if the cursor is moving around the main workspace.
-   */
-  protected markedNode: Blockly.ASTNode | null = null;
+  private passiveFocusIndicator: PassiveFocus = new PassiveFocus();
 
   /**
    * Constructor for keyboard navigation.
@@ -144,6 +143,18 @@ export class Navigation {
   }
 
   /**
+   * Gets the node to use as context for insert operations.
+   *
+   * @param workspace The main workspace.
+   */
+  getStationaryNode(workspace: Blockly.WorkspaceSvg) {
+    return (
+      this.passiveFocusIndicator.getCurNode() ??
+      workspace.getCursor()?.getCurNode()
+    );
+  }
+
+  /**
    * Adds all event listeners and cursors to the flyout that are needed for
    * keyboard navigation to work.
    *
@@ -202,17 +213,19 @@ export class Navigation {
           this.handleBlockMutation(workspace, e as Blockly.Events.BlockChange);
         }
         break;
-      case Blockly.Events.CLICK:
-        this.handleWorkspaceClick(workspace, e as Blockly.Events.Click);
-        break;
-      case Blockly.Events.TOOLBOX_ITEM_SELECT:
-        this.handleToolboxCategoryClick(
-          workspace,
-          e as Blockly.Events.ToolboxItemSelect,
-        );
-        break;
       case Blockly.Events.BLOCK_CREATE:
-        this.handleBlockCreate(workspace, e);
+        if (workspace.isDragging()) {
+          // Hide the passive focus indicator when dragging so as not to fight
+          // with the drop cues. Safe because of the gesture monkey patch.
+          this.passiveFocusIndicator.hide();
+        }
+        break;
+    }
+
+    // Hiding the cursor isn't permanent and can show again when we render.
+    // Rehide it:
+    if (this.passiveFocusIndicator.isVisible()) {
+      workspace.getCursor()?.hide();
     }
   }
 
@@ -260,25 +273,27 @@ export class Navigation {
         );
         this.handleBlockClickInFlyout(mainWorkspace, block!);
       }
+    } else if (
+      e.type === Blockly.Events.BLOCK_CREATE &&
+      this.getState(mainWorkspace) === Constants.STATE.FLYOUT
+    ) {
+      // When variables are created, that recreates the flyout contents, leaving the
+      // cursor in an invalid state.
+      this.resetFlyoutCursorPosition(mainWorkspace);
     }
   }
 
-  /**
-   * Moves the cursor to the workspace if a block has been dragged from a simple
-   * toolbox. For a category toolbox this is handled in
-   * handleToolboxCategoryClick_.
-   *
-   * @param workspace The workspace the cursor belongs to.
-   * @param e The Blockly event to process.
-   */
-  handleBlockCreate(
-    workspace: Blockly.WorkspaceSvg,
-    e: Blockly.Events.Abstract,
-  ) {
-    if (this.getState(workspace) === Constants.STATE.FLYOUT) {
-      this.resetFlyout(workspace, !!workspace.getToolbox());
-      this.setState(workspace, Constants.STATE.WORKSPACE);
+  private isFlyoutItemDisposed(node: Blockly.ASTNode) {
+    if (node.getSourceBlock()?.disposed) {
+      return true;
     }
+    const location = node.getLocation();
+    if (location instanceof Blockly.FlyoutButton) {
+      // No nice way to tell for a button. In v12 we could use getSvgGroup().
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (location as any).svgGroup.parentNode === null;
+    }
+    return false;
   }
 
   /**
@@ -301,45 +316,6 @@ export class Navigation {
       if (block && block.id === mutatedBlockId) {
         cursor.setCurNode(Blockly.ASTNode.createBlockNode(block)!);
       }
-    }
-  }
-
-  /**
-   * Moves the cursor to the workspace when a user clicks on the workspace.
-   *
-   * @param workspace The workspace the cursor belongs to.
-   * @param e The Blockly event to process.
-   */
-  handleWorkspaceClick(
-    workspace: Blockly.WorkspaceSvg,
-    e: Blockly.Events.Click,
-  ) {
-    const workspaceState = this.getState(workspace);
-    if (workspaceState !== Constants.STATE.WORKSPACE) {
-      this.resetFlyout(workspace, !!workspace.getToolbox());
-      this.setState(workspace, Constants.STATE.WORKSPACE);
-    }
-  }
-
-  /**
-   * Moves the cursor to the toolbox when a user clicks on a toolbox category.
-   * Moves the cursor to the workspace if theh user closes the toolbox category.
-   *
-   * @param workspace The workspace the toolbox is on.
-   * @param e The event emitted from the workspace.
-   */
-  handleToolboxCategoryClick(
-    workspace: Blockly.WorkspaceSvg,
-    e: Blockly.Events.ToolboxItemSelect,
-  ) {
-    const workspaceState = this.getState(workspace);
-    if (e.newItem && workspaceState !== Constants.STATE.TOOLBOX) {
-      // If the toolbox category was just clicked, focus on the toolbox.
-      this.focusToolbox(workspace);
-    } else if (!e.newItem) {
-      // If the toolbox was closed, focus on the workspace.
-      this.resetFlyout(workspace, !!workspace.getToolbox());
-      this.setState(workspace, Constants.STATE.WORKSPACE);
     }
   }
 
@@ -399,7 +375,69 @@ export class Navigation {
     this.getFlyoutCursor(mainWorkspace)!.setCurNode(
       Blockly.ASTNode.createStackNode(block)!,
     );
-    this.setState(mainWorkspace, Constants.STATE.FLYOUT);
+    this.focusFlyout(mainWorkspace);
+  }
+
+  /**
+   * Sets browser focus to the workspace.
+   *
+   * @param workspace The workspace to focus.
+   */
+  focusWorkspace(workspace: Blockly.WorkspaceSvg) {
+    getWorkspaceElement(workspace).focus();
+  }
+
+  /**
+   * Sets the navigation state to workspace and moves the cursor to either the
+   * top block on a workspace or to the workspace. Switches from passive focus
+   * indication to showing the cursor.
+   *
+   * @param workspace The workspace that has gained focus.
+   */
+  handleFocusWorkspace(workspace: Blockly.WorkspaceSvg) {
+    this.setState(workspace, Constants.STATE.WORKSPACE);
+    if (!Blockly.Gesture.inProgress()) {
+      workspace.hideChaff();
+      // This will make a selection which would interfere with any gesture.
+      this.defaultCursorPositionIfNeeded(workspace);
+    }
+
+    const cursor = workspace.getCursor();
+    if (cursor) {
+      const passiveFocusNode = this.passiveFocusIndicator.getCurNode();
+      this.passiveFocusIndicator.hide();
+      // If there's a gesture then it will either set the node or be a click
+      // that should not set one.
+      if (!Blockly.Gesture.inProgress() && passiveFocusNode) {
+        cursor.setCurNode(passiveFocusNode);
+      }
+    }
+  }
+
+  /**
+   * Clears the navigation state and switches to using the passive focus indicator.
+   *
+   * @param workspace The workspace that has lost focus.
+   */
+  handleBlurWorkspace(workspace: Blockly.WorkspaceSvg) {
+    this.setState(workspace, Constants.STATE.NOWHERE);
+    const cursor = workspace.getCursor();
+    if (cursor) {
+      if (cursor.getCurNode()) {
+        this.passiveFocusIndicator.show(cursor.getCurNode());
+      }
+      // It's initially null so this is a valid state despite the types.
+      cursor.setCurNode(null as never);
+    }
+  }
+
+  /**
+   * Sets browser focus to the toolbox (if any).
+   *
+   * @param workspace The workspace with the toolbox.
+   */
+  focusToolbox(workspace: Blockly.WorkspaceSvg) {
+    getToolboxElement(workspace)?.focus();
   }
 
   /**
@@ -408,16 +446,12 @@ export class Navigation {
    *
    * @param workspace The workspace to get the toolbox on.
    */
-  focusToolbox(workspace: Blockly.WorkspaceSvg) {
+  handleFocusToolbox(workspace: Blockly.WorkspaceSvg) {
     const toolbox = workspace.getToolbox();
     if (!toolbox) {
       return;
     }
-
-    this.markAtCursor(workspace);
-    workspace.getCursor()?.hide();
     this.setState(workspace, Constants.STATE.TOOLBOX);
-    this.resetFlyout(workspace, false /* shouldHide */);
 
     if (!toolbox.getSelectedItem()) {
       // Find the first item that is selectable.
@@ -432,122 +466,137 @@ export class Navigation {
   }
 
   /**
-   * Sets the navigation state to flyout and moves the cursor to the first
-   * block or button in the flyout.
+   * Clears the navigation state and closes the flyout if `allowClose` is true
+   * and a gesture is not in progress.
    *
    * @param workspace The workspace the flyout is on.
+   * @param closeFlyout True to close the flyout, false otherwise.
    */
-  focusFlyout(workspace: Blockly.WorkspaceSvg) {
-    workspace.getCursor()?.hide();
-    this.markAtCursor(workspace);
-
-    const flyout = workspace.getFlyout();
-    this.setState(workspace, Constants.STATE.FLYOUT);
-
-    if (flyout && flyout.getWorkspace()) {
-      const flyoutContents = flyout.getContents();
-      const firstFlyoutItem = flyoutContents[0];
-      if (!firstFlyoutItem) return;
-      if (firstFlyoutItem.button) {
-        const astNode = Blockly.ASTNode.createButtonNode(
-          firstFlyoutItem.button,
-        );
-        this.getFlyoutCursor(workspace)!.setCurNode(astNode!);
-      } else if (firstFlyoutItem.block) {
-        const astNode = Blockly.ASTNode.createStackNode(firstFlyoutItem.block);
-        this.getFlyoutCursor(workspace)!.setCurNode(astNode!);
-      }
+  handleBlurToolbox(workspace: Blockly.WorkspaceSvg, closeFlyout: boolean) {
+    this.setState(workspace, Constants.STATE.NOWHERE);
+    if (closeFlyout) {
+      workspace.hideChaff();
     }
   }
 
   /**
-   * Sets the navigation state to workspace and moves the cursor to either the
-   * top block on a workspace or to the workspace.
+   * Sets browser focus to the flyout (if any).
    *
-   * @param workspace The workspace to focus on.
-   * @param keepCursorPosition Whether to retain the cursor's previous position.
+   * @param workspace The workspace with the flyout.
    */
-  focusWorkspace(workspace: Blockly.WorkspaceSvg, keepCursorPosition = false) {
-    workspace.hideChaff();
-    const reset = !!workspace.getToolbox();
-
-    this.resetFlyout(workspace, reset);
-    this.setState(workspace, Constants.STATE.WORKSPACE);
-    this.setCursorOnWorkspaceFocus(workspace, keepCursorPosition);
+  focusFlyout(workspace: Blockly.WorkspaceSvg) {
+    getFlyoutElement(workspace)?.focus();
   }
 
   /**
-   * Blurs (de-focuses) the workspace's toolbox, and hides the flyout if it's
-   * currently visible.
+   * Sets the navigation state to flyout and moves the cursor to the first
+   * block or button in the flyout. We disable tabbing to the toolbox while
+   * the flyout has focus as we use left/right for that.
    *
-   * Note that it's up to callers to ensure that this function is only called
-   * when appropriate (i.e. when the workspace actually has a toolbox that's
-   * currently focused).
-   *
-   * @param workspace The workspace containing the toolbox.
+   * @param workspace The workspace the flyout is on.
    */
-  blurToolbox(workspace: Blockly.WorkspaceSvg) {
-    workspace.hideChaff();
-    const reset = !!workspace.getToolbox();
+  handleFocusFlyout(workspace: Blockly.WorkspaceSvg) {
+    // Note this can happen when the flyout was already focussed as regrettably
+    // a click on the flyout calls markFocused() on the workspace SVG and the
+    // focus is then redirected back to the flyout.
 
-    this.resetFlyout(workspace, reset);
-    switch (this.getState(workspace)) {
-      case Constants.STATE.FLYOUT:
-      case Constants.STATE.TOOLBOX:
-        // Clear state since neither the flyout nor toolbox are focused anymore.
-        this.setState(workspace, Constants.STATE.NOWHERE);
-        break;
+    this.setState(workspace, Constants.STATE.FLYOUT);
+    this.getFlyoutCursor(workspace)?.draw();
+    this.resetFlyoutCursorPosition(workspace);
+
+    // Prevent shift-tab to the toolbox while the flyout has focus.
+    const toolboxElement = getToolboxElement(workspace);
+    if (toolboxElement) {
+      toolboxElement.tabIndex = -1;
+    }
+  }
+
+  /**
+   * Clears the navigation state and closes the flyout if `allowClose` is true
+   * and a gesture is not in progress.
+   *
+   * @param workspace The workspace the flyout is on.
+   * @param closeFlyout True to close the flyout, false otherwise.
+   */
+  handleBlurFlyout(workspace: Blockly.WorkspaceSvg, closeFlyout: boolean) {
+    this.setState(workspace, Constants.STATE.NOWHERE);
+    if (closeFlyout) {
+      workspace.hideChaff();
+    }
+    this.getFlyoutCursor(workspace)?.hide();
+
+    // Reinstate tab to toolbox.
+    const toolboxElement = getToolboxElement(workspace);
+    if (toolboxElement) {
+      toolboxElement.tabIndex = 0;
+    }
+  }
+
+  /**
+   * Move the flyout cursor to the start if unset (as it is initially despite
+   * the types) or on a disposed item.
+   *
+   * @param workspace The workspace.
+   */
+  private resetFlyoutCursorPosition(workspace: Blockly.WorkspaceSvg) {
+    const flyout = workspace.getFlyout();
+    if (!flyout) return;
+    const flyoutCursor = this.getFlyoutCursor(workspace);
+    if (!flyoutCursor) return;
+
+    if (
+      flyoutCursor.getCurNode() &&
+      !this.isFlyoutItemDisposed(flyoutCursor.getCurNode())
+    )
+      return;
+
+    const flyoutContents = flyout.getContents();
+    const firstFlyoutItem = flyoutContents[0];
+    if (!firstFlyoutItem) return;
+    if (firstFlyoutItem.button) {
+      const astNode = Blockly.ASTNode.createButtonNode(firstFlyoutItem.button);
+      flyoutCursor.setCurNode(astNode!);
+    } else if (firstFlyoutItem.block) {
+      const astNode = Blockly.ASTNode.createStackNode(firstFlyoutItem.block);
+      flyoutCursor.setCurNode(astNode!);
     }
   }
 
   /**
    * Sets the cursor location when focusing the workspace.
    * Tries the following, in order, stopping after the first success:
-   *  - Resume editing by putting the cursor at the marker location, if any.
-   *  - Resume editing by returning the cursor to its previous location, if any.
+   *  - Resume editing by returning the cursor to its previous location, if valid.
    *  - Move the cursor to the top connection point on on the first top block.
    *  - Move the cursor to the default location on the workspace.
    *
    * @param workspace The main Blockly workspace.
-   * @param keepPosition Whether to retain the cursor's previous position.
+   * @return true if the cursor location was defaulted.
    */
-  setCursorOnWorkspaceFocus(
+  defaultCursorPositionIfNeeded(
     workspace: Blockly.WorkspaceSvg,
-    keepPosition: boolean,
+    prefer: 'first' | 'last' = 'first',
   ) {
     const topBlocks = workspace.getTopBlocks(true);
     const cursor = workspace.getCursor();
     if (!cursor) {
       return;
     }
-
-    if (this.markedNode) {
-      // Note that this hide happens twice, one before setCurNode() and once in
-      // removeMark. The latter is actually a logical no-op because setCurNode()
-      // will trigger a selection update of the currently marked node (if it's a
-      // block) and that, in turn, clones the underlying block's
-      // pathObject.svgPath. Since svgPath is updated to remove any passive
-      // focus indicator after selection clones it, the effect of removing the
-      // indicator doesn't do anything (hence it needs to be done *before*
-      // selection is added in order to immediately take effect).
-      this.passiveFocusIndicator.hide();
-      cursor.setCurNode(this.markedNode);
-      this.removeMark(workspace);
-      return;
-    }
-
     const disposed = cursor.getCurNode()?.getSourceBlock()?.disposed;
-    if (cursor.getCurNode() && !disposed && keepPosition) {
+    if (cursor.getCurNode() && !disposed) {
       // Retain the cursor's previous position since it's set, but only if not
       // disposed (which can happen when blocks are reloaded).
-      return;
+      return false;
     }
     const wsCoordinates = new Blockly.utils.Coordinate(
       this.DEFAULT_WS_COORDINATE.x / workspace.scale,
       this.DEFAULT_WS_COORDINATE.y / workspace.scale,
     );
     if (topBlocks.length > 0) {
-      cursor.setCurNode(Blockly.ASTNode.createTopNode(topBlocks[0])!);
+      cursor.setCurNode(
+        Blockly.ASTNode.createTopNode(
+          topBlocks[prefer === 'first' ? 0 : topBlocks.length - 1],
+        )!,
+      );
     } else {
       const wsNode = Blockly.ASTNode.createWorkspaceNode(
         workspace,
@@ -555,6 +604,7 @@ export class Navigation {
       );
       cursor.setCurNode(wsNode!);
     }
+    return true;
   }
 
   /**
@@ -568,41 +618,6 @@ export class Navigation {
     const cursor = flyout ? flyout.getWorkspace().getCursor() : null;
 
     return cursor as FlyoutCursor;
-  }
-
-  /**
-   * Hides the flyout cursor and optionally hides the flyout.
-   *
-   * @param workspace The workspace.
-   * @param shouldHide True if the flyout should be hidden.
-   */
-  resetFlyout(workspace: Blockly.WorkspaceSvg, shouldHide: boolean) {
-    if (this.getFlyoutCursor(workspace)) {
-      this.getFlyoutCursor(workspace)!.hide();
-      if (shouldHide) {
-        workspace.getFlyout()!.hide();
-      }
-    }
-  }
-
-  /**
-   * Connects the location of the marked node and the location of the cursor.
-   * No-op if the marked node or cursor node are null.
-   *
-   * @param workspace The main workspace.
-   * @returns True if the cursor and marker locations were connected,
-   *     false otherwise.
-   */
-  connectMarkerAndCursor(workspace: Blockly.WorkspaceSvg): boolean {
-    const cursorNode = workspace.getCursor()!.getCurNode();
-
-    if (this.markedNode && cursorNode) {
-      if (this.tryToConnectNodes(workspace, this.markedNode, cursorNode)) {
-        this.removeMark(workspace);
-        return true;
-      }
-    }
-    return false;
   }
 
   /**
@@ -982,32 +997,6 @@ export class Navigation {
   }
 
   /**
-   * Moves the passive focus indicator to the cursor's current location.
-   *
-   * @param workspace The workspace.
-   */
-  markAtCursor(workspace: Blockly.WorkspaceSvg) {
-    const cursor = workspace.getCursor()!;
-    this.markedNode = cursor.getCurNode();
-
-    // Although it seems like this should never happen, the typings are wrong
-    // in the base Marker class and this can therefore be null.
-    if (this.markedNode) {
-      this.passiveFocusIndicator.show(this.markedNode);
-    }
-  }
-
-  /**
-   * Removes the passive focus indicator from its current location and hides it.
-   *
-   * @param workspace The workspace.
-   */
-  removeMark(workspace: Blockly.WorkspaceSvg) {
-    this.passiveFocusIndicator.hide();
-    this.markedNode = null;
-  }
-
-  /**
    * Enables accessibility mode.
    *
    * @param workspace The workspace to enable keyboard
@@ -1034,7 +1023,6 @@ export class Navigation {
       workspace.keyboardAccessibilityMode
     ) {
       workspace.keyboardAccessibilityMode = false;
-      this.markAtCursor(workspace);
       workspace.getCursor()!.hide();
       if (this.getFlyoutCursor(workspace)) {
         this.getFlyoutCursor(workspace)!.hide();
@@ -1078,7 +1066,6 @@ export class Navigation {
    * @param workspace The active workspace.
    */
   openToolboxOrFlyout(workspace: Blockly.WorkspaceSvg) {
-    this.markAtCursor(workspace);
     if (workspace.getToolbox()) {
       this.focusToolbox(workspace);
     } else {
@@ -1111,7 +1098,6 @@ export class Navigation {
           Blockly.ASTNode.createBlockNode(block)!,
         );
       }
-      this.removeMark(workspace);
       return true;
     }
     Blockly.Events.setGroup(false);
