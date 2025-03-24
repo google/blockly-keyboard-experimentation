@@ -503,6 +503,8 @@ export class Navigation {
     this.setState(workspace, Constants.STATE.FLYOUT);
     this.getFlyoutCursor(workspace)?.draw();
 
+    // This doesn't identify a click on the scrollbars which will unfortunately
+    // default the cursor if the flyout didn't already have focus.
     if (!Blockly.Gesture.inProgress()) {
       this.defaultFlyoutCursorIfNeeded(workspace);
     }
