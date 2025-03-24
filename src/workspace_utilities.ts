@@ -17,19 +17,14 @@ import * as Blockly from 'blockly/core';
  * @param workspace The workspace to scroll the given bounds into view in.
  */
 export function scrollBoundsIntoView(
-  originalBounds: Blockly.utils.Rect,
+  bounds: Blockly.utils.Rect,
   workspace: Blockly.WorkspaceSvg,
 ) {
+  if (Blockly.Gesture.inProgress()) {
+    // This can cause jumps during a drag and it only suited for keyboard nav.
+    return;
+  }
   const scale = workspace.getScale();
-
-  const bounds = originalBounds.clone();
-
-  // Add some padding to the bounds so the element is scrolled comfortably
-  // into view.
-  bounds.top -= 10;
-  bounds.bottom += 10;
-  bounds.left -= 10;
-  bounds.right += 10;
 
   const rawViewport = workspace.getMetricsManager().getViewMetrics(true);
   const viewport = new Blockly.utils.Rect(
@@ -48,6 +43,14 @@ export function scrollBoundsIntoView(
     // Do nothing if the block is fully inside the viewport.
     return;
   }
+
+  // Add some padding to the bounds so the element is scrolled comfortably
+  // into view.
+  bounds = bounds.clone();
+  bounds.top -= 10;
+  bounds.bottom += 10;
+  bounds.left -= 10;
+  bounds.right += 10;
 
   let deltaX = 0;
   let deltaY = 0;
