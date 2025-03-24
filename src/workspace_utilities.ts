@@ -91,7 +91,7 @@ export function getToolboxElement(
   const toolbox = workspace.getToolbox();
   if (toolbox instanceof Blockly.Toolbox) {
     return toolbox.HtmlDiv?.querySelector(
-      '.blocklyToolboxContents',
+      '.blocklyToolboxCategoryGroup',
     ) as HTMLElement | null;
   }
   return null;
