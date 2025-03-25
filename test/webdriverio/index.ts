@@ -103,4 +103,6 @@ function addP5() {
 document.addEventListener('DOMContentLoaded', () => {
   addP5();
   createWorkspace();
+  // @ts-ignore
+  window.getMainWorkspace = Blockly.getMainWorkspace;
 });
