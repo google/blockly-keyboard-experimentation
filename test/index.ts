@@ -124,4 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
   addP5();
   createWorkspace();
   document.getElementById('run')?.addEventListener('click', runCode);
+  //@ts-ignore
+  window.getMainWorkspace = Blockly.getMainWorkspace;
 });

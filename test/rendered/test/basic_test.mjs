@@ -32,7 +32,7 @@ suite('Testing testing', function () {
         await this.browser.pause(50);
     }
     
-    await this.browser.pause(10000);
+    await this.browser.pause(1000);
   
       const blockCount = await this.browser.execute(() => {
         return getMainWorkspace().getAllBlocks(false).length;
