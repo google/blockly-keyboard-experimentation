@@ -40,7 +40,7 @@ export class ArrowNavigation {
       return false;
     }
     const curNode = cursor.getCurNode();
-    if (curNode.getType() === ASTNode.types.FIELD) {
+    if (curNode?.getType() === ASTNode.types.FIELD) {
       return (curNode.getLocation() as Field).onShortcut(shortcut);
     }
     return false;
