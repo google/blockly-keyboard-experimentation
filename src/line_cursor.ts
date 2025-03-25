@@ -79,7 +79,8 @@ export class LineCursor extends Marker {
     const markerManager = this.workspace.getMarkerManager();
     this.oldCursor = markerManager.getCursor();
     markerManager.setCursor(this);
-    if (this.oldCursor) this.setCurNode(this.oldCursor.getCurNode());
+    const oldCursorNode = this.oldCursor?.getCurNode();
+    if (oldCursorNode) this.setCurNode(oldCursorNode);
     this.workspace.addChangeListener(this.selectListener);
     this.installed = true;
   }
@@ -423,7 +424,7 @@ export class LineCursor extends Marker {
   preDelete(deletedBlock: Blockly.Block) {
     const curNode = this.getCurNode();
 
-    const nodes: Blockly.ASTNode[] = [curNode];
+    const nodes: Blockly.ASTNode[] = curNode ? [curNode] : [];
     // The connection to which the deleted block is attached.
     const parentConnection =
       deletedBlock.previousConnection?.targetConnection ??
@@ -446,7 +447,7 @@ export class LineCursor extends Marker {
     }
     // A location on the workspace beneath the deleted block.
     // Move to the workspace.
-    const curBlock = curNode.getSourceBlock();
+    const curBlock = curNode?.getSourceBlock();
     if (curBlock) {
       const workspaceNode = Blockly.ASTNode.createWorkspaceNode(
         this.workspace,
@@ -484,7 +485,7 @@ export class LineCursor extends Marker {
    *
    * @returns The current field, connection, or block the cursor is on.
    */
-  override getCurNode(): ASTNode {
+  override getCurNode(): ASTNode | null {
     const curNode = super.getCurNode();
     let selected = Blockly.common.getSelected();
     if (
@@ -509,6 +510,40 @@ export class LineCursor extends Marker {
     }
 
     return super.getCurNode();
+  }
+
+  /**
+   * Sets the object in charge of drawing the marker.
+   *
+   * We want to customize drawing, so rather than directly setting the given
+   * object, we instead set a wrapper proxy object that passes through all
+   * method calls and property accesses except for draw(), which it delegates
+   * to the drawMarker() method in this class.
+   *
+   * @param drawer The object ~in charge of drawing the marker.
+   */
+  override setDrawer(drawer: Blockly.blockRendering.MarkerSvg) {
+    const altDraw = function (
+      this: LineCursor,
+      oldNode: ASTNode | null,
+      curNode: ASTNode | null,
+    ) {
+      // Pass the unproxied, raw drawer object so that drawMarker can call its
+      // `draw()` method without triggering infinite recursion.
+      this.drawMarker(oldNode, curNode, drawer);
+    }.bind(this);
+
+    super.setDrawer(
+      new Proxy(drawer, {
+        get(target: typeof drawer, prop: keyof typeof drawer) {
+          if (prop === 'draw') {
+            return altDraw;
+          }
+
+          return target[prop];
+        },
+      }),
+    );
   }
 
   /**
@@ -541,18 +576,8 @@ export class LineCursor extends Marker {
       }
     }
 
-    const oldNode = super.getCurNode();
-    // Kludge: we can't set this.curNode directly, so we have to call
-    // super.setCurNode(...) to do it for us - but that would call
-    // this.drawer.draw(...), so prevent that by temporarily setting
-    // this.drawer to null (which we also can't do directly!)
-    const drawer = this.getDrawer();
-    this.setDrawer(null as any); // Cast required since param is not nullable.
     super.setCurNode(newNode);
-    this.setDrawer(drawer);
 
-    // Draw this marker the way we want to.
-    this.drawMarker(oldNode, newNode);
     // Try to scroll cursor into view.
     if (newNode?.getType() === ASTNode.types.BLOCK) {
       const block = newNode.getLocation() as Blockly.BlockSvg;
@@ -561,21 +586,6 @@ export class LineCursor extends Marker {
         block.workspace,
       );
     }
-  }
-
-  /**
-   * Redraw the current marker.
-   *
-   * Overrides normal Marker drawing logic to use this.drawMarker()
-   * instead of this.drawer.draw() directly.
-   *
-   * This hooks the method used by the renderer to draw the marker,
-   * preventing the marker drawer from showing a marker if we don't
-   * want it to.
-   */
-  override draw() {
-    const curNode = super.getCurNode();
-    this.drawMarker(curNode, curNode);
   }
 
   /**
@@ -602,7 +612,11 @@ export class LineCursor extends Marker {
    * @param oldNode The previous node.
    * @param curNode The current node.
    */
-  private drawMarker(oldNode: ASTNode, curNode: ASTNode) {
+  private drawMarker(
+    oldNode: ASTNode | null,
+    curNode: ASTNode | null,
+    realDrawer: Blockly.blockRendering.MarkerSvg,
+  ) {
     // If old node was a block, unselect it or remove fake selection.
     if (oldNode?.getType() === ASTNode.types.BLOCK) {
       const block = oldNode.getLocation() as Blockly.BlockSvg;
@@ -613,26 +627,26 @@ export class LineCursor extends Marker {
       }
     }
 
-    if (this.isZelos && this.isValueInputConnection(oldNode)) {
+    if (this.isZelos && oldNode && this.isValueInputConnection(oldNode)) {
       this.hideAtInput(oldNode);
     }
 
     const curNodeType = curNode?.getType();
     const isZelosInputConnection =
-      this.isZelos && this.isValueInputConnection(curNode);
+      this.isZelos && curNode && this.isValueInputConnection(curNode);
 
     // If drawing can't be handled locally, just use the drawer.
     if (curNodeType !== ASTNode.types.BLOCK && !isZelosInputConnection) {
-      this.getDrawer()?.draw(oldNode, curNode);
+      realDrawer.draw(oldNode, curNode);
       return;
     }
 
     // Hide any visible marker SVG and instead do some manual rendering.
-    super.hide(); // Calls this.drawer?.hide().
+    realDrawer.hide();
 
     if (isZelosInputConnection) {
       this.showAtInput(curNode);
-    } else if (curNodeType === ASTNode.types.BLOCK) {
+    } else if (curNode && curNodeType === ASTNode.types.BLOCK) {
       const block = curNode.getLocation() as Blockly.BlockSvg;
       if (!block.isShadow()) {
         // Selection should already be in sync.
@@ -643,7 +657,7 @@ export class LineCursor extends Marker {
 
     // Call MarkerSvg.prototype.fireMarkerEvent like
     // MarkerSvg.prototype.draw would (even though it's private).
-    (this.getDrawer() as any)?.fireMarkerEvent?.(oldNode, curNode);
+    (realDrawer as any)?.fireMarkerEvent?.(oldNode, curNode);
   }
 
   /**

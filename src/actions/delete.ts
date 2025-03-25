@@ -113,8 +113,8 @@ export class DeleteAction {
         // Run the original precondition code, from the context menu option.
         // If the item would be hidden or disabled, respect it.
         const originalPreconditionResult =
-          this.oldContextMenuItem!.preconditionFn(scope);
-        if (!ws || originalPreconditionResult != 'enabled') {
+          this.oldContextMenuItem!.preconditionFn?.(scope) ?? 'enabled';
+        if (!ws || originalPreconditionResult !== 'enabled') {
           return originalPreconditionResult;
         }
 
@@ -169,7 +169,10 @@ export class DeleteAction {
     const cursor = workspace.getCursor();
     if (!cursor) return false;
 
-    const sourceBlock = cursor.getCurNode().getSourceBlock() as BlockSvg;
+    const sourceBlock = cursor
+      .getCurNode()
+      ?.getSourceBlock() as BlockSvg | null;
+    if (!sourceBlock) return false;
     // Delete or backspace.
     // There is an event if this is triggered from a keyboard shortcut,
     // but not if it's triggered from a context menu.
