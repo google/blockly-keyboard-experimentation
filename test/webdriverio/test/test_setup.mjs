@@ -40,7 +40,7 @@ export const PAUSE_TIME = 50;
 /**
  * Start up the test page. This should only be done once, to avoid
  * constantly popping browser windows open and closed.
- * @return A Promsie that resolves to a webdriverIO browser that tests can manipulate.
+ * @return A Promise that resolves to a webdriverIO browser that tests can manipulate.
  */
 export async function driverSetup() {
   const options = {
@@ -50,6 +50,9 @@ export async function driverSetup() {
       'goog:chromeOptions': {
         args: ['--allow-file-access-from-files'],
       },
+      // We aren't (yet) using any BiDi features, and BiDi is sensitive to
+      // mismatches between Chrome version and Chromedriver version.
+      'wdio:enforceWebDriverClassic': 'true',
     },
     logLevel: 'warn',
   };
