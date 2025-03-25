@@ -17,7 +17,18 @@
  */
 
 import * as webdriverio from 'webdriverio';
+import * as path from 'path';
+import {fileURLToPath} from 'url';
 
+/**
+ * The directory where this code was run.
+ *
+ */
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/**
+ * The webdriverio instance, which should only be initialized once.
+ */
 let driver = null;
 
 /**
@@ -86,6 +97,29 @@ export async function testSetup(playgroundUrl) {
   // Wait for the workspace to exist and be rendered.
   await driver
     .$('.blocklySvg .blocklyWorkspace > .blocklyBlockCanvas')
-    .waitForExist({timeout: 20000});
+    .waitForExist({timeout: 2000});
   return driver;
 }
+
+/**
+ * Replaces OS-specific path with POSIX style path.
+ * Simplified implementation based on
+ * https://stackoverflow.com/a/63251716/4969945
+ *
+ * @param {string} target target path
+ * @return {string} posix path
+ */
+function posixPath(target) {
+  const result = target.split(path.sep).join(path.posix.sep);
+  console.log(result);
+  return result;
+}
+
+export const testFileLocations = {
+  BASE:
+    'file://' + posixPath(path.join(__dirname, '..', 'build')) + '/index.html',
+  GERAS:
+    'file://' +
+    posixPath(path.join(__dirname, '..', 'build')) +
+    '/index.html?renderer=geras',
+};
