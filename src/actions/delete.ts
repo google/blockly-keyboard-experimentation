@@ -12,6 +12,7 @@ import {
 } from 'blockly';
 import * as Constants from '../constants';
 import type {BlockSvg, WorkspaceSvg} from 'blockly';
+import {LineCursor} from '../line_cursor';
 import {Navigation} from '../navigation';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
@@ -90,7 +91,7 @@ export class DeleteAction {
 
     if (!this.oldContextMenuItem) return;
 
-    // Unregister the original item..
+    // Unregister the original item.
     ContextMenuRegistry.registry.unregister(this.oldContextMenuItem.id);
 
     const deleteItem: ContextMenuRegistry.RegistryItem = {
@@ -112,8 +113,8 @@ export class DeleteAction {
         // Run the original precondition code, from the context menu option.
         // If the item would be hidden or disabled, respect it.
         const originalPreconditionResult =
-          this.oldContextMenuItem!.preconditionFn(scope);
-        if (!ws || originalPreconditionResult != 'enabled') {
+          this.oldContextMenuItem!.preconditionFn?.(scope) ?? 'enabled';
+        if (!ws || originalPreconditionResult !== 'enabled') {
           return originalPreconditionResult;
         }
 
@@ -131,7 +132,7 @@ export class DeleteAction {
       },
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'blockDeleteFromContextMenu',
-      weight: 10,
+      weight: 11,
     };
 
     ContextMenuRegistry.registry.register(deleteItem);
@@ -149,7 +150,7 @@ export class DeleteAction {
   private deletePrecondition(workspace: WorkspaceSvg) {
     if (!this.canCurrentlyEdit(workspace)) return false;
 
-    const sourceBlock = workspace.getCursor()?.getCurNode().getSourceBlock();
+    const sourceBlock = workspace.getCursor()?.getCurNode()?.getSourceBlock();
     return !!sourceBlock?.isDeletable();
   }
 
@@ -168,7 +169,10 @@ export class DeleteAction {
     const cursor = workspace.getCursor();
     if (!cursor) return false;
 
-    const sourceBlock = cursor.getCurNode().getSourceBlock() as BlockSvg;
+    const sourceBlock = cursor
+      .getCurNode()
+      ?.getSourceBlock() as BlockSvg | null;
+    if (!sourceBlock) return false;
     // Delete or backspace.
     // There is an event if this is triggered from a keyboard shortcut,
     // but not if it's triggered from a context menu.
@@ -181,8 +185,9 @@ export class DeleteAction {
     // Don't delete while dragging.  Jeez.
     if (Gesture.inProgress()) false;
 
-    this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
+    if (cursor instanceof LineCursor) cursor.preDelete(sourceBlock);
     sourceBlock.checkAndDelete();
+    if (cursor instanceof LineCursor) cursor.postDelete();
     return true;
   }
 }

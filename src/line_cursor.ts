@@ -15,6 +15,7 @@
 
 import * as Blockly from 'blockly/core';
 import {ASTNode, Marker} from 'blockly/core';
+import {getWorkspaceElement, scrollBoundsIntoView} from './workspace_utilities';
 
 /** Options object for LineCursor instances. */
 export type CursorOptions = {
@@ -45,6 +46,12 @@ export class LineCursor extends Marker {
   /** Old Cursor instance, saved during installation. */
   private oldCursor: Blockly.Cursor | null = null;
 
+  /** Locations to try moving the cursor to after a deletion. */
+  private potentialNodes: Blockly.ASTNode[] | null = null;
+
+  /** Whether the renderer is zelos-style. */
+  private isZelos: boolean = false;
+
   /**
    * @param workspace The workspace this cursor belongs to.
    */
@@ -57,6 +64,8 @@ export class LineCursor extends Marker {
     this.selectListener = this.selectListener.bind(this);
     // Regularise options and apply defaults.
     this.options = {...defaultOptions, ...options};
+
+    this.isZelos = workspace.getRenderer() instanceof Blockly.zelos.Renderer;
   }
 
   /**
@@ -70,7 +79,8 @@ export class LineCursor extends Marker {
     const markerManager = this.workspace.getMarkerManager();
     this.oldCursor = markerManager.getCursor();
     markerManager.setCursor(this);
-    if (this.oldCursor) this.setCurNode(this.oldCursor.getCurNode());
+    const oldCursorNode = this.oldCursor?.getCurNode();
+    if (oldCursorNode) this.setCurNode(oldCursorNode);
     this.workspace.addChangeListener(this.selectListener);
     this.installed = true;
   }
@@ -172,6 +182,22 @@ export class LineCursor extends Marker {
   }
 
   /**
+   * Returns true iff the node to which we would navigate if in() were
+   * called, which will be a validInLineNode, is also a validLineNode
+   * - in effect, if the LineCursor is at the end of the 'current
+   * line' of the program.
+   */
+  public atEndOfLine(): boolean {
+    const curNode = this.getCurNode();
+    if (!curNode) return false;
+    const rightNode = this.getNextNode(
+      curNode,
+      this.validInLineNode.bind(this),
+    );
+    return this.validLineNode(rightNode);
+  }
+
+  /**
    * Returns true iff the given node represents the "beginning of a
    * new line of code" (and thus can be visited by pressing the
    * up/down arrow keys).  Specifically, if the node is for:
@@ -225,7 +251,7 @@ export class LineCursor extends Marker {
   /**
    * Returns true iff the given node can be visited by the cursor when
    * using the left/right arrow keys.  Specifically, if the node is
-   * for any node for which valideLineNode would return true, plus:
+   * any node for which valideLineNode would return true, plus:
    *
    * - Any block.
    * - Any field that is not a full block field.
@@ -259,131 +285,18 @@ export class LineCursor extends Marker {
   }
 
   /**
-   * Moves the cursor to the next sibling that is at the same level
-   * of nesting.
+   * Returns true iff the given node can be visited by the cursor.
+   * Specifically, if the node is any for which validInLineNode woudl
+   * return true, or if it is a workspace node.
    *
-   * @returns The next sibling node, or null if the current node
-   *     is not set or there is no next sibling node.
+   * @param node The AST node to check whether it is valid.
+   * @returns True if the node should be visited, false otherwise.
    */
-  nextSibling(): ASTNode | null {
-    const curNode = this.getCurNode();
-    if (!curNode) {
-      return null;
-    }
-    let newNode = null;
-    switch (curNode.getType()) {
-      case ASTNode.types.STACK: {
-        // TODO: Make navigateBetweenStacks public
-        newNode = (curNode as any).navigateBetweenStacks(true);
-        break;
-      }
-      case ASTNode.types.WORKSPACE: {
-        break;
-      }
-      default: {
-        const block = curNode.getSourceBlock();
-        const nextBlock = block?.getNextBlock();
-        if (nextBlock) {
-          newNode = ASTNode.createBlockNode(nextBlock);
-        }
-        break;
-      }
-    }
-
-    if (newNode) {
-      this.setCurNode(newNode);
-    }
-    return newNode;
-  }
-
-  /**
-   * Moves the cursor to the previous sibling that is at the same level
-   * of nesting.
-   *
-   * @returns The previous sibling node, or null if the current node
-   *     is not set or there is no previous sibling node.
-   */
-  previousSibling(): ASTNode | null {
-    const curNode = this.getCurNode();
-    if (!curNode) {
-      return null;
-    }
-    let newNode = null;
-    switch (curNode.getType()) {
-      case ASTNode.types.STACK: {
-        // TODO: Make navigateBetweenStacks public.
-        newNode = (curNode as any).navigateBetweenStacks(false);
-        break;
-      }
-      case ASTNode.types.WORKSPACE: {
-        break;
-      }
-      default: {
-        const block = curNode.getSourceBlock();
-        // TODO: Decide what this should do if the source block is
-        // the first block inside a statement input.
-        // TODO: Decide what this should do if the source block
-        // has an output instead of a previous.
-        const prevBlock = block?.getPreviousBlock();
-        if (prevBlock) {
-          newNode = ASTNode.createBlockNode(prevBlock);
-        }
-        break;
-      }
-    }
-
-    if (newNode) {
-      this.setCurNode(newNode);
-    }
-    return newNode;
-  }
-
-  /**
-   * Moves the cursor out by one level of nesting.
-   *
-   * @returns The new node the cursor points to, or null if
-   * one could not be found.
-   */
-  contextOut(): ASTNode | null {
-    const curNode = this.getCurNode();
-    if (!curNode) {
-      return null;
-    }
-
-    // Returns null at the workspace level.
-    // TODO: Decide where the cursor goes from the workspace level.
-    const newNode = curNode.out();
-    if (newNode) {
-      this.setCurNode(newNode);
-    }
-    return newNode;
-  }
-
-  /**
-   * Moves the cursor in by one level of nesting.
-   *
-   * @returns The new node the cursor points to, or null if
-   * one could not be found.
-   */
-  contextIn(): ASTNode | null {
-    let curNode: ASTNode | null = this.getCurNode();
-    if (!curNode) {
-      return null;
-    }
-    // If we are on a previous or output connection, go to the block level
-    // before performing next operation.
-    if (
-      curNode.getType() === ASTNode.types.PREVIOUS ||
-      curNode.getType() === ASTNode.types.OUTPUT
-    ) {
-      curNode = curNode.next();
-    }
-    const newNode = curNode?.in() ?? null;
-
-    if (newNode) {
-      this.setCurNode(newNode);
-    }
-    return newNode;
+  protected validNode(node: ASTNode | null): boolean {
+    return (
+      !!node &&
+      (this.validInLineNode(node) || node.getType() === ASTNode.types.WORKSPACE)
+    );
   }
 
   /**
@@ -487,59 +400,172 @@ export class LineCursor extends Marker {
   }
 
   /**
-   * Get the current location of the cursor.
+   * Prepare for the deletion of a block by making a list of nodes we
+   * could move the cursor to afterwards and save it to
+   * this.potentialNodes.
    *
-   * Overrides superclass implementation to add a hack that attempts
-   * to detect if the user has moved focus by selecting a block and,
-   * if so, update the cursor location (and any highlighting) to
-   * match.
+   * After the deletion has occurred, call postDelete to move it to
+   * the first valid node on that list.
    *
-   * Doing this only when getCurNode would naturally be called works
-   * reasonably well but has some glitches, most notably that if the
-   * cursor was not on a block (e.g. it was on a connection or the
-   * workspace) when the user selected a block then it will remain
-   * visible in its previous location until some keyboard navigation occurs.
+   * The locations to try (in order of preference) are:
    *
-   * To ameliorate this, the LineCursor constructor adds an event
-   * listener that calls getCurNode in response to SELECTED events.
+   * - The current location.
+   * - The connection to which the deleted block is attached.
+   * - The block connected to the next connection of the deleted block.
+   * - The parent block of the deleted block.
+   * - A location on the workspace beneath the deleted block.
    *
-   * Remove this hack once Blockly is modified to update the
-   * cursor/focus itself.
+   * N.B.: When block is deleted, all of the blocks conneccted to that
+   * block's inputs are also deleted, but not blocks connected to its
+   * next connection.
    *
-   * @returns The current field, connection, or block the cursor is on.
+   * @param deletedBlock The block that is being deleted.
    */
-  override getCurNode(): ASTNode {
-    const curNode = super.getCurNode();
-    const selected = Blockly.common.getSelected();
-    if (selected?.workspace !== this.workspace) return curNode;
+  preDelete(deletedBlock: Blockly.Block) {
+    const curNode = this.getCurNode();
 
-    // Selected item is on workspace that this cursor belongs to.
-    const curLocation = curNode?.getLocation();
-    if (curLocation === selected) return curNode;
-
-    // Selected item is not where cursor is.  Try to move cursor.
-    if (!(selected instanceof Blockly.Block)) {
-      console.error('Selected item is not a block.  Ignoring');
-      return curNode;
+    const nodes: Blockly.ASTNode[] = curNode ? [curNode] : [];
+    // The connection to which the deleted block is attached.
+    const parentConnection =
+      deletedBlock.previousConnection?.targetConnection ??
+      deletedBlock.outputConnection?.targetConnection;
+    if (parentConnection) {
+      const parentNode = Blockly.ASTNode.createConnectionNode(parentConnection);
+      if (parentNode) nodes.push(parentNode);
     }
-    const newNode = new ASTNode(ASTNode.types.BLOCK, selected);
-    super.setCurNode(newNode);
-    this.updateFocusIndication(curNode, newNode);
-    return newNode;
+    // The block connected to the next connection of the deleted block.
+    const nextBlock = deletedBlock.getNextBlock();
+    if (nextBlock) {
+      const nextNode = Blockly.ASTNode.createBlockNode(nextBlock);
+      if (nextNode) nodes.push(nextNode);
+    }
+    //  The parent block of the deleted block.
+    const parentBlock = deletedBlock.getParent();
+    if (parentBlock) {
+      const parentNode = Blockly.ASTNode.createBlockNode(parentBlock);
+      if (parentNode) nodes.push(parentNode);
+    }
+    // A location on the workspace beneath the deleted block.
+    // Move to the workspace.
+    const curBlock = curNode?.getSourceBlock();
+    if (curBlock) {
+      const workspaceNode = Blockly.ASTNode.createWorkspaceNode(
+        this.workspace,
+        curBlock.getRelativeToSurfaceXY(),
+      );
+      if (workspaceNode) nodes.push(workspaceNode);
+    }
+    this.potentialNodes = nodes;
+  }
+
+  /**
+   * Move the cursor to the first valid location in
+   * this.potentialNodes, following a block deletion.
+   */
+  postDelete() {
+    const nodes = this.potentialNodes;
+    this.potentialNodes = null;
+    if (!nodes) throw new Error('must call preDelete first');
+    for (const node of nodes) {
+      if (this.validNode(node) && !node.getSourceBlock()?.disposed) {
+        this.setCurNode(node);
+        return;
+      }
+    }
+    throw new Error('no valid nodes in this.potentialNodes');
+  }
+
+  /**
+   * Sets the object in charge of drawing the marker.
+   *
+   * We want to customize drawing, so rather than directly setting the given
+   * object, we instead set a wrapper proxy object that passes through all
+   * method calls and property accesses except for draw(), which it delegates
+   * to the drawMarker() method in this class.
+   *
+   * @param drawer The object ~in charge of drawing the marker.
+   */
+  override setDrawer(drawer: Blockly.blockRendering.MarkerSvg) {
+    const altDraw = function (
+      this: LineCursor,
+      oldNode: ASTNode | null,
+      curNode: ASTNode | null,
+    ) {
+      // Pass the unproxied, raw drawer object so that drawMarker can call its
+      // `draw()` method without triggering infinite recursion.
+      this.drawMarker(oldNode, curNode, drawer);
+    }.bind(this);
+
+    super.setDrawer(
+      new Proxy(drawer, {
+        get(target: typeof drawer, prop: keyof typeof drawer) {
+          if (prop === 'draw') {
+            return altDraw;
+          }
+
+          return target[prop];
+        },
+      }),
+    );
   }
 
   /**
    * Set the location of the cursor and draw it.
    *
-   * Overrides drawing logic to call `setSelected` if the location is
-   * a block, or `addSelect` if it's a shadow block (since shadow
-   * blocks can't be selected).
+   * Overrides normal Marker setCurNode logic to call
+   * this.drawMarker() instead of this.drawer.draw() directly.
+   *
+   * @param newNode The new location of the cursor.
+   */
+  override setCurNode(newNode: ASTNode | null, selectionInSync = false) {
+    if (newNode?.getLocation() === this.getCurNode()?.getLocation()) {
+      return;
+    }
+    if (!selectionInSync) {
+      if (
+        newNode?.getType() === ASTNode.types.BLOCK &&
+        !(newNode.getLocation() as Blockly.BlockSvg).isShadow()
+      ) {
+        if (Blockly.common.getSelected() !== newNode.getLocation()) {
+          Blockly.Events.disable();
+          Blockly.common.setSelected(newNode.getLocation() as Blockly.BlockSvg);
+          Blockly.Events.enable();
+        }
+      } else {
+        if (Blockly.common.getSelected()) {
+          Blockly.Events.disable();
+          Blockly.common.setSelected(null);
+          Blockly.Events.enable();
+        }
+      }
+    }
+
+    super.setCurNode(newNode);
+
+    // Try to scroll cursor into view.
+    if (newNode?.getType() === ASTNode.types.BLOCK) {
+      const block = newNode.getLocation() as Blockly.BlockSvg;
+      scrollBoundsIntoView(
+        block.getBoundingRectangleWithoutChildren(),
+        block.workspace,
+      );
+    }
+  }
+
+  /**
+   * Draw this cursor's marker.
+   *
+   * This is a wrapper around this.drawer.draw (usually implemented by
+   * MarkerSvg.prototype.draw) that will, if newNode is a BLOCK node,
+   * instead call `setSelected` to select it (if it's a regular block)
+   * or `addSelect` (if it's a shadow block, since shadow blocks can't
+   * be selected) instead of using the normal drawer logic.
    *
    * TODO(#142): The selection and fake-selection code was originally
    * a hack added for testing on October 28 2024, because the default
-   * drawer behaviour was to draw a box around the block and all
-   * attached child blocks, which was confusing when navigating
-   * stacks.
+   * drawer (MarkerSvg) behaviour in Zelos was to draw a box around
+   * the block and all attached child blocks, which was confusing when
+   * navigating stacks.
    *
    * Since then we have decided that we probably _do_ in most cases
    * want navigating to a block to select the block, but more
@@ -547,106 +573,101 @@ export class LineCursor extends Marker {
    * this selection hack with non-hacky changing of focus once that's
    * possible.
    *
-   * @param newNode The new location of the cursor.
-   */
-  override setCurNode(newNode: ASTNode) {
-    const oldNode = this.getCurNode();
-    super.setCurNode(newNode);
-    if (newNode?.getType() === ASTNode.types.BLOCK) {
-      this.scrollBlockIntoView(newNode.getLocation() as Blockly.BlockSvg);
-    }
-    this.updateFocusIndication(oldNode, newNode);
-  }
-
-  /**
-   * Scrolls the provided block into view.
-   *
-   * This is a basic implementation that scrolls just enough to get the block
-   * into bounds. For very small workspaces/high zoom levels the entire block
-   * may not fit, but a decent portion of it should still be visible at least.
-   *
-   * @param block The block to scroll into bounds.
-   */
-  private scrollBlockIntoView(block: Blockly.BlockSvg) {
-    const workspace = block.workspace;
-    const scale = workspace.getScale();
-    const bounds = block.getBoundingRectangleWithoutChildren();
-    const rawViewport = workspace.getMetricsManager().getViewMetrics(true);
-    const viewport = new Blockly.utils.Rect(
-      rawViewport.top,
-      rawViewport.top + rawViewport.height,
-      rawViewport.left,
-      rawViewport.left + rawViewport.width,
-    );
-
-    if (
-      bounds.left >= viewport.left &&
-      bounds.top >= viewport.top &&
-      bounds.right <= viewport.right &&
-      bounds.bottom <= viewport.bottom
-    ) {
-      // Do nothing if the block is fully inside the viewport.
-      return;
-    }
-
-    let deltaX = 0;
-    let deltaY = 0;
-
-    if (bounds.left < viewport.left) {
-      deltaX = viewport.left - bounds.left;
-    } else if (bounds.right > viewport.right) {
-      deltaX = viewport.right - bounds.right;
-    }
-
-    if (bounds.top < viewport.top) {
-      deltaY = viewport.top - bounds.top;
-    } else if (bounds.bottom > viewport.bottom) {
-      deltaY = viewport.bottom - bounds.bottom;
-    }
-
-    deltaX *= scale;
-    deltaY *= scale;
-    workspace.scroll(workspace.scrollX + deltaX, workspace.scrollY + deltaY);
-  }
-
-  /**
-   * Implements fake selection of shadow blocks as described in
-   * documentation for setCurNode.
-   *
    * @param oldNode The previous node.
-   * @param newNode The newly-selected node.
+   * @param curNode The current node.
    */
-  private updateFocusIndication(oldNode: ASTNode, newNode: ASTNode) {
-    const drawer = this.getDrawer();
-
-    if (!drawer) {
-      console.error('could not find a drawer');
-      return;
-    }
-
+  private drawMarker(
+    oldNode: ASTNode | null,
+    curNode: ASTNode | null,
+    realDrawer: Blockly.blockRendering.MarkerSvg,
+  ) {
     // If old node was a block, unselect it or remove fake selection.
     if (oldNode?.getType() === ASTNode.types.BLOCK) {
       const block = oldNode.getLocation() as Blockly.BlockSvg;
       if (!block.isShadow()) {
-        Blockly.common.setSelected(null);
+        // Selection should already be in sync.
       } else {
         block.removeSelect();
       }
     }
 
-    // If new node is a block, select it or make it look selected.
-    if (newNode?.getType() === ASTNode.types.BLOCK) {
-      drawer.hide();
-      const block = newNode.getLocation() as Blockly.BlockSvg;
-      if (!block.isShadow()) {
-        Blockly.common.setSelected(block);
-      } else {
-        block.addSelect();
-      }
+    if (this.isZelos && oldNode && this.isValueInputConnection(oldNode)) {
+      this.hideAtInput(oldNode);
+    }
+
+    const curNodeType = curNode?.getType();
+    const isZelosInputConnection =
+      this.isZelos && curNode && this.isValueInputConnection(curNode);
+
+    // If drawing can't be handled locally, just use the drawer.
+    if (curNodeType !== ASTNode.types.BLOCK && !isZelosInputConnection) {
+      realDrawer.draw(oldNode, curNode);
       return;
     }
 
-    drawer.draw(oldNode, newNode);
+    // Hide any visible marker SVG and instead do some manual rendering.
+    realDrawer.hide();
+
+    if (isZelosInputConnection) {
+      this.showAtInput(curNode);
+    } else if (curNode && curNodeType === ASTNode.types.BLOCK) {
+      const block = curNode.getLocation() as Blockly.BlockSvg;
+      if (!block.isShadow()) {
+        // Selection should already be in sync.
+      } else {
+        block.addSelect();
+      }
+    }
+
+    // Call MarkerSvg.prototype.fireMarkerEvent like
+    // MarkerSvg.prototype.draw would (even though it's private).
+    (realDrawer as any)?.fireMarkerEvent?.(oldNode, curNode);
+  }
+
+  /**
+   * Check whether the node represents a value input connection.
+   *
+   * @param node The node to check
+   * @returns True if the node represents a value input connection.
+   */
+  private isValueInputConnection(node: ASTNode) {
+    if (node?.getType() !== ASTNode.types.INPUT) return false;
+    const connection = node.getLocation() as Blockly.Connection;
+    return connection.type === Blockly.ConnectionType.INPUT_VALUE;
+  }
+
+  /**
+   * Hide the cursor rendering at the given input node.
+   *
+   * @param node The input node to hide.
+   */
+  private hideAtInput(node: ASTNode) {
+    const inputConnection = node.getLocation() as Blockly.Connection;
+    const sourceBlock = inputConnection.getSourceBlock() as Blockly.BlockSvg;
+    const input = inputConnection.getParentInput();
+    if (input) {
+      const pathObject = sourceBlock.pathObject as Blockly.zelos.PathObject;
+      // @ts-expect-error getOutlinePath is private.
+      const outlinePath = pathObject.getOutlinePath(input.name);
+      Blockly.utils.dom.removeClass(outlinePath, 'inputActiveFocus');
+    }
+  }
+
+  /**
+   * Show the cursor rendering at the given input node.
+   *
+   * @param node The input node to show.
+   */
+  private showAtInput(node: ASTNode) {
+    const inputConnection = node.getLocation() as Blockly.Connection;
+    const sourceBlock = inputConnection.getSourceBlock() as Blockly.BlockSvg;
+    const input = inputConnection.getParentInput();
+    if (input) {
+      const pathObject = sourceBlock.pathObject as Blockly.zelos.PathObject;
+      // @ts-expect-error getOutlinePath is private.
+      const outlinePath = pathObject.getOutlinePath(input.name);
+      Blockly.utils.dom.addClass(outlinePath, 'inputActiveFocus');
+    }
   }
 
   /**
@@ -657,7 +678,17 @@ export class LineCursor extends Marker {
     if (event.type !== Blockly.Events.SELECTED) return;
     const selectedEvent = event as Blockly.Events.Selected;
     if (selectedEvent.workspaceId !== this.workspace.id) return;
-    this.getCurNode();
+    if (selectedEvent.newElementId) {
+      const block = this.workspace.getBlockById(selectedEvent.newElementId);
+      if (block) {
+        const node = ASTNode.createBlockNode(block);
+        if (node) {
+          this.setCurNode(node, true);
+        }
+      }
+    } else {
+      this.setCurNode(null as never, true);
+    }
   }
 }
 

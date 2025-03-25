@@ -14,6 +14,7 @@
  * The different parts of Blockly that the user navigates between.
  */
 export enum STATE {
+  NOWHERE = 'nowhere',
   WORKSPACE = 'workspace',
   FLYOUT = 'flyout',
   TOOLBOX = 'toolbox',
@@ -23,12 +24,12 @@ export enum STATE {
  * Default keyboard navigation shortcut names.
  */
 export enum SHORTCUT_NAMES {
-  PREVIOUS = 'previous',
-  NEXT = 'next',
-  IN = 'in',
-  OUT = 'out',
+  UP = 'up',
+  DOWN = 'down',
+  RIGHT = 'right',
+  LEFT = 'left',
   INSERT = 'insert',
-  MARK = 'mark',
+  EDIT_OR_CONFIRM = 'edit_or_confirm',
   DISCONNECT = 'disconnect',
   TOOLBOX = 'toolbox',
   EXIT = 'exit',
@@ -42,15 +43,9 @@ export enum SHORTCUT_NAMES {
   MOVE_WS_CURSOR_DOWN = 'workspace_down',
   MOVE_WS_CURSOR_LEFT = 'workspace_left',
   MOVE_WS_CURSOR_RIGHT = 'workspace_right',
-  TOGGLE_KEYBOARD_NAV = 'toggle_keyboard_nav',
+  CREATE_WS_CURSOR = 'to_workspace',
   /* eslint-enable @typescript-eslint/naming-convention */
   LIST_SHORTCUTS = 'list_shortcuts',
-  ANNOUNCE = 'announce',
-  GO_TO_NEXT_SIBLING = 'go_to_next_sibling',
-  GO_TO_PREVIOUS_SIBLING = 'go_to_previous_sibling',
-  JUMP_TO_ROOT = 'jump_to_root_of_current_stack',
-  CONTEXT_OUT = 'context_out',
-  CONTEXT_IN = 'context_in',
   CLEAN_UP = 'clean_up_workspace',
 }
 
@@ -65,54 +60,38 @@ export enum LOGGING_MSG_TYPE {
 }
 
 /**
- * Platform specific modifier key used in shortcuts.
- */
-export enum MODIFIER_KEY {
-  Windows = 'Ctrl',
-  ChromeOS = 'Ctrl',
-  macOS = '⌘ Command',
-  Linux = 'Meta',
-}
-
-/**
  * Categories used to organised the shortcut dialog.
  * Shortcut name should match those obtained from the Blockly shortcut register.
  */
-export const SHORTCUT_CATEGORIES = {
+export const SHORTCUT_CATEGORIES: Record<
+  string,
+  // Also allow undo/redo. Document the non-keyboard-nav versions of others for
+  // better text because temporarily the name in the table is derived from
+  // these id-like names.
+  Array<SHORTCUT_NAMES | 'undo' | 'redo' | 'cut' | 'copy' | 'paste' | 'delete'>
+> = {
   'General': [
-    'escape',
-    'exit',
-    'delete',
-    'toggle_keyboard_nav',
-    'announce',
-    'list_shortcuts',
-    'toolbox',
-    'disconnect',
+    SHORTCUT_NAMES.MENU,
+    SHORTCUT_NAMES.EDIT_OR_CONFIRM,
+    SHORTCUT_NAMES.EXIT,
+    SHORTCUT_NAMES.TOOLBOX,
+    SHORTCUT_NAMES.CLEAN_UP,
+    SHORTCUT_NAMES.LIST_SHORTCUTS,
   ],
   'Editing': [
+    SHORTCUT_NAMES.INSERT,
+    'delete',
+    SHORTCUT_NAMES.DISCONNECT,
     'cut',
     'copy',
     'paste',
     'undo',
     'redo',
-    'enter_or_mark',
-    'insert',
   ],
   'Code navigation': [
-    'previous',
-    'next',
-    'in',
-    'out',
-    'go_to_previous_sibling',
-    'go_to_next_sibling',
-    'jump_to_root_of_current_stack',
-  ],
-  'Workspace navigation': [
-    'workspace_down',
-    'workspace_left',
-    'workspace_up',
-    'workspace_right',
-    'clean_up_workspace',
-    'intercept_tab_navigation',
+    SHORTCUT_NAMES.UP,
+    SHORTCUT_NAMES.DOWN,
+    SHORTCUT_NAMES.RIGHT,
+    SHORTCUT_NAMES.LEFT,
   ],
 };

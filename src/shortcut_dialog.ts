@@ -17,10 +17,10 @@ export class ShortcutDialog {
   outputDiv: HTMLElement | null;
   modalContainer: HTMLElement | null;
   shortcutDialog: HTMLDialogElement | null;
-  open: Boolean;
+  open: boolean;
   closeButton: HTMLElement | null;
   /**
-   * Constructor for an Announcer.
+   * Constructor for a dialog that displays available keyboard shortcuts.
    */
   constructor() {
     // For testing purposes, this assumes that the page has a
@@ -34,17 +34,16 @@ export class ShortcutDialog {
   }
 
   getPlatform() {
-    const platform = navigator.platform;
-
-    // Check for Windows platforms
+    const {platform, userAgent} = navigator;
     if (platform.startsWith('Win')) {
       return 'Windows';
     } else if (platform.startsWith('Mac')) {
       return 'macOS';
+    } else if (/\bCrOS\b/.test(userAgent)) {
+      // Order is important because platform matches the Linux case below.
+      return 'ChromeOS';
     } else if (platform.includes('Linux')) {
       return 'Linux';
-    } else if (platform.includes('chromeOS')) {
-      return 'ChromeOS';
     } else {
       return 'Unknown';
     }
@@ -69,11 +68,9 @@ export class ShortcutDialog {
         this.shortcutDialog.querySelectorAll('.key.modifier');
 
       if (modifierKeys.length > 0 && platform) {
-        for (let key of modifierKeys) {
+        for (const key of modifierKeys) {
           key.textContent =
-            Constants.MODIFIER_KEY[
-              platform as keyof typeof Constants.MODIFIER_KEY
-            ];
+            this.getPlatform() === 'macOS' ? '⌘ Command' : 'Ctrl';
         }
       }
     }
@@ -103,8 +100,6 @@ export class ShortcutDialog {
    * List all currently registered shortcuts as a table.
    */
   createModalContent() {
-    const registry = ShortcutRegistry.registry.getRegistry();
-
     let modalContents = `<div class="modal-container">
       <dialog class="shortcut-modal">
         <div class="shortcut-container" tabindex="0">
@@ -117,16 +112,9 @@ export class ShortcutDialog {
           <div class="shortcut-tables">`;
 
     // Display shortcuts by their categories.
-    const categoryKeys = Object.keys(Constants.SHORTCUT_CATEGORIES);
-
-    for (const key of categoryKeys) {
-      const categoryShortcuts: string[] =
-        Constants.SHORTCUT_CATEGORIES[
-          key as keyof typeof Constants.SHORTCUT_CATEGORIES
-        ];
-
-      const shortcuts = Object.keys(registry);
-
+    for (const [key, categoryShortcuts] of Object.entries(
+      Constants.SHORTCUT_CATEGORIES,
+    )) {
       modalContents += `
         <table class="shortcut-table">
           <tbody>
@@ -134,12 +122,10 @@ export class ShortcutDialog {
           <tr>
           `;
 
-      for (const keyboardShortcut of shortcuts) {
-        if (categoryShortcuts.includes(keyboardShortcut)) {
-          const codeArray =
-            ShortcutRegistry.registry.getKeyCodesByShortcutName(
-              keyboardShortcut,
-            );
+      for (const keyboardShortcut of categoryShortcuts) {
+        const codeArray =
+          ShortcutRegistry.registry.getKeyCodesByShortcutName(keyboardShortcut);
+        if (codeArray.length > 0) {
           // Only show the first shortcut if there are many
           const prettyPrinted =
             codeArray.length > 2
@@ -149,7 +135,7 @@ export class ShortcutDialog {
           modalContents += `
               <td>${this.getReadableShortcutName(keyboardShortcut)}</td>
               <td>${prettyPrinted}</td>
-             </tr>`;
+              </tr>`;
         }
       }
       modalContents += '</tr></tbody></table>';
@@ -172,6 +158,31 @@ export class ShortcutDialog {
       }
     }
   }
+
+  /**
+   * Registers an action to list shortcuts with the shortcut registry.
+   */
+  install() {
+    /** List all of the currently registered shortcuts. */
+    const announceShortcut: ShortcutRegistry.KeyboardShortcut = {
+      name: Constants.SHORTCUT_NAMES.LIST_SHORTCUTS,
+      callback: () => {
+        this.toggle();
+        return true;
+      },
+      keyCodes: [Blockly.utils.KeyCodes.SLASH],
+    };
+    ShortcutRegistry.registry.register(announceShortcut);
+  }
+
+  /**
+   * Unregisters the action to list shortcuts.
+   */
+  uninstall() {
+    ShortcutRegistry.registry.unregister(
+      Constants.SHORTCUT_NAMES.LIST_SHORTCUTS,
+    );
+  }
 }
 
 /**
@@ -193,10 +204,9 @@ Blockly.Css.register(`
   gap: 12px;
   margin: auto;
   max-height: 82vh;
-  min-width: 500px;
+  max-width: calc(100% - 10em);
   padding: 24px 12px 24px 32px;
   position: relative;
-  width: calc(100% - 10em);
   z-index: 99;
 }
 
@@ -232,11 +242,30 @@ Blockly.Css.register(`
   width: 100%;
 }
 
+.shortcut-tables {
+  display: grid;
+  align-items: start;
+  grid-template-columns: 1fr;
+  row-gap: 1em;
+  column-gap: 2em;
+}
+
+@media (min-width: 950px) {
+  .shortcut-tables {
+    grid-template-columns: 1fr 1fr
+  }
+}
+
+@media (min-width: 1360px) {
+  .shortcut-tables {
+    grid-template-columns: 1fr 1fr 1fr
+  }
+}
+
 .shortcut-table {
   border-collapse: collapse;
   font-family: Roboto;
   font-size: .9em;
-  width: 100%;
 }
 
 .shortcut-table th {
@@ -299,36 +328,4 @@ Blockly.Css.register(`
   text-wrap: nowrap;
 }
 
-@media (max-width: 800px) {
-  .shortcut-modal {
-    min-width: 450px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .shortcut-tables {
-    align-items: flex-start;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-  }
-
-  .shortcut-table {
-    width: calc(50% - 12px);
-  }
-}
-
-@media (min-width: 1420px) {
-  .shortcut-modal {
-    max-width: 1900px
-  }
-
-  .shortcut-table {
-    width: calc(25% - 24px);
-  }
-
-  .shortcut-table td:first-child {
-    width: 45%;
-  }
-}
 `);

@@ -5,14 +5,18 @@
  */
 
 import {
+  ASTNode,
   ContextMenuRegistry,
   Gesture,
   ShortcutRegistry,
+  Events,
   utils as blocklyUtils,
+  clipboard,
   ICopyData,
 } from 'blockly';
 import * as Constants from '../constants';
-import type {BlockSvg, Workspace, WorkspaceSvg} from 'blockly';
+import type {BlockSvg, WorkspaceSvg} from 'blockly';
+import {LineCursor} from '../line_cursor';
 import {Navigation} from '../navigation';
 
 const KeyCodes = blocklyUtils.KeyCodes;
@@ -26,7 +30,7 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
  * menu; changing individual weights relative to base weight can change
  * the order within the clipboard group.
  */
-const BASE_WEIGHT = 11;
+const BASE_WEIGHT = 12;
 
 /**
  * Logic and state for cut/copy/paste actions as both keyboard shortcuts
@@ -163,14 +167,17 @@ export class Clipboard {
    * @returns True if this function successfully handled cutting.
    */
   private cutCallback(workspace: WorkspaceSvg) {
-    const sourceBlock = workspace
-      .getCursor()
-      ?.getCurNode()
-      .getSourceBlock() as BlockSvg;
+    const cursor = workspace.getCursor();
+    if (!cursor) throw new TypeError('no cursor');
+    const sourceBlock = cursor
+      .getCurNode()
+      ?.getSourceBlock() as BlockSvg | null;
+    if (!sourceBlock) throw new TypeError('no source block');
     this.copyData = sourceBlock.toCopyData();
     this.copyWorkspace = sourceBlock.workspace;
-    this.navigation.moveCursorOnBlockDelete(workspace, sourceBlock);
+    if (cursor instanceof LineCursor) cursor.preDelete(sourceBlock);
     sourceBlock.checkAndDelete();
+    if (cursor instanceof LineCursor) cursor.postDelete();
     return true;
   }
 
@@ -269,11 +276,16 @@ export class Clipboard {
     const sourceBlock = activeWorkspace
       ?.getCursor()
       ?.getCurNode()
-      .getSourceBlock() as BlockSvg;
-    workspace.hideChaff();
+      ?.getSourceBlock() as BlockSvg;
+    if (!sourceBlock) return false;
+
     this.copyData = sourceBlock.toCopyData();
     this.copyWorkspace = sourceBlock.workspace;
-    return !!this.copyData;
+    const copied = !!this.copyData;
+    if (copied && navigationState === Constants.STATE.FLYOUT) {
+      this.navigation.focusWorkspace(workspace);
+    }
+    return copied;
   }
 
   /**
@@ -303,13 +315,17 @@ export class Clipboard {
     const pasteAction: ContextMenuRegistry.RegistryItem = {
       displayText: (scope) => `Paste (${this.getPlatformPrefix()}V)`,
       preconditionFn: (scope) => {
-        const ws = scope.block?.workspace;
+        const ws =
+          scope.block?.workspace ??
+          (scope as any).connection?.getSourceBlock().workspace;
         if (!ws) return 'hidden';
 
         return this.pastePrecondition(ws) ? 'enabled' : 'disabled';
       },
       callback: (scope) => {
-        const ws = scope.block?.workspace;
+        const ws =
+          scope.block?.workspace ??
+          (scope as any).connection?.getSourceBlock().workspace;
         if (!ws) return;
         return this.pasteCallback(ws);
       },
@@ -350,7 +366,27 @@ export class Clipboard {
     const pasteWorkspace = this.copyWorkspace.isFlyout
       ? workspace
       : this.copyWorkspace;
-    return this.navigation.paste(this.copyData, pasteWorkspace);
+
+    const targetNode = this.navigation.getStationaryNode(pasteWorkspace);
+    // If we're pasting in the flyout it still targets the workspace. Focus first
+    // so ensure correct selection handling.
+    this.navigation.focusWorkspace(workspace);
+
+    Events.setGroup(true);
+    const block = clipboard.paste(this.copyData, pasteWorkspace) as BlockSvg;
+    if (block) {
+      if (targetNode) {
+        this.navigation.tryToConnectNodes(
+          pasteWorkspace,
+          targetNode,
+          ASTNode.createBlockNode(block)!,
+        );
+      }
+      Events.setGroup(false);
+      return true;
+    }
+    Events.setGroup(false);
+    return false;
   }
 
   /**
