@@ -228,7 +228,7 @@ const simpleCircle = {
           'STATEMENTS': {
             'block': {
               'type': 'simple_circle',
-              'id': '_}!@OHwjAb,2Gi8nT0}L',
+              'id': 'draw_circle_1',
               'inline': true,
               'inputs': {
                 'COLOR': {
