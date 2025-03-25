@@ -64,7 +64,11 @@ export class ArrowNavigation {
             case Constants.STATE.WORKSPACE:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled && workspace) {
-                if (!this.navigation.defaultCursorPositionIfNeeded(workspace)) {
+                if (
+                  !this.navigation.defaultWorkspaceCursorPositionIfNeeded(
+                    workspace,
+                  )
+                ) {
                   workspace.getCursor()?.in();
                 }
                 isHandled = true;
@@ -97,7 +101,11 @@ export class ArrowNavigation {
             case Constants.STATE.WORKSPACE:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled && workspace) {
-                if (!this.navigation.defaultCursorPositionIfNeeded(workspace)) {
+                if (
+                  !this.navigation.defaultWorkspaceCursorPositionIfNeeded(
+                    workspace,
+                  )
+                ) {
                   workspace.getCursor()?.out();
                 }
                 isHandled = true;
@@ -129,7 +137,11 @@ export class ArrowNavigation {
             case Constants.STATE.WORKSPACE:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled && workspace) {
-                if (!this.navigation.defaultCursorPositionIfNeeded(workspace)) {
+                if (
+                  !this.navigation.defaultWorkspaceCursorPositionIfNeeded(
+                    workspace,
+                  )
+                ) {
                   workspace.getCursor()?.next();
                 }
                 isHandled = true;
@@ -138,7 +150,9 @@ export class ArrowNavigation {
             case Constants.STATE.FLYOUT:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled && flyout) {
-                flyout.getWorkspace()?.getCursor()?.next();
+                if (!this.navigation.defaultFlyoutCursorIfNeeded(workspace)) {
+                  flyout.getWorkspace()?.getCursor()?.next();
+                }
                 isHandled = true;
               }
               return isHandled;
@@ -165,7 +179,7 @@ export class ArrowNavigation {
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled) {
                 if (
-                  !this.navigation.defaultCursorPositionIfNeeded(
+                  !this.navigation.defaultWorkspaceCursorPositionIfNeeded(
                     workspace,
                     'last',
                   )
@@ -178,7 +192,14 @@ export class ArrowNavigation {
             case Constants.STATE.FLYOUT:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled && flyout) {
-                flyout.getWorkspace()?.getCursor()?.prev();
+                if (
+                  !this.navigation.defaultFlyoutCursorIfNeeded(
+                    workspace,
+                    'last',
+                  )
+                ) {
+                  flyout.getWorkspace()?.getCursor()?.prev();
+                }
                 isHandled = true;
               }
               return isHandled;

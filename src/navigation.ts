@@ -279,7 +279,7 @@ export class Navigation {
     ) {
       // When variables are created, that recreates the flyout contents, leaving the
       // cursor in an invalid state.
-      this.resetFlyoutCursorPosition(mainWorkspace);
+      this.defaultFlyoutCursorIfNeeded(mainWorkspace);
     }
   }
 
@@ -399,7 +399,7 @@ export class Navigation {
     if (!Blockly.Gesture.inProgress()) {
       workspace.hideChaff();
       // This will make a selection which would interfere with any gesture.
-      this.defaultCursorPositionIfNeeded(workspace);
+      this.defaultWorkspaceCursorPositionIfNeeded(workspace);
     }
 
     const cursor = workspace.getCursor();
@@ -503,7 +503,12 @@ export class Navigation {
 
     this.setState(workspace, Constants.STATE.FLYOUT);
     this.getFlyoutCursor(workspace)?.draw();
-    this.resetFlyoutCursorPosition(workspace);
+
+    // This doesn't identify a click on the scrollbars which will unfortunately
+    // default the cursor if the flyout didn't already have focus.
+    if (!Blockly.Gesture.inProgress()) {
+      this.defaultFlyoutCursorIfNeeded(workspace);
+    }
 
     // Prevent shift-tab to the toolbox while the flyout has focus.
     const toolboxElement = getToolboxElement(workspace);
@@ -534,34 +539,46 @@ export class Navigation {
   }
 
   /**
-   * Move the flyout cursor to the start if unset (as it is initially despite
+   * Move the flyout cursor to the preferred end if unset (as it is initially despite
    * the types) or on a disposed item.
    *
    * @param workspace The workspace.
+   * @param prefer The preferred default position.
+   * @return true if the cursor location was defaulted.
    */
-  private resetFlyoutCursorPosition(workspace: Blockly.WorkspaceSvg) {
+  defaultFlyoutCursorIfNeeded(
+    workspace: Blockly.WorkspaceSvg,
+    prefer: 'first' | 'last' = 'first',
+  ) {
     const flyout = workspace.getFlyout();
     if (!flyout) return;
     const flyoutCursor = this.getFlyoutCursor(workspace);
     if (!flyoutCursor) return;
 
     const curNode = flyoutCursor.getCurNode();
-    if (curNode && !this.isFlyoutItemDisposed(curNode)) return;
+    if (curNode && !this.isFlyoutItemDisposed(curNode)) return false;
 
     const flyoutContents = flyout.getContents();
-    const firstFlyoutItem = flyoutContents[0];
-    if (!firstFlyoutItem) return;
-    if (firstFlyoutItem.getElement() instanceof Blockly.FlyoutButton) {
+    const defaultFlyoutItem =
+      prefer === 'first'
+        ? flyoutContents[0]
+        : flyoutContents[flyoutContents.length - 1];
+    if (!defaultFlyoutItem) return;
+    const defaultFlyoutItemElement = defaultFlyoutItem.getElement();
+    if (defaultFlyoutItemElement instanceof Blockly.FlyoutButton) {
       const astNode = Blockly.ASTNode.createButtonNode(
-        firstFlyoutItem.getElement() as Blockly.FlyoutButton,
+        defaultFlyoutItemElement as Blockly.FlyoutButton,
       );
       flyoutCursor.setCurNode(astNode!);
-    } else if (firstFlyoutItem.getElement() instanceof Blockly.BlockSvg) {
+      return true;
+    } else if (defaultFlyoutItemElement instanceof Blockly.BlockSvg) {
       const astNode = Blockly.ASTNode.createStackNode(
-        firstFlyoutItem.getElement() as Blockly.BlockSvg,
+        defaultFlyoutItemElement as Blockly.BlockSvg,
       );
       flyoutCursor.setCurNode(astNode!);
+      return true;
     }
+    return false;
   }
 
   /**
@@ -572,9 +589,10 @@ export class Navigation {
    *  - Move the cursor to the default location on the workspace.
    *
    * @param workspace The main Blockly workspace.
+   * @param prefer The preferred default position.
    * @return true if the cursor location was defaulted.
    */
-  defaultCursorPositionIfNeeded(
+  defaultWorkspaceCursorPositionIfNeeded(
     workspace: Blockly.WorkspaceSvg,
     prefer: 'first' | 'last' = 'first',
   ) {
