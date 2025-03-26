@@ -103,4 +103,8 @@ function addP5() {
 document.addEventListener('DOMContentLoaded', () => {
   addP5();
   createWorkspace();
+  // Add Blockly to the global scope so that test code can access it to
+  // verify state after keypresses.
+  // @ts-ignore
+  window.Blockly = Blockly;
 });
