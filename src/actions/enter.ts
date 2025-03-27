@@ -4,7 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ASTNode, ShortcutRegistry, utils as BlocklyUtils} from 'blockly/core';
+import {
+  ASTNode,
+  ShortcutRegistry,
+  utils as BlocklyUtils,
+  dialog,
+} from 'blockly/core';
 
 import type {
   Block,
@@ -61,7 +66,7 @@ export class EnterAction {
               return false;
             }
             curNode = flyoutCursor.getCurNode();
-            nodeType = curNode.getType();
+            nodeType = curNode?.getType();
 
             switch (nodeType) {
               case ASTNode.types.STACK:
@@ -90,6 +95,7 @@ export class EnterAction {
     const cursor = workspace.getCursor();
     if (!cursor) return;
     const curNode = cursor.getCurNode();
+    if (!curNode) return;
     const nodeType = curNode.getType();
     if (nodeType === ASTNode.types.FIELD) {
       (curNode.getLocation() as Field).showEditor();
@@ -122,7 +128,7 @@ export class EnterAction {
    *     the block will be placed on.
    */
   private insertFromFlyout(workspace: WorkspaceSvg) {
-    const stationaryNode = workspace.getCursor()?.getCurNode();
+    const stationaryNode = this.navigation.getStationaryNode(workspace);
     const newBlock = this.createNewBlock(workspace);
     if (!newBlock) return;
     if (stationaryNode) {
@@ -141,7 +147,6 @@ export class EnterAction {
 
     this.navigation.focusWorkspace(workspace);
     workspace.getCursor()!.setCurNode(ASTNode.createBlockNode(newBlock)!);
-    this.navigation.removeMark(workspace);
   }
 
   /**
@@ -154,7 +159,8 @@ export class EnterAction {
     const button = this.navigation
       .getFlyoutCursor(workspace)!
       .getCurNode()
-      .getLocation() as FlyoutButton;
+      ?.getLocation() as FlyoutButton | undefined;
+    if (!button) return;
     const buttonCallback = (workspace as any).flyoutButtonCallbacks.get(
       (button as any).callbackKey,
     );
@@ -206,8 +212,8 @@ export class EnterAction {
     const curBlock = this.navigation
       .getFlyoutCursor(workspace)!
       .getCurNode()
-      .getLocation() as BlockSvg;
-    if (!curBlock.isEnabled()) {
+      ?.getLocation() as BlockSvg | undefined;
+    if (!curBlock?.isEnabled()) {
       console.warn("Can't insert a disabled block.");
       return null;
     }

@@ -32,7 +32,7 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
  * menu; changing individual weights relative to base weight can change
  * the order within the clipboard group.
  */
-const BASE_WEIGHT = 11;
+const BASE_WEIGHT = 12;
 
 /**
  * Logic and state for cut/copy/paste actions as both keyboard shortcuts
@@ -171,7 +171,9 @@ export class Clipboard {
   private cutCallback(workspace: WorkspaceSvg) {
     const cursor = workspace.getCursor();
     if (!cursor) throw new TypeError('no cursor');
-    const sourceBlock = cursor.getCurNode().getSourceBlock() as BlockSvg | null;
+    const sourceBlock = cursor
+      .getCurNode()
+      ?.getSourceBlock() as BlockSvg | null;
     if (!sourceBlock) throw new TypeError('no source block');
     this.copyData = sourceBlock.toCopyData();
     this.copyWorkspace = sourceBlock.workspace;
@@ -276,17 +278,22 @@ export class Clipboard {
     const sourceBlock = activeWorkspace
       ?.getCursor()
       ?.getCurNode()
-      .getSourceBlock() as BlockSvg;
-    workspace.hideChaff();
+      ?.getSourceBlock() as BlockSvg;
+    if (!sourceBlock) return false;
+
     this.copyData = sourceBlock.toCopyData();
     this.copyWorkspace = sourceBlock.workspace;
-    if (this.copyData) {
+    const copied = !!this.copyData;
+    if (copied) {
+      if (navigationState === Constants.STATE.FLYOUT) {
+        this.navigation.focusWorkspace(workspace);
+      }
       toast(workspace, {
-        message: `Copied. Press ${formatMetaShortcut("V")} to paste.`,
+        message: `Copied. Press ${formatMetaShortcut('V')} to paste.`,
         duration: 4500,
       });
     }
-    return !!this.copyData;
+    return copied;
   }
 
   /**
@@ -368,8 +375,10 @@ export class Clipboard {
       ? workspace
       : this.copyWorkspace;
 
-    // Do this before clipoard.paste due to cursor/focus workaround in getCurNode.
-    const targetNode = pasteWorkspace.getCursor()?.getCurNode();
+    const targetNode = this.navigation.getStationaryNode(pasteWorkspace);
+    // If we're pasting in the flyout it still targets the workspace. Focus first
+    // so ensure correct selection handling.
+    this.navigation.focusWorkspace(workspace);
 
     Events.setGroup(true);
     const block = clipboard.paste(this.copyData, pasteWorkspace) as BlockSvg;
@@ -381,7 +390,6 @@ export class Clipboard {
           ASTNode.createBlockNode(block)!,
         );
       }
-      this.navigation.removeMark(pasteWorkspace);
       Events.setGroup(false);
       return true;
     }

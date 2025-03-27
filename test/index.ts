@@ -14,7 +14,7 @@ import {forBlock} from './blocks/p5_generators';
 // @ts-expect-error No types in js file
 import {blocks} from './blocks/p5_blocks';
 // @ts-expect-error No types in js file
-import {toolbox} from './blocks/toolbox.js';
+import {toolbox as toolboxFlyout} from './blocks/toolbox.js';
 // @ts-expect-error No types in js file
 import toolboxCategories from './toolboxCategories.js';
 
@@ -50,12 +50,18 @@ function getOptions() {
   const noStackParam = params.get('noStack');
   const stackConnections = !noStackParam;
 
+  const toolboxParam = params.get('toolbox');
+  const toolbox = toolboxParam ?? 'toolbox';
+  const toolboxObject =
+    toolbox === 'flyout' ? toolboxFlyout : toolboxCategories;
+
   // Update form inputs to match params, but only after the page is
   // fully loaded as Chrome (at least) tries to restore previous form
   // values and does so _after_ DOMContentLoaded has fired, which can
   // result in the form inputs being out-of-sync with the actual
   // options when doing browswer page navigation.
   window.addEventListener('load', () => {
+    (document.getElementById('toolbox') as HTMLSelectElement).value = toolbox;
     (document.getElementById('renderer') as HTMLSelectElement).value = renderer;
     (document.getElementById('scenario') as HTMLSelectElement).value = scenario;
     (document.getElementById('noStack') as HTMLInputElement).checked =
@@ -66,6 +72,7 @@ function getOptions() {
     scenario,
     stackConnections,
     renderer,
+    toolbox: toolboxObject,
   };
 }
 
@@ -76,10 +83,10 @@ function getOptions() {
  * @returns The created workspace.
  */
 function createWorkspace(): Blockly.WorkspaceSvg {
-  const {scenario, stackConnections, renderer} = getOptions();
+  const {scenario, stackConnections, renderer, toolbox} = getOptions();
 
   const injectOptions = {
-    toolbox: toolboxCategories,
+    toolbox,
     renderer,
   };
   const blocklyDiv = document.getElementById('blocklyDiv')!;

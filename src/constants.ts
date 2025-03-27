@@ -43,6 +43,7 @@ export enum SHORTCUT_NAMES {
   MOVE_WS_CURSOR_DOWN = 'workspace_down',
   MOVE_WS_CURSOR_LEFT = 'workspace_left',
   MOVE_WS_CURSOR_RIGHT = 'workspace_right',
+  CREATE_WS_CURSOR = 'to_workspace',
   /* eslint-enable @typescript-eslint/naming-convention */
   LIST_SHORTCUTS = 'list_shortcuts',
   CLEAN_UP = 'clean_up_workspace',
