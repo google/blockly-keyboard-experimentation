@@ -21,6 +21,8 @@ import type {
 
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
+import {formatMetaShortcut} from '../shortcut_formatting';
+import {toast} from '../toast';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 
@@ -100,14 +102,14 @@ export class EnterAction {
     } else if (nodeType === ASTNode.types.BLOCK) {
       const block = curNode.getLocation() as Block;
       if (!this.tryShowFullBlockFieldEditor(block)) {
-        const metaKey = navigator.platform.startsWith('Mac') ? 'Cmd' : 'Ctrl';
-        const canMoveInHint = `Press right arrow to move in or ${metaKey} + Enter for more options`;
-        const genericHint = `Press ${metaKey} + Enter for options`;
-        const hint =
+        const shortcut = formatMetaShortcut('Enter');
+        const canMoveInHint = `Press right arrow to move in or ${shortcut} for more options`;
+        const genericHint = `Press ${shortcut} for options`;
+        const message =
           curNode.in()?.getSourceBlock() === block
             ? canMoveInHint
             : genericHint;
-        dialog.alert(hint);
+        toast(workspace, {message});
       }
     } else if (curNode.isConnection() || nodeType === ASTNode.types.WORKSPACE) {
       this.navigation.openToolboxOrFlyout(workspace);
