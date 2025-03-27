@@ -455,7 +455,7 @@ export class Navigation {
   ) {
     if (relatedTarget === null) {
       // Workaround:
-      // Skip document.body/null case until this blur bugs is fixed to avoid
+      // Skip document.body/null case until this blur bug is fixed to avoid
       // flipping to passive focus as the user moves their mouse over the
       // colour picker.
       // https://github.com/google/blockly-samples/issues/2498
