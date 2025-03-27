@@ -111,7 +111,7 @@ export class ActionMenu {
     const cursor = workspace.getCursor();
     if (!cursor) throw new Error('workspace has no cursor');
     const node = cursor.getCurNode();
-    if (!node) throw new Error('No node is currently selected');
+    if (!node) return false;
     const nodeType = node.getType();
     switch (nodeType) {
       case ASTNode.types.BLOCK:
