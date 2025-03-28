@@ -149,13 +149,17 @@ export class NavigationController {
     }
     switch (shortcut.name) {
       case Constants.SHORTCUT_NAMES.UP:
-        return (this as any).selectPrevious();
+        // @ts-expect-error private method
+        return this.selectPrevious();
       case Constants.SHORTCUT_NAMES.LEFT:
-        return (this as any).selectParent();
+        // @ts-expect-error private method
+        return this.selectParent();
       case Constants.SHORTCUT_NAMES.DOWN:
-        return (this as any).selectNext();
+        // @ts-expect-error private method
+        return this.selectNext();
       case Constants.SHORTCUT_NAMES.RIGHT:
-        return (this as any).selectChild();
+        // @ts-expect-error private method
+        return this.selectChild();
       default:
         return false;
     }

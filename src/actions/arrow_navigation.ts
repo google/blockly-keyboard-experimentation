@@ -57,7 +57,7 @@ export class ArrowNavigation {
       right: {
         name: Constants.SHORTCUT_NAMES.RIGHT,
         preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-        callback: (workspace, _, shortcut) => {
+        callback: (workspace, e, shortcut) => {
           const toolbox = workspace.getToolbox() as Toolbox;
           let isHandled = false;
           switch (this.navigation.getState(workspace)) {
@@ -94,7 +94,7 @@ export class ArrowNavigation {
       left: {
         name: Constants.SHORTCUT_NAMES.LEFT,
         preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-        callback: (workspace, _, shortcut) => {
+        callback: (workspace, e, shortcut) => {
           const toolbox = workspace.getToolbox() as Toolbox;
           let isHandled = false;
           switch (this.navigation.getState(workspace)) {
@@ -129,7 +129,7 @@ export class ArrowNavigation {
       down: {
         name: Constants.SHORTCUT_NAMES.DOWN,
         preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-        callback: (workspace, _, shortcut) => {
+        callback: (workspace, e, shortcut) => {
           const toolbox = workspace.getToolbox() as Toolbox;
           const flyout = workspace.getFlyout();
           let isHandled = false;
@@ -170,7 +170,7 @@ export class ArrowNavigation {
       up: {
         name: Constants.SHORTCUT_NAMES.UP,
         preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-        callback: (workspace, _, shortcut) => {
+        callback: (workspace, e, shortcut) => {
           const flyout = workspace.getFlyout();
           const toolbox = workspace.getToolbox() as Toolbox;
           let isHandled = false;

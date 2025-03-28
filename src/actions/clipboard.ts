@@ -18,6 +18,7 @@ import * as Constants from '../constants';
 import type {BlockSvg, WorkspaceSvg} from 'blockly';
 import {LineCursor} from '../line_cursor';
 import {Navigation} from '../navigation';
+import {ScopeWithConnection} from './action_menu';
 
 const KeyCodes = blocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -238,7 +239,7 @@ export class Clipboard {
   private copyPrecondition(workspace: WorkspaceSvg) {
     if (!this.canCurrentlyEdit(workspace)) return false;
     switch (this.navigation.getState(workspace)) {
-      case Constants.STATE.WORKSPACE:
+      case Constants.STATE.WORKSPACE: {
         const curNode = workspace?.getCursor()?.getCurNode();
         const source = curNode?.getSourceBlock();
         return !!(
@@ -246,13 +247,15 @@ export class Clipboard {
           source?.isMovable() &&
           !Gesture.inProgress()
         );
-      case Constants.STATE.FLYOUT:
+      }
+      case Constants.STATE.FLYOUT: {
         const flyoutWorkspace = workspace.getFlyout()?.getWorkspace();
         const sourceBlock = flyoutWorkspace
           ?.getCursor()
           ?.getCurNode()
           ?.getSourceBlock();
         return !!(sourceBlock && !Gesture.inProgress());
+      }
       default:
         return false;
     }
@@ -314,18 +317,15 @@ export class Clipboard {
   private registerPasteContextMenuAction() {
     const pasteAction: ContextMenuRegistry.RegistryItem = {
       displayText: (scope) => `Paste (${this.getPlatformPrefix()}V)`,
-      preconditionFn: (scope) => {
-        const ws =
-          scope.block?.workspace ??
-          (scope as any).connection?.getSourceBlock().workspace;
+      preconditionFn: (scope: ScopeWithConnection) => {
+        const block = scope.block ?? scope.connection?.getSourceBlock();
+        const ws = block?.workspace as WorkspaceSvg | null;
         if (!ws) return 'hidden';
-
         return this.pastePrecondition(ws) ? 'enabled' : 'disabled';
       },
-      callback: (scope) => {
-        const ws =
-          scope.block?.workspace ??
-          (scope as any).connection?.getSourceBlock().workspace;
+      callback: (scope: ScopeWithConnection) => {
+        const block = scope.block ?? scope.connection?.getSourceBlock();
+        const ws = block?.workspace as WorkspaceSvg | null;
         if (!ws) return;
         return this.pasteCallback(ws);
       },

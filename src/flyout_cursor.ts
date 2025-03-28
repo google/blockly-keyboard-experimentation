@@ -20,6 +20,8 @@ import {scrollBoundsIntoView} from './workspace_utilities';
 export class FlyoutCursor extends Blockly.Cursor {
   /**
    * The constructor for the FlyoutCursor.
+   *
+   * @param flyout The flyout this cursor is for.
    */
   constructor(private readonly flyout: Blockly.IFlyout) {
     super();

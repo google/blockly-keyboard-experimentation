@@ -7,7 +7,6 @@
 import * as Blockly from 'blockly/core';
 import * as Constants from './constants';
 import {ShortcutRegistry} from 'blockly/core';
-// @ts-expect-error No types in js file
 import {keyCodeArrayToString, toTitleCase} from './keynames';
 
 /**
@@ -88,12 +87,13 @@ export class ShortcutDialog {
   }
 
   /**
-   * @param {string} shortcutName Shortcut name to convert.
-   * @returns {string}
+   * Munges a shortcut name into human readable text.
+   *
+   * @param shortcutName Shortcut name to convert.
+   * @returns A title case version of the name.
    */
   getReadableShortcutName(shortcutName: string) {
-    shortcutName = toTitleCase(shortcutName.replace(/_/gi, ' '));
-    return shortcutName;
+    return toTitleCase(shortcutName.replace(/_/gi, ' '));
   }
 
   /**
@@ -188,7 +188,7 @@ export class ShortcutDialog {
 /**
  * Register classes used by the shortcuts modal
  * Alt: plugin exports a register() function that updates the registry
- **/
+ */
 Blockly.Css.register(`
 :root {
   --divider-border-color: #eee;

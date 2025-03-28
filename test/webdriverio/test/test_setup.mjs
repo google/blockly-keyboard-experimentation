@@ -40,7 +40,7 @@ export const PAUSE_TIME = 50;
 /**
  * Start up the test page. This should only be done once, to avoid
  * constantly popping browser windows open and closed.
- * @return A Promise that resolves to a webdriverIO browser that tests can manipulate.
+ * @returns {Promise<webdriverio.Browser>} A Promise that resolves to a webdriverIO browser that tests can manipulate.
  */
 export async function driverSetup() {
   const options = {
@@ -90,7 +90,7 @@ export async function driverTeardown() {
  * Navigate to the correct URL for the test, using the shared driver.
  * @param {string} playgroundUrl The URL to open for the test, which should be
  *     a Blockly playground with a workspace.
- * @return A Promsie that resolves to a webdriverIO browser that tests can manipulate.
+ * @returns {Promise<webdriverio.Browser>} A Promsie that resolves to a webdriverIO browser that tests can manipulate.
  */
 export async function testSetup(playgroundUrl) {
   if (!driver) {
@@ -106,11 +106,11 @@ export async function testSetup(playgroundUrl) {
 
 /**
  * Replaces OS-specific path with POSIX style path.
+ *
  * Simplified implementation based on
  * https://stackoverflow.com/a/63251716/4969945
- *
  * @param {string} target target path
- * @return {string} posix path
+ * @returns {string} posix path
  */
 function posixPath(target) {
   const result = target.split(path.sep).join(path.posix.sep);

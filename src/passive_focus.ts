@@ -74,6 +74,8 @@ export class PassiveFocus {
   /**
    * Show the passive focus indicator at the specified location.
    * Implementation varies based on location type.
+   *
+   * @param node The node to show passive focus for.
    */
   show(node: ASTNode) {
     // Hide last shown.

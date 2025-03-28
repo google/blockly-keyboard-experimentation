@@ -18,13 +18,13 @@ import {ASTNode, Marker} from 'blockly/core';
 import {scrollBoundsIntoView} from './workspace_utilities';
 
 /** Options object for LineCursor instances. */
-export type CursorOptions = {
+export interface CursorOptions {
   /**
    * Can the cursor visit all stack connections (next/previous), or
    * (if false) only unconnected next connections?
    */
   stackConnections: boolean;
-};
+}
 
 /** Default options for LineCursor instances. */
 const defaultOptions: CursorOptions = {
@@ -50,13 +50,14 @@ export class LineCursor extends Marker {
   private potentialNodes: Blockly.ASTNode[] | null = null;
 
   /** Whether the renderer is zelos-style. */
-  private isZelos: boolean = false;
+  private isZelos = false;
 
   /**
    * @param workspace The workspace this cursor belongs to.
+   * @param options Cursor options.
    */
   constructor(
-    public readonly workspace: Blockly.WorkspaceSvg,
+    private readonly workspace: Blockly.WorkspaceSvg,
     options?: Partial<CursorOptions>,
   ) {
     super();
@@ -111,7 +112,7 @@ export class LineCursor extends Marker {
     if (!curNode) {
       return null;
     }
-    let newNode = this.getNextNode(curNode, this.validLineNode.bind(this));
+    const newNode = this.getNextNode(curNode, this.validLineNode.bind(this));
 
     if (newNode) {
       this.setCurNode(newNode);
@@ -150,7 +151,10 @@ export class LineCursor extends Marker {
     if (!curNode) {
       return null;
     }
-    let newNode = this.getPreviousNode(curNode, this.validLineNode.bind(this));
+    const newNode = this.getPreviousNode(
+      curNode,
+      this.validLineNode.bind(this),
+    );
 
     if (newNode) {
       this.setCurNode(newNode);
@@ -187,7 +191,7 @@ export class LineCursor extends Marker {
    * - in effect, if the LineCursor is at the end of the 'current
    * line' of the program.
    */
-  public atEndOfLine(): boolean {
+  atEndOfLine(): boolean {
     const curNode = this.getCurNode();
     if (!curNode) return false;
     const rightNode = this.getNextNode(
@@ -227,12 +231,13 @@ export class LineCursor extends Marker {
     switch (type) {
       case ASTNode.types.BLOCK:
         return !(location as Blockly.Block).outputConnection?.isConnected();
-      case ASTNode.types.INPUT:
+      case ASTNode.types.INPUT: {
         const connection = location as Blockly.Connection;
         return (
           connection.type === Blockly.NEXT_STATEMENT &&
           (this.options.stackConnections || !connection.isConnected())
         );
+      }
       case ASTNode.types.NEXT:
         return (
           this.options.stackConnections ||
@@ -388,13 +393,17 @@ export class LineCursor extends Marker {
    * @returns The right most child of the given node, or the node if no child
    *     exists.
    */
-  private getRightMostChild(node: ASTNode | null): ASTNode | null {
-    if (!node!.in()) {
+  private getRightMostChild(node: ASTNode): ASTNode | null {
+    let newNode = node.in();
+    if (!newNode) {
       return node;
     }
-    let newNode = node!.in();
-    while (newNode && newNode.next()) {
-      newNode = newNode.next();
+    for (
+      let nextNode: ASTNode | null = newNode;
+      nextNode;
+      nextNode = newNode.next()
+    ) {
+      newNode = nextNode;
     }
     return this.getRightMostChild(newNode);
   }
@@ -573,6 +582,7 @@ export class LineCursor extends Marker {
    *
    * @param oldNode The previous node.
    * @param curNode The current node.
+   * @param realDrawer The object ~in charge of drawing the marker.
    */
   private drawMarker(
     oldNode: ASTNode | null,
@@ -620,7 +630,8 @@ export class LineCursor extends Marker {
 
     // Call MarkerSvg.prototype.fireMarkerEvent like
     // MarkerSvg.prototype.draw would (even though it's private).
-    (realDrawer as any)?.fireMarkerEvent?.(oldNode, curNode);
+    // @ts-expect-error calling protected method
+    realDrawer?.fireMarkerEvent?.(oldNode, curNode);
   }
 
   /**

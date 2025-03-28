@@ -117,12 +117,17 @@ export class DisconnectAction {
     if (!curConnection.isConnected()) {
       return;
     }
+    const targetConnection = curConnection.targetConnection;
+    if (!targetConnection) {
+      throw new Error('Must have target if connected');
+    }
+
     const superiorConnection = curConnection.isSuperior()
       ? curConnection
-      : curConnection.targetConnection!;
+      : targetConnection;
 
     const inferiorConnection = curConnection.isSuperior()
-      ? curConnection.targetConnection!
+      ? targetConnection
       : curConnection;
 
     if (inferiorConnection.getSourceBlock().isShadow()) {
@@ -140,8 +145,8 @@ export class DisconnectAction {
     rootBlock.bringToFront();
 
     if (wasVisitingConnection) {
-      const connectionNode = ASTNode.createConnectionNode(superiorConnection);
-      workspace.getCursor()!.setCurNode(connectionNode!);
+      const connectionNode = ASTNode.createConnectionNode(superiorConnection)!;
+      workspace.getCursor()?.setCurNode(connectionNode);
     }
   }
 }

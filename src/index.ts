@@ -10,9 +10,9 @@ import {CursorOptions, LineCursor} from './line_cursor';
 import {getFlyoutElement, getToolboxElement} from './workspace_utilities';
 
 /** Options object for KeyboardNavigation instances. */
-export type NavigationOptions = {
+export interface NavigationOptions {
   cursor: Partial<CursorOptions>;
-};
+}
 
 /** Default options for LineCursor instances. */
 const defaultOptions: NavigationOptions = {
@@ -73,6 +73,7 @@ export class KeyboardNavigation {
    *
    * @param workspace The workspace that the plugin will
    *     be added to.
+   * @param options Options.
    */
   constructor(
     workspace: Blockly.WorkspaceSvg,

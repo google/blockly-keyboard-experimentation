@@ -10,7 +10,6 @@ import {
   ContextMenu,
   ContextMenuRegistry,
   ShortcutRegistry,
-  comments,
   utils as BlocklyUtils,
   WidgetDiv,
 } from 'blockly';
@@ -23,10 +22,7 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
   ShortcutRegistry.registry,
 );
 
-export interface Scope {
-  block?: BlockSvg;
-  workspace?: WorkspaceSvg;
-  comment?: comments.RenderedWorkspaceComment;
+export interface ScopeWithConnection extends ContextMenuRegistry.Scope {
   connection?: Connection;
 }
 
@@ -100,6 +96,8 @@ export class ActionMenu {
    * Returns true if it is possible to open the action menu in the
    * current location, even if the menu was not opened due there being
    * no applicable menu items.
+   *
+   * @param workspace The workspace.
    */
   private openActionMenu(workspace: WorkspaceSvg): boolean {
     let menuOptions: Array<
@@ -114,7 +112,7 @@ export class ActionMenu {
     if (!node) return false;
     const nodeType = node.getType();
     switch (nodeType) {
-      case ASTNode.types.BLOCK:
+      case ASTNode.types.BLOCK: {
         const block = node.getLocation() as BlockSvg;
         rtl = block.RTL;
         // Reimplement BlockSvg.prototype.generateContextMenu as that
@@ -130,11 +128,12 @@ export class ActionMenu {
         }
         // End reimplement.
         break;
+      }
 
       // case Blockly.ASTNode.types.INPUT:
       case ASTNode.types.NEXT:
       case ASTNode.types.PREVIOUS:
-      case ASTNode.types.INPUT:
+      case ASTNode.types.INPUT: {
         const connection = node.getLocation() as Connection;
         rtl = connection.getSourceBlock().RTL;
 
@@ -143,6 +142,7 @@ export class ActionMenu {
         // a possible kind of scope.
         this.addConnectionItems(connection, menuOptions);
         break;
+      }
 
       default:
         console.info(`No action menu for ASTNode of type ${nodeType}`);
@@ -177,24 +177,21 @@ export class ActionMenu {
    */
   private addConnectionItems(
     connection: Connection,
-    menuOptions: (
+    menuOptions: Array<
       | ContextMenuRegistry.ContextMenuOption
       | ContextMenuRegistry.LegacyContextMenuOption
-    )[],
+    >,
   ) {
-    const insertAction = ContextMenuRegistry.registry.getItem('insert');
-    if (!insertAction) throw new Error("can't find insert action");
-
-    const pasteAction = ContextMenuRegistry.registry.getItem(
-      'blockPasteFromContextMenu',
-    );
-    if (!pasteAction) throw new Error("can't find paste action");
-    const possibleOptions = [insertAction, pasteAction /* etc.*/];
+    const possibleOptions = [
+      this.getContextMenuAction('insert'),
+      this.getContextMenuAction('blockPasteFromContextMenu'),
+    ];
 
     // Check preconditions and get menu texts.
     const scope = {
       connection,
     } as unknown as ContextMenuRegistry.Scope;
+
     for (const option of possibleOptions) {
       const precondition = option.preconditionFn?.(scope);
       if (precondition === 'hidden') continue;
@@ -205,12 +202,31 @@ export class ActionMenu {
       menuOptions.push({
         text: displayText,
         enabled: precondition === 'enabled',
-        callback: option.callback!,
+        callback: option.callback,
         scope,
         weight: option.weight,
       });
     }
     return menuOptions;
+  }
+
+  /**
+   * Find a context menu action, throwing an `Error` if it is not present or
+   * not an action. This usefully narrows the type to `ActionRegistryItem`
+   * which is not exported from Blockly.
+   *
+   * @param id The id of the action.
+   * @returns the action.
+   */
+  private getContextMenuAction(id: string) {
+    const item = ContextMenuRegistry.registry.getItem('insert');
+    if (!item) {
+      throw new Error(`can't find context menu item ${id}`);
+    }
+    if (!item?.callback) {
+      throw new Error(`context menu item unexpectedly not action ${id}`);
+    }
+    return item;
   }
 
   /**
