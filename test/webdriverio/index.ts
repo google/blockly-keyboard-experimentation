@@ -52,11 +52,15 @@ function getOptions() {
   const toolboxObject =
     toolbox === 'flyout' ? toolboxFlyout : toolboxCategories;
 
+  const rtlParam = params.get('rtl');
+  const rtl = !!rtlParam;
+
   return {
     scenario,
     stackConnections,
     renderer,
     toolbox: toolboxObject,
+    rtl,
   };
 }
 
@@ -67,11 +71,12 @@ function getOptions() {
  * @returns The created workspace.
  */
 function createWorkspace(): Blockly.WorkspaceSvg {
-  const {scenario, stackConnections, renderer, toolbox} = getOptions();
+  const {scenario, stackConnections, renderer, toolbox, rtl} = getOptions();
 
   const injectOptions = {
     toolbox,
     renderer,
+    rtl,
   };
   const blocklyDiv = document.getElementById('blocklyDiv');
   if (!blocklyDiv) {
