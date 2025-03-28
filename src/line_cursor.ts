@@ -744,8 +744,7 @@ export class LineCursor extends Marker {
         block = block.getParent();
       }
       if (block) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.setCurNode(Blockly.ASTNode.createBlockNode(block)!, true);
+        this.setCurNode(Blockly.ASTNode.createBlockNode(block), true);
       }
     }
   }

@@ -83,12 +83,13 @@ export class FlyoutCursor extends Blockly.Cursor {
     return null;
   }
 
-  override setCurNode(node: Blockly.ASTNode) {
+  override setCurNode(node: Blockly.ASTNode | null) {
     super.setCurNode(node);
 
-    const location = node.getLocation();
+    const location = node?.getLocation();
     let bounds: Blockly.utils.Rect | undefined;
     if (
+      location &&
       'getBoundingRectangle' in location &&
       typeof location.getBoundingRectangle === 'function'
     ) {

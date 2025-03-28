@@ -320,8 +320,7 @@ export class Navigation {
       const curNode = cursor.getCurNode();
       const block = curNode ? curNode.getSourceBlock() : null;
       if (block && block.id === mutatedBlockId) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        cursor.setCurNode(Blockly.ASTNode.createBlockNode(block)!);
+        cursor.setCurNode(Blockly.ASTNode.createBlockNode(block));
       }
     }
   }
@@ -348,11 +347,7 @@ export class Navigation {
 
     if (sourceBlock.id === deletedBlockId || ids.includes(sourceBlock.id)) {
       cursor.setCurNode(
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        Blockly.ASTNode.createWorkspaceNode(
-          workspace,
-          WS_COORDINATE_ON_DELETE,
-        )!,
+        Blockly.ASTNode.createWorkspaceNode(workspace, WS_COORDINATE_ON_DELETE),
       );
     }
   }
@@ -374,8 +369,7 @@ export class Navigation {
     const curNodeBlock = block.isShadow() ? block : block.getParent();
     if (curNodeBlock) {
       this.getFlyoutCursor(mainWorkspace)?.setCurNode(
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        Blockly.ASTNode.createStackNode(curNodeBlock)!,
+        Blockly.ASTNode.createStackNode(curNodeBlock),
       );
     }
     this.focusFlyout(mainWorkspace);
@@ -603,17 +597,15 @@ export class Navigation {
     if (!defaultFlyoutItem) return;
     const defaultFlyoutItemElement = defaultFlyoutItem.getElement();
     if (defaultFlyoutItemElement instanceof Blockly.FlyoutButton) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const astNode = Blockly.ASTNode.createButtonNode(
         defaultFlyoutItemElement as Blockly.FlyoutButton,
-      )!;
+      );
       flyoutCursor.setCurNode(astNode);
       return true;
     } else if (defaultFlyoutItemElement instanceof Blockly.BlockSvg) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const astNode = Blockly.ASTNode.createStackNode(
         defaultFlyoutItemElement as Blockly.BlockSvg,
-      )!;
+      );
       flyoutCursor.setCurNode(astNode);
       return true;
     }
@@ -652,17 +644,15 @@ export class Navigation {
     );
     if (topBlocks.length > 0) {
       cursor.setCurNode(
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         Blockly.ASTNode.createTopNode(
           topBlocks[prefer === 'first' ? 0 : topBlocks.length - 1],
-        )!,
+        ),
       );
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const wsNode = Blockly.ASTNode.createWorkspaceNode(
         workspace,
         wsCoordinates,
-      )!;
+      );
       cursor.setCurNode(wsNode);
     }
     return true;

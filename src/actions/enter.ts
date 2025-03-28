@@ -145,8 +145,7 @@ export class EnterAction {
     }
 
     this.navigation.focusWorkspace(workspace);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    workspace.getCursor()?.setCurNode(ASTNode.createBlockNode(newBlock)!);
+    workspace.getCursor()?.setCurNode(ASTNode.createBlockNode(newBlock));
   }
 
   /**
