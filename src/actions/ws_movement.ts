@@ -14,6 +14,11 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
 );
 
 /**
+ * The distance to move the cursor when the cursor is on the workspace.
+ */
+const WS_MOVE_DISTANCE = 40;
+
+/**
  * Logic for free movement of the cursor on the workspace with keyboard
  * shortcuts.
  */
@@ -23,11 +28,6 @@ export class WorkspaceMovement {
    * is allowed.
    */
   private canCurrentlyEdit: (ws: WorkspaceSvg) => boolean;
-
-  /**
-   * The distance to move the cursor when the cursor is on the workspace.
-   */
-  WS_MOVE_DISTANCE = 40;
 
   constructor(canEdit: (ws: WorkspaceSvg) => boolean) {
     this.canCurrentlyEdit = canEdit;
@@ -111,14 +111,14 @@ export class WorkspaceMovement {
     if (!curNode || curNode.getType() !== ASTNode.types.WORKSPACE) return false;
 
     const wsCoord = curNode.getWsCoordinate();
-    const newX = xDirection * this.WS_MOVE_DISTANCE + wsCoord.x;
-    const newY = yDirection * this.WS_MOVE_DISTANCE + wsCoord.y;
+    const newX = xDirection * WS_MOVE_DISTANCE + wsCoord.x;
+    const newY = yDirection * WS_MOVE_DISTANCE + wsCoord.y;
 
     cursor.setCurNode(
       ASTNode.createWorkspaceNode(
         workspace,
         new BlocklyUtils.Coordinate(newX, newY),
-      )!,
+      ),
     );
     return true;
   }

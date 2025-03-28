@@ -4,19 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {
-  Connection,
-  ContextMenuRegistry,
-  ShortcutRegistry,
-  comments,
-  utils as BlocklyUtils,
-} from 'blockly';
-import * as Constants from '../constants';
-import type {BlockSvg, WorkspaceSvg} from 'blockly';
+import {ContextMenuRegistry} from 'blockly';
+import type {WorkspaceSvg} from 'blockly';
 import {LineCursor} from '../line_cursor';
-import {NavigationController} from '../navigation_controller';
-
-const KeyCodes = BlocklyUtils.KeyCodes;
 
 /**
  * Action to edit a block.  This just moves the cursor to the first

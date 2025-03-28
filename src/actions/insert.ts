@@ -5,16 +5,14 @@
  */
 
 import {
-  Connection,
   ContextMenuRegistry,
   ShortcutRegistry,
-  comments,
   utils as BlocklyUtils,
 } from 'blockly';
 import * as Constants from '../constants';
-import type {BlockSvg, WorkspaceSvg} from 'blockly';
+import type {WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
-import {Scope} from './action_menu';
+import {ScopeWithConnection} from './action_menu';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 
@@ -87,15 +85,15 @@ export class InsertAction {
           return 'Insert Block (I)';
         }
       },
-      preconditionFn: (scope: Scope) => {
+      preconditionFn: (scope: ScopeWithConnection) => {
         const block = scope.block ?? scope.connection?.getSourceBlock();
         const ws = block?.workspace as WorkspaceSvg | null;
         if (!ws) return 'hidden';
 
         return this.insertPrecondition(ws) ? 'enabled' : 'hidden';
       },
-      callback: (scope: Scope) => {
-        let ws =
+      callback: (scope: ScopeWithConnection) => {
+        const ws =
           scope.block?.workspace ??
           (scope.connection?.getSourceBlock().workspace as WorkspaceSvg);
         if (!ws) return false;

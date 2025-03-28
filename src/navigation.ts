@@ -25,6 +25,22 @@ import {
 import {PassiveFocus} from './passive_focus';
 
 /**
+ * The default coordinate to use when focusing on the workspace and no
+ * blocks are present. In pixel coordinates, but will be converted to
+ * workspace coordinates when used to position the cursor.
+ */
+const DEFAULT_WS_COORDINATE: Blockly.utils.Coordinate =
+  new Blockly.utils.Coordinate(100, 100);
+
+/**
+ * The default coordinate to use when moving the cursor to the workspace
+ * after a block has been deleted. In pixel coordinates, but will be
+ * converted to workspace coordinates when used to position the cursor.
+ */
+const WS_COORDINATE_ON_DELETE: Blockly.utils.Coordinate =
+  new Blockly.utils.Coordinate(100, 100);
+
+/**
  * Class that holds all methods necessary for keyboard navigation to work.
  */
 export class Navigation {
@@ -33,22 +49,6 @@ export class Navigation {
    * Possible locations of the cursor are: workspace, flyout or toolbox.
    */
   workspaceStates: {[index: string]: Constants.STATE} = {};
-
-  /**
-   * The default coordinate to use when focusing on the workspace and no
-   * blocks are present. In pixel coordinates, but will be converted to
-   * workspace coordinates when used to position the cursor.
-   */
-  DEFAULT_WS_COORDINATE: Blockly.utils.Coordinate =
-    new Blockly.utils.Coordinate(100, 100);
-
-  /**
-   * The default coordinate to use when moving the cursor to the workspace
-   * after a block has been deleted. In pixel coordinates, but will be
-   * converted to workspace coordinates when used to position the cursor.
-   */
-  WS_COORDINATE_ON_DELETE: Blockly.utils.Coordinate =
-    new Blockly.utils.Coordinate(100, 100);
 
   /**
    * Wrapper for method that deals with workspace changes.
@@ -263,15 +263,21 @@ export class Navigation {
         e.type === Blockly.Events.CLICK &&
         (e as Blockly.Events.Click).targetType === 'block'
       ) {
-        const block = flyoutWorkspace.getBlockById(
-          (e as Blockly.Events.Click).blockId!,
-        );
-        this.handleBlockClickInFlyout(mainWorkspace, block!);
+        const {blockId} = e as Blockly.Events.Click;
+        if (blockId) {
+          const block = flyoutWorkspace.getBlockById(blockId);
+          if (block) {
+            this.handleBlockClickInFlyout(mainWorkspace, block);
+          }
+        }
       } else if (e.type === Blockly.Events.SELECTED) {
-        const block = flyoutWorkspace.getBlockById(
-          (e as Blockly.Events.Selected).newElementId!,
-        );
-        this.handleBlockClickInFlyout(mainWorkspace, block!);
+        const {newElementId} = e as Blockly.Events.Selected;
+        if (newElementId) {
+          const block = flyoutWorkspace.getBlockById(newElementId);
+          if (block) {
+            this.handleBlockClickInFlyout(mainWorkspace, block);
+          }
+        }
       }
     } else if (
       e.type === Blockly.Events.BLOCK_CREATE &&
@@ -314,7 +320,7 @@ export class Navigation {
       const curNode = cursor.getCurNode();
       const block = curNode ? curNode.getSourceBlock() : null;
       if (block && block.id === mutatedBlockId) {
-        cursor.setCurNode(Blockly.ASTNode.createBlockNode(block)!);
+        cursor.setCurNode(Blockly.ASTNode.createBlockNode(block));
       }
     }
   }
@@ -333,24 +339,15 @@ export class Navigation {
     const deletedBlockId = e.blockId;
     const ids = e.ids ?? [];
     const cursor = workspace.getCursor();
+    if (!cursor) return;
 
     // Make sure the cursor is on a block.
-    if (
-      !cursor ||
-      !cursor.getCurNode() ||
-      !cursor.getCurNode()?.getSourceBlock()
-    ) {
-      return;
-    }
+    const sourceBlock = cursor.getCurNode()?.getSourceBlock();
+    if (!sourceBlock) return;
 
-    const curNode = cursor.getCurNode();
-    const sourceBlock = curNode?.getSourceBlock()!;
-    if (sourceBlock?.id === deletedBlockId || ids.includes(sourceBlock?.id)) {
+    if (sourceBlock.id === deletedBlockId || ids.includes(sourceBlock.id)) {
       cursor.setCurNode(
-        Blockly.ASTNode.createWorkspaceNode(
-          workspace,
-          this.WS_COORDINATE_ON_DELETE,
-        )!,
+        Blockly.ASTNode.createWorkspaceNode(workspace, WS_COORDINATE_ON_DELETE),
       );
     }
   }
@@ -369,12 +366,12 @@ export class Navigation {
     if (!block) {
       return;
     }
-    if (block.isShadow()) {
-      block = block.getParent()!;
+    const curNodeBlock = block.isShadow() ? block : block.getParent();
+    if (curNodeBlock) {
+      this.getFlyoutCursor(mainWorkspace)?.setCurNode(
+        Blockly.ASTNode.createStackNode(curNodeBlock),
+      );
     }
-    this.getFlyoutCursor(mainWorkspace)!.setCurNode(
-      Blockly.ASTNode.createStackNode(block)!,
-    );
     this.focusFlyout(mainWorkspace);
   }
 
@@ -488,9 +485,9 @@ export class Navigation {
     }
     this.setState(workspace, Constants.STATE.TOOLBOX);
 
-    if (!toolbox.getSelectedItem()) {
+    if (!toolbox.getSelectedItem() && toolbox instanceof Blockly.Toolbox) {
       // Find the first item that is selectable.
-      const toolboxItems = (toolbox as any).getToolboxItems();
+      const toolboxItems = toolbox.getToolboxItems();
       for (let i = 0, toolboxItem; (toolboxItem = toolboxItems[i]); i++) {
         if (toolboxItem.isSelectable()) {
           toolbox.selectItemByPosition(i);
@@ -603,13 +600,13 @@ export class Navigation {
       const astNode = Blockly.ASTNode.createButtonNode(
         defaultFlyoutItemElement as Blockly.FlyoutButton,
       );
-      flyoutCursor.setCurNode(astNode!);
+      flyoutCursor.setCurNode(astNode);
       return true;
     } else if (defaultFlyoutItemElement instanceof Blockly.BlockSvg) {
       const astNode = Blockly.ASTNode.createStackNode(
         defaultFlyoutItemElement as Blockly.BlockSvg,
       );
-      flyoutCursor.setCurNode(astNode!);
+      flyoutCursor.setCurNode(astNode);
       return true;
     }
     return false;
@@ -642,21 +639,21 @@ export class Navigation {
       return false;
     }
     const wsCoordinates = new Blockly.utils.Coordinate(
-      this.DEFAULT_WS_COORDINATE.x / workspace.scale,
-      this.DEFAULT_WS_COORDINATE.y / workspace.scale,
+      DEFAULT_WS_COORDINATE.x / workspace.scale,
+      DEFAULT_WS_COORDINATE.y / workspace.scale,
     );
     if (topBlocks.length > 0) {
       cursor.setCurNode(
         Blockly.ASTNode.createTopNode(
           topBlocks[prefer === 'first' ? 0 : topBlocks.length - 1],
-        )!,
+        ),
       );
     } else {
       const wsNode = Blockly.ASTNode.createWorkspaceNode(
         workspace,
         wsCoordinates,
       );
-      cursor.setCurNode(wsNode!);
+      cursor.setCurNode(wsNode);
     }
     return true;
   }
@@ -1077,9 +1074,9 @@ export class Navigation {
       workspace.keyboardAccessibilityMode
     ) {
       workspace.keyboardAccessibilityMode = false;
-      workspace.getCursor()!.hide();
+      workspace.getCursor()?.hide();
       if (this.getFlyoutCursor(workspace)) {
-        this.getFlyoutCursor(workspace)!.hide();
+        this.getFlyoutCursor(workspace)?.hide();
       }
     }
   }
@@ -1117,6 +1114,7 @@ export class Navigation {
   /**
    * Save the current cursor location and open the toolbox or flyout
    * to select and insert a block.
+   *
    * @param workspace The active workspace.
    */
   openToolboxOrFlyout(workspace: Blockly.WorkspaceSvg) {
@@ -1149,6 +1147,7 @@ export class Navigation {
         this.tryToConnectNodes(
           workspace,
           targetNode,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           Blockly.ASTNode.createBlockNode(block)!,
         );
       }
