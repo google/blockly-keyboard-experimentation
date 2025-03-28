@@ -134,6 +134,7 @@ export class EnterAction {
         !this.navigation.tryToConnectNodes(
           workspace,
           stationaryNode,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           ASTNode.createBlockNode(newBlock)!,
         )
       ) {
@@ -144,6 +145,7 @@ export class EnterAction {
     }
 
     this.navigation.focusWorkspace(workspace);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     workspace.getCursor()?.setCurNode(ASTNode.createBlockNode(newBlock)!);
   }
 

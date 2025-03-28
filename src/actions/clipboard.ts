@@ -379,6 +379,7 @@ export class Clipboard {
         this.navigation.tryToConnectNodes(
           pasteWorkspace,
           targetNode,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           ASTNode.createBlockNode(block)!,
         );
       }

@@ -145,6 +145,7 @@ export class DisconnectAction {
     rootBlock.bringToFront();
 
     if (wasVisitingConnection) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const connectionNode = ASTNode.createConnectionNode(superiorConnection)!;
       workspace.getCursor()?.setCurNode(connectionNode);
     }

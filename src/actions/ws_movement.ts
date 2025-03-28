@@ -115,6 +115,7 @@ export class WorkspaceMovement {
     const newY = yDirection * WS_MOVE_DISTANCE + wsCoord.y;
 
     cursor.setCurNode(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       ASTNode.createWorkspaceNode(
         workspace,
         new BlocklyUtils.Coordinate(newX, newY),
