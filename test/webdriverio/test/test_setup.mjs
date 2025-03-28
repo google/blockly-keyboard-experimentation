@@ -121,8 +121,14 @@ function posixPath(target) {
 export const testFileLocations = {
   BASE:
     'file://' + posixPath(path.join(__dirname, '..', 'build')) + '/index.html',
+  BASE_RTL:
+    'file://' + posixPath(path.join(__dirname, '..', 'build')) + '/index.html?rtl=true',
   GERAS:
     'file://' +
     posixPath(path.join(__dirname, '..', 'build')) +
     '/index.html?renderer=geras',
+  GERAS_RTL:
+    'file://' +
+    posixPath(path.join(__dirname, '..', 'build')) +
+    '/index.html?renderer=geras&rtl=true',
 };
