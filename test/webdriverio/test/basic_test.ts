@@ -5,7 +5,8 @@
  */
 
 import * as chai from 'chai';
-import {testSetup, testFileLocations, PAUSE_TIME} from './test_setup.mjs';
+import * as Blockly from 'blockly';
+import {testSetup, testFileLocations, PAUSE_TIME} from './test_setup.js';
 import {Key} from 'webdriverio';
 
 suite('Keyboard navigation', function () {
@@ -38,7 +39,7 @@ suite('Keyboard navigation', function () {
     }
 
     const selectedId = await this.browser.execute(() => {
-      return Blockly.common.getSelected().id;
+      return Blockly.common.getSelected()?.id;
     });
     chai.assert.equal(selectedId, 'draw_circle_1');
   });

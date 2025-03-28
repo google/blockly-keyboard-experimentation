@@ -12,5 +12,6 @@
   },
   // NOTE: `test/**/*` is automatically included in `blockly-scripts start`.
   // Only src matters for production builds.
-  "include": ["./src", "./test"]
+  "include": ["./src", "./test"],
+  "exclude": ["./test/webdriverio/"]
 }

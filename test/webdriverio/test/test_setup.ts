@@ -21,15 +21,9 @@ import * as path from 'path';
 import {fileURLToPath} from 'url';
 
 /**
- * The directory where this code was run.
- *
- */
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-/**
  * The webdriverio instance, which should only be initialized once.
  */
-let driver = null;
+let driver: webdriverio.Browser | null = null;
 
 /**
  * The default amount of time to wait during a test. Increase this to make
@@ -40,21 +34,24 @@ export const PAUSE_TIME = 50;
 /**
  * Start up the test page. This should only be done once, to avoid
  * constantly popping browser windows open and closed.
- * @returns {Promise<webdriverio.Browser>} A Promise that resolves to a webdriverIO browser that tests can manipulate.
+ *
+ * @returns A Promise that resolves to a webdriverIO browser that tests can manipulate.
  */
-export async function driverSetup() {
+export async function driverSetup(): Promise<webdriverio.Browser> {
   const options = {
     capabilities: {
       'browserName': 'chrome',
       'unhandledPromptBehavior': 'ignore',
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       'goog:chromeOptions': {
         args: ['--allow-file-access-from-files'],
       },
       // We aren't (yet) using any BiDi features, and BiDi is sensitive to
       // mismatches between Chrome version and Chromedriver version.
-      'wdio:enforceWebDriverClassic': 'true',
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      'wdio:enforceWebDriverClassic': true,
     },
-    logLevel: 'warn',
+    logLevel: 'warn' as const,
   };
 
   // Run in headless mode on Github Actions.
@@ -78,23 +75,27 @@ export async function driverSetup() {
 
 /**
  * End the webdriverIO session.
+ *
  * @return A Promise that resolves after the actions have been completed.
  */
 export async function driverTeardown() {
-  await driver.deleteSession();
+  await driver?.deleteSession();
   driver = null;
   return;
 }
 
 /**
  * Navigate to the correct URL for the test, using the shared driver.
- * @param {string} playgroundUrl The URL to open for the test, which should be
+ *
+ * @param playgroundUrl The URL to open for the test, which should be
  *     a Blockly playground with a workspace.
- * @returns {Promise<webdriverio.Browser>} A Promsie that resolves to a webdriverIO browser that tests can manipulate.
+ * @returns A Promsie that resolves to a webdriverIO browser that tests can manipulate.
  */
-export async function testSetup(playgroundUrl) {
+export async function testSetup(
+  playgroundUrl: string,
+): Promise<webdriverio.Browser> {
   if (!driver) {
-    await driverSetup();
+    driver = await driverSetup();
   }
   await driver.url(playgroundUrl);
   // Wait for the workspace to exist and be rendered.
@@ -109,26 +110,33 @@ export async function testSetup(playgroundUrl) {
  *
  * Simplified implementation based on
  * https://stackoverflow.com/a/63251716/4969945
- * @param {string} target target path
- * @returns {string} posix path
+ *
+ * @param target target path
+ * @returns posix path
  */
-function posixPath(target) {
+function posixPath(target: string): string {
   const result = target.split(path.sep).join(path.posix.sep);
   console.log(result);
   return result;
 }
 
+// Relative to dist folder for TS build
+const createTestUrl = (options?: URLSearchParams) => {
+  const dirname = path.dirname(fileURLToPath(import.meta.url));
+  const base = new URL(
+    `file://${posixPath(path.join(dirname, '..', '..', 'build', 'index.html'))}`,
+  );
+  base.search = options?.toString() ?? '';
+  return base.toString();
+};
+
 export const testFileLocations = {
-  BASE:
-    'file://' + posixPath(path.join(__dirname, '..', 'build')) + '/index.html',
-  BASE_RTL:
-    'file://' + posixPath(path.join(__dirname, '..', 'build')) + '/index.html?rtl=true',
-  GERAS:
-    'file://' +
-    posixPath(path.join(__dirname, '..', 'build')) +
-    '/index.html?renderer=geras',
-  GERAS_RTL:
-    'file://' +
-    posixPath(path.join(__dirname, '..', 'build')) +
-    '/index.html?renderer=geras&rtl=true',
+  BASE: createTestUrl(),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  BASE_RTL: createTestUrl(new URLSearchParams({rtl: 'true'})),
+  GERAS: createTestUrl(new URLSearchParams({renderer: 'geras'})),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  GERAS_RTL: createTestUrl(
+    new URLSearchParams({renderer: 'geras', rtl: 'true'}),
+  ),
 };

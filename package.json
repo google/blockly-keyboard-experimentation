@@ -13,9 +13,11 @@
     "prepublishOnly": "npm login --registry https://wombat-dressing-room.appspot.com",
     "start": "blockly-scripts start",
     "test": "npm run wdio:clean && npm run wdio:build && npm run wdio:run",
-    "wdio:build": "cd test/webdriverio && webpack",
-    "wdio:clean": "cd test/webdriverio && rm -rf build",
-    "wdio:run": "cd test/webdriverio && npx mocha"
+    "wdio:build": "npm run wdio:build:app && npm run wdio:build:tests",
+    "wdio:build:app": "cd test/webdriverio && webpack",
+    "wdio:build:tests": "tsc -p ./test/webdriverio/test/tsconfig.json",
+    "wdio:clean": "cd test/webdriverio/test && rm -rf dist",
+    "wdio:run": "npm run wdio:build && cd test/webdriverio/test && npx mocha dist"
   },
   "main": "./dist/index.js",
   "module": "./src/index.js",
@@ -48,6 +50,8 @@
     "@blockly/field-colour": "^5.0.7",
     "@eslint/eslintrc": "^2.1.2",
     "@eslint/js": "^8.49.0",
+    "@types/chai": "^5.2.1",
+    "@types/mocha": "^10.0.10",
     "@types/p5": "^1.7.6",
     "@typescript-eslint/eslint-plugin": "^6.7.2",
     "@typescript-eslint/parser": "^6.7.2",

@@ -129,7 +129,7 @@ module.exports = [
     },
   },
   {
-    files: ['**/*.mocha.js', 'test/webdriverio/test/*_test.mjs'],
+    files: ['**/*.mocha.js', 'test/webdriverio/test/*_test.js'],
     languageOptions: {
       globals: {
         ...globals.mocha,
