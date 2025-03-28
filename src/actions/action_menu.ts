@@ -219,7 +219,7 @@ export class ActionMenu {
    * @returns the action.
    */
   private getContextMenuAction(id: string) {
-    const item = ContextMenuRegistry.registry.getItem('insert');
+    const item = ContextMenuRegistry.registry.getItem(id);
     if (!item) {
       throw new Error(`can't find context menu item ${id}`);
     }
