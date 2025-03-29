@@ -25,7 +25,6 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
  * Actions for moving blocks with keyboard shortcuts.
  */
 export class Mover {
-
   /**
    * Map of moves in progress.
    *
@@ -324,11 +323,11 @@ export class Mover {
  * Workspace.
  */
 export class MoveInfo {
-  public readonly parentNext: Connection | null;
-  public readonly parentInput: Connection | null;
-  public readonly startLocation: utils.Coordinate;
+  readonly parentNext: Connection | null;
+  readonly parentInput: Connection | null;
+  readonly startLocation: utils.Coordinate;
 
-  constructor(public readonly block: Block) {
+  constructor(readonly block: Block) {
     this.parentNext = block.previousConnection?.targetConnection ?? null;
     this.parentInput = block.outputConnection?.targetConnection ?? null;
     this.startLocation = block.getRelativeToSurfaceXY();

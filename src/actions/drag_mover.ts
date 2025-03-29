@@ -4,31 +4,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as Constants from '../constants';
-import {
-  ASTNode,
-  Connection,
-  ShortcutRegistry,
-  WorkspaceSvg,
-  common,
-  registry,
-  utils,
-} from 'blockly';
-import type {Block, BlockSvg, IDragger} from 'blockly';
+import {ASTNode, WorkspaceSvg, common, registry, utils} from 'blockly';
+import type {Block, IDragger} from 'blockly';
 import {Mover, MoveInfo} from './mover';
-import {Navigation} from '../navigation';
+
+/**
+ * The distance to move an item, in workspace coordinates, when
+ * making an unconstrained move.
+ */
+const UNCONSTRAINED_MOVE_DISTANCE = 20;
 
 /**
  * An experimental implementation of Mover that uses a dragger to
- * perform unconstraind movment.
+ * perform unconstraind movement.
  */
 export class DragMover extends Mover {
-  /**
-   * The distance to move an item, in workspace coordinates, when
-   * making an unconstrained move.
-   */
-  UNCONSTRAINED_MOVE_DISTANCE = 20;
-
   /**
    * Map of moves in progress.
    *
@@ -54,7 +44,7 @@ export class DragMover extends Mover {
 
     // Select and focus block.
     common.setSelected(block);
-    cursor.setCurNode(ASTNode.createBlockNode(block)!);
+    cursor.setCurNode(ASTNode.createBlockNode(block));
     // Begin dragging block.
     const DraggerClass = registry.getClassFromOptions(
       registry.Type.BLOCK_DRAGGER,
@@ -105,6 +95,7 @@ export class DragMover extends Mover {
     if (!info) throw new Error('no move info for workspace');
 
     // Monkey patch dragger to trigger call to draggable.revertDrag.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (info.dragger as any).shouldReturnToStart = () => true;
     info.dragger.onDragEnd(
       info.fakePointerEvent('pointerup'),
@@ -153,9 +144,9 @@ Use enter to complete the move, or escape to abort.`);
     if (!info) throw new Error('no move info for workspace');
 
     info.totalDelta.x +=
-      xDirection * this.UNCONSTRAINED_MOVE_DISTANCE * workspace.scale;
+      xDirection * UNCONSTRAINED_MOVE_DISTANCE * workspace.scale;
     info.totalDelta.y +=
-      yDirection * this.UNCONSTRAINED_MOVE_DISTANCE * workspace.scale;
+      yDirection * UNCONSTRAINED_MOVE_DISTANCE * workspace.scale;
 
     info.dragger.onDrag(info.fakePointerEvent('pointermove'), info.totalDelta);
     return true;
@@ -171,17 +162,23 @@ class DragMoveInfo extends MoveInfo {
   totalDelta = new utils.Coordinate(0, 0);
 
   constructor(
-    public readonly block: Block,
-    public readonly dragger: IDragger,
+    readonly block: Block,
+    readonly dragger: IDragger,
   ) {
     super(block);
   }
 
-  /** Create fake pointer event for dragging. */
+  /**
+   * Create a fake pointer event for dragging.
+   *
+   * @param type Which type of pointer event to create.
+   * @returns A synthetic PointerEvent that can be consumed by Blockly's
+   *     dragging code.
+   */
   fakePointerEvent(type: string): PointerEvent {
     const workspace = this.block.workspace;
     if (!(workspace instanceof WorkspaceSvg)) throw new TypeError();
-    
+
     const blockCoords = utils.svgMath.wsToScreenCoordinates(
       workspace,
       new utils.Coordinate(
@@ -194,5 +191,4 @@ class DragMoveInfo extends MoveInfo {
       clientY: blockCoords.y,
     });
   }
-
 }
