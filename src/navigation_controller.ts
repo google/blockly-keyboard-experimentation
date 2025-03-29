@@ -356,7 +356,7 @@ export class NavigationController {
    * Removes all the keyboard navigation shortcuts.
    */
   dispose() {
-    this.mover.install();
+    this.mover.uninstall();
     this.deleteAction.uninstall();
     this.editAction.uninstall();
     this.insertAction.uninstall();

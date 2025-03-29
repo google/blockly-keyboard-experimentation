@@ -49,8 +49,7 @@ export class DragMover extends Mover {
    */
   override startMove(workspace: WorkspaceSvg) {
     const cursor = workspace?.getCursor();
-    const curNode = cursor?.getCurNode();
-    const block = curNode?.getSourceBlock() as BlockSvg | null;
+    const block = this.getCurrentBlock(workspace);
     if (!cursor || !block) throw new Error('precondition failure');
 
     // Select and focus block.
@@ -81,7 +80,6 @@ export class DragMover extends Mover {
    * @returns True iff move successfully finished.
    */
   override finishMove(workspace: WorkspaceSvg) {
-    if (!workspace) return false;
     const info = this.moves.get(workspace);
     if (!info) throw new Error('no move info for workspace');
 
@@ -103,7 +101,6 @@ export class DragMover extends Mover {
    * @returns True iff move successfully aborted.
    */
   override abortMove(workspace: WorkspaceSvg) {
-    if (!workspace) return false;
     const info = this.moves.get(workspace);
     if (!info) throw new Error('no move info for workspace');
 

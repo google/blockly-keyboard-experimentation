@@ -25,11 +25,6 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
  * Actions for moving blocks with keyboard shortcuts.
  */
 export class Mover {
-  /**
-   * Function provided by the navigation controller to say whether editing
-   * is allowed.
-   */
-  protected canCurrentlyEdit: (ws: WorkspaceSvg) => boolean;
 
   /**
    * Map of moves in progress.
@@ -42,10 +37,8 @@ export class Mover {
 
   constructor(
     protected navigation: Navigation,
-    canEdit: (ws: WorkspaceSvg) => boolean,
-  ) {
-    this.canCurrentlyEdit = canEdit;
-  }
+    protected canEdit: (ws: WorkspaceSvg) => boolean,
+  ) {}
 
   private shortcuts: ShortcutRegistry.KeyboardShortcut[] = [
     // Begin and end move.
@@ -146,12 +139,12 @@ export class Mover {
       preconditionFn: (scope) => {
         const workspace = scope.block?.workspace as WorkspaceSvg | null;
         if (!workspace) return 'hidden';
-        return this.canMove(workspace, scope.block) ? 'enabled' : 'disabled';
+        return this.canMove(workspace) ? 'enabled' : 'disabled';
       },
       callback: (scope) => {
         const workspace = scope.block?.workspace as WorkspaceSvg | null;
         if (!workspace) return false;
-        this.startMove(workspace, scope.block);
+        this.startMove(workspace);
       },
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'move',
@@ -185,23 +178,18 @@ export class Mover {
   }
 
   /**
-   * Returns true iff we are able to begin moving the given block (or,
-   * if no block supplied, the block wich currently has focus) on the
-   * given workspace.
+   * Returns true iff we are able to begin moving the block which
+   * currently has focus on the given workspace.
    *
    * @param workspace The workspace to move on.
-   * @returns True iff we can beign a move.
+   * @returns True iff we can begin a move.
    */
-  canMove(workspace: WorkspaceSvg, block?: Block) {
-    if (!block) {
-      const cursor = workspace?.getCursor();
-      const curNode = cursor?.getCurNode();
-      block = curNode?.getSourceBlock() ?? undefined;
-    }
+  canMove(workspace: WorkspaceSvg) {
+    const block = this.getCurrentBlock(workspace);
 
     return !!(
       this.navigation.getState(workspace) === Constants.STATE.WORKSPACE &&
-      this.canCurrentlyEdit(workspace) &&
+      this.canEdit(workspace) &&
       !this.moves.has(workspace) && // No move in progress.
       block?.isMovable()
     );
@@ -215,7 +203,7 @@ export class Mover {
    * @returns True iff we are moving.
    */
   isMoving(workspace: WorkspaceSvg) {
-    return this.canCurrentlyEdit(workspace) && this.moves.has(workspace);
+    return this.canEdit(workspace) && this.moves.has(workspace);
   }
 
   /**
@@ -227,17 +215,14 @@ export class Mover {
    * @param workspace The workspace we might be moving on.
    * @returns True iff a move has successfully begun.
    */
-  startMove(workspace: WorkspaceSvg, block?: Block) {
+  startMove(workspace: WorkspaceSvg) {
     const cursor = workspace?.getCursor();
-    if (!block) {
-      const curNode = cursor?.getCurNode();
-      block = curNode?.getSourceBlock() ?? undefined;
-    }
+    const block = this.getCurrentBlock(workspace);
     if (!cursor || !block) throw new Error('precondition failure');
 
     // Select and focus block.
-    common.setSelected(block as BlockSvg);
-    cursor.setCurNode(ASTNode.createBlockNode(block)!);
+    common.setSelected(block);
+    cursor.setCurNode(ASTNode.createBlockNode(block));
 
     // Additional implementation goes here.
     console.log('startMove');
@@ -255,7 +240,6 @@ export class Mover {
    * @returns True iff move successfully finished.
    */
   finishMove(workspace: WorkspaceSvg) {
-    if (!workspace) return false;
     const info = this.moves.get(workspace);
     if (!info) throw new Error('no move info for workspace');
 
@@ -275,7 +259,6 @@ export class Mover {
    * @returns True iff move successfully aborted.
    */
   abortMove(workspace: WorkspaceSvg) {
-    if (!workspace) return false;
     const info = this.moves.get(workspace);
     if (!info) throw new Error('no move info for workspace');
 
@@ -319,6 +302,20 @@ export class Mover {
     console.log('moveUnconstrained');
     // Not yet implemented.  Absorb keystroke to avoid moving cursor.
     return true;
+  }
+
+  /**
+   * Get the source block for the cursor location, or undefined if no
+   * source block can be found.
+   *
+   * @param workspace The workspace to inspect for a cursor.
+   * @returns The source block, or undefined if no appropriate block
+   *     could be found.
+   */
+  protected getCurrentBlock(workspace: WorkspaceSvg): BlockSvg | undefined {
+    const cursor = workspace?.getCursor();
+    const curNode = cursor?.getCurNode();
+    return (curNode?.getSourceBlock() as BlockSvg) ?? undefined;
   }
 }
 
