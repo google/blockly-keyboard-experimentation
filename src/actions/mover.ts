@@ -46,7 +46,6 @@ export class Mover {
       preconditionFn: (workspace) => this.canMove(workspace),
       callback: (workspace) => this.startMove(workspace),
       keyCodes: [KeyCodes.M],
-      allowCollision: true, // TODO: remove once #309 has been merged.
     },
     {
       name: 'Finish move',
