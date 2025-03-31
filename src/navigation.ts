@@ -675,113 +675,63 @@ export class Navigation {
    * Tries to intelligently connect the blocks or connections
    * represented by the given nodes, based on node types and locations.
    *
-   * @param workspace The main workspace.
    * @param stationaryNode The first node to connect.
-   * @param movingNode The second node to connect.
+   * @param movingBlock The block we're moving.
    * @returns True if the key was handled; false if something went
    *     wrong.
    */
-  tryToConnectNodes(
-    workspace: Blockly.WorkspaceSvg,
+  tryToConnectBlock(
     stationaryNode: Blockly.ASTNode,
-    movingNode: Blockly.ASTNode,
+    movingBlock: Blockly.BlockSvg,
   ): boolean {
-    if (!this.logConnectionWarning(stationaryNode, movingNode)) {
-      return false;
-    }
-
     const stationaryType = stationaryNode.getType();
-    const movingType = movingNode.getType();
-
     const stationaryLoc = stationaryNode.getLocation();
-    const movingLoc = movingNode.getLocation();
 
     if (stationaryNode.isConnection()) {
-      if (movingNode.isConnection()) {
-        const stationaryAsConnection =
-          stationaryLoc as Blockly.RenderedConnection;
-        const movingAsConnection = movingLoc as Blockly.RenderedConnection;
-        return this.connect(movingAsConnection, stationaryAsConnection);
-      }
       // Connect the moving block to the stationary connection using
       // the most plausible connection on the moving block.
-      if (
-        movingType === Blockly.ASTNode.types.BLOCK ||
-        movingType === Blockly.ASTNode.types.STACK
-      ) {
-        const stationaryAsConnection =
-          stationaryLoc as Blockly.RenderedConnection;
-        const movingAsBlock = movingLoc as Blockly.BlockSvg;
-        return this.insertBlock(movingAsBlock, stationaryAsConnection);
-      }
+      const stationaryAsConnection =
+        stationaryLoc as Blockly.RenderedConnection;
+      return this.insertBlock(movingBlock, stationaryAsConnection);
     } else if (stationaryType === Blockly.ASTNode.types.WORKSPACE) {
-      const block = movingNode
-        ? (movingNode.getSourceBlock() as Blockly.BlockSvg)
-        : null;
-      return this.moveBlockToWorkspace(block, stationaryNode);
-    } else if (
-      stationaryType === Blockly.ASTNode.types.BLOCK &&
-      movingType === Blockly.ASTNode.types.BLOCK
-    ) {
-      // Insert the moving block above the stationary block, if the
-      // appropriate connections exist.
+      return this.moveBlockToWorkspace(movingBlock, stationaryNode);
+    } else if (stationaryType === Blockly.ASTNode.types.BLOCK) {
       const stationaryBlock = stationaryLoc as Blockly.BlockSvg;
-      const movingBlock = movingLoc as Blockly.BlockSvg;
-      if (stationaryBlock.previousConnection) {
+
+      // 1. Connect blocks to first compatible input
+      const inputType = movingBlock.outputConnection
+        ? Blockly.inputs.inputTypes.VALUE
+        : Blockly.inputs.inputTypes.STATEMENT;
+      const compatibleInputs = stationaryBlock.inputList.filter(
+        (input) => input.type === inputType,
+      );
+      const input = compatibleInputs.length > 0 ? compatibleInputs[0] : null;
+      let connection = input?.connection;
+      if (connection) {
+        if (inputType === Blockly.inputs.inputTypes.STATEMENT) {
+          while (connection.targetBlock()?.nextConnection) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            connection = connection.targetBlock()!.nextConnection!;
+          }
+        }
         return this.insertBlock(
           movingBlock,
-          stationaryBlock.previousConnection,
+          connection as Blockly.RenderedConnection,
         );
-      } else if (stationaryBlock.outputConnection) {
+      }
+
+      // 2. Connect statement blocks to next connection.
+      if (stationaryBlock.nextConnection && !movingBlock.outputConnection) {
+        return this.insertBlock(movingBlock, stationaryBlock.nextConnection);
+      }
+
+      // 3. Output connection. This will wrap around or displace.
+      if (stationaryBlock.outputConnection) {
         return this.insertBlock(movingBlock, stationaryBlock.outputConnection);
       }
     }
-    this.warn('Unexpected state in tryToConnectNodes.');
+    this.warn(`Unexpected case in tryToConnectBlock ${stationaryType}.`);
     return false;
-  }
-
-  /**
-   * Warns the user if the given cursor or marker node can not be connected.
-   *
-   * @param markerNode The node to try to connect to.
-   * @param cursorNode The node to connect to the markerNode.
-   * @returns True if the marker and cursor are valid types, false
-   *     otherwise.
-   */
-  logConnectionWarning(
-    markerNode: Blockly.ASTNode,
-    cursorNode: Blockly.ASTNode,
-  ): boolean {
-    if (!markerNode) {
-      this.warn('Cannot insert with no marked node.');
-      return false;
-    }
-
-    if (!cursorNode) {
-      this.warn('Cannot insert with no cursor node.');
-      return false;
-    }
-    const markerType = markerNode.getType();
-    const cursorType = cursorNode.getType();
-
-    // Check the marker for invalid types.
-    if (markerType === Blockly.ASTNode.types.FIELD) {
-      this.warn('Should not have been able to mark a field.');
-      return false;
-    } else if (markerType === Blockly.ASTNode.types.STACK) {
-      this.warn('Should not have been able to mark a stack.');
-      return false;
-    }
-
-    // Check the cursor for invalid types.
-    if (cursorType === Blockly.ASTNode.types.FIELD) {
-      this.warn('Cannot attach a field to anything else.');
-      return false;
-    } else if (cursorType === Blockly.ASTNode.types.WORKSPACE) {
-      this.warn('Cannot attach a workspace to anything else.');
-      return false;
-    }
-    return true;
   }
 
   /**
@@ -1144,12 +1094,7 @@ export class Navigation {
     ) as Blockly.BlockSvg;
     if (block) {
       if (targetNode) {
-        this.tryToConnectNodes(
-          workspace,
-          targetNode,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          Blockly.ASTNode.createBlockNode(block)!,
-        );
+        this.tryToConnectBlock(targetNode, block);
       }
       return true;
     }

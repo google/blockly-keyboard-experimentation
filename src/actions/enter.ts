@@ -130,14 +130,7 @@ export class EnterAction {
     const newBlock = this.createNewBlock(workspace);
     if (!newBlock) return;
     if (stationaryNode) {
-      if (
-        !this.navigation.tryToConnectNodes(
-          workspace,
-          stationaryNode,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          ASTNode.createBlockNode(newBlock)!,
-        )
-      ) {
+      if (!this.navigation.tryToConnectBlock(stationaryNode, newBlock)) {
         console.warn(
           'Something went wrong while inserting a block from the flyout.',
         );
