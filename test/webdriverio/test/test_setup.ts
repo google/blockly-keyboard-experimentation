@@ -89,7 +89,7 @@ export async function driverTeardown() {
  *
  * @param playgroundUrl The URL to open for the test, which should be
  *     a Blockly playground with a workspace.
- * @returns A Promsie that resolves to a webdriverIO browser that tests can manipulate.
+ * @returns A Promise that resolves to a webdriverIO browser that tests can manipulate.
  */
 export async function testSetup(
   playgroundUrl: string,
