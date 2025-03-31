@@ -71,7 +71,7 @@ export class Mover {
       allowCollision: true,
     },
     {
-      name: 'Move right unconstraind',
+      name: 'Move right unconstrained',
       preconditionFn: (workspace) => this.isMoving(workspace),
       callback: (workspace) => this.moveConstrained(workspace /* , ... */),
       keyCodes: [KeyCodes.RIGHT],
@@ -103,7 +103,7 @@ export class Mover {
       ],
     },
     {
-      name: 'Move right, unconstraind',
+      name: 'Move right, unconstrained',
       preconditionFn: (workspace) => this.isMoving(workspace),
       callback: (workspace) => this.moveUnconstrained(workspace, 1, 0),
       keyCodes: [

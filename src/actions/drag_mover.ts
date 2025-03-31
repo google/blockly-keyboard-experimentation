@@ -23,7 +23,7 @@ const UNCONSTRAINED_MOVE_DISTANCE = 20;
 
 /**
  * An experimental implementation of Mover that uses a dragger to
- * perform unconstraind movement.
+ * perform unconstrained movement.
  */
 export class DragMover extends Mover {
   /**
