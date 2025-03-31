@@ -31,10 +31,10 @@ export class KeyboardNavigation {
   private blurListener: (e: Event) => void;
 
   /** Event handler run when the toolbox gains focus. */
-  private toolboxFocusListener: () => void;
+  private toolboxFocusInListener: (e: Event) => void;
 
   /** Event handler run when the toolbox loses focus. */
-  private toolboxBlurListener: (e: Event) => void;
+  private toolboxFocusOutListener: (e: Event) => void;
 
   /** Event handler run when the flyout gains focus. */
   private flyoutFocusListener: () => void;
@@ -99,10 +99,6 @@ export class KeyboardNavigation {
       flyoutElement,
       workspace.getParentSvg(),
     );
-    // Allow tab to the flyout only when there's no toolbox.
-    if (workspace.getToolbox() && flyoutElement) {
-      flyoutElement.tabIndex = -1;
-    }
 
     this.focusListener = (e: Event) => {
       if (e.currentTarget === this.workspace.getParentSvg()) {
@@ -143,10 +139,26 @@ export class KeyboardNavigation {
     workspace.getSvgGroup().addEventListener('blur', this.blurListener);
 
     const toolboxElement = getToolboxElement(workspace);
-    this.toolboxFocusListener = () => {
+    this.toolboxFocusInListener = (e: Event) => {
+      if (
+        (e.currentTarget as Element).contains(
+          (e as FocusEvent).relatedTarget as Node,
+        )
+      ) {
+        return;
+      }
+
       this.navigationController.handleFocusToolbox(workspace);
     };
-    this.toolboxBlurListener = (e: Event) => {
+    this.toolboxFocusOutListener = (e: Event) => {
+      if (
+        (e.currentTarget as Element).contains(
+          (e as FocusEvent).relatedTarget as Node,
+        )
+      ) {
+        return;
+      }
+
       this.navigationController.handleBlurToolbox(
         workspace,
         this.shouldCloseFlyoutOnBlur(
@@ -155,8 +167,8 @@ export class KeyboardNavigation {
         ),
       );
     };
-    toolboxElement?.addEventListener('focus', this.toolboxFocusListener);
-    toolboxElement?.addEventListener('blur', this.toolboxBlurListener);
+    toolboxElement?.addEventListener('focusin', this.toolboxFocusInListener);
+    toolboxElement?.addEventListener('focusout', this.toolboxFocusOutListener);
 
     this.flyoutFocusListener = () => {
       this.navigationController.handleFocusFlyout(workspace);
@@ -198,8 +210,11 @@ export class KeyboardNavigation {
       .removeEventListener('focus', this.focusListener);
 
     const toolboxElement = getToolboxElement(this.workspace);
-    toolboxElement?.removeEventListener('focus', this.toolboxFocusListener);
-    toolboxElement?.removeEventListener('blur', this.toolboxBlurListener);
+    toolboxElement?.removeEventListener('focusin', this.toolboxFocusInListener);
+    toolboxElement?.removeEventListener(
+      'focusout',
+      this.toolboxFocusOutListener,
+    );
 
     const flyoutElement = getFlyoutElement(this.workspace);
     flyoutElement?.removeEventListener('focus', this.flyoutFocusListener);
