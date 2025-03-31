@@ -4,7 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ASTNode, WorkspaceSvg, common, registry, utils} from 'blockly';
+import {
+  ASTNode,
+  BlockSvg,
+  WorkspaceSvg,
+  common,
+  registry,
+  utils,
+} from 'blockly';
 import type {Block, IDragger} from 'blockly';
 import {Mover, MoveInfo} from './mover';
 
@@ -97,6 +104,11 @@ export class DragMover extends Mover {
     // Monkey patch dragger to trigger call to draggable.revertDrag.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (info.dragger as any).shouldReturnToStart = () => true;
+    const blockSvg = info.block as BlockSvg;
+
+    // Explicitly call `hidePreview` because it is not called in revertDrag.
+    // @ts-expect-error Access to private property dragStrategy.
+    blockSvg.dragStrategy.connectionPreviewer.hidePreview();
     info.dragger.onDragEnd(
       info.fakePointerEvent('pointerup'),
       new utils.Coordinate(0, 0),
