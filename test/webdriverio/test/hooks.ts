@@ -9,10 +9,11 @@
  * These create a shared chromedriver instance, so we don't have to fire up
  * a new one for every suite.
  */
-import {driverSetup, driverTeardown} from './test_setup.mjs';
+import {RootHookObject} from 'mocha';
+import {driverSetup, driverTeardown} from './test_setup.js';
 
-export const mochaHooks = {
-  async beforeAll() {
+export const mochaHooks: RootHookObject = {
+  async beforeAll(this: Mocha.Context) {
     // Set a long timeout for startup.
     this.timeout(10000);
     return await driverSetup();
