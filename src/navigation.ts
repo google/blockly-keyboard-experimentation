@@ -540,12 +540,6 @@ export class Navigation {
     if (!Blockly.Gesture.inProgress()) {
       this.defaultFlyoutCursorIfNeeded(workspace);
     }
-
-    // Prevent shift-tab to the toolbox while the flyout has focus.
-    const toolboxElement = getToolboxElement(workspace);
-    if (toolboxElement) {
-      toolboxElement.tabIndex = -1;
-    }
   }
 
   /**
@@ -561,12 +555,6 @@ export class Navigation {
       workspace.hideChaff();
     }
     this.getFlyoutCursor(workspace)?.hide();
-
-    // Reinstate tab to toolbox.
-    const toolboxElement = getToolboxElement(workspace);
-    if (toolboxElement) {
-      toolboxElement.tabIndex = 0;
-    }
   }
 
   /**
