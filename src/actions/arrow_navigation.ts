@@ -40,7 +40,7 @@ export class ArrowNavigation {
       return false;
     }
     const curNode = cursor.getCurNode();
-    if (curNode.getType() === ASTNode.types.FIELD) {
+    if (curNode?.getType() === ASTNode.types.FIELD) {
       return (curNode.getLocation() as Field).onShortcut(shortcut);
     }
     return false;
@@ -57,14 +57,18 @@ export class ArrowNavigation {
       right: {
         name: Constants.SHORTCUT_NAMES.RIGHT,
         preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-        callback: (workspace, _, shortcut) => {
+        callback: (workspace, e, shortcut) => {
           const toolbox = workspace.getToolbox() as Toolbox;
           let isHandled = false;
           switch (this.navigation.getState(workspace)) {
             case Constants.STATE.WORKSPACE:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled && workspace) {
-                if (!this.navigation.defaultCursorPositionIfNeeded(workspace)) {
+                if (
+                  !this.navigation.defaultWorkspaceCursorPositionIfNeeded(
+                    workspace,
+                  )
+                ) {
                   workspace.getCursor()?.in();
                 }
                 isHandled = true;
@@ -90,14 +94,18 @@ export class ArrowNavigation {
       left: {
         name: Constants.SHORTCUT_NAMES.LEFT,
         preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-        callback: (workspace, _, shortcut) => {
+        callback: (workspace, e, shortcut) => {
           const toolbox = workspace.getToolbox() as Toolbox;
           let isHandled = false;
           switch (this.navigation.getState(workspace)) {
             case Constants.STATE.WORKSPACE:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled && workspace) {
-                if (!this.navigation.defaultCursorPositionIfNeeded(workspace)) {
+                if (
+                  !this.navigation.defaultWorkspaceCursorPositionIfNeeded(
+                    workspace,
+                  )
+                ) {
                   workspace.getCursor()?.out();
                 }
                 isHandled = true;
@@ -121,7 +129,7 @@ export class ArrowNavigation {
       down: {
         name: Constants.SHORTCUT_NAMES.DOWN,
         preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-        callback: (workspace, _, shortcut) => {
+        callback: (workspace, e, shortcut) => {
           const toolbox = workspace.getToolbox() as Toolbox;
           const flyout = workspace.getFlyout();
           let isHandled = false;
@@ -129,7 +137,11 @@ export class ArrowNavigation {
             case Constants.STATE.WORKSPACE:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled && workspace) {
-                if (!this.navigation.defaultCursorPositionIfNeeded(workspace)) {
+                if (
+                  !this.navigation.defaultWorkspaceCursorPositionIfNeeded(
+                    workspace,
+                  )
+                ) {
                   workspace.getCursor()?.next();
                 }
                 isHandled = true;
@@ -138,7 +150,9 @@ export class ArrowNavigation {
             case Constants.STATE.FLYOUT:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled && flyout) {
-                flyout.getWorkspace()?.getCursor()?.next();
+                if (!this.navigation.defaultFlyoutCursorIfNeeded(workspace)) {
+                  flyout.getWorkspace()?.getCursor()?.next();
+                }
                 isHandled = true;
               }
               return isHandled;
@@ -156,7 +170,7 @@ export class ArrowNavigation {
       up: {
         name: Constants.SHORTCUT_NAMES.UP,
         preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
-        callback: (workspace, _, shortcut) => {
+        callback: (workspace, e, shortcut) => {
           const flyout = workspace.getFlyout();
           const toolbox = workspace.getToolbox() as Toolbox;
           let isHandled = false;
@@ -165,7 +179,7 @@ export class ArrowNavigation {
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled) {
                 if (
-                  !this.navigation.defaultCursorPositionIfNeeded(
+                  !this.navigation.defaultWorkspaceCursorPositionIfNeeded(
                     workspace,
                     'last',
                   )
@@ -178,7 +192,14 @@ export class ArrowNavigation {
             case Constants.STATE.FLYOUT:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled && flyout) {
-                flyout.getWorkspace()?.getCursor()?.prev();
+                if (
+                  !this.navigation.defaultFlyoutCursorIfNeeded(
+                    workspace,
+                    'last',
+                  )
+                ) {
+                  flyout.getWorkspace()?.getCursor()?.prev();
+                }
                 isHandled = true;
               }
               return isHandled;

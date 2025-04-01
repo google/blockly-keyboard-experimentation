@@ -18,6 +18,7 @@ import * as Constants from '../constants';
 import type {BlockSvg, WorkspaceSvg} from 'blockly';
 import {LineCursor} from '../line_cursor';
 import {Navigation} from '../navigation';
+import {ScopeWithConnection} from './action_menu';
 
 const KeyCodes = blocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -169,7 +170,9 @@ export class Clipboard {
   private cutCallback(workspace: WorkspaceSvg) {
     const cursor = workspace.getCursor();
     if (!cursor) throw new TypeError('no cursor');
-    const sourceBlock = cursor.getCurNode().getSourceBlock() as BlockSvg | null;
+    const sourceBlock = cursor
+      .getCurNode()
+      ?.getSourceBlock() as BlockSvg | null;
     if (!sourceBlock) throw new TypeError('no source block');
     this.copyData = sourceBlock.toCopyData();
     this.copyWorkspace = sourceBlock.workspace;
@@ -236,7 +239,7 @@ export class Clipboard {
   private copyPrecondition(workspace: WorkspaceSvg) {
     if (!this.canCurrentlyEdit(workspace)) return false;
     switch (this.navigation.getState(workspace)) {
-      case Constants.STATE.WORKSPACE:
+      case Constants.STATE.WORKSPACE: {
         const curNode = workspace?.getCursor()?.getCurNode();
         const source = curNode?.getSourceBlock();
         return !!(
@@ -244,13 +247,15 @@ export class Clipboard {
           source?.isMovable() &&
           !Gesture.inProgress()
         );
-      case Constants.STATE.FLYOUT:
+      }
+      case Constants.STATE.FLYOUT: {
         const flyoutWorkspace = workspace.getFlyout()?.getWorkspace();
         const sourceBlock = flyoutWorkspace
           ?.getCursor()
           ?.getCurNode()
           ?.getSourceBlock();
         return !!(sourceBlock && !Gesture.inProgress());
+      }
       default:
         return false;
     }
@@ -274,7 +279,9 @@ export class Clipboard {
     const sourceBlock = activeWorkspace
       ?.getCursor()
       ?.getCurNode()
-      .getSourceBlock() as BlockSvg;
+      ?.getSourceBlock() as BlockSvg;
+    if (!sourceBlock) return false;
+
     this.copyData = sourceBlock.toCopyData();
     this.copyWorkspace = sourceBlock.workspace;
     const copied = !!this.copyData;
@@ -310,18 +317,15 @@ export class Clipboard {
   private registerPasteContextMenuAction() {
     const pasteAction: ContextMenuRegistry.RegistryItem = {
       displayText: (scope) => `Paste (${this.getPlatformPrefix()}V)`,
-      preconditionFn: (scope) => {
-        const ws =
-          scope.block?.workspace ??
-          (scope as any).connection?.getSourceBlock().workspace;
+      preconditionFn: (scope: ScopeWithConnection) => {
+        const block = scope.block ?? scope.connection?.getSourceBlock();
+        const ws = block?.workspace as WorkspaceSvg | null;
         if (!ws) return 'hidden';
-
         return this.pastePrecondition(ws) ? 'enabled' : 'disabled';
       },
-      callback: (scope) => {
-        const ws =
-          scope.block?.workspace ??
-          (scope as any).connection?.getSourceBlock().workspace;
+      callback: (scope: ScopeWithConnection) => {
+        const block = scope.block ?? scope.connection?.getSourceBlock();
+        const ws = block?.workspace as WorkspaceSvg | null;
         if (!ws) return;
         return this.pasteCallback(ws);
       },
@@ -375,6 +379,7 @@ export class Clipboard {
         this.navigation.tryToConnectNodes(
           pasteWorkspace,
           targetNode,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           ASTNode.createBlockNode(block)!,
         );
       }

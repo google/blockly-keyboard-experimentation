@@ -64,7 +64,7 @@ export class EnterAction {
               return false;
             }
             curNode = flyoutCursor.getCurNode();
-            nodeType = curNode.getType();
+            nodeType = curNode?.getType();
 
             switch (nodeType) {
               case ASTNode.types.STACK:
@@ -134,6 +134,7 @@ export class EnterAction {
         !this.navigation.tryToConnectNodes(
           workspace,
           stationaryNode,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           ASTNode.createBlockNode(newBlock)!,
         )
       ) {
@@ -144,7 +145,7 @@ export class EnterAction {
     }
 
     this.navigation.focusWorkspace(workspace);
-    workspace.getCursor()!.setCurNode(ASTNode.createBlockNode(newBlock)!);
+    workspace.getCursor()?.setCurNode(ASTNode.createBlockNode(newBlock));
   }
 
   /**
@@ -155,16 +156,22 @@ export class EnterAction {
    */
   private triggerButtonCallback(workspace: WorkspaceSvg) {
     const button = this.navigation
-      .getFlyoutCursor(workspace)!
-      .getCurNode()
-      .getLocation() as FlyoutButton;
-    const buttonCallback = (workspace as any).flyoutButtonCallbacks.get(
-      (button as any).callbackKey,
-    );
-    if (typeof buttonCallback === 'function') {
+      .getFlyoutCursor(workspace)
+      ?.getCurNode()
+      ?.getLocation() as FlyoutButton | undefined;
+    if (!button) return;
+
+    const flyoutButtonCallbacks: Map<string, (p1: FlyoutButton) => void> =
+      // @ts-expect-error private field access
+      workspace.flyoutButtonCallbacks;
+
+    const info = button.info;
+    if ('callbackkey' in info) {
+      const buttonCallback = flyoutButtonCallbacks.get(info.callbackkey);
+      if (!buttonCallback) {
+        throw new Error('No callback function found for flyout button.');
+      }
       buttonCallback(button);
-    } else if (!button.isLabel()) {
-      throw new Error('No callback function found for flyout button.');
     }
   }
 
@@ -207,10 +214,10 @@ export class EnterAction {
     }
 
     const curBlock = this.navigation
-      .getFlyoutCursor(workspace)!
-      .getCurNode()
-      .getLocation() as BlockSvg;
-    if (!curBlock.isEnabled()) {
+      .getFlyoutCursor(workspace)
+      ?.getCurNode()
+      ?.getLocation() as BlockSvg | undefined;
+    if (!curBlock?.isEnabled()) {
       console.warn("Can't insert a disabled block.");
       return null;
     }

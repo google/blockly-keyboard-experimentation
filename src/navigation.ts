@@ -25,6 +25,22 @@ import {
 import {PassiveFocus} from './passive_focus';
 
 /**
+ * The default coordinate to use when focusing on the workspace and no
+ * blocks are present. In pixel coordinates, but will be converted to
+ * workspace coordinates when used to position the cursor.
+ */
+const DEFAULT_WS_COORDINATE: Blockly.utils.Coordinate =
+  new Blockly.utils.Coordinate(100, 100);
+
+/**
+ * The default coordinate to use when moving the cursor to the workspace
+ * after a block has been deleted. In pixel coordinates, but will be
+ * converted to workspace coordinates when used to position the cursor.
+ */
+const WS_COORDINATE_ON_DELETE: Blockly.utils.Coordinate =
+  new Blockly.utils.Coordinate(100, 100);
+
+/**
  * Class that holds all methods necessary for keyboard navigation to work.
  */
 export class Navigation {
@@ -33,22 +49,6 @@ export class Navigation {
    * Possible locations of the cursor are: workspace, flyout or toolbox.
    */
   workspaceStates: {[index: string]: Constants.STATE} = {};
-
-  /**
-   * The default coordinate to use when focusing on the workspace and no
-   * blocks are present. In pixel coordinates, but will be converted to
-   * workspace coordinates when used to position the cursor.
-   */
-  DEFAULT_WS_COORDINATE: Blockly.utils.Coordinate =
-    new Blockly.utils.Coordinate(100, 100);
-
-  /**
-   * The default coordinate to use when moving the cursor to the workspace
-   * after a block has been deleted. In pixel coordinates, but will be
-   * converted to workspace coordinates when used to position the cursor.
-   */
-  WS_COORDINATE_ON_DELETE: Blockly.utils.Coordinate =
-    new Blockly.utils.Coordinate(100, 100);
 
   /**
    * Wrapper for method that deals with workspace changes.
@@ -263,15 +263,21 @@ export class Navigation {
         e.type === Blockly.Events.CLICK &&
         (e as Blockly.Events.Click).targetType === 'block'
       ) {
-        const block = flyoutWorkspace.getBlockById(
-          (e as Blockly.Events.Click).blockId!,
-        );
-        this.handleBlockClickInFlyout(mainWorkspace, block!);
+        const {blockId} = e as Blockly.Events.Click;
+        if (blockId) {
+          const block = flyoutWorkspace.getBlockById(blockId);
+          if (block) {
+            this.handleBlockClickInFlyout(mainWorkspace, block);
+          }
+        }
       } else if (e.type === Blockly.Events.SELECTED) {
-        const block = flyoutWorkspace.getBlockById(
-          (e as Blockly.Events.Selected).newElementId!,
-        );
-        this.handleBlockClickInFlyout(mainWorkspace, block!);
+        const {newElementId} = e as Blockly.Events.Selected;
+        if (newElementId) {
+          const block = flyoutWorkspace.getBlockById(newElementId);
+          if (block) {
+            this.handleBlockClickInFlyout(mainWorkspace, block);
+          }
+        }
       }
     } else if (
       e.type === Blockly.Events.BLOCK_CREATE &&
@@ -279,7 +285,7 @@ export class Navigation {
     ) {
       // When variables are created, that recreates the flyout contents, leaving the
       // cursor in an invalid state.
-      this.resetFlyoutCursorPosition(mainWorkspace);
+      this.defaultFlyoutCursorIfNeeded(mainWorkspace);
     }
   }
 
@@ -314,7 +320,7 @@ export class Navigation {
       const curNode = cursor.getCurNode();
       const block = curNode ? curNode.getSourceBlock() : null;
       if (block && block.id === mutatedBlockId) {
-        cursor.setCurNode(Blockly.ASTNode.createBlockNode(block)!);
+        cursor.setCurNode(Blockly.ASTNode.createBlockNode(block));
       }
     }
   }
@@ -333,24 +339,15 @@ export class Navigation {
     const deletedBlockId = e.blockId;
     const ids = e.ids ?? [];
     const cursor = workspace.getCursor();
+    if (!cursor) return;
 
     // Make sure the cursor is on a block.
-    if (
-      !cursor ||
-      !cursor.getCurNode() ||
-      !cursor.getCurNode().getSourceBlock()
-    ) {
-      return;
-    }
+    const sourceBlock = cursor.getCurNode()?.getSourceBlock();
+    if (!sourceBlock) return;
 
-    const curNode = cursor.getCurNode();
-    const sourceBlock = curNode.getSourceBlock()!;
     if (sourceBlock.id === deletedBlockId || ids.includes(sourceBlock.id)) {
       cursor.setCurNode(
-        Blockly.ASTNode.createWorkspaceNode(
-          workspace,
-          this.WS_COORDINATE_ON_DELETE,
-        )!,
+        Blockly.ASTNode.createWorkspaceNode(workspace, WS_COORDINATE_ON_DELETE),
       );
     }
   }
@@ -369,12 +366,12 @@ export class Navigation {
     if (!block) {
       return;
     }
-    if (block.isShadow()) {
-      block = block.getParent()!;
+    const curNodeBlock = block.isShadow() ? block : block.getParent();
+    if (curNodeBlock) {
+      this.getFlyoutCursor(mainWorkspace)?.setCurNode(
+        Blockly.ASTNode.createStackNode(curNodeBlock),
+      );
     }
-    this.getFlyoutCursor(mainWorkspace)!.setCurNode(
-      Blockly.ASTNode.createStackNode(block)!,
-    );
     this.focusFlyout(mainWorkspace);
   }
 
@@ -399,7 +396,7 @@ export class Navigation {
     if (!Blockly.Gesture.inProgress()) {
       workspace.hideChaff();
       // This will make a selection which would interfere with any gesture.
-      this.defaultCursorPositionIfNeeded(workspace);
+      this.defaultWorkspaceCursorPositionIfNeeded(workspace);
     }
 
     const cursor = workspace.getCursor();
@@ -415,19 +412,54 @@ export class Navigation {
   }
 
   /**
-   * Clears the navigation state and switches to using the passive focus indicator.
+   * Clears navigation state and switches to using the passive focus indicator
+   * if it is not the context menu / field input that is causing blur.
    *
    * @param workspace The workspace that has lost focus.
+   * @param ignorePopUpDivs Whether to skip the focus indicator change when
+   *     the widget/dropdown divs are open.
    */
-  handleBlurWorkspace(workspace: Blockly.WorkspaceSvg) {
+  handleBlurWorkspace(
+    workspace: Blockly.WorkspaceSvg,
+    ignorePopUpDivs = false,
+  ) {
     this.setState(workspace, Constants.STATE.NOWHERE);
     const cursor = workspace.getCursor();
-    if (cursor) {
-      if (cursor.getCurNode()) {
-        this.passiveFocusIndicator.show(cursor.getCurNode());
+    const popUpDivsShowing =
+      Blockly.WidgetDiv.isVisible() || Blockly.DropDownDiv.isVisible();
+    if (cursor && (ignorePopUpDivs || !popUpDivsShowing)) {
+      const curNode = cursor.getCurNode();
+      if (curNode) {
+        this.passiveFocusIndicator.show(curNode);
       }
       // It's initially null so this is a valid state despite the types.
-      cursor.setCurNode(null as never);
+      cursor.setCurNode(null);
+    }
+  }
+
+  /**
+   * Handle the widget or dropdown div losing focus (via focusout).
+   *
+   * Because we skip the widget/dropdown div cases in `handleBlurWorkspace` we need
+   * to catch them here.
+   *
+   * @param workspace The workspace.
+   * @param relatedTarget The related target (newly focused element if any).
+   */
+  handleFocusOutWidgetDropdownDiv(
+    workspace: Blockly.WorkspaceSvg,
+    relatedTarget: EventTarget | null,
+  ) {
+    if (relatedTarget === null) {
+      // Workaround:
+      // Skip document.body/null case until this blur bug is fixed to avoid
+      // flipping to passive focus as the user moves their mouse over the
+      // colour picker.
+      // https://github.com/google/blockly-samples/issues/2498
+      return;
+    }
+    if (relatedTarget !== getWorkspaceElement(workspace)) {
+      this.handleBlurWorkspace(workspace, true);
     }
   }
 
@@ -453,9 +485,9 @@ export class Navigation {
     }
     this.setState(workspace, Constants.STATE.TOOLBOX);
 
-    if (!toolbox.getSelectedItem()) {
+    if (!toolbox.getSelectedItem() && toolbox instanceof Blockly.Toolbox) {
       // Find the first item that is selectable.
-      const toolboxItems = (toolbox as any).getToolboxItems();
+      const toolboxItems = toolbox.getToolboxItems();
       for (let i = 0, toolboxItem; (toolboxItem = toolboxItems[i]); i++) {
         if (toolboxItem.isSelectable()) {
           toolbox.selectItemByPosition(i);
@@ -502,7 +534,12 @@ export class Navigation {
 
     this.setState(workspace, Constants.STATE.FLYOUT);
     this.getFlyoutCursor(workspace)?.draw();
-    this.resetFlyoutCursorPosition(workspace);
+
+    // This doesn't identify a click on the scrollbars which will unfortunately
+    // default the cursor if the flyout didn't already have focus.
+    if (!Blockly.Gesture.inProgress()) {
+      this.defaultFlyoutCursorIfNeeded(workspace);
+    }
   }
 
   /**
@@ -521,33 +558,46 @@ export class Navigation {
   }
 
   /**
-   * Move the flyout cursor to the start if unset (as it is initially despite
+   * Move the flyout cursor to the preferred end if unset (as it is initially despite
    * the types) or on a disposed item.
    *
    * @param workspace The workspace.
+   * @param prefer The preferred default position.
+   * @return true if the cursor location was defaulted.
    */
-  private resetFlyoutCursorPosition(workspace: Blockly.WorkspaceSvg) {
+  defaultFlyoutCursorIfNeeded(
+    workspace: Blockly.WorkspaceSvg,
+    prefer: 'first' | 'last' = 'first',
+  ) {
     const flyout = workspace.getFlyout();
     if (!flyout) return;
     const flyoutCursor = this.getFlyoutCursor(workspace);
     if (!flyoutCursor) return;
 
-    if (
-      flyoutCursor.getCurNode() &&
-      !this.isFlyoutItemDisposed(flyoutCursor.getCurNode())
-    )
-      return;
+    const curNode = flyoutCursor.getCurNode();
+    if (curNode && !this.isFlyoutItemDisposed(curNode)) return false;
 
     const flyoutContents = flyout.getContents();
-    const firstFlyoutItem = flyoutContents[0];
-    if (!firstFlyoutItem) return;
-    if (firstFlyoutItem.button) {
-      const astNode = Blockly.ASTNode.createButtonNode(firstFlyoutItem.button);
-      flyoutCursor.setCurNode(astNode!);
-    } else if (firstFlyoutItem.block) {
-      const astNode = Blockly.ASTNode.createStackNode(firstFlyoutItem.block);
-      flyoutCursor.setCurNode(astNode!);
+    const defaultFlyoutItem =
+      prefer === 'first'
+        ? flyoutContents[0]
+        : flyoutContents[flyoutContents.length - 1];
+    if (!defaultFlyoutItem) return;
+    const defaultFlyoutItemElement = defaultFlyoutItem.getElement();
+    if (defaultFlyoutItemElement instanceof Blockly.FlyoutButton) {
+      const astNode = Blockly.ASTNode.createButtonNode(
+        defaultFlyoutItemElement as Blockly.FlyoutButton,
+      );
+      flyoutCursor.setCurNode(astNode);
+      return true;
+    } else if (defaultFlyoutItemElement instanceof Blockly.BlockSvg) {
+      const astNode = Blockly.ASTNode.createStackNode(
+        defaultFlyoutItemElement as Blockly.BlockSvg,
+      );
+      flyoutCursor.setCurNode(astNode);
+      return true;
     }
+    return false;
   }
 
   /**
@@ -558,9 +608,10 @@ export class Navigation {
    *  - Move the cursor to the default location on the workspace.
    *
    * @param workspace The main Blockly workspace.
+   * @param prefer The preferred default position.
    * @return true if the cursor location was defaulted.
    */
-  defaultCursorPositionIfNeeded(
+  defaultWorkspaceCursorPositionIfNeeded(
     workspace: Blockly.WorkspaceSvg,
     prefer: 'first' | 'last' = 'first',
   ) {
@@ -576,21 +627,21 @@ export class Navigation {
       return false;
     }
     const wsCoordinates = new Blockly.utils.Coordinate(
-      this.DEFAULT_WS_COORDINATE.x / workspace.scale,
-      this.DEFAULT_WS_COORDINATE.y / workspace.scale,
+      DEFAULT_WS_COORDINATE.x / workspace.scale,
+      DEFAULT_WS_COORDINATE.y / workspace.scale,
     );
     if (topBlocks.length > 0) {
       cursor.setCurNode(
         Blockly.ASTNode.createTopNode(
           topBlocks[prefer === 'first' ? 0 : topBlocks.length - 1],
-        )!,
+        ),
       );
     } else {
       const wsNode = Blockly.ASTNode.createWorkspaceNode(
         workspace,
         wsCoordinates,
       );
-      cursor.setCurNode(wsNode!);
+      cursor.setCurNode(wsNode);
     }
     return true;
   }
@@ -1011,9 +1062,9 @@ export class Navigation {
       workspace.keyboardAccessibilityMode
     ) {
       workspace.keyboardAccessibilityMode = false;
-      workspace.getCursor()!.hide();
+      workspace.getCursor()?.hide();
       if (this.getFlyoutCursor(workspace)) {
-        this.getFlyoutCursor(workspace)!.hide();
+        this.getFlyoutCursor(workspace)?.hide();
       }
     }
   }
@@ -1051,6 +1102,7 @@ export class Navigation {
   /**
    * Save the current cursor location and open the toolbox or flyout
    * to select and insert a block.
+   *
    * @param workspace The active workspace.
    */
   openToolboxOrFlyout(workspace: Blockly.WorkspaceSvg) {
@@ -1083,6 +1135,7 @@ export class Navigation {
         this.tryToConnectNodes(
           workspace,
           targetNode,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           Blockly.ASTNode.createBlockNode(block)!,
         );
       }

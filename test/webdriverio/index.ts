@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2024 Google LLC
+ * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -8,20 +8,17 @@ import * as Blockly from 'blockly';
 // Import the default blocks.
 import 'blockly/blocks';
 import {installAllBlocks as installColourBlocks} from '@blockly/field-colour';
-import {KeyboardNavigation} from '../src/index';
+import {KeyboardNavigation} from '../../src/index';
 // @ts-expect-error No types in js file
-import {forBlock} from './blocks/p5_generators';
+import {blocks} from './../blocks/p5_blocks';
 // @ts-expect-error No types in js file
-import {blocks} from './blocks/p5_blocks';
+import {toolbox as toolboxFlyout} from './../blocks/toolbox.js';
 // @ts-expect-error No types in js file
-import {toolbox as toolboxFlyout} from './blocks/toolbox.js';
-// @ts-expect-error No types in js file
-import toolboxCategories from './toolboxCategories.js';
+import toolboxCategories from './../toolboxCategories.js';
 
 import {javascriptGenerator} from 'blockly/javascript';
 // @ts-expect-error No types in js file
-import {load} from './loadTestBlocks';
-import {runCode, registerRunCodeShortcut} from './runCode';
+import {load} from './../loadTestBlocks';
 
 /**
  * Parse query params for inject and navigation options and update
@@ -55,24 +52,15 @@ function getOptions() {
   const toolboxObject =
     toolbox === 'flyout' ? toolboxFlyout : toolboxCategories;
 
-  // Update form inputs to match params, but only after the page is
-  // fully loaded as Chrome (at least) tries to restore previous form
-  // values and does so _after_ DOMContentLoaded has fired, which can
-  // result in the form inputs being out-of-sync with the actual
-  // options when doing browswer page navigation.
-  window.addEventListener('load', () => {
-    (document.getElementById('toolbox') as HTMLSelectElement).value = toolbox;
-    (document.getElementById('renderer') as HTMLSelectElement).value = renderer;
-    (document.getElementById('scenario') as HTMLSelectElement).value = scenario;
-    (document.getElementById('noStack') as HTMLInputElement).checked =
-      !stackConnections;
-  });
+  const rtlParam = params.get('rtl');
+  const rtl = !!rtlParam;
 
   return {
     scenario,
     stackConnections,
     renderer,
     toolbox: toolboxObject,
+    rtl,
   };
 }
 
@@ -83,11 +71,12 @@ function getOptions() {
  * @returns The created workspace.
  */
 function createWorkspace(): Blockly.WorkspaceSvg {
-  const {scenario, stackConnections, renderer, toolbox} = getOptions();
+  const {scenario, stackConnections, renderer, toolbox, rtl} = getOptions();
 
   const injectOptions = {
     toolbox,
     renderer,
+    rtl,
   };
   const blocklyDiv = document.getElementById('blocklyDiv');
   if (!blocklyDiv) {
@@ -99,13 +88,11 @@ function createWorkspace(): Blockly.WorkspaceSvg {
     cursor: {stackConnections},
   };
   new KeyboardNavigation(workspace, navigationOptions);
-  registerRunCodeShortcut();
 
   // Disable blocks that aren't inside the setup or draw loops.
   workspace.addChangeListener(Blockly.Events.disableOrphans);
 
   load(workspace, scenario);
-  runCode();
 
   return workspace;
 }
@@ -119,12 +106,14 @@ function addP5() {
     javascript: javascriptGenerator,
   });
   Blockly.common.defineBlocks(blocks);
-  Object.assign(javascriptGenerator.forBlock, forBlock);
-  javascriptGenerator.addReservedWords('sketch');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   addP5();
   createWorkspace();
-  document.getElementById('run')?.addEventListener('click', runCode);
+  // Add Blockly to the global scope so that test code can access it to
+  // verify state after keypresses.
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  window.Blockly = Blockly;
 });
