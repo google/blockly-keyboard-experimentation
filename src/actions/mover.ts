@@ -15,8 +15,9 @@ import {
   registry,
   utils,
 } from 'blockly';
-import type {Block, BlockSvg, IDragger} from 'blockly';
+import type {BlockSvg, IDragger, IDragStrategy} from 'blockly';
 import {Navigation} from '../navigation';
+import {KeyboardDragStrategy} from '../keyboard_drag_strategy';
 
 const KeyCodes = utils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -47,6 +48,12 @@ export class Mover {
    * of a keyboard drag and reset at the end of a keyboard drag.
    */
   oldIsDragging: (() => boolean) | null = null;
+
+  /**
+   * The block's base drag strategy, which will be overridden during
+   * keyboard drags and reset at the end of the drag.
+   */
+  private oldDragStrategy: IDragStrategy | null = null;
 
   constructor(
     protected navigation: Navigation,
@@ -237,6 +244,7 @@ export class Mover {
     cursor.setCurNode(ASTNode.createBlockNode(block));
 
     this.patchIsDragging(workspace);
+    this.patchDragStrategy(block);
     // Begin dragging block.
     const DraggerClass = registry.getClassFromOptions(
       registry.Type.BLOCK_DRAGGER,
@@ -271,6 +279,7 @@ export class Mover {
     );
 
     this.unpatchIsDragging(workspace);
+    this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
     return true;
   }
@@ -290,7 +299,7 @@ export class Mover {
     // Monkey patch dragger to trigger call to draggable.revertDrag.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (info.dragger as any).shouldReturnToStart = () => true;
-    const blockSvg = info.block as BlockSvg;
+    const blockSvg = info.block;
 
     // Explicitly call `hidePreview` because it is not called in revertDrag.
     // @ts-expect-error Access to private property dragStrategy.
@@ -301,6 +310,7 @@ export class Mover {
     );
 
     this.unpatchIsDragging(workspace);
+    this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
     return true;
   }
@@ -388,6 +398,28 @@ Use enter to complete the move, or escape to abort.`);
       (workspace as any).isDragging = this.oldIsDragging;
     }
   }
+  /**
+   * Monkeypatch: replace the block's drag strategy and cache the old value.
+   *
+   * @param block The block to patch.
+   */
+  private patchDragStrategy(block: BlockSvg) {
+    // @ts-expect-error block.dragStrategy is private.
+    this.oldDragStrategy = block.dragStrategy;
+    block.setDragStrategy(new KeyboardDragStrategy(block));
+  }
+
+  /**
+   * Undo the monkeypatching of the block's drag strategy.
+   *
+   * @param block The block to patch.
+   */
+  private unpatchDragStrategy(block: BlockSvg) {
+    if (this.oldDragStrategy) {
+      block.setDragStrategy(this.oldDragStrategy);
+      this.oldDragStrategy = null;
+    }
+  }
 }
 
 /**
@@ -402,7 +434,7 @@ export class MoveInfo {
   readonly startLocation: utils.Coordinate;
 
   constructor(
-    readonly block: Block,
+    readonly block: BlockSvg,
     readonly dragger: IDragger,
   ) {
     this.parentNext = block.previousConnection?.targetConnection ?? null;
