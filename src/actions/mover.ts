@@ -10,16 +10,24 @@ import {
   Connection,
   ContextMenuRegistry,
   ShortcutRegistry,
+  WorkspaceSvg,
   common,
+  registry,
   utils,
 } from 'blockly';
-import type {Block, BlockSvg, WorkspaceSvg} from 'blockly';
+import type {Block, BlockSvg, IDragger} from 'blockly';
 import {Navigation} from '../navigation';
 
 const KeyCodes = utils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
   ShortcutRegistry.registry,
 );
+
+/**
+ * The distance to move an item, in workspace coordinates, when
+ * making an unconstrained move.
+ */
+const UNCONSTRAINED_MOVE_DISTANCE = 20;
 
 /**
  * Actions for moving blocks with keyboard shortcuts.
@@ -221,11 +229,19 @@ export class Mover {
     // Select and focus block.
     common.setSelected(block);
     cursor.setCurNode(ASTNode.createBlockNode(block));
-
-    // Additional implementation goes here.
-    console.log('startMove');
-
-    this.moves.set(workspace, new MoveInfo(block));
+    // Begin dragging block.
+    const DraggerClass = registry.getClassFromOptions(
+      registry.Type.BLOCK_DRAGGER,
+      workspace.options,
+      true,
+    );
+    if (!DraggerClass) throw new Error('no Dragger registered');
+    const dragger = new DraggerClass(block, workspace);
+    // Record that a move is in progress and start dragging.
+    const info = new MoveInfo(block, dragger);
+    this.moves.set(workspace, info);
+    // Begin drag.
+    dragger.onDragStart(info.fakePointerEvent('pointerdown'));
     return true;
   }
 
@@ -241,8 +257,10 @@ export class Mover {
     const info = this.moves.get(workspace);
     if (!info) throw new Error('no move info for workspace');
 
-    // Additional implementation goes here.
-    console.log('finishMove');
+    info.dragger.onDragEnd(
+      info.fakePointerEvent('pointerup'),
+      new utils.Coordinate(0, 0),
+    );
 
     this.moves.delete(workspace);
     return true;
@@ -260,8 +278,18 @@ export class Mover {
     const info = this.moves.get(workspace);
     if (!info) throw new Error('no move info for workspace');
 
-    // Additional implementation goes here.
-    console.log('abortMove');
+    // Monkey patch dragger to trigger call to draggable.revertDrag.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (info.dragger as any).shouldReturnToStart = () => true;
+    const blockSvg = info.block as BlockSvg;
+
+    // Explicitly call `hidePreview` because it is not called in revertDrag.
+    // @ts-expect-error Access to private property dragStrategy.
+    blockSvg.dragStrategy.connectionPreviewer.hidePreview();
+    info.dragger.onDragEnd(
+      info.fakePointerEvent('pointerup'),
+      new utils.Coordinate(0, 0),
+    );
 
     this.moves.delete(workspace);
     return true;
@@ -278,8 +306,11 @@ export class Mover {
     workspace: WorkspaceSvg,
     /* ... */
   ) {
-    console.log('moveConstrained');
     // Not yet implemented.  Absorb keystroke to avoid moving cursor.
+    alert(`Constrained movement not implemented.
+
+Use ctrl+arrow or alt+arrow (option+arrow on macOS) for unconstrained move.
+Use enter to complete the move, or escape to abort.`);
     return true;
   }
 
@@ -297,8 +328,16 @@ export class Mover {
     xDirection: number,
     yDirection: number,
   ): boolean {
-    console.log('moveUnconstrained');
-    // Not yet implemented.  Absorb keystroke to avoid moving cursor.
+    if (!workspace) return false;
+    const info = this.moves.get(workspace);
+    if (!info) throw new Error('no move info for workspace');
+
+    info.totalDelta.x +=
+      xDirection * UNCONSTRAINED_MOVE_DISTANCE * workspace.scale;
+    info.totalDelta.y +=
+      yDirection * UNCONSTRAINED_MOVE_DISTANCE * workspace.scale;
+
+    info.dragger.onDrag(info.fakePointerEvent('pointermove'), info.totalDelta);
     return true;
   }
 
@@ -322,13 +361,42 @@ export class Mover {
  * Workspace.
  */
 export class MoveInfo {
+  /** Total distance moved, in screen pixels */
+  totalDelta = new utils.Coordinate(0, 0);
   readonly parentNext: Connection | null;
   readonly parentInput: Connection | null;
   readonly startLocation: utils.Coordinate;
 
-  constructor(readonly block: Block) {
+  constructor(
+    readonly block: Block,
+    readonly dragger: IDragger,
+  ) {
     this.parentNext = block.previousConnection?.targetConnection ?? null;
     this.parentInput = block.outputConnection?.targetConnection ?? null;
     this.startLocation = block.getRelativeToSurfaceXY();
+  }
+
+  /**
+   * Create a fake pointer event for dragging.
+   *
+   * @param type Which type of pointer event to create.
+   * @returns A synthetic PointerEvent that can be consumed by Blockly's
+   *     dragging code.
+   */
+  fakePointerEvent(type: string): PointerEvent {
+    const workspace = this.block.workspace;
+    if (!(workspace instanceof WorkspaceSvg)) throw new TypeError();
+
+    const blockCoords = utils.svgMath.wsToScreenCoordinates(
+      workspace,
+      new utils.Coordinate(
+        this.startLocation.x + this.totalDelta.x,
+        this.startLocation.y + this.totalDelta.y,
+      ),
+    );
+    return new PointerEvent(type, {
+      clientX: blockCoords.x,
+      clientY: blockCoords.y,
+    });
   }
 }
