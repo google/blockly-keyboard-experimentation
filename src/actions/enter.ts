@@ -6,6 +6,7 @@
 
 import {
   ASTNode,
+  Events,
   ShortcutRegistry,
   utils as BlocklyUtils,
   dialog,
@@ -126,6 +127,9 @@ export class EnterAction {
    *     the block will be placed on.
    */
   private insertFromFlyout(workspace: WorkspaceSvg) {
+    workspace.setResizesEnabled(false);
+    Events.setGroup(true);
+
     const stationaryNode = this.navigation.getStationaryNode(workspace);
     const newBlock = this.createNewBlock(workspace);
     if (!newBlock) return;
@@ -137,8 +141,99 @@ export class EnterAction {
       }
     }
 
+    if (workspace.getTopBlocks().includes(newBlock)) {
+      this.positionNewTopLevelBlock(workspace, newBlock);
+    }
+
+    Events.setGroup(false);
+    workspace.setResizesEnabled(true);
+
     this.navigation.focusWorkspace(workspace);
-    workspace.getCursor()?.setCurNode(ASTNode.createBlockNode(newBlock));
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    workspace.getCursor()?.setCurNode(ASTNode.createBlockNode(newBlock)!);
+  }
+
+  /**
+   * Position a new top-level block to avoid overlap at the top left.
+   *
+   * Similar to `WorkspaceSvg.cleanUp()` but does not constrain itself to not
+   * affecting code ordering in order to use horizontal space.
+   *
+   * @param workspace The workspace.
+   * @param newBlock The top-level block to move to free space.
+   */
+  private positionNewTopLevelBlock(
+    workspace: WorkspaceSvg,
+    newBlock: BlockSvg,
+  ) {
+    const initialY = 10;
+    const initialX = 10;
+    const xSpacing = 80;
+
+    const filteredTopBlocks = workspace
+      .getTopBlocks(true)
+      .filter((block) => block.id !== newBlock.id);
+    const allBlockBounds = filteredTopBlocks.map((block) =>
+      block.getBoundingRectangle(),
+    );
+
+    const toolboxWidth = workspace.getToolbox()?.getWidth();
+    const workspaceWidth =
+      workspace.getParentSvg().clientWidth - (toolboxWidth ?? 0);
+    const workspaceHeight = workspace.getParentSvg().clientHeight;
+    const {height: newBlockHeight, width: newBlockWidth} =
+      newBlock.getHeightWidth();
+
+    const getNextIntersectingBlock = function (
+      newBlockRect: BlocklyUtils.Rect,
+    ): BlocklyUtils.Rect | null {
+      for (const rect of allBlockBounds) {
+        if (newBlockRect.intersects(rect)) {
+          return rect;
+        }
+      }
+      return null;
+    };
+
+    let cursorY = initialY;
+    let cursorX = initialX;
+    const minBlockHeight = workspace
+      .getRenderer()
+      .getConstants().MIN_BLOCK_HEIGHT;
+    // Make the initial movement of shifting the block to its best possible position.
+    let boundingRect = newBlock.getBoundingRectangle();
+    newBlock.moveBy(cursorX - boundingRect.left, cursorY - boundingRect.top, [
+      'cleanup',
+    ]);
+    newBlock.snapToGrid();
+
+    boundingRect = newBlock.getBoundingRectangle();
+    let conflictingRect = getNextIntersectingBlock(boundingRect);
+    while (conflictingRect != null) {
+      const newCursorX =
+        conflictingRect.left + conflictingRect.getWidth() + xSpacing;
+      const newCursorY =
+        conflictingRect.top + conflictingRect.getHeight() + minBlockHeight;
+      if (newCursorX + newBlockWidth <= workspaceWidth) {
+        cursorX = newCursorX;
+      } else if (newCursorY + newBlockHeight <= workspaceHeight) {
+        cursorY = newCursorY;
+        cursorX = initialX;
+      } else {
+        // Off screen, but new blocks will be selected which will scroll them
+        // into view.
+        cursorY = newCursorY;
+        cursorX = initialX;
+      }
+      newBlock.moveBy(cursorX - boundingRect.left, cursorY - boundingRect.top, [
+        'cleanup',
+      ]);
+      newBlock.snapToGrid();
+      boundingRect = newBlock.getBoundingRectangle();
+      conflictingRect = getNextIntersectingBlock(boundingRect);
+    }
+
+    newBlock.bringToFront();
   }
 
   /**
