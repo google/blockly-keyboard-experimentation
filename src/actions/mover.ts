@@ -15,7 +15,7 @@ import {
   registry,
   utils,
 } from 'blockly';
-import type {Block, BlockSvg, IDragger, IDragStrategy} from 'blockly';
+import type {BlockSvg, IDragger, IDragStrategy} from 'blockly';
 import {Navigation} from '../navigation';
 import {KeyboardDragStrategy} from '../keyboard_drag_strategy';
 
@@ -279,7 +279,7 @@ export class Mover {
     );
 
     this.unpatchIsDragging(workspace);
-    this.unpatchDragStrategy(info.block as BlockSvg);
+    this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
     return true;
   }
@@ -299,7 +299,7 @@ export class Mover {
     // Monkey patch dragger to trigger call to draggable.revertDrag.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (info.dragger as any).shouldReturnToStart = () => true;
-    const blockSvg = info.block as BlockSvg;
+    const blockSvg = info.block;
 
     // Explicitly call `hidePreview` because it is not called in revertDrag.
     // @ts-expect-error Access to private property dragStrategy.
@@ -310,7 +310,7 @@ export class Mover {
     );
 
     this.unpatchIsDragging(workspace);
-    this.unpatchDragStrategy(info.block as BlockSvg);
+    this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
     return true;
   }
@@ -434,7 +434,7 @@ export class MoveInfo {
   readonly startLocation: utils.Coordinate;
 
   constructor(
-    readonly block: Block,
+    readonly block: BlockSvg,
     readonly dragger: IDragger,
   ) {
     this.parentNext = block.previousConnection?.targetConnection ?? null;
