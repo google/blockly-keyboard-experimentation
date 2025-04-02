@@ -42,6 +42,12 @@ export class Mover {
    */
   protected moves: Map<WorkspaceSvg, MoveInfo> = new Map();
 
+  /**
+   * The stashed isDragging function, which is replaced at the beginning
+   * of a keyboard drag and reset at the end of a keyboard drag.
+   */
+  oldIsDragging: (() => boolean) | null = null;
+
   constructor(
     protected navigation: Navigation,
     protected canEdit: (ws: WorkspaceSvg) => boolean,
@@ -229,6 +235,8 @@ export class Mover {
     // Select and focus block.
     common.setSelected(block);
     cursor.setCurNode(ASTNode.createBlockNode(block));
+
+    this.patchIsDragging(workspace);
     // Begin dragging block.
     const DraggerClass = registry.getClassFromOptions(
       registry.Type.BLOCK_DRAGGER,
@@ -262,6 +270,7 @@ export class Mover {
       new utils.Coordinate(0, 0),
     );
 
+    this.unpatchIsDragging(workspace);
     this.moves.delete(workspace);
     return true;
   }
@@ -291,6 +300,7 @@ export class Mover {
       new utils.Coordinate(0, 0),
     );
 
+    this.unpatchIsDragging(workspace);
     this.moves.delete(workspace);
     return true;
   }
@@ -353,6 +363,30 @@ Use enter to complete the move, or escape to abort.`);
     const cursor = workspace?.getCursor();
     const curNode = cursor?.getCurNode();
     return (curNode?.getSourceBlock() as BlockSvg) ?? undefined;
+  }
+
+  /**
+   * Monkeypatch over workspace.isDragging to return whether a keyboard
+   * drag is in progress.
+   *
+   * @param workspace The workspace to patch.
+   */
+  private patchIsDragging(workspace: WorkspaceSvg) {
+    this.oldIsDragging = workspace.isDragging;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (workspace as any).isDragging = () => this.isMoving(workspace);
+  }
+
+  /**
+   * Remove the monkeypatch on workspace.isDragging.
+   *
+   * @param workspace The workspace to unpatch.
+   */
+  private unpatchIsDragging(workspace: WorkspaceSvg) {
+    if (this.oldIsDragging) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (workspace as any).isDragging = this.oldIsDragging;
+    }
   }
 }
 
