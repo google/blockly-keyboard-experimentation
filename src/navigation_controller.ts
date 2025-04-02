@@ -34,7 +34,7 @@ import {ExitAction} from './actions/exit';
 import {EnterAction} from './actions/enter';
 import {DisconnectAction} from './actions/disconnect';
 import {ActionMenu} from './actions/action_menu';
-import {DragMover as Mover} from './actions/drag_mover';
+import {Mover} from './actions/mover';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 
