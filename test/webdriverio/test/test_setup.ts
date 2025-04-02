@@ -16,6 +16,7 @@
  * identifiers that Selenium can use to find those elements.
  */
 
+import * as Blockly from 'blockly';
 import * as webdriverio from 'webdriverio';
 import * as path from 'path';
 import {fileURLToPath} from 'url';
@@ -140,3 +141,95 @@ export const testFileLocations = {
     new URLSearchParams({renderer: 'geras', rtl: 'true'}),
   ),
 };
+
+/**
+ * Copied from blockly browser test_setup.mjs and amended for typescript
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @returns A Promise that resolves to the ID of the currently selected block.
+ */
+export async function getSelectedBlockId(browser: WebdriverIO.Browser) {
+  return await browser.execute(() => {
+    // Note: selected is an ICopyable and I am assuming that it is a BlockSvg.
+    return Blockly.common.getSelected()?.id;
+  });
+}
+
+export interface ElementWithId extends WebdriverIO.Element {
+  id: string;
+}
+
+/**
+ * Copied from blockly browser test_setup.mjs and amended for typescript
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param id The ID of the Blockly block to search for.
+ * @returns A Promise that resolves to the root SVG element of the block with
+ *     the given ID, as an interactable browser element.
+ */
+export async function getBlockElementById(
+  browser: WebdriverIO.Browser,
+  id: string,
+) {
+  const elem = (await browser.$(
+    `[data-id="${id}"]`,
+  )) as unknown as ElementWithId;
+  elem['id'] = id;
+  return elem;
+}
+
+/**
+ * Copied from blockly browser test_setup.mjs and amended for typescript
+ *
+ * Find a clickable element on the block and click it.
+ * We can't always use the block's SVG root because clicking will always happen
+ * in the middle of the block's bounds (including children) by default, which
+ * causes problems if it has holes (e.g. statement inputs). Instead, this tries
+ * to get the first text field on the block. It falls back on the block's SVG root.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param block The block to click, as an interactable element.
+ * @param clickOptions The options to pass to webdriverio's element.click function.
+ * @return A Promise that resolves when the actions are completed.
+ */
+export async function clickBlock(
+  browser: WebdriverIO.Browser,
+  block: ElementWithId,
+  clickOptions: webdriverio.ClickOptions,
+) {
+  const findableId = 'clickTargetElement';
+  // In the browser context, find the element that we want and give it a findable ID.
+  await browser.execute(
+    (blockId, newElemId) => {
+      const block = Blockly.getMainWorkspace().getBlockById(blockId);
+      if (block) {
+        for (const input of block.inputList) {
+          for (const field of input.fieldRow) {
+            if (field instanceof Blockly.FieldLabel) {
+              const fieldSvg = field.getSvgRoot();
+              if (fieldSvg) {
+                fieldSvg.id = newElemId;
+                return;
+              }
+            }
+          }
+        }
+      }
+      // No label field found. Fall back to the block's SVG root.
+      (block as Blockly.BlockSvg).getSvgRoot().id = findableId;
+    },
+    block.id,
+    findableId,
+  );
+
+  // In the test context, get the Webdriverio Element that we've identified.
+  const elem = await browser.$(`#${findableId}`);
+
+  await elem.click(clickOptions);
+
+  // In the browser context, remove the ID.
+  await browser.execute((elemId) => {
+    const clickElem = document.getElementById(elemId);
+    clickElem?.removeAttribute('id');
+  }, findableId);
+}
