@@ -22,7 +22,10 @@ interface ConnectionCandidate {
 
 // @ts-expect-error overrides a private function.
 export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
+  /** Which direction the current constrained drag is in, if any. */
   private currentDragDirection: Direction | null = null;
+
+  /** Where a constrained movement should start when traversing the tree. */
   private searchNode: ASTNode | null = null;
 
   override startDrag(e?: PointerEvent) {
@@ -55,7 +58,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   /**
    * Returns the next compatible connection in keyboard navigation order,
    * based on the input direction.
-   * Always resumes the search at the last
+   * Always resumes the search at the last valid connection that was tried.
    *
    * @param draggingBlock The block where the drag started.
    * @returns A valid connection candidate, or null if none was found.
@@ -63,6 +66,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   private getConstrainedConnectionCandidate(
     draggingBlock: BlockSvg,
   ): ConnectionCandidate | null {
+    // TODO(#385): Make sure this works for any cursor, not just LineCursor.
     const cursor = draggingBlock.workspace.getCursor() as LineCursor;
 
     const initialNode = this.searchNode;
@@ -97,7 +101,9 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       localConns.forEach((conn: RenderedConnection) => {
         const potentialLocation =
           potential?.getLocation() as RenderedConnection;
-        if (connectionChecker.canConnect(conn, potentialLocation, true, 5000)) {
+        if (
+          connectionChecker.canConnect(conn, potentialLocation, true, Infinity)
+        ) {
           candidateConnection = {
             local: conn,
             neighbour: potentialLocation,
