@@ -44,13 +44,19 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     super.drag(newLoc);
 
     // Handle the case when an unconstrained drag found a connection candidate.
-    // The next constrained move will resume the search from the current candidate
-    // location.
     // @ts-expect-error connectionCandidate is private.
     if (this.connectionCandidate) {
-      this.searchNode = ASTNode.createConnectionNode(
-        // @ts-expect-error connectionCandidate is private.
-        (this.connectionCandidate as ConnectionCandidate).neighbour,
+      // @ts-expect-error connectionCandidate is private.
+      const neighbour = (this.connectionCandidate as ConnectionCandidate)
+        .neighbour;
+      // The next constrained move will resume the search from the current
+      // candidate location.
+      this.searchNode = ASTNode.createConnectionNode(neighbour);
+      // The moving block will be positioned slightly down and to the
+      // right of the connection it found.
+      // @ts-expect-error block and startLoc are private.
+      this.block.moveDuringDrag(
+        new utils.Coordinate(neighbour.x + 10, neighbour.y + 10),
       );
     }
   }
