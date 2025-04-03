@@ -118,7 +118,8 @@ export class Mover {
     {
       name: 'Move left, unconstrained',
       preconditionFn: (workspace) => this.isMoving(workspace),
-      callback: (workspace) => this.moveUnconstrained(workspace, -1, 0),
+      callback: (workspace) =>
+        this.moveUnconstrained(workspace, Direction.Left),
       keyCodes: [
         createSerializedKey(KeyCodes.LEFT, [KeyCodes.ALT]),
         createSerializedKey(KeyCodes.LEFT, [KeyCodes.CTRL]),
@@ -127,7 +128,8 @@ export class Mover {
     {
       name: 'Move right, unconstrained',
       preconditionFn: (workspace) => this.isMoving(workspace),
-      callback: (workspace) => this.moveUnconstrained(workspace, 1, 0),
+      callback: (workspace) =>
+        this.moveUnconstrained(workspace, Direction.Right),
       keyCodes: [
         createSerializedKey(KeyCodes.RIGHT, [KeyCodes.ALT]),
         createSerializedKey(KeyCodes.RIGHT, [KeyCodes.CTRL]),
@@ -136,7 +138,7 @@ export class Mover {
     {
       name: 'Move up unconstrained',
       preconditionFn: (workspace) => this.isMoving(workspace),
-      callback: (workspace) => this.moveUnconstrained(workspace, 0, -1),
+      callback: (workspace) => this.moveUnconstrained(workspace, Direction.Up),
       keyCodes: [
         createSerializedKey(KeyCodes.UP, [KeyCodes.ALT]),
         createSerializedKey(KeyCodes.UP, [KeyCodes.CTRL]),
@@ -145,7 +147,8 @@ export class Mover {
     {
       name: 'Move down, unconstrained',
       preconditionFn: (workspace) => this.isMoving(workspace),
-      callback: (workspace) => this.moveUnconstrained(workspace, 0, 1),
+      callback: (workspace) =>
+        this.moveUnconstrained(workspace, Direction.Down),
       keyCodes: [
         createSerializedKey(KeyCodes.DOWN, [KeyCodes.ALT]),
         createSerializedKey(KeyCodes.DOWN, [KeyCodes.CTRL]),
@@ -341,23 +344,17 @@ export class Mover {
    * without constraint.
    *
    * @param workspace The workspace to move on.
-   * @param xDirection -1 to move left. 1 to move right.
-   * @param yDirection -1 to move up. 1 to move down.
+   * @param direction The direction to move the dragged item.
    * @returns True iff this action applies and has been performed.
    */
-  moveUnconstrained(
-    workspace: WorkspaceSvg,
-    xDirection: number,
-    yDirection: number,
-  ): boolean {
+  moveUnconstrained(workspace: WorkspaceSvg, direction: Direction): boolean {
     if (!workspace) return false;
     const info = this.moves.get(workspace);
     if (!info) throw new Error('no move info for workspace');
 
-    info.totalDelta.x +=
-      xDirection * UNCONSTRAINED_MOVE_DISTANCE * workspace.scale;
-    info.totalDelta.y +=
-      yDirection * UNCONSTRAINED_MOVE_DISTANCE * workspace.scale;
+    const {x, y} = getXYFromDirection(direction);
+    info.totalDelta.x += x * UNCONSTRAINED_MOVE_DISTANCE * workspace.scale;
+    info.totalDelta.y += y * UNCONSTRAINED_MOVE_DISTANCE * workspace.scale;
 
     info.dragger.onDrag(info.fakePointerEvent('pointermove'), info.totalDelta);
     return true;
