@@ -5,7 +5,6 @@
  */
 
 import {
-  ASTNode,
   ContextMenuRegistry,
   Gesture,
   ShortcutRegistry,
