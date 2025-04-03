@@ -336,6 +336,8 @@ export class Mover {
       info.fakePointerEvent('pointermove', direction),
       info.totalDelta,
     );
+
+    info.updateTotalDelta();
     return true;
   }
 
@@ -426,7 +428,7 @@ export class Mover {
  * Workspace.
  */
 export class MoveInfo {
-  /** Total distance moved, in screen pixels */
+  /** Total distance moved, in workspace units. */
   totalDelta = new utils.Coordinate(0, 0);
   readonly parentNext: Connection | null;
   readonly parentInput: Connection | null;
@@ -467,5 +469,20 @@ export class MoveInfo {
       tiltX: tilts.x,
       tiltY: tilts.y,
     });
+  }
+
+  /**
+   * The keyboard drag may have moved the block to an appropriate location
+   * for a preview. Update the saved delta to reflect the block's new
+   * location, so that it does not jump during the next unconstrained move.
+   */
+  updateTotalDelta() {
+    const workspace = this.block.workspace;
+    if (!(workspace instanceof WorkspaceSvg)) throw new TypeError();
+
+    this.totalDelta = new utils.Coordinate(
+      this.block.relativeCoords.x - this.startLocation.x,
+      this.block.relativeCoords.y - this.startLocation.y,
+    );
   }
 }
