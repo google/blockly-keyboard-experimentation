@@ -18,6 +18,7 @@ import {
 import type {BlockSvg, IDragger, IDragStrategy} from 'blockly';
 import {Navigation} from '../navigation';
 import {KeyboardDragStrategy} from '../keyboard_drag_strategy';
+import {Direction, getXYFromDirection} from '../drag_direction';
 
 const KeyCodes = utils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -87,28 +88,28 @@ export class Mover {
     {
       name: 'Move left, constrained',
       preconditionFn: (workspace) => this.isMoving(workspace),
-      callback: (workspace) => this.moveConstrained(workspace /* , ...*/),
+      callback: (workspace) => this.moveConstrained(workspace, Direction.Left),
       keyCodes: [KeyCodes.LEFT],
       allowCollision: true,
     },
     {
       name: 'Move right unconstrained',
       preconditionFn: (workspace) => this.isMoving(workspace),
-      callback: (workspace) => this.moveConstrained(workspace /* , ... */),
+      callback: (workspace) => this.moveConstrained(workspace, Direction.Right),
       keyCodes: [KeyCodes.RIGHT],
       allowCollision: true,
     },
     {
       name: 'Move up, constrained',
       preconditionFn: (workspace) => this.isMoving(workspace),
-      callback: (workspace) => this.moveConstrained(workspace /* , ... */),
+      callback: (workspace) => this.moveConstrained(workspace, Direction.Up),
       keyCodes: [KeyCodes.UP],
       allowCollision: true,
     },
     {
       name: 'Move down constrained',
       preconditionFn: (workspace) => this.isMoving(workspace),
-      callback: (workspace) => this.moveConstrained(workspace /* , ... */),
+      callback: (workspace) => this.moveConstrained(workspace, Direction.Down),
       keyCodes: [KeyCodes.DOWN],
       allowCollision: true,
     },
@@ -320,17 +321,18 @@ export class Mover {
    * constrained to valid attachment points (if any).
    *
    * @param workspace The workspace to move on.
+   * @param direction The direction to move the dragged item.
    * @returns True iff this action applies and has been performed.
    */
-  moveConstrained(
-    workspace: WorkspaceSvg,
-    /* ... */
-  ) {
-    // Not yet implemented.  Absorb keystroke to avoid moving cursor.
-    alert(`Constrained movement not implemented.
+  moveConstrained(workspace: WorkspaceSvg, direction: Direction) {
+    if (!workspace) return false;
+    const info = this.moves.get(workspace);
+    if (!info) throw new Error('no move info for workspace');
 
-Use ctrl+arrow or alt+arrow (option+arrow on macOS) for unconstrained move.
-Use enter to complete the move, or escape to abort.`);
+    info.dragger.onDrag(
+      info.fakePointerEvent('pointermove', direction),
+      info.totalDelta,
+    );
     return true;
   }
 
@@ -446,10 +448,11 @@ export class MoveInfo {
    * Create a fake pointer event for dragging.
    *
    * @param type Which type of pointer event to create.
+   * @param direction The direction if this movement is a constrained drag.
    * @returns A synthetic PointerEvent that can be consumed by Blockly's
    *     dragging code.
    */
-  fakePointerEvent(type: string): PointerEvent {
+  fakePointerEvent(type: string, direction?: Direction): PointerEvent {
     const workspace = this.block.workspace;
     if (!(workspace instanceof WorkspaceSvg)) throw new TypeError();
 
@@ -460,9 +463,12 @@ export class MoveInfo {
         this.startLocation.y + this.totalDelta.y,
       ),
     );
+    const tilts = getXYFromDirection(direction);
     return new PointerEvent(type, {
       clientX: blockCoords.x,
       clientY: blockCoords.y,
+      tiltX: tilts.x,
+      tiltY: tilts.y,
     });
   }
 }
