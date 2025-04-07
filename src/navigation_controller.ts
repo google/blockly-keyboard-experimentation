@@ -34,6 +34,7 @@ import {ExitAction} from './actions/exit';
 import {EnterAction} from './actions/enter';
 import {DisconnectAction} from './actions/disconnect';
 import {ActionMenu} from './actions/action_menu';
+import {MoveActions} from './actions/move';
 import {Mover} from './actions/mover';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
@@ -43,6 +44,8 @@ const KeyCodes = BlocklyUtils.KeyCodes;
  */
 export class NavigationController {
   private navigation: Navigation = new Navigation();
+
+  private mover = new Mover(this.navigation);
 
   shortcutDialog: ShortcutDialog = new ShortcutDialog();
 
@@ -71,7 +74,7 @@ export class NavigationController {
 
   actionMenu: ActionMenu = new ActionMenu(this.navigation);
 
-  mover = new Mover(this.navigation);
+  moveActions = new MoveActions(this.mover);
 
   /**
    * Original Toolbox.prototype.onShortcut method, saved by
@@ -289,7 +292,7 @@ export class NavigationController {
     this.actionMenu.install();
 
     this.clipboard.install();
-    this.mover.install();
+    this.moveActions.install();
     this.shortcutDialog.install();
 
     // Initialize the shortcut modal with available shortcuts.  Needs
@@ -302,7 +305,7 @@ export class NavigationController {
    * Removes all the keyboard navigation shortcuts.
    */
   dispose() {
-    this.mover.uninstall();
+    this.moveActions.uninstall();
     this.deleteAction.uninstall();
     this.editAction.uninstall();
     this.insertAction.uninstall();
