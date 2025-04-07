@@ -58,6 +58,9 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       this.block.moveDuringDrag(
         new utils.Coordinate(neighbour.x + 10, neighbour.y + 10),
       );
+    } else {
+      // Handle the case when unconstrained drag was far from any candidate.
+      this.searchNode = null;
     }
   }
 
@@ -72,32 +75,78 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   private getConstrainedConnectionCandidate(
     draggingBlock: BlockSvg,
   ): ConnectionCandidate | null {
-    // TODO(#385): Make sure this works for any cursor, not just LineCursor.
-    const cursor = draggingBlock.workspace.getCursor() as LineCursor;
-
-    const initialNode = this.searchNode;
-    if (!initialNode || !cursor) return null;
-
     // @ts-expect-error getLocalConnections is private.
     const localConns = this.getLocalConnections(draggingBlock);
+
+    let candidateConnection = this.findTraversalCandidate(
+      draggingBlock,
+      localConns,
+    );
+    // Fall back on a coordinate-based search if there was no good starting
+    // point for the search.
+    if (!candidateConnection && !this.searchNode) {
+      candidateConnection = this.findNearestCandidate(localConns);
+    }
+    return candidateConnection;
+  }
+
+  /**
+   * Get the nearest valid candidate connection, regardless of direction.
+   * TODO(github.com/google/blockly/issues/8869): Replace with an
+   * override of `getSearchRadius` when implemented in core.
+   *
+   * @param localConns The list of connections on the dragging block(s) that are
+   *     available to connect to.
+   * @returns A candidate connection and radius, or null if none was found.
+   */
+  findNearestCandidate(
+    localConns: RenderedConnection[],
+  ): ConnectionCandidate | null {
+    let radius = Infinity;
+    let candidate = null;
+    const dxy = new utils.Coordinate(0, 0);
+
+    for (const conn of localConns) {
+      const {connection: neighbour, radius: rad} = conn.closest(radius, dxy);
+      if (neighbour) {
+        candidate = {
+          local: conn,
+          neighbour: neighbour,
+          distance: rad,
+        };
+        radius = rad;
+      }
+    }
+    return candidate;
+  }
+
+  /**
+   * Get the nearest valid candidate connection in traversal order.
+   *
+   * @param draggingBlock The root block being dragged.
+   * @param localConns The list of connections on the dragging block(s) that are
+   *     available to connect to.
+   * @returns A candidate connection and radius, or null if none was found.
+   */
+  findTraversalCandidate(
+    draggingBlock: BlockSvg,
+    localConns: RenderedConnection[],
+  ): ConnectionCandidate | null {
+    // TODO(#385): Make sure this works for any cursor, not just LineCursor.
+    const cursor = draggingBlock.workspace.getCursor() as LineCursor;
+    if (!cursor) return null;
+
     const connectionChecker = draggingBlock.workspace.connectionChecker;
-
     let candidateConnection: ConnectionCandidate | null = null;
-
-    let potential: ASTNode | null = initialNode;
+    let potential: ASTNode | null = this.searchNode;
+    const dir = this.currentDragDirection;
     while (potential && !candidateConnection) {
-      if (
-        this.currentDragDirection === Direction.Up ||
-        this.currentDragDirection === Direction.Left
-      ) {
+      if (dir === Direction.Up || dir === Direction.Left) {
         potential = cursor.getPreviousNode(potential, (node) => {
           // @ts-expect-error isConnectionType is private.
           return node && ASTNode.isConnectionType(node.getType());
         });
-      } else if (
-        this.currentDragDirection === Direction.Down ||
-        this.currentDragDirection === Direction.Right
-      ) {
+      } else if (dir === Direction.Down || dir === Direction.Right) {
         potential = cursor.getNextNode(potential, (node) => {
           // @ts-expect-error isConnectionType is private.
           return node && ASTNode.isConnectionType(node.getType());
@@ -105,23 +154,15 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       }
 
       localConns.forEach((conn: RenderedConnection) => {
-        const potentialLocation =
-          potential?.getLocation() as RenderedConnection;
-        if (
-          connectionChecker.canConnect(conn, potentialLocation, true, Infinity)
-        ) {
+        const location = potential?.getLocation() as RenderedConnection;
+        if (connectionChecker.canConnect(conn, location, true, Infinity)) {
           candidateConnection = {
             local: conn,
-            neighbour: potentialLocation,
+            neighbour: location,
             distance: 0,
           };
         }
       });
-    }
-    if (candidateConnection) {
-      this.searchNode = ASTNode.createConnectionNode(
-        (candidateConnection as ConnectionCandidate).neighbour,
-      );
     }
     return candidateConnection;
   }
