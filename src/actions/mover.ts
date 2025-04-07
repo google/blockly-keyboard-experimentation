@@ -218,15 +218,27 @@ export class Mover {
   /**
    * Get the source block for the cursor location, or undefined if no
    * source block can be found.
+   * If the cursor is on a shadow block, walks up the tree until it finds
+   * a non-shadow block to drag.
    *
    * @param workspace The workspace to inspect for a cursor.
    * @returns The source block, or undefined if no appropriate block
    *     could be found.
    */
   protected getCurrentBlock(workspace: WorkspaceSvg): BlockSvg | undefined {
-    const cursor = workspace?.getCursor();
-    const curNode = cursor?.getCurNode();
-    return (curNode?.getSourceBlock() as BlockSvg) ?? undefined;
+    const curNode = workspace?.getCursor()?.getCurNode();
+    let block = curNode?.getSourceBlock();
+    if (!block) return undefined;
+    while (block && block.isShadow()) {
+      block = block.getParent();
+      if (!block) {
+        throw new Error(
+          'Tried to drag a shadow block with no parent. ' +
+            'Shadow blocks should always have parents.',
+        );
+      }
+    }
+    return block as BlockSvg;
   }
 
   /**
