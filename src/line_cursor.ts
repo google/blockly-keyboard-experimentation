@@ -312,11 +312,13 @@ export class LineCursor extends Marker {
    * @param node The current position in the AST.
    * @param isValid A function true/false depending on whether the given node
    *     should be traversed.
+   * @param loop A boolean for whether to try to loop back to the top block.
    * @returns The next node in the traversal.
    */
   getNextNode(
     node: ASTNode | null,
     isValid: (p1: ASTNode | null) => boolean,
+    loop = true,
   ): ASTNode | null {
     if (!node) {
       return null;
@@ -332,6 +334,13 @@ export class LineCursor extends Marker {
       return siblingOrParent;
     } else if (siblingOrParent) {
       return this.getNextNode(siblingOrParent, isValid);
+    }
+    if (loop) {
+      // Loop back to first block if it exists.
+      const topBlocks = this.workspace.getTopBlocks(true);
+      return topBlocks.length > 0
+        ? Blockly.ASTNode.createTopNode(topBlocks[0])
+        : null;
     }
     return null;
   }
@@ -366,7 +375,34 @@ export class LineCursor extends Marker {
     } else if (newNode) {
       return this.getPreviousNode(newNode, isValid);
     }
-    return null;
+    // Loop back to last block if it exists.
+    return this.getLastNode();
+  }
+
+  /**
+   * Get the very last valid AST node.
+   *
+   * @returns The last AST node or null.
+   */
+  private getLastNode(): ASTNode | null {
+    const topBlocks = this.workspace.getTopBlocks(true);
+    if (topBlocks.length === 0) {
+      return null;
+    }
+    const lastTopBlockNode = Blockly.ASTNode.createTopNode(
+      topBlocks[topBlocks.length - 1],
+    );
+    let prevNode = lastTopBlockNode;
+    let nextNode: ASTNode | null = lastTopBlockNode;
+    while (nextNode) {
+      prevNode = nextNode;
+      nextNode = this.getNextNode(
+        prevNode,
+        this.validLineNode.bind(this),
+        false,
+      );
+    }
+    return prevNode;
   }
 
   /**
