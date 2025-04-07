@@ -56,10 +56,7 @@ export class Mover {
    */
   private oldDragStrategy: IDragStrategy | null = null;
 
-  constructor(
-    protected navigation: Navigation,
-    protected canEdit: (ws: WorkspaceSvg) => boolean,
-  ) {}
+  constructor(protected navigation: Navigation) {}
 
   private shortcuts: ShortcutRegistry.KeyboardShortcut[] = [
     // Begin and end move.
@@ -212,7 +209,7 @@ export class Mover {
 
     return !!(
       this.navigation.getState(workspace) === Constants.STATE.WORKSPACE &&
-      this.canEdit(workspace) &&
+      this.navigation.canCurrentlyEdit(workspace) &&
       !this.moves.has(workspace) && // No move in progress.
       block?.isMovable()
     );
@@ -226,7 +223,9 @@ export class Mover {
    * @returns True iff we are moving.
    */
   isMoving(workspace: WorkspaceSvg) {
-    return this.canEdit(workspace) && this.moves.has(workspace);
+    return (
+      this.navigation.canCurrentlyEdit(workspace) && this.moves.has(workspace)
+    );
   }
 
   /**

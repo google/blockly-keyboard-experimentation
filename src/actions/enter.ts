@@ -29,10 +29,7 @@ const KeyCodes = BlocklyUtils.KeyCodes;
  * Class for registering a shortcut for the enter action.
  */
 export class EnterAction {
-  constructor(
-    private navigation: Navigation,
-    private canCurrentlyEdit: (ws: WorkspaceSvg) => boolean,
-  ) {}
+  constructor(private navigation: Navigation) {}
 
   /**
    * Adds the enter action shortcut to the registry.
@@ -47,7 +44,8 @@ export class EnterAction {
      */
     ShortcutRegistry.registry.register({
       name: Constants.SHORTCUT_NAMES.EDIT_OR_CONFIRM,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
+      preconditionFn: (workspace) =>
+        this.navigation.canCurrentlyEdit(workspace),
       callback: (workspace, event) => {
         event.preventDefault();
 

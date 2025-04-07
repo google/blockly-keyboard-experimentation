@@ -1091,6 +1091,37 @@ export class Navigation {
   }
 
   /**
+   * Determines whether keyboard navigation should be allowed based on the
+   * current state of the workspace.
+   *
+   * A return value of 'true' generally indicates that either the workspace,
+   * toolbox or flyout has enabled keyboard navigation and is currently in a
+   * state (e.g. focus) that can support keyboard navigation.
+   *
+   * @param workspace the workspace in which keyboard navigation may be allowed.
+   * @returns whether keyboard navigation is currently allowed.
+   */
+  canCurrentlyNavigate(workspace: Blockly.WorkspaceSvg) {
+    return (
+      workspace.keyboardAccessibilityMode &&
+      this.getState(workspace) !== Constants.STATE.NOWHERE
+    );
+  }
+
+  /**
+   * Determines whether the provided workspace is currently keyboard navigable
+   * and editable.
+   *
+   * For the navigability criteria, see canCurrentlyKeyboardNavigate.
+   *
+   * @param workspace the workspace in which keyboard editing may be allowed.
+   * @returns whether keyboard navigation and editing is currently allowed.
+   */
+  canCurrentlyEdit(workspace: Blockly.WorkspaceSvg) {
+    return this.canCurrentlyNavigate(workspace) && !workspace.options.readOnly;
+  }
+
+  /**
    * Removes the change listeners on all registered workspaces.
    */
   dispose() {

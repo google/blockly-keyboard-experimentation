@@ -25,22 +25,11 @@ const KeyCodes = BlocklyUtils.KeyCodes;
  */
 export class DisconnectAction {
   /**
-   * Function provided by the navigation controller to say whether editing
-   * is allowed.
-   */
-  private canCurrentlyEdit: (ws: WorkspaceSvg) => boolean;
-
-  /**
    * Registration name for the keyboard shortcut.
    */
   private shortcutName = Constants.SHORTCUT_NAMES.DISCONNECT;
 
-  constructor(
-    private navigation: Navigation,
-    canEdit: (ws: WorkspaceSvg) => boolean,
-  ) {
-    this.canCurrentlyEdit = canEdit;
-  }
+  constructor(private navigation: Navigation) {}
 
   /**
    * Install this action as both a keyboard shortcut and a context menu item.
@@ -63,7 +52,8 @@ export class DisconnectAction {
   private registerShortcut() {
     const disconnectShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: this.shortcutName,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
+      preconditionFn: (workspace) =>
+        this.navigation.canCurrentlyEdit(workspace),
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:

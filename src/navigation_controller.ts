@@ -47,57 +47,31 @@ export class NavigationController {
   shortcutDialog: ShortcutDialog = new ShortcutDialog();
 
   /** Context menu and keyboard action for deletion. */
-  deleteAction: DeleteAction = new DeleteAction(
-    this.navigation,
-    this.canCurrentlyEdit.bind(this),
-  );
+  deleteAction: DeleteAction = new DeleteAction(this.navigation);
 
   /** Context menu and keyboard action for deletion. */
-  editAction: EditAction = new EditAction(this.canCurrentlyEdit.bind(this));
+  editAction: EditAction = new EditAction(this.navigation);
 
   /** Context menu and keyboard action for insertion. */
-  insertAction: InsertAction = new InsertAction(
-    this.navigation,
-    this.canCurrentlyEdit.bind(this),
-  );
+  insertAction: InsertAction = new InsertAction(this.navigation);
 
   /** Keyboard shortcut for disconnection. */
-  disconnectAction: DisconnectAction = new DisconnectAction(
-    this.navigation,
-    this.canCurrentlyEdit.bind(this),
-  );
+  disconnectAction: DisconnectAction = new DisconnectAction(this.navigation);
 
-  clipboard: Clipboard = new Clipboard(
-    this.navigation,
-    this.canCurrentlyEdit.bind(this),
-  );
+  clipboard: Clipboard = new Clipboard(this.navigation);
 
-  workspaceMovement: WorkspaceMovement = new WorkspaceMovement(
-    this.canCurrentlyEdit.bind(this),
-  );
+  workspaceMovement: WorkspaceMovement = new WorkspaceMovement(this.navigation);
 
   /** Keyboard navigation actions for the arrow keys. */
-  arrowNavigation: ArrowNavigation = new ArrowNavigation(
-    this.navigation,
-    this.canCurrentlyNavigate.bind(this),
-  );
+  arrowNavigation: ArrowNavigation = new ArrowNavigation(this.navigation);
 
-  exitAction: ExitAction = new ExitAction(
-    this.navigation,
-    this.canCurrentlyNavigate.bind(this),
-  );
+  exitAction: ExitAction = new ExitAction(this.navigation);
 
-  enterAction: EnterAction = new EnterAction(
-    this.navigation,
-    this.canCurrentlyEdit.bind(this),
-  );
+  enterAction: EnterAction = new EnterAction(this.navigation);
 
-  actionMenu: ActionMenu = new ActionMenu(
-    this.navigation,
-    this.canCurrentlyNavigate.bind(this),
-  );
+  actionMenu: ActionMenu = new ActionMenu(this.navigation);
 
-  mover = new Mover(this.navigation, this.canCurrentlyEdit.bind(this));
+  mover = new Mover(this.navigation);
 
   /**
    * Original Toolbox.prototype.onShortcut method, saved by
@@ -235,37 +209,6 @@ export class NavigationController {
   }
 
   /**
-   * Determines whether keyboard navigation should be allowed based on the
-   * current state of the workspace.
-   *
-   * A return value of 'true' generally indicates that either the workspace or
-   * toolbox both has enabled keyboard navigation and is currently in a state
-   * (e.g. focus) that can support keyboard navigation.
-   *
-   * @param workspace the workspace in which keyboard navigation may be allowed.
-   * @returns whether keyboard navigation is currently allowed.
-   */
-  private canCurrentlyNavigate(workspace: WorkspaceSvg) {
-    return (
-      workspace.keyboardAccessibilityMode &&
-      this.navigation.getState(workspace) !== Constants.STATE.NOWHERE
-    );
-  }
-
-  /**
-   * Determines whether the provided workspace is currently keyboard navigable
-   * and editable.
-   *
-   * For the navigability criteria, see canCurrentlyKeyboardNavigate.
-   *
-   * @param workspace the workspace in which keyboard editing may be allowed.
-   * @returns whether keyboard navigation and editing is currently allowed.
-   */
-  private canCurrentlyEdit(workspace: WorkspaceSvg) {
-    return this.canCurrentlyNavigate(workspace) && !workspace.options.readOnly;
-  }
-
-  /**
    * Turns on keyboard navigation.
    *
    * @param workspace The workspace to turn on keyboard
@@ -294,7 +237,8 @@ export class NavigationController {
     /** Move focus to or from the toolbox. */
     focusToolbox: {
       name: Constants.SHORTCUT_NAMES.TOOLBOX,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
+      preconditionFn: (workspace) =>
+        this.navigation.canCurrentlyEdit(workspace),
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
@@ -314,7 +258,9 @@ export class NavigationController {
     /** Clean up the workspace. */
     cleanup: {
       name: Constants.SHORTCUT_NAMES.CLEAN_UP,
-      preconditionFn: (workspace) => workspace.getTopBlocks(false).length > 0,
+      preconditionFn: (workspace) =>
+        this.navigation.canCurrentlyEdit(workspace) &&
+        workspace.getTopBlocks(false).length > 0,
       callback: (workspace) => {
         workspace.cleanUp();
         return true;

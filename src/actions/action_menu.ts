@@ -31,22 +31,11 @@ export interface ScopeWithConnection extends ContextMenuRegistry.Scope {
  */
 export class ActionMenu {
   /**
-   * Function provided by the navigation controller to say whether navigation
-   * is allowed.
-   */
-  private canCurrentlyNavigate: (ws: WorkspaceSvg) => boolean;
-
-  /**
    * Registration name for the keyboard shortcut.
    */
   private shortcutName = Constants.SHORTCUT_NAMES.MENU;
 
-  constructor(
-    private navigation: Navigation,
-    canNavigate: (ws: WorkspaceSvg) => boolean,
-  ) {
-    this.canCurrentlyNavigate = canNavigate;
-  }
+  constructor(private navigation: Navigation) {}
 
   /**
    * Install this action.
@@ -68,7 +57,8 @@ export class ActionMenu {
   private registerShortcut() {
     const menuShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.MENU,
-      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
+      preconditionFn: (workspace) =>
+        this.navigation.canCurrentlyNavigate(workspace),
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:

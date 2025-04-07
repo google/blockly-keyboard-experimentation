@@ -5,8 +5,8 @@
  */
 
 import {ContextMenuRegistry} from 'blockly';
-import type {WorkspaceSvg} from 'blockly';
 import {LineCursor} from '../line_cursor';
+import {Navigation} from 'src/navigation';
 
 /**
  * Action to edit a block.  This just moves the cursor to the first
@@ -29,7 +29,7 @@ import {LineCursor} from '../line_cursor';
  * is already a corresponding "right" shortcut item.
  */
 export class EditAction {
-  constructor(private canCurrentlyNavigate: (ws: WorkspaceSvg) => boolean) {}
+  constructor(private navigation: Navigation) {}
 
   /**
    * Install this action as a context menu item.
@@ -54,7 +54,7 @@ export class EditAction {
       displayText: 'Edit Block contents (→︎)',
       preconditionFn: (scope: ContextMenuRegistry.Scope) => {
         const workspace = scope.block?.workspace;
-        if (!workspace || !this.canCurrentlyNavigate(workspace)) {
+        if (!workspace || !this.navigation.canCurrentlyNavigate(workspace)) {
           return 'disabled';
         }
         const cursor = workspace.getCursor() as LineCursor | null;

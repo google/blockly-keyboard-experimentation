@@ -17,10 +17,7 @@ const KeyCodes = BlocklyUtils.KeyCodes;
  * Class for registering shortcuts for navigating the workspace with arrow keys.
  */
 export class ArrowNavigation {
-  constructor(
-    private navigation: Navigation,
-    private canCurrentlyNavigate: (ws: WorkspaceSvg) => boolean,
-  ) {}
+  constructor(private navigation: Navigation) {}
 
   /**
    * Gives the cursor to the field to handle if the cursor is on a field.
@@ -56,7 +53,8 @@ export class ArrowNavigation {
       /** Go to the next location to the right. */
       right: {
         name: Constants.SHORTCUT_NAMES.RIGHT,
-        preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
+        preconditionFn: (workspace) =>
+          this.navigation.canCurrentlyNavigate(workspace),
         callback: (workspace, e, shortcut) => {
           const toolbox = workspace.getToolbox() as Toolbox;
           let isHandled = false;
@@ -93,7 +91,8 @@ export class ArrowNavigation {
       /** Go to the next location to the left. */
       left: {
         name: Constants.SHORTCUT_NAMES.LEFT,
-        preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
+        preconditionFn: (workspace) =>
+          this.navigation.canCurrentlyNavigate(workspace),
         callback: (workspace, e, shortcut) => {
           const toolbox = workspace.getToolbox() as Toolbox;
           let isHandled = false;
@@ -128,7 +127,8 @@ export class ArrowNavigation {
       /** Go down to the next location. */
       down: {
         name: Constants.SHORTCUT_NAMES.DOWN,
-        preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
+        preconditionFn: (workspace) =>
+          this.navigation.canCurrentlyNavigate(workspace),
         callback: (workspace, e, shortcut) => {
           const toolbox = workspace.getToolbox() as Toolbox;
           const flyout = workspace.getFlyout();
@@ -169,7 +169,8 @@ export class ArrowNavigation {
       /** Go up to the previous location. */
       up: {
         name: Constants.SHORTCUT_NAMES.UP,
-        preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
+        preconditionFn: (workspace) =>
+          this.navigation.canCurrentlyNavigate(workspace),
         callback: (workspace, e, shortcut) => {
           const flyout = workspace.getFlyout();
           const toolbox = workspace.getToolbox() as Toolbox;
