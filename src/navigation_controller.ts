@@ -70,7 +70,7 @@ export class NavigationController {
 
   exitAction: ExitAction = new ExitAction(this.navigation);
 
-  enterAction: EnterAction = new EnterAction(this.navigation);
+  enterAction: EnterAction = new EnterAction(this.mover, this.navigation);
 
   actionMenu: ActionMenu = new ActionMenu(this.navigation);
 
