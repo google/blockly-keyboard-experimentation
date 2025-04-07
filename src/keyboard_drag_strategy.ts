@@ -92,8 +92,8 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
 
   /**
    * Get the nearest valid candidate connection, regardless of direction.
-   * TODO: This is almost exactly the same as getConnectionCandidate in 
-   * block_drag_strategy, except for the start value of radius. Combine them.
+   * TODO(github.com/google/blockly/issues/8869): Replace with an
+   * override of `getSearchRadius` when implemented in core.
    *
    * @param localConns The list of connections on the dragging block(s) that are
    *     available to connect to.
