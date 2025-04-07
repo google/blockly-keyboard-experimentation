@@ -6,8 +6,6 @@
 
 import {ShortcutRegistry, utils as BlocklyUtils} from 'blockly/core';
 
-import type {WorkspaceSvg} from 'blockly/core';
-
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
 
@@ -17,10 +15,7 @@ const KeyCodes = BlocklyUtils.KeyCodes;
  * Class for registering a shortcut for the exit action.
  */
 export class ExitAction {
-  constructor(
-    private navigation: Navigation,
-    private canCurrentlyNavigate: (ws: WorkspaceSvg) => boolean,
-  ) {}
+  constructor(private navigation: Navigation) {}
 
   /**
    * Adds the exit action shortcut to the registry.
@@ -28,7 +23,8 @@ export class ExitAction {
   install() {
     ShortcutRegistry.registry.register({
       name: Constants.SHORTCUT_NAMES.EXIT,
-      preconditionFn: (workspace) => this.canCurrentlyNavigate(workspace),
+      preconditionFn: (workspace) =>
+        this.navigation.canCurrentlyNavigate(workspace),
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.FLYOUT:

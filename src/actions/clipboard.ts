@@ -44,18 +44,7 @@ export class Clipboard {
   /** The workspace a copy or cut keyboard shortcut happened in. */
   private copyWorkspace: WorkspaceSvg | null = null;
 
-  /**
-   * Function provided by the navigation controller to say whether editing
-   * is allowed.
-   */
-  private canCurrentlyEdit: (ws: WorkspaceSvg) => boolean;
-
-  constructor(
-    private navigation: Navigation,
-    canEdit: (ws: WorkspaceSvg) => boolean,
-  ) {
-    this.canCurrentlyEdit = canEdit;
-  }
+  constructor(private navigation: Navigation) {}
 
   /**
    * Install these actions as both keyboard shortcuts and context menu items.
@@ -141,7 +130,7 @@ export class Clipboard {
    * @returns True iff `cutCallback` function should be called.
    */
   private cutPrecondition(workspace: WorkspaceSvg) {
-    if (this.canCurrentlyEdit(workspace)) {
+    if (this.navigation.canCurrentlyEdit(workspace)) {
       const curNode = workspace.getCursor()?.getCurNode();
       if (curNode && curNode.getSourceBlock()) {
         const sourceBlock = curNode.getSourceBlock();
@@ -236,7 +225,7 @@ export class Clipboard {
    * @returns True iff `copyCallback` function should be called.
    */
   private copyPrecondition(workspace: WorkspaceSvg) {
-    if (!this.canCurrentlyEdit(workspace)) return false;
+    if (!this.navigation.canCurrentlyEdit(workspace)) return false;
     switch (this.navigation.getState(workspace)) {
       case Constants.STATE.WORKSPACE: {
         const curNode = workspace?.getCursor()?.getCurNode();
@@ -348,7 +337,7 @@ export class Clipboard {
   private pastePrecondition(workspace: WorkspaceSvg) {
     if (!this.copyData || !this.copyWorkspace) return false;
 
-    return this.canCurrentlyEdit(workspace) && !Gesture.inProgress();
+    return this.navigation.canCurrentlyEdit(workspace) && !Gesture.inProgress();
   }
 
   /**

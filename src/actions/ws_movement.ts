@@ -7,6 +7,7 @@
 import {ASTNode, ShortcutRegistry, utils as BlocklyUtils} from 'blockly';
 import * as Constants from '../constants';
 import type {WorkspaceSvg} from 'blockly';
+import {Navigation} from 'src/navigation';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -23,35 +24,30 @@ const WS_MOVE_DISTANCE = 40;
  * shortcuts.
  */
 export class WorkspaceMovement {
-  /**
-   * Function provided by the navigation controller to say whether editing
-   * is allowed.
-   */
-  private canCurrentlyEdit: (ws: WorkspaceSvg) => boolean;
-
-  constructor(canEdit: (ws: WorkspaceSvg) => boolean) {
-    this.canCurrentlyEdit = canEdit;
-  }
+  constructor(private navigation: Navigation) {}
 
   private shortcuts: ShortcutRegistry.KeyboardShortcut[] = [
     /** Move the cursor on the workspace to the left. */
     {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_LEFT,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
+      preconditionFn: (workspace) =>
+        this.navigation.canCurrentlyEdit(workspace),
       callback: (workspace) => this.moveWSCursor(workspace, -1, 0),
       keyCodes: [createSerializedKey(KeyCodes.A, [KeyCodes.SHIFT])],
     },
     /** Move the cursor on the workspace to the right. */
     {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_RIGHT,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
+      preconditionFn: (workspace) =>
+        this.navigation.canCurrentlyEdit(workspace),
       callback: (workspace) => this.moveWSCursor(workspace, 1, 0),
       keyCodes: [createSerializedKey(KeyCodes.D, [KeyCodes.SHIFT])],
     },
     /** Move the cursor on the workspace up. */
     {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_UP,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
+      preconditionFn: (workspace) =>
+        this.navigation.canCurrentlyEdit(workspace),
       callback: (workspace) => this.moveWSCursor(workspace, 0, -1),
       keyCodes: [createSerializedKey(KeyCodes.W, [KeyCodes.SHIFT])],
     },
@@ -59,7 +55,8 @@ export class WorkspaceMovement {
     /** Move the cursor on the workspace down. */
     {
       name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_DOWN,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
+      preconditionFn: (workspace) =>
+        this.navigation.canCurrentlyEdit(workspace),
       callback: (workspace) => this.moveWSCursor(workspace, 0, 1),
       keyCodes: [createSerializedKey(KeyCodes.S, [KeyCodes.SHIFT])],
     },
@@ -67,7 +64,8 @@ export class WorkspaceMovement {
     /** Move the cursor to the workspace. */
     {
       name: Constants.SHORTCUT_NAMES.CREATE_WS_CURSOR,
-      preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
+      preconditionFn: (workspace) =>
+        this.navigation.canCurrentlyEdit(workspace),
       callback: (workspace) => this.createWSCursor(workspace),
       keyCodes: [KeyCodes.W],
     },

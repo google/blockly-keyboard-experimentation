@@ -29,22 +29,11 @@ export class DeleteAction {
   private oldContextMenuItem: ContextMenuRegistry.RegistryItem | null = null;
 
   /**
-   * Function provided by the navigation controller to say whether editing
-   * is allowed.
-   */
-  private canCurrentlyEdit: (ws: WorkspaceSvg) => boolean;
-
-  /**
    * Registration name for the keyboard shortcut.
    */
   private deleteShortcutName = Constants.SHORTCUT_NAMES.DELETE;
 
-  constructor(
-    private navigation: Navigation,
-    canEdit: (ws: WorkspaceSvg) => boolean,
-  ) {
-    this.canCurrentlyEdit = canEdit;
-  }
+  constructor(private navigation: Navigation) {}
 
   /**
    * Install this action as both a keyboard shortcut and a context menu item.
@@ -148,10 +137,11 @@ export class DeleteAction {
    * @returns True iff `deleteCallback` function should be called.
    */
   private deletePrecondition(workspace: WorkspaceSvg) {
-    if (!this.canCurrentlyEdit(workspace)) return false;
-
     const sourceBlock = workspace.getCursor()?.getCurNode()?.getSourceBlock();
-    return !!sourceBlock?.isDeletable();
+    return (
+      this.navigation.canCurrentlyEdit(workspace) &&
+      !!sourceBlock?.isDeletable()
+    );
   }
 
   /**
