@@ -115,6 +115,7 @@ export class Mover {
     this.moves.set(workspace, info);
     // Begin drag.
     dragger.onDragStart(info.fakePointerEvent('pointerdown'));
+    info.dragger.onDrag(info.fakePointerEvent('pointermove'), info.totalDelta);
     return true;
   }
 
