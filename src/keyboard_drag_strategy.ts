@@ -4,9 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ASTNode, BlockSvg, RenderedConnection, dragging, utils} from 'blockly';
+import {
+  ASTNode,
+  BlockSvg,
+  RenderedConnection,
+  LineCursor,
+  dragging,
+  utils,
+} from 'blockly';
 import {Direction, getDirectionFromXY} from './drag_direction';
-import {LineCursor} from './line_cursor';
 
 // Copied in from core because it is not exported.
 interface ConnectionCandidate {
