@@ -79,6 +79,7 @@ export class KeyboardNavigation {
       .getParentSvg()
       .getAttribute('tabindex');
     // We add a focus listener below so use -1 so it doesn't become focusable.
+    workspace.getSvgGroup().setAttribute('tabindex', '-1');
     workspace.getParentSvg().setAttribute('tabindex', '-1');
 
     this.focusListener = () => {

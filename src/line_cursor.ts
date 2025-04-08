@@ -14,7 +14,7 @@
  */
 
 import * as Blockly from 'blockly/core';
-import {ASTNode, Marker} from 'blockly/core';
+import {ASTNode, Marker, IFocusableNode, isFocusableNode} from 'blockly/core';
 import {scrollBoundsIntoView} from './workspace_utilities';
 
 /** Options object for LineCursor instances. */
@@ -74,7 +74,9 @@ export class LineCursor extends Marker {
     const markerManager = this.workspace.getMarkerManager();
     this.oldCursor = markerManager.getCursor();
     markerManager.setCursor(this);
-    if (this.oldCursor) this.setCurNode(this.oldCursor.getCurNode());
+    if (this.oldCursor && this.oldCursor.getCurNode()) {
+      this.setCurNode(this.oldCursor.getCurNode());
+    }
     this.workspace.addChangeListener(this.selectListener);
     this.installed = true;
   }
@@ -641,7 +643,33 @@ export class LineCursor extends Marker {
     super.setCurNode(newNode);
     this.setDrawer(drawer);
     // Draw this marker the way we want to.
+
+    // If old node was a block, unselect it or remove fake selection.
+    if (oldNode?.getType() === ASTNode.types.BLOCK) {
+      const block = oldNode.getLocation() as Blockly.BlockSvg;
+      if (!block.isShadow()) {
+        Blockly.common.setSelected(null);
+      } else {
+        block.removeSelect();
+      }
+    }
+
     this.drawMarker(oldNode, newNode);
+
+    const newNodeLocation = newNode?.getLocation();
+    console.trace('@@@@@@', 'setCurNode', newNode?.getLocation());
+    if (isFocusableNode(newNodeLocation)) {
+      Blockly.getFocusManager().focusNode(newNodeLocation);
+    } else console.log('Error: node is not focusable:', newNodeLocation);
+    if (newNode?.getType() === ASTNode.types.BLOCK) {
+      const block = newNode.getLocation() as Blockly.BlockSvg;
+      if (!block.isShadow()) {
+        Blockly.common.setSelected(block);
+      } else {
+        block.addSelect();
+      }
+    }
+
     // Try to scroll cursor into view.
     if (newNode?.getType() === ASTNode.types.BLOCK) {
       const block = newNode.getLocation() as Blockly.BlockSvg;
@@ -692,16 +720,6 @@ export class LineCursor extends Marker {
    * @param curNode The current node.
    */
   private drawMarker(oldNode: ASTNode, curNode: ASTNode) {
-    // If old node was a block, unselect it or remove fake selection.
-    if (oldNode?.getType() === ASTNode.types.BLOCK) {
-      const block = oldNode.getLocation() as Blockly.BlockSvg;
-      if (!block.isShadow()) {
-        Blockly.common.setSelected(null);
-      } else {
-        block.removeSelect();
-      }
-    }
-
     // If curNode node is not block, just use the drawer.
     if (curNode?.getType() !== ASTNode.types.BLOCK) {
       this.getDrawer()?.draw(oldNode, curNode);
@@ -711,14 +729,9 @@ export class LineCursor extends Marker {
     // curNode is a block.  Hide any visible marker SVG and instead
     // select the block or make it look selected.
     super.hide(); // Calls this.drawer?.hide().
-    const block = curNode.getLocation() as Blockly.BlockSvg;
-    block.getSvgRoot().setAttribute('tabindex', '0');
-    block.getSvgRoot().focus();
-    if (!block.isShadow()) {
-      Blockly.common.setSelected(block);
-    } else {
-      block.addSelect();
-    }
+    // const block = curNode.getLocation() as Blockly.BlockSvg;
+    // block.getSvgRoot().setAttribute('tabindex', '0');
+    // block.getSvgRoot().focus();
 
     // Call MarkerSvg.prototype.fireMarkerEvent like
     // MarkerSvg.prototype.draw would (even though it's private).
