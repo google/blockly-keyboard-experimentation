@@ -141,7 +141,7 @@ export class Mover {
       new utils.Coordinate(0, 0),
     );
 
-    this.upatchWorkspace(workspace);
+    this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
     return true;
@@ -172,7 +172,7 @@ export class Mover {
       new utils.Coordinate(0, 0),
     );
 
-    this.upatchWorkspace(workspace);
+    this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
     return true;
@@ -263,7 +263,7 @@ export class Mover {
    *
    * @param workspace The workspace to unpatch.
    */
-  private upatchWorkspace(workspace: WorkspaceSvg) {
+  private unpatchWorkspace(workspace: WorkspaceSvg) {
     if (this.oldIsDragging) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (workspace as any).isDragging = this.oldIsDragging;
