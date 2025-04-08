@@ -6,12 +6,11 @@
 
 import * as Blockly from 'blockly/core';
 import {NavigationController} from './navigation_controller';
-import {CursorOptions, LineCursor} from './line_cursor';
 import {getFlyoutElement, getToolboxElement} from './workspace_utilities';
 
 /** Options object for KeyboardNavigation instances. */
 export interface NavigationOptions {
-  cursor: Partial<CursorOptions>;
+  cursor: Partial<Blockly.CursorOptions>;
 }
 
 /** Default options for LineCursor instances. */
@@ -49,7 +48,7 @@ export class KeyboardNavigation {
   private navigationController: NavigationController;
 
   /** Cursor for the main workspace. */
-  private cursor: LineCursor;
+  private cursor: Blockly.LineCursor;
 
   /**
    * These fields are used to preserve the workspace's initial state to restore
@@ -92,8 +91,7 @@ export class KeyboardNavigation {
     this.originalTheme = workspace.getTheme();
     this.setGlowTheme();
 
-    this.cursor = new LineCursor(workspace, options.cursor);
-    this.cursor.install();
+    this.cursor = new Blockly.LineCursor(workspace, options.cursor);
 
     // Ensure that only the root SVG G (group) has a tab index.
     this.injectionDivTabIndex = workspace
@@ -275,8 +273,6 @@ export class KeyboardNavigation {
     } else {
       this.workspace.getInjectionDiv().removeAttribute('tabindex');
     }
-
-    this.cursor.uninstall();
 
     this.workspace.setTheme(this.originalTheme);
 

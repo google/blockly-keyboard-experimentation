@@ -17,14 +17,14 @@ import {scrollBoundsIntoView} from './workspace_utilities';
  * This controls how a user navigates blocks in the flyout.
  * This cursor only allows a user to go to the previous or next stack.
  */
-export class FlyoutCursor extends Blockly.Cursor {
+export class FlyoutCursor extends Blockly.LineCursor {
   /**
    * The constructor for the FlyoutCursor.
    *
    * @param flyout The flyout this cursor is for.
    */
   constructor(private readonly flyout: Blockly.IFlyout) {
-    super();
+    super(flyout.getWorkspace());
   }
 
   /**
