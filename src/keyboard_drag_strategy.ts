@@ -7,8 +7,9 @@
 import {
   ASTNode,
   BlockSvg,
-  RenderedConnection,
+  ConnectionType,
   LineCursor,
+  RenderedConnection,
   dragging,
   utils,
 } from 'blockly';
@@ -40,8 +41,9 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     // to the top left of the workspace.
     // @ts-expect-error block and startLoc are private.
     this.block.moveDuringDrag(this.startLoc);
-    // @ts-expect-error startParentConn is private.
-    this.searchNode = ASTNode.createConnectionNode(this.startParentConn);
+    // @ts-expect-error connectionCandidate is private.
+    this.connectionCandidate = this.createInitialCandidate();
+    this.forceShowPreview();
   }
 
   override drag(newLoc: utils.Coordinate, e?: PointerEvent): void {
@@ -60,7 +62,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       this.searchNode = ASTNode.createConnectionNode(neighbour);
       // The moving block will be positioned slightly down and to the
       // right of the connection it found.
-      // @ts-expect-error block and startLoc are private.
+      // @ts-expect-error block is private.
       this.block.moveDuringDrag(
         new utils.Coordinate(neighbour.x + 10, neighbour.y + 10),
       );
@@ -204,5 +206,87 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
    */
   private isConstrainedMovement(): boolean {
     return !!this.currentDragDirection;
+  }
+
+  /**
+   * Force the preview (replacement or insertion marker) to be shown
+   * immediately. Keyboard drags should always show a preview, even when
+   * the drag has just started; this forces it.
+   */
+  private forceShowPreview() {
+    // @ts-expect-error connectionPreviewer is private
+    const previewer = this.connectionPreviewer;
+    // @ts-expect-error connectionCandidate is private
+    const candidate = this.connectionCandidate as ConnectionCandidate;
+    if (!candidate || !previewer) return;
+    // @ts-expect-error block is private
+    const block = this.block;
+
+    // This is essentially a copy of the second half of updateConnectionPreview
+    // in BlockDragStrategy. It adds a `moveDuringDrag` call at the end.
+    const {local, neighbour} = candidate;
+    const localIsOutputOrPrevious =
+      local.type === ConnectionType.OUTPUT_VALUE ||
+      local.type === ConnectionType.PREVIOUS_STATEMENT;
+
+    const target = neighbour.targetBlock();
+    const neighbourIsConnectedToRealBlock =
+      target && !target.isInsertionMarker();
+
+    const orphanCanConnectAtEnd =
+      target &&
+      // @ts-expect-error orphanCanConnectAtEnd is private
+      this.orphanCanConnectAtEnd(block, target, local.type);
+    if (
+      localIsOutputOrPrevious &&
+      neighbourIsConnectedToRealBlock &&
+      !orphanCanConnectAtEnd
+    ) {
+      previewer.previewReplacement(local, neighbour, target);
+    } else {
+      previewer.previewConnection(local, neighbour);
+    }
+    // The moving block will be positioned slightly down and to the
+    // right of the connection it found.
+    block.moveDuringDrag(
+      new utils.Coordinate(neighbour.x + 10, neighbour.y + 10),
+    );
+  }
+
+  /**
+   * Create a candidate representing where the block was previously connected.
+   * Used to render the block position after picking up the block but before
+   * moving during a drag.
+   *
+   * @returns A connection candidate representing where the block was at the
+   *     start of the drag.
+   */
+  private createInitialCandidate(): ConnectionCandidate | null {
+    // @ts-expect-error startParentConn is private.
+    const neighbour = this.startParentConn;
+    if (neighbour) {
+      this.searchNode = ASTNode.createConnectionNode(neighbour);
+      switch (neighbour.type) {
+        case ConnectionType.INPUT_VALUE:
+          return {
+            neighbour: neighbour,
+            // @ts-expect-error block is private.
+            local: this.block.outputConnection,
+            distance: 0,
+          };
+        case ConnectionType.NEXT_STATEMENT:
+          return {
+            neighbour: neighbour,
+            // @ts-expect-error block is private.
+            local: this.block.previousConnection,
+            distance: 0,
+          };
+      }
+    }
+    return null;
+  }
+
+  override shouldHealStack(e: PointerEvent | undefined): boolean {
+    return true;
   }
 }
