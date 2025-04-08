@@ -9,10 +9,10 @@ import {
   Gesture,
   ShortcutRegistry,
   utils as BlocklyUtils,
+  LineCursor,
 } from 'blockly';
 import * as Constants from '../constants';
 import type {BlockSvg, WorkspaceSvg} from 'blockly';
-import {LineCursor} from '../line_cursor';
 import {Navigation} from '../navigation';
 
 const KeyCodes = BlocklyUtils.KeyCodes;

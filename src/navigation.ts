@@ -746,7 +746,10 @@ export class Navigation {
     if (block.getParent()) {
       block.unplug(false);
     }
-    block.moveTo(wsNode.getWsCoordinate());
+    const workspaceCoordinate = wsNode.getWsCoordinate();
+    if (!workspaceCoordinate) return false;
+
+    block.moveTo(workspaceCoordinate);
     return true;
   }
 
