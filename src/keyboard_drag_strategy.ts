@@ -285,4 +285,8 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     }
     return null;
   }
+
+  override shouldHealStack(e: PointerEvent | undefined): boolean {
+    return true;
+  }
 }
