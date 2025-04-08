@@ -17,19 +17,14 @@ import * as Blockly from 'blockly/core';
  * @param workspace The workspace to scroll the given bounds into view in.
  */
 export function scrollBoundsIntoView(
-  originalBounds: Blockly.utils.Rect,
+  bounds: Blockly.utils.Rect,
   workspace: Blockly.WorkspaceSvg,
 ) {
+  if (Blockly.Gesture.inProgress()) {
+    // This can cause jumps during a drag and it only suited for keyboard nav.
+    return;
+  }
   const scale = workspace.getScale();
-
-  const bounds = originalBounds.clone();
-
-  // Add some padding to the bounds so the element is scrolled comfortably
-  // into view.
-  bounds.top -= 10;
-  bounds.bottom += 10;
-  bounds.left -= 10;
-  bounds.right += 10;
 
   const rawViewport = workspace.getMetricsManager().getViewMetrics(true);
   const viewport = new Blockly.utils.Rect(
@@ -49,6 +44,14 @@ export function scrollBoundsIntoView(
     return;
   }
 
+  // Add some padding to the bounds so the element is scrolled comfortably
+  // into view.
+  bounds = bounds.clone();
+  bounds.top -= 10;
+  bounds.bottom += 10;
+  bounds.left -= 10;
+  bounds.right += 10;
+
   let deltaX = 0;
   let deltaY = 0;
 
@@ -67,4 +70,50 @@ export function scrollBoundsIntoView(
   deltaX *= scale;
   deltaY *= scale;
   workspace.scroll(workspace.scrollX + deltaX, workspace.scrollY + deltaY);
+}
+
+/**
+ * Get the workspace SVG group which is the element that takes focus.
+ *
+ * @param workspace The workspace.
+ * @returns The element.
+ */
+export function getWorkspaceElement(workspace: Blockly.Workspace): SVGElement {
+  return (workspace as Blockly.WorkspaceSvg).getSvgGroup() as SVGElement;
+}
+
+/**
+ * Get the toolbox element that takes the focus (if any).
+ *
+ * @param workspace The workspace.
+ * @returns The element or null if a toolbox is not in use.
+ */
+export function getToolboxElement(
+  workspace: Blockly.WorkspaceSvg,
+): HTMLElement | null {
+  const toolbox = workspace.getToolbox();
+  if (toolbox instanceof Blockly.Toolbox) {
+    return toolbox.HtmlDiv?.querySelector(
+      '.blocklyToolboxCategoryGroup',
+    ) as HTMLElement | null;
+  }
+  return null;
+}
+
+/**
+ * Get the flyout element we focus.
+ *
+ * @param workspace The workspace.
+ * @returns The element, or null if there is no flyout.
+ */
+export function getFlyoutElement(
+  workspace: Blockly.WorkspaceSvg,
+): SVGElement | null {
+  const flyout = workspace.getFlyout();
+  if (flyout != null && flyout instanceof Blockly.Flyout) {
+    // This relies on internals.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return ((flyout as any).svgGroup_ as SVGElement) ?? null;
+  }
+  return null;
 }

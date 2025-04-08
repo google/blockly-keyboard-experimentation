@@ -8,13 +8,16 @@ import {
   ContextMenuRegistry,
   Gesture,
   ShortcutRegistry,
+  Events,
   utils as blocklyUtils,
+  clipboard,
   ICopyData,
 } from 'blockly';
 import * as Constants from '../constants';
 import type {BlockSvg, WorkspaceSvg} from 'blockly';
 import {LineCursor} from '../line_cursor';
 import {Navigation} from '../navigation';
+import {ScopeWithConnection} from './action_menu';
 
 const KeyCodes = blocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -27,7 +30,7 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
  * menu; changing individual weights relative to base weight can change
  * the order within the clipboard group.
  */
-const BASE_WEIGHT = 11;
+const BASE_WEIGHT = 12;
 
 /**
  * Logic and state for cut/copy/paste actions as both keyboard shortcuts
@@ -41,18 +44,7 @@ export class Clipboard {
   /** The workspace a copy or cut keyboard shortcut happened in. */
   private copyWorkspace: WorkspaceSvg | null = null;
 
-  /**
-   * Function provided by the navigation controller to say whether editing
-   * is allowed.
-   */
-  private canCurrentlyEdit: (ws: WorkspaceSvg) => boolean;
-
-  constructor(
-    private navigation: Navigation,
-    canEdit: (ws: WorkspaceSvg) => boolean,
-  ) {
-    this.canCurrentlyEdit = canEdit;
-  }
+  constructor(private navigation: Navigation) {}
 
   /**
    * Install these actions as both keyboard shortcuts and context menu items.
@@ -138,7 +130,7 @@ export class Clipboard {
    * @returns True iff `cutCallback` function should be called.
    */
   private cutPrecondition(workspace: WorkspaceSvg) {
-    if (this.canCurrentlyEdit(workspace)) {
+    if (this.navigation.canCurrentlyEdit(workspace)) {
       const curNode = workspace.getCursor()?.getCurNode();
       if (curNode && curNode.getSourceBlock()) {
         const sourceBlock = curNode.getSourceBlock();
@@ -166,7 +158,9 @@ export class Clipboard {
   private cutCallback(workspace: WorkspaceSvg) {
     const cursor = workspace.getCursor();
     if (!cursor) throw new TypeError('no cursor');
-    const sourceBlock = cursor.getCurNode().getSourceBlock() as BlockSvg | null;
+    const sourceBlock = cursor
+      .getCurNode()
+      ?.getSourceBlock() as BlockSvg | null;
     if (!sourceBlock) throw new TypeError('no source block');
     this.copyData = sourceBlock.toCopyData();
     this.copyWorkspace = sourceBlock.workspace;
@@ -231,9 +225,9 @@ export class Clipboard {
    * @returns True iff `copyCallback` function should be called.
    */
   private copyPrecondition(workspace: WorkspaceSvg) {
-    if (!this.canCurrentlyEdit(workspace)) return false;
+    if (!this.navigation.canCurrentlyEdit(workspace)) return false;
     switch (this.navigation.getState(workspace)) {
-      case Constants.STATE.WORKSPACE:
+      case Constants.STATE.WORKSPACE: {
         const curNode = workspace?.getCursor()?.getCurNode();
         const source = curNode?.getSourceBlock();
         return !!(
@@ -241,13 +235,15 @@ export class Clipboard {
           source?.isMovable() &&
           !Gesture.inProgress()
         );
-      case Constants.STATE.FLYOUT:
+      }
+      case Constants.STATE.FLYOUT: {
         const flyoutWorkspace = workspace.getFlyout()?.getWorkspace();
         const sourceBlock = flyoutWorkspace
           ?.getCursor()
           ?.getCurNode()
           ?.getSourceBlock();
         return !!(sourceBlock && !Gesture.inProgress());
+      }
       default:
         return false;
     }
@@ -271,11 +267,16 @@ export class Clipboard {
     const sourceBlock = activeWorkspace
       ?.getCursor()
       ?.getCurNode()
-      .getSourceBlock() as BlockSvg;
-    workspace.hideChaff();
+      ?.getSourceBlock() as BlockSvg;
+    if (!sourceBlock) return false;
+
     this.copyData = sourceBlock.toCopyData();
     this.copyWorkspace = sourceBlock.workspace;
-    return !!this.copyData;
+    const copied = !!this.copyData;
+    if (copied && navigationState === Constants.STATE.FLYOUT) {
+      this.navigation.focusWorkspace(workspace);
+    }
+    return copied;
   }
 
   /**
@@ -304,18 +305,15 @@ export class Clipboard {
   private registerPasteContextMenuAction() {
     const pasteAction: ContextMenuRegistry.RegistryItem = {
       displayText: (scope) => `Paste (${this.getPlatformPrefix()}V)`,
-      preconditionFn: (scope) => {
-        const ws =
-          scope.block?.workspace ??
-          (scope as any).connection?.getSourceBlock().workspace;
+      preconditionFn: (scope: ScopeWithConnection) => {
+        const block = scope.block ?? scope.connection?.getSourceBlock();
+        const ws = block?.workspace as WorkspaceSvg | null;
         if (!ws) return 'hidden';
-
         return this.pastePrecondition(ws) ? 'enabled' : 'disabled';
       },
-      callback: (scope) => {
-        const ws =
-          scope.block?.workspace ??
-          (scope as any).connection?.getSourceBlock().workspace;
+      callback: (scope: ScopeWithConnection) => {
+        const block = scope.block ?? scope.connection?.getSourceBlock();
+        const ws = block?.workspace as WorkspaceSvg | null;
         if (!ws) return;
         return this.pasteCallback(ws);
       },
@@ -339,7 +337,7 @@ export class Clipboard {
   private pastePrecondition(workspace: WorkspaceSvg) {
     if (!this.copyData || !this.copyWorkspace) return false;
 
-    return this.canCurrentlyEdit(workspace) && !Gesture.inProgress();
+    return this.navigation.canCurrentlyEdit(workspace) && !Gesture.inProgress();
   }
 
   /**
@@ -356,7 +354,23 @@ export class Clipboard {
     const pasteWorkspace = this.copyWorkspace.isFlyout
       ? workspace
       : this.copyWorkspace;
-    return this.navigation.paste(this.copyData, pasteWorkspace);
+
+    const targetNode = this.navigation.getStationaryNode(pasteWorkspace);
+    // If we're pasting in the flyout it still targets the workspace. Focus first
+    // so ensure correct selection handling.
+    this.navigation.focusWorkspace(workspace);
+
+    Events.setGroup(true);
+    const block = clipboard.paste(this.copyData, pasteWorkspace) as BlockSvg;
+    if (block) {
+      if (targetNode) {
+        this.navigation.tryToConnectBlock(targetNode, block);
+      }
+      Events.setGroup(false);
+      return true;
+    }
+    Events.setGroup(false);
+    return false;
   }
 
   /**

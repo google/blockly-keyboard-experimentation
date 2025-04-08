@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+// The rules expect camel or pascal case enum members and record properties.
+
 /**
  * @license
  * Copyright 2021 Google LLC
@@ -14,6 +17,7 @@
  * The different parts of Blockly that the user navigates between.
  */
 export enum STATE {
+  NOWHERE = 'nowhere',
   WORKSPACE = 'workspace',
   FLYOUT = 'flyout',
   TOOLBOX = 'toolbox',
@@ -23,10 +27,10 @@ export enum STATE {
  * Default keyboard navigation shortcut names.
  */
 export enum SHORTCUT_NAMES {
-  PREVIOUS = 'previous',
-  NEXT = 'next',
-  IN = 'in',
-  OUT = 'out',
+  UP = 'up',
+  DOWN = 'down',
+  RIGHT = 'right',
+  LEFT = 'left',
   INSERT = 'insert',
   EDIT_OR_CONFIRM = 'edit_or_confirm',
   DISCONNECT = 'disconnect',
@@ -37,20 +41,12 @@ export enum SHORTCUT_NAMES {
   CUT = 'keyboard_nav_cut',
   PASTE = 'keyboard_nav_paste',
   DELETE = 'keyboard_nav_delete',
-  /* eslint-disable @typescript-eslint/naming-convention */
   MOVE_WS_CURSOR_UP = 'workspace_up',
   MOVE_WS_CURSOR_DOWN = 'workspace_down',
   MOVE_WS_CURSOR_LEFT = 'workspace_left',
   MOVE_WS_CURSOR_RIGHT = 'workspace_right',
-  TOGGLE_KEYBOARD_NAV = 'toggle_keyboard_nav',
-  /* eslint-enable @typescript-eslint/naming-convention */
+  CREATE_WS_CURSOR = 'to_workspace',
   LIST_SHORTCUTS = 'list_shortcuts',
-  ANNOUNCE = 'announce',
-  GO_TO_NEXT_SIBLING = 'go_to_next_sibling',
-  GO_TO_PREVIOUS_SIBLING = 'go_to_previous_sibling',
-  JUMP_TO_ROOT = 'jump_to_root_of_current_stack',
-  CONTEXT_OUT = 'context_out',
-  CONTEXT_IN = 'context_in',
   CLEAN_UP = 'clean_up_workspace',
 }
 
@@ -94,12 +90,9 @@ export const SHORTCUT_CATEGORIES: Record<
     'redo',
   ],
   'Code navigation': [
-    SHORTCUT_NAMES.PREVIOUS,
-    SHORTCUT_NAMES.NEXT,
-    SHORTCUT_NAMES.IN,
-    SHORTCUT_NAMES.OUT,
-    SHORTCUT_NAMES.GO_TO_NEXT_SIBLING,
-    SHORTCUT_NAMES.GO_TO_PREVIOUS_SIBLING,
-    SHORTCUT_NAMES.JUMP_TO_ROOT,
+    SHORTCUT_NAMES.UP,
+    SHORTCUT_NAMES.DOWN,
+    SHORTCUT_NAMES.RIGHT,
+    SHORTCUT_NAMES.LEFT,
   ],
 };

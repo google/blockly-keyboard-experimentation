@@ -5,24 +5,16 @@
  */
 
 import {
-  Connection,
   ContextMenuRegistry,
   ShortcutRegistry,
-  comments,
   utils as BlocklyUtils,
 } from 'blockly';
 import * as Constants from '../constants';
-import type {BlockSvg, WorkspaceSvg} from 'blockly';
+import type {WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
+import {ScopeWithConnection} from './action_menu';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
-
-interface Scope {
-  block?: BlockSvg;
-  workspace?: WorkspaceSvg;
-  comment?: comments.RenderedWorkspaceComment;
-  connection?: Connection;
-}
 
 /**
  * Action to insert a block into the workspace.
@@ -32,22 +24,11 @@ interface Scope {
  */
 export class InsertAction {
   /**
-   * Function provided by the navigation controller to say whether editing
-   * is allowed.
-   */
-  private canCurrentlyEdit: (ws: WorkspaceSvg) => boolean;
-
-  /**
    * Registration name for the keyboard shortcut.
    */
   private insertShortcutName = Constants.SHORTCUT_NAMES.INSERT;
 
-  constructor(
-    private navigation: Navigation,
-    canEdit: (ws: WorkspaceSvg) => boolean,
-  ) {
-    this.canCurrentlyEdit = canEdit;
-  }
+  constructor(private navigation: Navigation) {}
 
   /**
    * Install this action as both a keyboard shortcut and a context menu item.
@@ -86,22 +67,18 @@ export class InsertAction {
    */
   private registerContextMenuAction() {
     const insertAboveItem: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => {
-        if (scope.block?.previousConnection) {
-          return 'Insert Block Above (I)';
-        } else {
-          return 'Insert Block (I)';
-        }
+      displayText: () => {
+        return 'Insert Block (I)';
       },
-      preconditionFn: (scope: Scope) => {
+      preconditionFn: (scope: ScopeWithConnection) => {
         const block = scope.block ?? scope.connection?.getSourceBlock();
         const ws = block?.workspace as WorkspaceSvg | null;
         if (!ws) return 'hidden';
 
         return this.insertPrecondition(ws) ? 'enabled' : 'hidden';
       },
-      callback: (scope: Scope) => {
-        let ws =
+      callback: (scope: ScopeWithConnection) => {
+        const ws =
           scope.block?.workspace ??
           (scope.connection?.getSourceBlock().workspace as WorkspaceSvg);
         if (!ws) return false;
@@ -124,7 +101,7 @@ export class InsertAction {
    * @returns True iff `insertCallback` function should be called.
    */
   private insertPrecondition(workspace: WorkspaceSvg): boolean {
-    return this.canCurrentlyEdit(workspace);
+    return this.navigation.canCurrentlyEdit(workspace);
   }
 
   /**

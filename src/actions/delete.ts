@@ -29,22 +29,11 @@ export class DeleteAction {
   private oldContextMenuItem: ContextMenuRegistry.RegistryItem | null = null;
 
   /**
-   * Function provided by the navigation controller to say whether editing
-   * is allowed.
-   */
-  private canCurrentlyEdit: (ws: WorkspaceSvg) => boolean;
-
-  /**
    * Registration name for the keyboard shortcut.
    */
   private deleteShortcutName = Constants.SHORTCUT_NAMES.DELETE;
 
-  constructor(
-    private navigation: Navigation,
-    canEdit: (ws: WorkspaceSvg) => boolean,
-  ) {
-    this.canCurrentlyEdit = canEdit;
-  }
+  constructor(private navigation: Navigation) {}
 
   /**
    * Install this action as both a keyboard shortcut and a context menu item.
@@ -113,8 +102,8 @@ export class DeleteAction {
         // Run the original precondition code, from the context menu option.
         // If the item would be hidden or disabled, respect it.
         const originalPreconditionResult =
-          this.oldContextMenuItem!.preconditionFn(scope);
-        if (!ws || originalPreconditionResult != 'enabled') {
+          this.oldContextMenuItem?.preconditionFn?.(scope) ?? 'enabled';
+        if (!ws || originalPreconditionResult !== 'enabled') {
           return originalPreconditionResult;
         }
 
@@ -132,7 +121,7 @@ export class DeleteAction {
       },
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'blockDeleteFromContextMenu',
-      weight: 10,
+      weight: 11,
     };
 
     ContextMenuRegistry.registry.register(deleteItem);
@@ -148,10 +137,11 @@ export class DeleteAction {
    * @returns True iff `deleteCallback` function should be called.
    */
   private deletePrecondition(workspace: WorkspaceSvg) {
-    if (!this.canCurrentlyEdit(workspace)) return false;
-
-    const sourceBlock = workspace.getCursor()?.getCurNode().getSourceBlock();
-    return !!sourceBlock?.isDeletable();
+    const sourceBlock = workspace.getCursor()?.getCurNode()?.getSourceBlock();
+    return (
+      this.navigation.canCurrentlyEdit(workspace) &&
+      !!sourceBlock?.isDeletable()
+    );
   }
 
   /**
@@ -169,7 +159,10 @@ export class DeleteAction {
     const cursor = workspace.getCursor();
     if (!cursor) return false;
 
-    const sourceBlock = cursor.getCurNode().getSourceBlock() as BlockSvg;
+    const sourceBlock = cursor
+      .getCurNode()
+      ?.getSourceBlock() as BlockSvg | null;
+    if (!sourceBlock) return false;
     // Delete or backspace.
     // There is an event if this is triggered from a keyboard shortcut,
     // but not if it's triggered from a context menu.

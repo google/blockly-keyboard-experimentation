@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /**
  * @license
  * Copyright 2023 Google LLC

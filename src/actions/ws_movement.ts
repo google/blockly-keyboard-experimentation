@@ -7,6 +7,7 @@
 import {ASTNode, ShortcutRegistry, utils as BlocklyUtils} from 'blockly';
 import * as Constants from '../constants';
 import type {WorkspaceSvg} from 'blockly';
+import {Navigation} from 'src/navigation';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -14,84 +15,78 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
 );
 
 /**
+ * The distance to move the cursor when the cursor is on the workspace.
+ */
+const WS_MOVE_DISTANCE = 40;
+
+/**
  * Logic for free movement of the cursor on the workspace with keyboard
  * shortcuts.
  */
 export class WorkspaceMovement {
-  /**
-   * Function provided by the navigation controller to say whether editing
-   * is allowed.
-   */
-  private canCurrentlyEdit: (ws: WorkspaceSvg) => boolean;
+  constructor(private navigation: Navigation) {}
+
+  private shortcuts: ShortcutRegistry.KeyboardShortcut[] = [
+    /** Move the cursor on the workspace to the left. */
+    {
+      name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_LEFT,
+      preconditionFn: (workspace) =>
+        this.navigation.canCurrentlyEdit(workspace),
+      callback: (workspace) => this.moveWSCursor(workspace, -1, 0),
+      keyCodes: [createSerializedKey(KeyCodes.A, [KeyCodes.SHIFT])],
+    },
+    /** Move the cursor on the workspace to the right. */
+    {
+      name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_RIGHT,
+      preconditionFn: (workspace) =>
+        this.navigation.canCurrentlyEdit(workspace),
+      callback: (workspace) => this.moveWSCursor(workspace, 1, 0),
+      keyCodes: [createSerializedKey(KeyCodes.D, [KeyCodes.SHIFT])],
+    },
+    /** Move the cursor on the workspace up. */
+    {
+      name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_UP,
+      preconditionFn: (workspace) =>
+        this.navigation.canCurrentlyEdit(workspace),
+      callback: (workspace) => this.moveWSCursor(workspace, 0, -1),
+      keyCodes: [createSerializedKey(KeyCodes.W, [KeyCodes.SHIFT])],
+    },
+
+    /** Move the cursor on the workspace down. */
+    {
+      name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_DOWN,
+      preconditionFn: (workspace) =>
+        this.navigation.canCurrentlyEdit(workspace),
+      callback: (workspace) => this.moveWSCursor(workspace, 0, 1),
+      keyCodes: [createSerializedKey(KeyCodes.S, [KeyCodes.SHIFT])],
+    },
+
+    /** Move the cursor to the workspace. */
+    {
+      name: Constants.SHORTCUT_NAMES.CREATE_WS_CURSOR,
+      preconditionFn: (workspace) =>
+        this.navigation.canCurrentlyEdit(workspace),
+      callback: (workspace) => this.createWSCursor(workspace),
+      keyCodes: [KeyCodes.W],
+    },
+  ];
 
   /**
-   * The distance to move the cursor when the cursor is on the workspace.
-   */
-  WS_MOVE_DISTANCE = 40;
-
-  constructor(canEdit: (ws: WorkspaceSvg) => boolean) {
-    this.canCurrentlyEdit = canEdit;
-  }
-
-  /**
-   * Install these actions as both keyboard shortcuts and context menu items.
+   * Install the shortcuts.
    */
   install() {
-    const shortcutList: {
-      [name: string]: ShortcutRegistry.KeyboardShortcut;
-    } = {
-      /** Move the cursor on the workspace to the left. */
-      wsMoveLeft: {
-        name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_LEFT,
-        preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-        callback: (workspace) => this.moveWSCursor(workspace, -1, 0),
-        keyCodes: [createSerializedKey(KeyCodes.A, [KeyCodes.SHIFT])],
-      },
-      /** Move the cursor on the workspace to the right. */
-      wsMoveRight: {
-        name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_RIGHT,
-        preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-        callback: (workspace) => this.moveWSCursor(workspace, 1, 0),
-        keyCodes: [createSerializedKey(KeyCodes.D, [KeyCodes.SHIFT])],
-      },
-
-      /** Move the cursor on the workspace up. */
-      wsMoveUp: {
-        name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_UP,
-        preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-        callback: (workspace) => this.moveWSCursor(workspace, 0, -1),
-        keyCodes: [createSerializedKey(KeyCodes.W, [KeyCodes.SHIFT])],
-      },
-
-      /** Move the cursor on the workspace down. */
-      wsMoveDown: {
-        name: Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_DOWN,
-        preconditionFn: (workspace) => this.canCurrentlyEdit(workspace),
-        callback: (workspace) => this.moveWSCursor(workspace, 0, 1),
-        keyCodes: [createSerializedKey(KeyCodes.S, [KeyCodes.SHIFT])],
-      },
-    };
-    for (const shortcut of Object.values(shortcutList)) {
+    for (const shortcut of this.shortcuts) {
       ShortcutRegistry.registry.register(shortcut);
     }
   }
 
   /**
-   * Uninstall these actions.
+   * Uninstall the shortcuts.
    */
   uninstall() {
-    ShortcutRegistry.registry.unregister(
-      Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_LEFT,
-    );
-    ShortcutRegistry.registry.unregister(
-      Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_RIGHT,
-    );
-    ShortcutRegistry.registry.unregister(
-      Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_UP,
-    );
-    ShortcutRegistry.registry.unregister(
-      Constants.SHORTCUT_NAMES.MOVE_WS_CURSOR_DOWN,
-    );
+    for (const shortcut of this.shortcuts) {
+      ShortcutRegistry.registry.unregister(shortcut.name);
+    }
   }
 
   /**
@@ -109,25 +104,38 @@ export class WorkspaceMovement {
     yDirection: number,
   ): boolean {
     const cursor = workspace.getCursor();
-    if (!cursor) {
-      return false;
-    }
-    const curNode = cursor.getCurNode();
-
-    if (curNode.getType() !== ASTNode.types.WORKSPACE) {
-      return false;
-    }
+    if (!cursor) return false;
+    const curNode = cursor?.getCurNode();
+    if (!curNode || curNode.getType() !== ASTNode.types.WORKSPACE) return false;
 
     const wsCoord = curNode.getWsCoordinate();
-    const newX = xDirection * this.WS_MOVE_DISTANCE + wsCoord.x;
-    const newY = yDirection * this.WS_MOVE_DISTANCE + wsCoord.y;
+    const newX = xDirection * WS_MOVE_DISTANCE + wsCoord.x;
+    const newY = yDirection * WS_MOVE_DISTANCE + wsCoord.y;
 
     cursor.setCurNode(
       ASTNode.createWorkspaceNode(
         workspace,
         new BlocklyUtils.Coordinate(newX, newY),
-      )!,
+      ),
     );
+    return true;
+  }
+
+  /**
+   * Moves the cursor to the workspace near the origin.
+   *
+   * @param workspace The workspace the cursor is on.
+   */
+  createWSCursor(workspace: WorkspaceSvg) {
+    const workspaceNode = ASTNode.createWorkspaceNode(
+      workspace,
+      new BlocklyUtils.Coordinate(10, 10),
+    );
+    const cursor = workspace.getCursor();
+
+    if (!cursor || !workspaceNode) return false;
+
+    cursor.setCurNode(workspaceNode);
     return true;
   }
 }

@@ -30,6 +30,15 @@ export class PassiveFocus {
     this.nextConnectionIndicator = this.createNextIndicator();
   }
 
+  /**
+   * Get the current passive focus node.
+   *
+   * @returns the node or null.
+   */
+  getCurNode(): ASTNode | null {
+    return this.curNode;
+  }
+
   /** Dispose of this indicator. Do any necessary cleanup. */
   dispose() {
     this.hide();
@@ -50,21 +59,23 @@ export class PassiveFocus {
     // If old node was a block, unselect it or remove fake selection.
     if (type === ASTNode.types.BLOCK) {
       this.hideAtBlock(this.curNode);
-      return;
     } else if (this.curNode.isConnection()) {
       const curNodeAsConnection = location as RenderedConnection;
       const connectionType = curNodeAsConnection.type;
       if (connectionType === ConnectionType.NEXT_STATEMENT) {
         this.hideAtNext(this.curNode);
-        return;
       }
+    } else {
+      console.log('Could not hide passive focus indicator');
     }
-    console.log('Could not hide passive focus indicator');
+    this.curNode = null;
   }
 
   /**
    * Show the passive focus indicator at the specified location.
    * Implementation varies based on location type.
+   *
+   * @param node The node to show passive focus for.
    */
   show(node: ASTNode) {
     // Hide last shown.
@@ -94,9 +105,7 @@ export class PassiveFocus {
    */
   showAtBlock(node: ASTNode) {
     const block = node.getLocation() as BlockSvg;
-    // Note that this changes rendering but does not change Blockly's
-    // internal selected state.
-    block.addSelect();
+    utils.dom.addClass(block.pathObject.svgPath, 'passiveBlockFocus');
   }
 
   /**
@@ -106,9 +115,11 @@ export class PassiveFocus {
    */
   hideAtBlock(node: ASTNode) {
     const block = node.getLocation() as BlockSvg;
-    // Note that this changes rendering but does not change Blockly's
-    // internal selected state.
-    block.removeSelect();
+    // When a block is selected we can end up with a duplicate svgPath.
+    const svgPaths = block.getSvgRoot().querySelectorAll('.passiveBlockFocus');
+    svgPaths.forEach((svgPath) =>
+      utils.dom.removeClass(svgPath, 'passiveBlockFocus'),
+    );
   }
 
   /**
@@ -122,8 +133,6 @@ export class PassiveFocus {
       'width': 100,
       'height': 5,
       'class': 'passiveNextIndicator',
-      'stroke': '#4286f4',
-      'fill': '#4286f4',
     });
     return indicator;
   }
@@ -166,5 +175,9 @@ export class PassiveFocus {
       this.nextConnectionIndicator,
     );
     this.nextConnectionIndicator.style.display = 'none';
+  }
+
+  isVisible(): boolean {
+    return !!this.curNode;
   }
 }
