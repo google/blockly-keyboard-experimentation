@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type {BlockSvg, IDragger, IDragStrategy} from 'blockly';
+import type {BlockSvg, IDragger, IDragStrategy, Gesture} from 'blockly';
 import {
   ASTNode,
   common,
@@ -42,6 +42,12 @@ export class Mover {
    * of a keyboard drag and reset at the end of a keyboard drag.
    */
   oldIsDragging: (() => boolean) | null = null;
+
+  /**
+   * The stashed getGesture function, which is replaced at the beginning
+   * of a keyboard drag and reset at the end of a keyboard drag.
+   */
+  oldGetGesture: ((e: PointerEvent) => Gesture | null) | null = null;
 
   /**
    * The block's base drag strategy, which will be overridden during
@@ -100,7 +106,7 @@ export class Mover {
     common.setSelected(block);
     cursor.setCurNode(ASTNode.createBlockNode(block));
 
-    this.patchIsDragging(workspace);
+    this.patchWorkspace(workspace);
     this.patchDragStrategy(block);
     // Begin dragging block.
     const DraggerClass = registry.getClassFromOptions(
@@ -115,6 +121,7 @@ export class Mover {
     this.moves.set(workspace, info);
     // Begin drag.
     dragger.onDragStart(info.fakePointerEvent('pointerdown'));
+    info.dragger.onDrag(info.fakePointerEvent('pointermove'), info.totalDelta);
     return true;
   }
 
@@ -135,7 +142,7 @@ export class Mover {
       new utils.Coordinate(0, 0),
     );
 
-    this.unpatchIsDragging(workspace);
+    this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
     return true;
@@ -166,7 +173,7 @@ export class Mover {
       new utils.Coordinate(0, 0),
     );
 
-    this.unpatchIsDragging(workspace);
+    this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
     return true;
@@ -218,38 +225,65 @@ export class Mover {
   /**
    * Get the source block for the cursor location, or undefined if no
    * source block can be found.
+   * If the cursor is on a shadow block, walks up the tree until it finds
+   * a non-shadow block to drag.
    *
    * @param workspace The workspace to inspect for a cursor.
    * @returns The source block, or undefined if no appropriate block
    *     could be found.
    */
   protected getCurrentBlock(workspace: WorkspaceSvg): BlockSvg | undefined {
-    const cursor = workspace?.getCursor();
-    const curNode = cursor?.getCurNode();
-    return (curNode?.getSourceBlock() as BlockSvg) ?? undefined;
+    const curNode = workspace?.getCursor()?.getCurNode();
+    let block = curNode?.getSourceBlock();
+    if (!block) return undefined;
+    while (block && block.isShadow()) {
+      block = block.getParent();
+      if (!block) {
+        throw new Error(
+          'Tried to drag a shadow block with no parent. ' +
+            'Shadow blocks should always have parents.',
+        );
+      }
+    }
+    return block as BlockSvg;
   }
 
   /**
-   * Monkeypatch over workspace.isDragging to return whether a keyboard
-   * drag is in progress.
+   * Monkeypatch over workspace functions to consider keyboard drags as
+   * well as mouse/pointer drags.
    *
    * @param workspace The workspace to patch.
    */
-  private patchIsDragging(workspace: WorkspaceSvg) {
+  private patchWorkspace(workspace: WorkspaceSvg) {
+    // Keyboard drags are real drags.
     this.oldIsDragging = workspace.isDragging;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (workspace as any).isDragging = () => this.isMoving(workspace);
+
+    // Ignore mouse/pointer events during keyboard drags.
+    this.oldGetGesture = workspace.getGesture;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (workspace as any).getGesture = (e: PointerEvent) => {
+      // Normally these would be called from Gesture.doStart.
+      e.preventDefault();
+      e.stopPropagation();
+      return null;
+    };
   }
 
   /**
-   * Remove the monkeypatch on workspace.isDragging.
+   * Remove monkeypatches on the workspace.
    *
    * @param workspace The workspace to unpatch.
    */
-  private unpatchIsDragging(workspace: WorkspaceSvg) {
+  private unpatchWorkspace(workspace: WorkspaceSvg) {
     if (this.oldIsDragging) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (workspace as any).isDragging = this.oldIsDragging;
+    }
+    if (this.oldGetGesture) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (workspace as any).getGesture = this.oldGetGesture;
     }
   }
   /**
