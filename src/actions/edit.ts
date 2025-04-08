@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ContextMenuRegistry} from 'blockly';
-import {LineCursor} from '../line_cursor';
+import {ContextMenuRegistry, LineCursor} from 'blockly';
 import {Navigation} from 'src/navigation';
 
 /**

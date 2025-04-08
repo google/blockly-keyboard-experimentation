@@ -109,6 +109,8 @@ export class WorkspaceMovement {
     if (!curNode || curNode.getType() !== ASTNode.types.WORKSPACE) return false;
 
     const wsCoord = curNode.getWsCoordinate();
+    if (!wsCoord) return false;
+
     const newX = xDirection * WS_MOVE_DISTANCE + wsCoord.x;
     const newY = yDirection * WS_MOVE_DISTANCE + wsCoord.y;
 

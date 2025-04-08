@@ -12,10 +12,10 @@ import {
   utils as blocklyUtils,
   clipboard,
   ICopyData,
+  LineCursor,
 } from 'blockly';
 import * as Constants from '../constants';
 import type {BlockSvg, WorkspaceSvg} from 'blockly';
-import {LineCursor} from '../line_cursor';
 import {Navigation} from '../navigation';
 import {ScopeWithConnection} from './action_menu';
 

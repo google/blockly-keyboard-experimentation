@@ -271,7 +271,6 @@ export class EnterAction {
     if (block.isSimpleReporter()) {
       for (const input of block.inputList) {
         for (const field of input.fieldRow) {
-          // @ts-expect-error isFullBlockField is a protected method.
           if (field.isClickable() && field.isFullBlockField()) {
             field.showEditor();
             return true;
