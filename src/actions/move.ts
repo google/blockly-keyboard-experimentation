@@ -36,7 +36,7 @@ export class MoveActions {
       name: 'Finish move',
       preconditionFn: (workspace) => this.mover.isMoving(workspace),
       callback: (workspace) => this.mover.finishMove(workspace),
-      keyCodes: [KeyCodes.ENTER],
+      keyCodes: [KeyCodes.ENTER, KeyCodes.SPACE],
       allowCollision: true,
     },
     {
