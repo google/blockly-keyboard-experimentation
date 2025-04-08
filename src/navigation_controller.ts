@@ -36,6 +36,7 @@ import {DisconnectAction} from './actions/disconnect';
 import {ActionMenu} from './actions/action_menu';
 import {MoveActions} from './actions/move';
 import {Mover} from './actions/mover';
+import {UndoRedoAction} from './actions/undo_redo';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 
@@ -71,6 +72,8 @@ export class NavigationController {
   exitAction: ExitAction = new ExitAction(this.navigation);
 
   enterAction: EnterAction = new EnterAction(this.navigation);
+
+  undoRedoAction: UndoRedoAction = new UndoRedoAction();
 
   actionMenu: ActionMenu = new ActionMenu(this.navigation);
 
@@ -289,6 +292,7 @@ export class NavigationController {
     this.exitAction.install();
     this.enterAction.install();
     this.disconnectAction.install();
+    this.undoRedoAction.install();
     this.actionMenu.install();
 
     this.clipboard.install();
@@ -315,6 +319,7 @@ export class NavigationController {
     this.arrowNavigation.uninstall();
     this.exitAction.uninstall();
     this.enterAction.uninstall();
+    this.undoRedoAction.uninstall();
     this.actionMenu.uninstall();
     this.shortcutDialog.uninstall();
 
