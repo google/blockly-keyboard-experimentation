@@ -22,6 +22,7 @@ import type {
 
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
+import {Mover} from './mover';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 
@@ -29,7 +30,10 @@ const KeyCodes = BlocklyUtils.KeyCodes;
  * Class for registering a shortcut for the enter action.
  */
 export class EnterAction {
-  constructor(private navigation: Navigation) {}
+  constructor(
+    private mover: Mover,
+    private navigation: Navigation,
+  ) {}
 
   /**
    * Adds the enter action shortcut to the registry.
@@ -149,6 +153,7 @@ export class EnterAction {
     this.navigation.focusWorkspace(workspace);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     workspace.getCursor()?.setCurNode(ASTNode.createBlockNode(newBlock)!);
+    this.mover.startMove(workspace);
   }
 
   /**

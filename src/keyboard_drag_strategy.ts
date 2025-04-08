@@ -7,8 +7,9 @@
 import {
   ASTNode,
   BlockSvg,
-  RenderedConnection,
+  ConnectionType,
   LineCursor,
+  RenderedConnection,
   dragging,
   utils,
 } from 'blockly';
@@ -40,8 +41,13 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     // to the top left of the workspace.
     // @ts-expect-error block and startLoc are private.
     this.block.moveDuringDrag(this.startLoc);
-    // @ts-expect-error startParentConn is private.
-    this.searchNode = ASTNode.createConnectionNode(this.startParentConn);
+    //// @ts-expect-error startParentConn is private.
+    //this.searchNode = ASTNode.createConnectionNode(this.startParentConn);
+    // @ts-expect-error connectionCandidate is private.
+    this.connectionCandidate = this.createInitialCandidate();
+    this.forceShowPreview();
+    //// @ts-expect-error accessing private things.
+    //this.connectionPreviewer!.previewConnection(this.connectionCandidate.local, this.connectionCandidate.neighbour);
   }
 
   override drag(newLoc: utils.Coordinate, e?: PointerEvent): void {
@@ -60,7 +66,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       this.searchNode = ASTNode.createConnectionNode(neighbour);
       // The moving block will be positioned slightly down and to the
       // right of the connection it found.
-      // @ts-expect-error block and startLoc are private.
+      // @ts-expect-error block is private.
       this.block.moveDuringDrag(
         new utils.Coordinate(neighbour.x + 10, neighbour.y + 10),
       );
@@ -204,5 +210,70 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
    */
   private isConstrainedMovement(): boolean {
     return !!this.currentDragDirection;
+  }
+
+  // This is a direct copy of the second half of updateConnectionPreview in
+  // BlockDragStrategy.
+  private forceShowPreview() {
+    // @ts-expect-error connectionCandidate
+    const {local, neighbour} = this.connectionCandidate;
+    const localIsOutputOrPrevious =
+      local.type === ConnectionType.OUTPUT_VALUE ||
+      local.type === ConnectionType.PREVIOUS_STATEMENT;
+    const neighbourIsConnectedToRealBlock =
+      neighbour.isConnected() && !neighbour.targetBlock()!.isInsertionMarker();
+    if (
+      localIsOutputOrPrevious &&
+      neighbourIsConnectedToRealBlock &&
+      // @ts-expect-error orphanCanConnectAtEnd is private
+      !this.orphanCanConnectAtEnd(
+        // @ts-expect-error block is private
+        this.block,
+        neighbour.targetBlock()!,
+        local.type,
+      )
+    ) {
+      // @ts-expect-error connectionPreviewer is private
+      this.connectionPreviewer!.previewReplacement(
+        local,
+        neighbour,
+        neighbour.targetBlock()!,
+      );
+      return;
+    }
+    // @ts-expect-error connectionPreviewer is private
+    this.connectionPreviewer!.previewConnection(local, neighbour);
+
+    // The moving block will be positioned slightly down and to the
+    // right of the connection it found.
+    // @ts-expect-error block is private.
+    this.block.moveDuringDrag(
+      new utils.Coordinate(neighbour.x + 10, neighbour.y + 10),
+    );
+  }
+
+  private createInitialCandidate() {
+    // @ts-expect-error startParentConn is private.
+    const neighbour = this.startParentConn;
+    this.searchNode = ASTNode.createConnectionNode(neighbour);
+    if (neighbour) {
+      switch (neighbour.type) {
+        case ConnectionType.INPUT_VALUE:
+          return {
+            neighbour: neighbour,
+            // @ts-expect-error block is private.
+            local: this.block.outputConnection,
+            distance: 0,
+          };
+        case ConnectionType.NEXT_STATEMENT:
+          return {
+            neighbour: neighbour,
+            // @ts-expect-error block is private.
+            local: this.block.previousConnection,
+            distance: 0,
+          };
+      }
+    }
+    return null;
   }
 }
