@@ -19,7 +19,7 @@
  *
  * Copied from goog.events.keynames
  */
-const keyNames: Record<string, string> = {
+export const keyNames: Record<string, string> = {
   /* eslint-disable @typescript-eslint/naming-convention */
   8: 'backspace',
   9: 'tab',
@@ -121,70 +121,3 @@ const keyNames: Record<string, string> = {
   224: 'win',
   /* eslint-enable @typescript-eslint/naming-convention */
 };
-
-const modifierKeys = ['control', 'alt', 'meta'];
-
-/**
- * Assign the appropriate class names for the key.
- * Modifier keys are indicated so they can be switched to a platform specific
- * key.
- *
- * @param keyName The key name.
- */
-function getKeyClassName(keyName: string) {
-  return modifierKeys.includes(keyName.toLowerCase()) ? 'key modifier' : 'key';
-}
-
-/**
- * Naive title case conversion. Uppercases first and lowercases remainder.
- *
- * @param str String.
- * @returns The string in title case.
- */
-export function toTitleCase(str: string) {
-  return str.charAt(0).toUpperCase() + str.substring(1).toLowerCase();
-}
-
-/**
- * Convert from a serialized key code to a HTML string.
- * This should be the inverse of ShortcutRegistry.createSerializedKey, but
- * should also convert ascii characters to strings.
- *
- * @param keycode The key code as a string of characters separated
- *     by the + character.
- * @param index Which key code this is in sequence.
- * @returns A single string representing the key code.
- */
-function keyCodeToString(keycode: string, index: number) {
-  let result = `<span class="shortcut-combo shortcut-combo-${index}">`;
-  const pieces = keycode.split('+');
-
-  let piece = pieces[0];
-  let strrep = keyNames[piece] ?? piece;
-
-  for (let i = 0; i < pieces.length; i++) {
-    piece = pieces[i];
-    strrep = keyNames[piece] ?? piece;
-    const className = getKeyClassName(strrep);
-    if (i > 0) {
-      result += '+';
-    }
-    result += `<span class="${className}">${toTitleCase(strrep)}</span>`;
-  }
-  result += '</span>';
-  return result;
-}
-
-/**
- * Convert an array of key codes into a comma-separated list of strings.
- *
- * @param keycodeArr The array of key codes to convert.
- * @returns The input array as a comma-separated list of
- *     human-readable strings wrapped in HTML.
- */
-export function keyCodeArrayToString(keycodeArr: string[]): string {
-  const stringified = keycodeArr.map((keycode, index) =>
-    keyCodeToString(keycode, index),
-  );
-  return stringified.join('<span class="separator">/</span>');
-}

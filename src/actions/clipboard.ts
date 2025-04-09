@@ -18,6 +18,8 @@ import * as Constants from '../constants';
 import type {BlockSvg, WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
 import {ScopeWithConnection} from './action_menu';
+import {formatActionShortcut} from '../shortcut_formatting';
+import {toast} from '../toast';
 
 const KeyCodes = blocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -100,7 +102,7 @@ export class Clipboard {
    */
   private registerCutContextMenuAction() {
     const cutAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => `Cut (${this.getPlatformPrefix()}X)`,
+      displayText: (scope) => `Cut (${formatActionShortcut('cut', 'short')})`,
       preconditionFn: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return 'hidden';
@@ -195,7 +197,7 @@ export class Clipboard {
    */
   private registerCopyContextMenuAction() {
     const copyAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => `Copy (${this.getPlatformPrefix()}C)`,
+      displayText: (scope) => `Copy (${formatActionShortcut('copy', 'short')})`,
       preconditionFn: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return 'hidden';
@@ -273,8 +275,14 @@ export class Clipboard {
     this.copyData = sourceBlock.toCopyData();
     this.copyWorkspace = sourceBlock.workspace;
     const copied = !!this.copyData;
-    if (copied && navigationState === Constants.STATE.FLYOUT) {
-      this.navigation.focusWorkspace(workspace);
+    if (copied) {
+      if (navigationState === Constants.STATE.FLYOUT) {
+        this.navigation.focusWorkspace(workspace);
+      }
+      toast(workspace, {
+        message: `Copied. Press ${formatActionShortcut('paste', 'short')} to paste.`,
+        duration: 4500,
+      });
     }
     return copied;
   }
@@ -304,7 +312,8 @@ export class Clipboard {
    */
   private registerPasteContextMenuAction() {
     const pasteAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => `Paste (${this.getPlatformPrefix()}V)`,
+      displayText: (scope) =>
+        `Paste (${formatActionShortcut('paste', 'short')})`,
       preconditionFn: (scope: ScopeWithConnection) => {
         const block = scope.block ?? scope.connection?.getSourceBlock();
         const ws = block?.workspace as WorkspaceSvg | null;
@@ -371,17 +380,5 @@ export class Clipboard {
     }
     Events.setGroup(false);
     return false;
-  }
-
-  /**
-   * Check the platform and return a prefix for the keyboard shortcut.
-   * TODO: https://github.com/google/blockly-keyboard-experimentation/issues/155
-   * This will eventually be the responsibility of the action code ib
-   * Blockly core.
-   *
-   * @returns A platform-appropriate string for the meta key.
-   */
-  private getPlatformPrefix() {
-    return navigator.platform.startsWith('Mac') ? '⌘' : 'Ctrl + ';
   }
 }
