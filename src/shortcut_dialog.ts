@@ -7,7 +7,10 @@
 import * as Blockly from 'blockly/core';
 import * as Constants from './constants';
 import {ShortcutRegistry} from 'blockly/core';
-import {keyCodeArrayToString, toTitleCase} from './keynames';
+import {
+  actionShortcutsForPlatform,
+  upperCaseFirst,
+} from './shortcut_formatting';
 
 /**
  * Class for handling the shortcuts dialog.
@@ -51,27 +54,13 @@ export class ShortcutDialog {
   /**
    * Update the modifier key to the user's specific platform.
    */
-  updatePlatformModifier() {
+  updatePlatformName() {
     const platform = this.getPlatform();
     const platformEl = this.outputDiv
       ? this.outputDiv.querySelector('.platform')
       : null;
-
-    // Update platform string
     if (platformEl) {
       platformEl.textContent = platform;
-    }
-
-    if (this.shortcutDialog) {
-      const modifierKeys =
-        this.shortcutDialog.querySelectorAll('.key.modifier');
-
-      if (modifierKeys.length > 0 && platform) {
-        for (const key of modifierKeys) {
-          key.textContent =
-            this.getPlatform() === 'macOS' ? '⌘ Command' : 'Ctrl';
-        }
-      }
     }
   }
 
@@ -93,7 +82,7 @@ export class ShortcutDialog {
    * @returns A title case version of the name.
    */
   getReadableShortcutName(shortcutName: string) {
-    return toTitleCase(shortcutName.replace(/_/gi, ' '));
+    return upperCaseFirst(shortcutName.replace(/_/gi, ' '));
   }
 
   /**
@@ -123,20 +112,10 @@ export class ShortcutDialog {
           `;
 
       for (const keyboardShortcut of categoryShortcuts) {
-        const codeArray =
-          ShortcutRegistry.registry.getKeyCodesByShortcutName(keyboardShortcut);
-        if (codeArray.length > 0) {
-          // Only show the first shortcut if there are many
-          const prettyPrinted =
-            codeArray.length > 2
-              ? keyCodeArrayToString(codeArray.slice(0, 1))
-              : keyCodeArrayToString(codeArray);
-
-          modalContents += `
+        modalContents += `
               <td>${this.getReadableShortcutName(keyboardShortcut)}</td>
-              <td>${prettyPrinted}</td>
+              <td>${this.actionShortcutsToHTML(keyboardShortcut)}</td>
               </tr>`;
-        }
       }
       modalContents += '</tr></tbody></table>';
     }
@@ -149,7 +128,7 @@ export class ShortcutDialog {
       this.modalContainer = this.outputDiv.querySelector('.modal-container');
       this.shortcutDialog = this.outputDiv.querySelector('.shortcut-modal');
       this.closeButton = this.outputDiv.querySelector('.close-modal');
-      this.updatePlatformModifier();
+      this.updatePlatformName();
       // Can we also intercept the Esc key to dismiss.
       if (this.closeButton) {
         this.closeButton.addEventListener('click', (e) => {
@@ -157,6 +136,21 @@ export class ShortcutDialog {
         });
       }
     }
+  }
+
+  private actionShortcutsToHTML(action: string) {
+    const shortcuts = actionShortcutsForPlatform(action);
+    return shortcuts.map((keys) => this.actionShortcutToHTML(keys)).join(' / ');
+  }
+
+  private actionShortcutToHTML(keys: string[]) {
+    return [
+      `<span class="shortcut-combo">`,
+      ...keys.map((key, index) => {
+        return `<span class="key">${key}</span>${index < keys.length - 1 ? ' + ' : ''}`;
+      }),
+      `</span>`,
+    ].join('');
   }
 
   /**
