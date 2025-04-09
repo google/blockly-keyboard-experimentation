@@ -104,7 +104,7 @@ export class EnterAction {
     } else if (nodeType === ASTNode.types.BLOCK) {
       const block = curNode.getLocation() as Block;
       if (!this.tryShowFullBlockFieldEditor(block)) {
-        const shortcut = formatActionShortcut('list_shortcuts');
+        const shortcut = formatActionShortcut('list_shortcuts', 'short');
         const message = `Press ${shortcut} for help on keyboard controls`;
         dialog.alert(message);
       }

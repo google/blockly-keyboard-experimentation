@@ -101,7 +101,7 @@ export class Clipboard {
    */
   private registerCutContextMenuAction() {
     const cutAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => `Cut (${formatActionShortcut('cut')})`,
+      displayText: (scope) => `Cut (${formatActionShortcut('cut', 'short')})`,
       preconditionFn: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return 'hidden';
@@ -196,7 +196,7 @@ export class Clipboard {
    */
   private registerCopyContextMenuAction() {
     const copyAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => `Copy (${formatActionShortcut('copy')})`,
+      displayText: (scope) => `Copy (${formatActionShortcut('copy', 'short')})`,
       preconditionFn: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return 'hidden';
@@ -305,7 +305,8 @@ export class Clipboard {
    */
   private registerPasteContextMenuAction() {
     const pasteAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => `Paste (${formatActionShortcut('paste')})`,
+      displayText: (scope) =>
+        `Paste (${formatActionShortcut('paste', 'short')})`,
       preconditionFn: (scope: ScopeWithConnection) => {
         const block = scope.block ?? scope.connection?.getSourceBlock();
         const ws = block?.workspace as WorkspaceSvg | null;

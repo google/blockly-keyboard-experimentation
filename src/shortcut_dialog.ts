@@ -139,15 +139,16 @@ export class ShortcutDialog {
   }
 
   private actionShortcutsToHTML(action: string) {
-    const shortcuts = actionShortcutsForPlatform(action);
+    const shortcuts = actionShortcutsForPlatform(action, 'long');
     return shortcuts.map((keys) => this.actionShortcutToHTML(keys)).join(' / ');
   }
 
   private actionShortcutToHTML(keys: string[]) {
+    const separator = navigator.platform.startsWith('Mac') ? '' : ' + ';
     return [
       `<span class="shortcut-combo">`,
       ...keys.map((key, index) => {
-        return `<span class="key">${key}</span>${index < keys.length - 1 ? ' + ' : ''}`;
+        return `<span class="key">${key}</span>${index < keys.length - 1 ? separator : ''}`;
       }),
       `</span>`,
     ].join('');
@@ -298,7 +299,7 @@ Blockly.Css.register(`
   border: 1px solid var(--key-border-color);
   border-radius: 8px;
   display: inline-block;
-  margin: 0 8px;
+  margin: 0 4px;
   min-width: 2em;
   padding: .3em .5em;
   text-align: center;

@@ -7,18 +7,31 @@ const isMacPlatform = navigator.platform.startsWith('Mac');
  * Format the primary shortcut for this platform in a user facing format.
  *
  * @param action The action name, e.g. "cut".
+ * @param format The key format.
  * @returns The formatted shortcut.
  */
-export function formatActionShortcut(action: string): string {
-  const parts = actionShortcutsForPlatform(action)[0];
-  return parts.join(' + ');
+export function formatActionShortcut(
+  action: string,
+  format: ShortcutFormat,
+): string {
+  const parts = actionShortcutsForPlatform(action, format)[0];
+  return parts.join(isMacPlatform ? ' ' : ' + ');
 }
 
-const modifierNames: Record<string, string> = {
-  'Control': 'Ctrl',
-  'Meta': '⌘ Command',
-  'Alt': isMacPlatform ? '⌥ Option' : 'Alt',
+const modifierNamesByFormat: Record<ShortcutFormat, Record<string, string>> = {
+  long: {
+    'Control': 'Ctrl',
+    'Meta': '⌘ Command',
+    'Alt': isMacPlatform ? '⌥ Option' : 'Alt',
+  },
+  short: {
+    'Control': 'Ctrl',
+    'Meta': '⌘',
+    'Alt': isMacPlatform ? '⌥' : 'Alt',
+  },
 };
+
+export type ShortcutFormat = 'long' | 'short';
 
 /**
  * Find the relevant shortcuts for the given action for the current platform.
@@ -28,9 +41,14 @@ const modifierNames: Record<string, string> = {
  * current platform or tagged them with a platform.
  *
  * @param action The action name, e.g. "cut".
+ * @param format The key format.
  * @returns The formatted shortcuts.
  */
-export function actionShortcutsForPlatform(action: string): string[][] {
+export function actionShortcutsForPlatform(
+  action: string,
+  format: ShortcutFormat,
+): string[][] {
+  const modifierNames = modifierNamesByFormat[format];
   const shortcuts = ShortcutRegistry.registry.getKeyCodesByShortcutName(action);
   // See ShortcutRegistry.createSerializedKey for the starting format.
   const named = shortcuts.map((shortcut) => {
