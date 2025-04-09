@@ -150,15 +150,9 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     const dir = this.currentDragDirection;
     while (potential && !candidateConnection) {
       if (dir === Direction.Up || dir === Direction.Left) {
-        potential = cursor.getPreviousNode(potential, (node) => {
-          // @ts-expect-error isConnectionType is private.
-          return node && ASTNode.isConnectionType(node.getType());
-        });
+        potential = this.getPreviousNode(potential, cursor);
       } else if (dir === Direction.Down || dir === Direction.Right) {
-        potential = cursor.getNextNode(potential, (node) => {
-          // @ts-expect-error isConnectionType is private.
-          return node && ASTNode.isConnectionType(node.getType());
-        });
+        potential = this.getNextNode(potential, cursor);
       }
 
       localConns.forEach((conn: RenderedConnection) => {
@@ -288,5 +282,78 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
 
   override shouldHealStack(e: PointerEvent | undefined): boolean {
     return true;
+  }
+
+  /**
+   * Get the previous node in the tree, with loopback to the last
+   * stack on the workspace if needed.
+   *
+   * @param start Where to start traversal.
+   * @param cursor The workspace's cursor
+   * @returns The previous node, or null if there were no valid nodes
+   *     on the workspace.
+   */
+  private getPreviousNode(start: ASTNode, cursor: LineCursor) {
+    let potential: ASTNode | null = start;
+    potential = cursor.getPreviousNode(potential, (node) => {
+      // @ts-expect-error isConnectionType is private.
+      return node && ASTNode.isConnectionType(node.getType());
+    });
+    if (!potential) {
+      // Loop back to last block if it exists.
+      // @ts-expect-error workspace is private
+      const topBlocks = this.workspace.getTopBlocks(true);
+      if (!topBlocks.length) return null;
+
+      // Find the last stack.
+      const lastTopBlockNode = ASTNode.createStackNode(
+        topBlocks[topBlocks.length - 1],
+      );
+      let prevNode = lastTopBlockNode;
+      let nextNode: ASTNode | null = lastTopBlockNode;
+      // Iterate until you fall off the end of the stack.
+      while (nextNode) {
+        prevNode = nextNode;
+        nextNode = cursor.getNextNode(prevNode, (node) => {
+          return !!node;
+        });
+      }
+
+      // Resume searching.
+      potential = cursor.getPreviousNode(prevNode, (node) => {
+        // @ts-expect-error isConnectionType is private.
+        return node && ASTNode.isConnectionType(node.getType());
+      });
+    }
+    return potential;
+  }
+
+  /**
+   * Get the next node in the tree, with loopback to the first
+   * stack on the workspace if needed.
+   *
+   * @param start Where to start traversal.
+   * @param cursor The workspace's cursor
+   * @returns The next node, or null if there were no valid nodes
+   *     on the workspace.
+   */
+  private getNextNode(start: ASTNode, cursor: LineCursor) {
+    let potential: ASTNode | null = start;
+    potential = cursor.getNextNode(potential, (node) => {
+      // @ts-expect-error isConnectionType is private.
+      return node && ASTNode.isConnectionType(node.getType());
+    });
+    if (!potential) {
+      // Loop back to first block if it exists.
+      // @ts-expect-error workspace is private
+      const topBlocks = this.workspace.getTopBlocks(true);
+      if (!topBlocks.length) return null;
+      const initial = ASTNode.createTopNode(topBlocks[0]);
+      potential = cursor.getNextNode(initial, (node) => {
+        // @ts-expect-error isConnectionType is private.
+        return node && ASTNode.isConnectionType(node.getType());
+      });
+    }
+    return potential;
   }
 }
