@@ -82,7 +82,7 @@ export class ArrowNavigation {
               //     : false;
               const flyout = toolbox.getFlyout();
               if (!isHandled && flyout) {
-                Blockly.getFocusManager().focusTree(flyout);
+                Blockly.getFocusManager().focusTree(flyout.getWorkspace());
                 // this.navigation.focusFlyout(workspace);
               }
               return true;
@@ -116,7 +116,8 @@ export class ArrowNavigation {
               }
               return isHandled;
             case Constants.STATE.FLYOUT:
-              this.navigation.focusToolbox(workspace);
+              Blockly.getFocusManager().focusTree(toolbox);
+              // this.navigation.focusToolbox(workspace);
               return true;
             case Constants.STATE.TOOLBOX:
               isHandled = toolbox.selectParent();

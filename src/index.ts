@@ -54,8 +54,8 @@ export class KeyboardNavigation {
    * These fields are used to preserve the workspace's initial state to restore
    * it when/if keyboard navigation is disabled.
    */
-  private injectionDivTabIndex: string | null;
-  private workspaceParentTabIndex: string | null;
+  // private injectionDivTabIndex: string | null;
+  // private workspaceParentTabIndex: string | null;
   private originalTheme: Blockly.Theme;
 
   /**
@@ -93,17 +93,17 @@ export class KeyboardNavigation {
 
     this.cursor = new Blockly.LineCursor(workspace, options.cursor);
 
-    // Ensure that only the root SVG G (group) has a tab index.
-    this.injectionDivTabIndex = workspace
-      .getInjectionDiv()
-      .getAttribute('tabindex');
-    workspace.getInjectionDiv().removeAttribute('tabindex');
-    this.workspaceParentTabIndex = workspace
-      .getParentSvg()
-      .getAttribute('tabindex');
-    // We add a focus listener below so use -1 so it doesn't become focusable.
-    workspace.getSvgGroup().setAttribute('tabindex', '-1');
-    workspace.getParentSvg().setAttribute('tabindex', '-1');
+    // // Ensure that only the root SVG G (group) has a tab index.
+    // this.injectionDivTabIndex = workspace
+    //   .getInjectionDiv()
+    //   .getAttribute('tabindex');
+    // workspace.getInjectionDiv().removeAttribute('tabindex');
+    // this.workspaceParentTabIndex = workspace
+    //   .getParentSvg()
+    //   .getAttribute('tabindex');
+    // // We add a focus listener below so use -1 so it doesn't become focusable.
+    // workspace.getSvgGroup().setAttribute('tabindex', '-1');
+    // workspace.getParentSvg().setAttribute('tabindex', '-1');
 
     // Move the flyout for logical tab order.
     const flyoutElement = getFlyoutElement(workspace);
@@ -259,21 +259,21 @@ export class KeyboardNavigation {
     flyoutElement?.removeEventListener('focus', this.flyoutFocusListener);
     flyoutElement?.removeEventListener('blur', this.flyoutBlurListener);
 
-    if (this.workspaceParentTabIndex) {
-      this.workspace
-        .getParentSvg()
-        .setAttribute('tabindex', this.workspaceParentTabIndex);
-    } else {
-      this.workspace.getParentSvg().removeAttribute('tabindex');
-    }
+    // if (this.workspaceParentTabIndex) {
+    //   this.workspace
+    //     .getParentSvg()
+    //     .setAttribute('tabindex', this.workspaceParentTabIndex);
+    // } else {
+    //   this.workspace.getParentSvg().removeAttribute('tabindex');
+    // }
 
-    if (this.injectionDivTabIndex) {
-      this.workspace
-        .getInjectionDiv()
-        .setAttribute('tabindex', this.injectionDivTabIndex);
-    } else {
-      this.workspace.getInjectionDiv().removeAttribute('tabindex');
-    }
+    // if (this.injectionDivTabIndex) {
+    //   this.workspace
+    //     .getInjectionDiv()
+    //     .setAttribute('tabindex', this.injectionDivTabIndex);
+    // } else {
+    //   this.workspace.getInjectionDiv().removeAttribute('tabindex');
+    // }
 
     this.workspace.setTheme(this.originalTheme);
 

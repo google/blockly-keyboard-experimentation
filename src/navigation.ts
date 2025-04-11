@@ -141,7 +141,10 @@ export class Navigation {
   getState(workspace: Blockly.WorkspaceSvg): Constants.STATE {
     const focusedTree = Blockly.getFocusManager().getFocusedTree();
     if (focusedTree instanceof Blockly.WorkspaceSvg) {
-      return Constants.STATE.WORKSPACE;
+      // TODO: Is the instanceof Flyout below ever needed now? Probably not since Flyout shouldn't actually be a real IFocusableTree...
+      if (focusedTree.isFlyout) {
+        return Constants.STATE.FLYOUT;
+      } else return Constants.STATE.WORKSPACE;
     } else if (focusedTree instanceof Blockly.Toolbox) {
       return Constants.STATE.TOOLBOX;
     } else if (focusedTree instanceof Blockly.Flyout) {

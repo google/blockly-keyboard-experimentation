@@ -246,19 +246,21 @@ export class NavigationController {
               Blockly.getFocusManager().focusTree(workspace);
               // this.navigation.focusFlyout(workspace);
             } else {
+              // The toolbox receiving focus should ensure it has at least its first item selected
+              // if there was no previous focus yet.
               Blockly.getFocusManager().focusTree(toolbox);
               // Ensure that the first item is selected.
               // TODO: Retain this across contexts?
-              if (!toolbox.getSelectedItem() && toolbox instanceof Blockly.Toolbox) {
-                // Find the first item that is selectable.
-                const toolboxItems = toolbox.getToolboxItems();
-                for (let i = 0, toolboxItem; (toolboxItem = toolboxItems[i]); i++) {
-                  if (toolboxItem.isSelectable()) {
-                    toolbox.selectItemByPosition(i);
-                    break;
-                  }
-                }
-              }
+              // if (!toolbox.getSelectedItem() && toolbox instanceof Blockly.Toolbox) {
+              //   // Find the first item that is selectable.
+              //   const toolboxItems = toolbox.getToolboxItems();
+              //   for (let i = 0, toolboxItem; (toolboxItem = toolboxItems[i]); i++) {
+              //     if (toolboxItem.isSelectable()) {
+              //       toolbox.selectItemByPosition(i);
+              //       break;
+              //     }
+              //   }
+              // }
               // this.navigation.focusToolbox(workspace);
             }
             return true;
