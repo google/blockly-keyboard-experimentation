@@ -715,7 +715,26 @@ export class Navigation {
 
       // 3. Output connection. This will wrap around or displace.
       if (stationaryBlock.outputConnection) {
-        return this.insertBlock(movingBlock, stationaryBlock.outputConnection);
+        const handled = this.insertBlock(
+          movingBlock,
+          stationaryBlock.outputConnection,
+        );
+        if (handled) {
+          return true;
+        }
+      }
+
+      // 4. Connect statement blocks to the next connection of the moving block's parent.
+      const stationaryBlockParent = stationaryBlock.getParent();
+      if (
+        stationaryBlockParent &&
+        stationaryBlockParent.nextConnection &&
+        !movingBlock.outputConnection
+      ) {
+        return this.insertBlock(
+          movingBlock,
+          stationaryBlockParent.nextConnection,
+        );
       }
     }
     this.warn(`Unexpected case in tryToConnectBlock ${stationaryType}.`);
