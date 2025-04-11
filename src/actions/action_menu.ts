@@ -92,7 +92,7 @@ export class ActionMenu {
   private openActionMenu(workspace: WorkspaceSvg): boolean {
     let rtl: boolean;
 
-    // TODO: Pass this through the precondition and callback instead of making it up.
+    // TODO(#362): Pass this through the precondition and callback instead of making it up.
     const menuOpenEvent = new KeyboardEvent('keydown');
 
     const cursor = workspace.getCursor();
