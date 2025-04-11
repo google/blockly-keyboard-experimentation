@@ -132,16 +132,12 @@ export class NavigationController {
     }
     switch (shortcut.name) {
       case Constants.SHORTCUT_NAMES.UP:
-        // @ts-expect-error private method
         return this.selectPrevious();
       case Constants.SHORTCUT_NAMES.LEFT:
-        // @ts-expect-error private method
         return this.selectParent();
       case Constants.SHORTCUT_NAMES.DOWN:
-        // @ts-expect-error private method
         return this.selectNext();
       case Constants.SHORTCUT_NAMES.RIGHT:
-        // @ts-expect-error private method
         return this.selectChild();
       default:
         return false;
@@ -172,46 +168,46 @@ export class NavigationController {
   }
 
   focusWorkspace(workspace: WorkspaceSvg) {
-    this.navigation.focusWorkspace(workspace);
+    // this.navigation.focusWorkspace(workspace);
   }
 
   handleFocusWorkspace(workspace: Blockly.WorkspaceSvg) {
-    this.navigation.handleFocusWorkspace(workspace);
+    // this.navigation.handleFocusWorkspace(workspace);
   }
 
   handleBlurWorkspace(workspace: Blockly.WorkspaceSvg) {
-    this.navigation.handleBlurWorkspace(workspace);
+    // this.navigation.handleBlurWorkspace(workspace);
   }
 
   handleFocusOutWidgetDropdownDiv(
     workspace: Blockly.WorkspaceSvg,
     relatedTarget: EventTarget | null,
   ) {
-    this.navigation.handleFocusOutWidgetDropdownDiv(workspace, relatedTarget);
+    // this.navigation.handleFocusOutWidgetDropdownDiv(workspace, relatedTarget);
   }
 
   focusToolbox(workspace: Blockly.WorkspaceSvg) {
-    this.navigation.focusToolbox(workspace);
+    // this.navigation.focusToolbox(workspace);
   }
 
   handleFocusToolbox(workspace: Blockly.WorkspaceSvg) {
-    this.navigation.handleFocusToolbox(workspace);
+    // this.navigation.handleFocusToolbox(workspace);
   }
 
   handleBlurToolbox(workspace: Blockly.WorkspaceSvg, closeFlyout: boolean) {
-    this.navigation.handleBlurToolbox(workspace, closeFlyout);
+    // this.navigation.handleBlurToolbox(workspace, closeFlyout);
   }
 
   focusFlyout(workspace: Blockly.WorkspaceSvg) {
-    this.navigation.focusFlyout(workspace);
+    // this.navigation.focusFlyout(workspace);
   }
 
   handleFocusFlyout(workspace: Blockly.WorkspaceSvg) {
-    this.navigation.handleFocusFlyout(workspace);
+    // this.navigation.handleFocusFlyout(workspace);
   }
 
   handleBlurFlyout(workspace: Blockly.WorkspaceSvg, closeFlyout: boolean) {
-    this.navigation.handleBlurFlyout(workspace, closeFlyout);
+    // this.navigation.handleBlurFlyout(workspace, closeFlyout);
   }
 
   /**
@@ -248,10 +244,27 @@ export class NavigationController {
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
-            if (!workspace.getToolbox()) {
-              this.navigation.focusFlyout(workspace);
+            const toolbox = workspace.getToolbox();
+            if (!toolbox) {
+              Blockly.getFocusManager().focusTree(workspace);
+              // this.navigation.focusFlyout(workspace);
             } else {
-              this.navigation.focusToolbox(workspace);
+              // The toolbox receiving focus should ensure it has at least its first item selected
+              // if there was no previous focus yet.
+              Blockly.getFocusManager().focusTree(toolbox);
+              // Ensure that the first item is selected.
+              // TODO: Retain this across contexts?
+              // if (!toolbox.getSelectedItem() && toolbox instanceof Blockly.Toolbox) {
+              //   // Find the first item that is selectable.
+              //   const toolboxItems = toolbox.getToolboxItems();
+              //   for (let i = 0, toolboxItem; (toolboxItem = toolboxItems[i]); i++) {
+              //     if (toolboxItem.isSelectable()) {
+              //       toolbox.selectItemByPosition(i);
+              //       break;
+              //     }
+              //   }
+              // }
+              // this.navigation.focusToolbox(workspace);
             }
             return true;
           default:

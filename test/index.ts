@@ -87,6 +87,7 @@ function createWorkspace(): Blockly.WorkspaceSvg {
 
   const injectOptions = {
     toolbox,
+    comments: true,
     renderer,
   };
   const blocklyDiv = document.getElementById('blocklyDiv');

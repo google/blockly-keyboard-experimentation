@@ -139,7 +139,18 @@ export class Navigation {
    * @returns The state of the given workspace.
    */
   getState(workspace: Blockly.WorkspaceSvg): Constants.STATE {
-    return this.workspaceStates[workspace.id];
+    const focusedTree = Blockly.getFocusManager().getFocusedTree();
+    if (focusedTree instanceof Blockly.WorkspaceSvg) {
+      // TODO: Is the instanceof Flyout below ever needed now? Probably not since Flyout shouldn't actually be a real IFocusableTree...
+      if (focusedTree.isFlyout) {
+        return Constants.STATE.FLYOUT;
+      } else return Constants.STATE.WORKSPACE;
+    } else if (focusedTree instanceof Blockly.Toolbox) {
+      return Constants.STATE.TOOLBOX;
+    } else if (focusedTree instanceof Blockly.Flyout) {
+      return Constants.STATE.FLYOUT;
+    } else return Constants.STATE.NOWHERE;
+    // return this.workspaceStates[workspace.id];
   }
 
   /**
@@ -381,7 +392,7 @@ export class Navigation {
    * @param workspace The workspace to focus.
    */
   focusWorkspace(workspace: Blockly.WorkspaceSvg) {
-    getWorkspaceElement(workspace).focus();
+    // getWorkspaceElement(workspace).focus();
   }
 
   /**
@@ -458,9 +469,9 @@ export class Navigation {
       // https://github.com/google/blockly-samples/issues/2498
       return;
     }
-    if (relatedTarget !== getWorkspaceElement(workspace)) {
-      this.handleBlurWorkspace(workspace, true);
-    }
+    // if (relatedTarget !== getWorkspaceElement(workspace)) {
+    //   this.handleBlurWorkspace(workspace, true);
+    // }
   }
 
   /**
@@ -469,7 +480,7 @@ export class Navigation {
    * @param workspace The workspace with the toolbox.
    */
   focusToolbox(workspace: Blockly.WorkspaceSvg) {
-    getToolboxElement(workspace)?.focus();
+    // getToolboxElement(workspace)?.focus();
   }
 
   /**
@@ -517,7 +528,7 @@ export class Navigation {
    * @param workspace The workspace with the flyout.
    */
   focusFlyout(workspace: Blockly.WorkspaceSvg) {
-    getFlyoutElement(workspace)?.focus();
+    // getFlyoutElement(workspace)?.focus();
   }
 
   /**
@@ -1105,6 +1116,7 @@ export class Navigation {
    * @returns whether keyboard navigation is currently allowed.
    */
   canCurrentlyNavigate(workspace: Blockly.WorkspaceSvg) {
+    console.log('@@@@@@@ current state:', this.getState(workspace));
     return (
       workspace.keyboardAccessibilityMode &&
       this.getState(workspace) !== Constants.STATE.NOWHERE
