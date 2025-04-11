@@ -101,7 +101,9 @@ export class InsertAction {
    * @returns True iff `insertCallback` function should be called.
    */
   private insertPrecondition(workspace: WorkspaceSvg): boolean {
-    return this.navigation.canCurrentlyEdit(workspace);
+    return (
+      !workspace.isDragging() && this.navigation.canCurrentlyEdit(workspace)
+    );
   }
 
   /**

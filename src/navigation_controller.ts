@@ -244,7 +244,7 @@ export class NavigationController {
     focusToolbox: {
       name: Constants.SHORTCUT_NAMES.TOOLBOX,
       preconditionFn: (workspace) =>
-        this.navigation.canCurrentlyEdit(workspace),
+        !workspace.isDragging() && this.navigation.canCurrentlyEdit(workspace),
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
