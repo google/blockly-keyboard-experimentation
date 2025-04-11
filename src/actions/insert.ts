@@ -53,8 +53,7 @@ export class InsertAction {
   private registerShortcut() {
     const insertShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: this.insertShortcutName,
-      preconditionFn: (workspace: WorkspaceSvg) =>
-        !workspace.isDragging() && this.insertPrecondition(workspace),
+      preconditionFn: this.insertPrecondition.bind(this),
       callback: this.insertCallback.bind(this),
       keyCodes: [KeyCodes.I],
     };
@@ -102,7 +101,9 @@ export class InsertAction {
    * @returns True iff `insertCallback` function should be called.
    */
   private insertPrecondition(workspace: WorkspaceSvg): boolean {
-    return this.navigation.canCurrentlyEdit(workspace);
+    return (
+      !workspace.isDragging() && this.navigation.canCurrentlyEdit(workspace)
+    );
   }
 
   /**
