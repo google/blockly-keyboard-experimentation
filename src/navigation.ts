@@ -403,9 +403,11 @@ export class Navigation {
     if (cursor) {
       const passiveFocusNode = this.passiveFocusIndicator.getCurNode();
       this.passiveFocusIndicator.hide();
-      // If there's a gesture then it will either set the node or be a click
+      const disposed = passiveFocusNode?.getSourceBlock()?.disposed;
+      // If there's a gesture then it will either set the node if it has not 
+      // been disposed (which can happen when blocks are reloaded) or be a click 
       // that should not set one.
-      if (!Blockly.Gesture.inProgress() && passiveFocusNode) {
+      if (!Blockly.Gesture.inProgress() && passiveFocusNode && !disposed) {
         cursor.setCurNode(passiveFocusNode);
       }
     }
