@@ -8,7 +8,7 @@ import * as Blockly from 'blockly/core';
 import * as Constants from './constants';
 import {ShortcutRegistry} from 'blockly/core';
 import {
-  actionShortcutsForPlatform,
+  getLongActionShortcutsAsKeys,
   upperCaseFirst,
 } from './shortcut_formatting';
 
@@ -139,7 +139,7 @@ export class ShortcutDialog {
   }
 
   private actionShortcutsToHTML(action: string) {
-    const shortcuts = actionShortcutsForPlatform(action, 'long');
+    const shortcuts = getLongActionShortcutsAsKeys(action);
     return shortcuts.map((keys) => this.actionShortcutToHTML(keys)).join(' / ');
   }
 

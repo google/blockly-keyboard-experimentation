@@ -4,34 +4,39 @@ import {keyNames} from './keynames';
 const isMacPlatform = navigator.platform.startsWith('Mac');
 
 /**
- * Format the primary shortcut for this platform in a user facing format.
+ * Find the primary shortcut for this platform and return it as single string
+ * in a short user facing format.
  *
  * @param action The action name, e.g. "cut".
- * @param format The key format.
  * @returns The formatted shortcut.
  */
-export function formatActionShortcut(
-  action: string,
-  format: ShortcutFormat,
-): string {
-  const parts = actionShortcutsForPlatform(action, format)[0];
+export function getShortActionShortcut(action: string): string {
+  const parts = getActionShortcutsAsKeys(action, shortModifierNames)[0];
   return parts.join(isMacPlatform ? ' ' : ' + ');
 }
 
-const modifierNamesByFormat: Record<ShortcutFormat, Record<string, string>> = {
-  long: {
-    'Control': 'Ctrl',
-    'Meta': '⌘ Command',
-    'Alt': isMacPlatform ? '⌥ Option' : 'Alt',
-  },
-  short: {
-    'Control': 'Ctrl',
-    'Meta': '⌘',
-    'Alt': isMacPlatform ? '⌥' : 'Alt',
-  },
+/**
+ * Find the relevant shortcuts for the given action for the current platform.
+ * Keys are returned in a long user facing format.
+ *
+ * @param action The action name, e.g. "cut".
+ * @returns The formatted shortcuts as individual keys.
+ */
+export function getLongActionShortcutsAsKeys(action: string): string[][] {
+  return getActionShortcutsAsKeys(action, longModifierNames);
+}
+
+const longModifierNames: Record<string, string> = {
+  'Control': 'Ctrl',
+  'Meta': '⌘ Command',
+  'Alt': isMacPlatform ? '⌥ Option' : 'Alt',
 };
 
-export type ShortcutFormat = 'long' | 'short';
+const shortModifierNames: Record<string, string> = {
+  'Control': 'Ctrl',
+  'Meta': '⌘',
+  'Alt': isMacPlatform ? '⌥' : 'Alt',
+};
 
 /**
  * Find the relevant shortcuts for the given action for the current platform.
@@ -41,14 +46,13 @@ export type ShortcutFormat = 'long' | 'short';
  * current platform or tagged them with a platform.
  *
  * @param action The action name, e.g. "cut".
- * @param format The key format.
+ * @param modifierNames The names to use for the Meta/Control/Alt modifiers.
  * @returns The formatted shortcuts.
  */
-export function actionShortcutsForPlatform(
+function getActionShortcutsAsKeys(
   action: string,
-  format: ShortcutFormat,
+  modifierNames: Record<string, string>,
 ): string[][] {
-  const modifierNames = modifierNamesByFormat[format];
   const shortcuts = ShortcutRegistry.registry.getKeyCodesByShortcutName(action);
   // See ShortcutRegistry.createSerializedKey for the starting format.
   const named = shortcuts.map((shortcut) => {

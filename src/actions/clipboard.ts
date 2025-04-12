@@ -18,7 +18,7 @@ import * as Constants from '../constants';
 import type {BlockSvg, WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
 import {ScopeWithConnection} from './action_menu';
-import {formatActionShortcut} from '../shortcut_formatting';
+import {getShortActionShortcut} from '../shortcut_formatting';
 
 const KeyCodes = blocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -101,7 +101,7 @@ export class Clipboard {
    */
   private registerCutContextMenuAction() {
     const cutAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => `Cut (${formatActionShortcut('cut', 'short')})`,
+      displayText: (scope) => `Cut (${getShortActionShortcut('cut')})`,
       preconditionFn: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return 'hidden';
@@ -196,7 +196,7 @@ export class Clipboard {
    */
   private registerCopyContextMenuAction() {
     const copyAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => `Copy (${formatActionShortcut('copy', 'short')})`,
+      displayText: (scope) => `Copy (${getShortActionShortcut('copy')})`,
       preconditionFn: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return 'hidden';
@@ -305,8 +305,7 @@ export class Clipboard {
    */
   private registerPasteContextMenuAction() {
     const pasteAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) =>
-        `Paste (${formatActionShortcut('paste', 'short')})`,
+      displayText: (scope) => `Paste (${getShortActionShortcut('paste')})`,
       preconditionFn: (scope: ScopeWithConnection) => {
         const block = scope.block ?? scope.connection?.getSourceBlock();
         const ws = block?.workspace as WorkspaceSvg | null;

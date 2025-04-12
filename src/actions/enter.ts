@@ -22,7 +22,7 @@ import type {
 
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
-import {formatActionShortcut} from '../shortcut_formatting';
+import {getShortActionShortcut} from '../shortcut_formatting';
 import {Mover} from './mover';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
@@ -104,7 +104,7 @@ export class EnterAction {
     } else if (nodeType === ASTNode.types.BLOCK) {
       const block = curNode.getLocation() as Block;
       if (!this.tryShowFullBlockFieldEditor(block)) {
-        const shortcut = formatActionShortcut('list_shortcuts', 'short');
+        const shortcut = getShortActionShortcut('list_shortcuts');
         const message = `Press ${shortcut} for help on keyboard controls`;
         dialog.alert(message);
       }
