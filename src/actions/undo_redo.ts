@@ -4,17 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {
-  ShortcutRegistry,
-  utils as BlocklyUtils,
-  ShortcutItems,
-  WorkspaceSvg,
-} from 'blockly/core';
-
-import * as Constants from '../constants';
-import type {Navigation} from '../navigation';
-
-const KeyCodes = BlocklyUtils.KeyCodes;
+import {ShortcutRegistry, ShortcutItems, WorkspaceSvg} from 'blockly/core';
 
 /**
  * Class for registering a shortcut for undo/redo actions.
