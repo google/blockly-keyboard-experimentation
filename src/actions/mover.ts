@@ -4,11 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type {BlockSvg, IDragger, IDragStrategy, Gesture} from 'blockly';
+import type {
+  BlockSvg,
+  IDragger,
+  IDragStrategy,
+  Gesture,
+  RenderedConnection,
+} from 'blockly';
 import {
   ASTNode,
   common,
   Connection,
+  Events,
   registry,
   utils,
   WorkspaceSvg,
@@ -95,9 +102,14 @@ export class Mover {
    * Should only be called if canMove has returned true.
    *
    * @param workspace The workspace we might be moving on.
+   * @param startConnection The starting point for the move, if other than the current
+   *     position.
    * @returns True iff a move has successfully begun.
    */
-  startMove(workspace: WorkspaceSvg) {
+  startMove(
+    workspace: WorkspaceSvg,
+    startConnection: RenderedConnection | null = null,
+  ) {
     const cursor = workspace?.getCursor();
     const block = this.getCurrentBlock(workspace);
     if (!cursor || !block) throw new Error('precondition failure');
@@ -107,7 +119,7 @@ export class Mover {
     cursor.setCurNode(ASTNode.createBlockNode(block));
 
     this.patchWorkspace(workspace);
-    this.patchDragStrategy(block);
+    this.patchDragStrategy(block, startConnection);
     // Begin dragging block.
     const DraggerClass = registry.getClassFromOptions(
       registry.Type.BLOCK_DRAGGER,
@@ -144,6 +156,7 @@ export class Mover {
     this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
+
     return true;
   }
 
@@ -175,6 +188,7 @@ export class Mover {
     this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
+
     return true;
   }
 
@@ -289,11 +303,15 @@ export class Mover {
    * Monkeypatch: replace the block's drag strategy and cache the old value.
    *
    * @param block The block to patch.
+   * @param initialConnection The starting connection.
    */
-  private patchDragStrategy(block: BlockSvg) {
+  private patchDragStrategy(
+    block: BlockSvg,
+    initialConnection: RenderedConnection | null,
+  ) {
     // @ts-expect-error block.dragStrategy is private.
     this.oldDragStrategy = block.dragStrategy;
-    block.setDragStrategy(new KeyboardDragStrategy(block));
+    block.setDragStrategy(new KeyboardDragStrategy(block, initialConnection));
   }
 
   /**

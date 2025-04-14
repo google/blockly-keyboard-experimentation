@@ -668,17 +668,17 @@ export class Navigation {
    * @returns True if the key was handled; false if something went
    *     wrong.
    */
-  tryToConnectBlock(
+  findBestInsertionConnection(
     stationaryNode: Blockly.ASTNode,
     movingBlock: Blockly.BlockSvg,
-  ): boolean {
+  ): Blockly.RenderedConnection | null {
     const stationaryType = stationaryNode.getType();
     const stationaryLoc = stationaryNode.getLocation();
 
     if (stationaryNode.getType() === Blockly.ASTNode.types.FIELD) {
       const sourceBlock = stationaryNode.getSourceBlock();
-      if (!sourceBlock) return false;
-      return this.tryToConnectBlock(
+      if (!sourceBlock) return null;
+      return this.findBestInsertionConnection(
         Blockly.ASTNode.createBlockNode(sourceBlock),
         movingBlock,
       );
@@ -693,8 +693,8 @@ export class Navigation {
         stationaryAsConnection.type === Blockly.ConnectionType.INPUT_VALUE
       ) {
         const sourceBlock = stationaryNode.getSourceBlock();
-        if (!sourceBlock) return false;
-        return this.tryToConnectBlock(
+        if (!sourceBlock) return null;
+        return this.findBestInsertionConnection(
           Blockly.ASTNode.createBlockNode(sourceBlock),
           movingBlock,
         );
@@ -702,9 +702,9 @@ export class Navigation {
 
       // Connect the moving block to the stationary connection using
       // the most plausible connection on the moving block.
-      return this.insertBlock(movingBlock, stationaryAsConnection);
+      return stationaryAsConnection;
     } else if (stationaryType === Blockly.ASTNode.types.WORKSPACE) {
-      return this.moveBlockToWorkspace(movingBlock, stationaryNode);
+      return null;
     } else if (stationaryType === Blockly.ASTNode.types.BLOCK) {
       const stationaryBlock = stationaryLoc as Blockly.BlockSvg;
 
@@ -724,15 +724,12 @@ export class Navigation {
             connection = connection.targetBlock()!.nextConnection!;
           }
         }
-        return this.insertBlock(
-          movingBlock,
-          connection as Blockly.RenderedConnection,
-        );
+        return connection as Blockly.RenderedConnection;
       }
 
       // 2. Connect statement blocks to next connection.
       if (stationaryBlock.nextConnection && !movingBlock.outputConnection) {
-        return this.insertBlock(movingBlock, stationaryBlock.nextConnection);
+        return stationaryBlock.nextConnection;
       }
 
       // 3. Output connection. This will wrap around or displace.
@@ -743,17 +740,40 @@ export class Navigation {
           stationaryNode.getType() === Blockly.ASTNode.types.BLOCK
         ) {
           const parent = stationaryNode.getSourceBlock()?.getParent();
-          if (!parent) return false;
-          return this.tryToConnectBlock(
+          if (!parent) return null;
+          return this.findBestInsertionConnection(
             Blockly.ASTNode.createBlockNode(parent),
             movingBlock,
           );
         }
-        return this.insertBlock(movingBlock, stationaryBlock.outputConnection);
+        return stationaryBlock.outputConnection;
       }
     }
-    this.warn(`Unexpected case in tryToConnectBlock ${stationaryType}.`);
-    return false;
+    this.warn(
+      `Unexpected case in findBestInsertionConnection ${stationaryType}.`,
+    );
+    return null;
+  }
+
+  /**
+   * Tries to intelligently connect the blocks or connections
+   * represented by the given nodes, based on node types and locations.
+   *
+   * @param stationaryNode The first node to connect.
+   * @param movingBlock The block we're moving.
+   * @returns True if the key was handled; false if something went
+   *     wrong.
+   */
+  tryToConnectBlock(
+    stationaryNode: Blockly.ASTNode,
+    movingBlock: Blockly.BlockSvg,
+  ): boolean {
+    const destConnection = this.findBestInsertionConnection(
+      stationaryNode,
+      movingBlock,
+    );
+    if (!destConnection) return false;
+    return this.insertBlock(movingBlock, destConnection);
   }
 
   /**

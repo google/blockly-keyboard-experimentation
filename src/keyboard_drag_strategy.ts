@@ -35,6 +35,13 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   /** Where a constrained movement should start when traversing the tree. */
   private searchNode: ASTNode | null = null;
 
+  constructor(
+    block: BlockSvg,
+    private startConnection: RenderedConnection | null,
+  ) {
+    super(block);
+  }
+
   override startDrag(e?: PointerEvent) {
     super.startDrag(e);
     // Set position of the dragging block, so that it doesn't pop
@@ -263,7 +270,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
    */
   private createInitialCandidate(): ConnectionCandidate | null {
     // @ts-expect-error startParentConn is private.
-    const neighbour = this.startParentConn;
+    const neighbour = this.startConnection ?? this.startParentConn;
     if (neighbour) {
       this.searchNode = ASTNode.createConnectionNode(neighbour);
       switch (neighbour.type) {
