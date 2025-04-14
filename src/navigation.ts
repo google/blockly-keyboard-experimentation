@@ -675,11 +675,33 @@ export class Navigation {
     const stationaryType = stationaryNode.getType();
     const stationaryLoc = stationaryNode.getLocation();
 
-    if (stationaryNode.isConnection()) {
-      // Connect the moving block to the stationary connection using
-      // the most plausible connection on the moving block.
+    if (stationaryNode.getType() === Blockly.ASTNode.types.FIELD) {
+      const sourceBlock = stationaryNode.getSourceBlock();
+      if (!sourceBlock) return false;
+      return this.tryToConnectBlock(
+        Blockly.ASTNode.createBlockNode(sourceBlock),
+        movingBlock,
+      );
+    } else if (stationaryNode.isConnection()) {
       const stationaryAsConnection =
         stationaryLoc as Blockly.RenderedConnection;
+
+      // Move to the block if we're trying to insert a statement block into
+      // a value connection.
+      if (
+        !movingBlock.outputConnection &&
+        stationaryAsConnection.type === Blockly.ConnectionType.INPUT_VALUE
+      ) {
+        const sourceBlock = stationaryNode.getSourceBlock();
+        if (!sourceBlock) return false;
+        return this.tryToConnectBlock(
+          Blockly.ASTNode.createBlockNode(sourceBlock),
+          movingBlock,
+        );
+      }
+
+      // Connect the moving block to the stationary connection using
+      // the most plausible connection on the moving block.
       return this.insertBlock(movingBlock, stationaryAsConnection);
     } else if (stationaryType === Blockly.ASTNode.types.WORKSPACE) {
       return this.moveBlockToWorkspace(movingBlock, stationaryNode);
@@ -715,6 +737,18 @@ export class Navigation {
 
       // 3. Output connection. This will wrap around or displace.
       if (stationaryBlock.outputConnection) {
+        // Move to parent if we're trying to insert a statement block.
+        if (
+          !movingBlock.outputConnection &&
+          stationaryNode.getType() === Blockly.ASTNode.types.BLOCK
+        ) {
+          const parent = stationaryNode.getSourceBlock()?.getParent();
+          if (!parent) return false;
+          return this.tryToConnectBlock(
+            Blockly.ASTNode.createBlockNode(parent),
+            movingBlock,
+          );
+        }
         return this.insertBlock(movingBlock, stationaryBlock.outputConnection);
       }
     }
