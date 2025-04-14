@@ -113,13 +113,14 @@ export class DeleteAction {
           .displayText as DisplayTextFn;
         return oldDisplayText(scope) + ' (Del)';
       },
-      preconditionFn: (scope) => {
+      preconditionFn: (scope, menuOpenEvent: Event) => {
         const ws = scope.block?.workspace;
 
         // Run the original precondition code, from the context menu option.
         // If the item would be hidden or disabled, respect it.
         const originalPreconditionResult =
-          this.oldContextMenuItem?.preconditionFn?.(scope) ?? 'enabled';
+          this.oldContextMenuItem?.preconditionFn?.(scope, menuOpenEvent) ??
+          'enabled';
         if (!ws || originalPreconditionResult !== 'enabled') {
           return originalPreconditionResult;
         }
