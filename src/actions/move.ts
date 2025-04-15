@@ -127,9 +127,10 @@ export class MoveActions {
   menuItems: ContextMenuRegistry.RegistryItem[] = [
     {
       displayText: 'Move Block (M)',
-      preconditionFn: (scope) => {
+      preconditionFn: (scope, menuOpenEvent) => {
         const workspace = scope.block?.workspace as WorkspaceSvg | null;
-        if (!workspace) return 'hidden';
+        if (!workspace || menuOpenEvent instanceof PointerEvent)
+          return 'hidden';
         return this.mover.canMove(workspace) ? 'enabled' : 'disabled';
       },
       callback: (scope) => {
