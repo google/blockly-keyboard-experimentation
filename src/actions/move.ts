@@ -22,6 +22,13 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
  * Actions for moving blocks with keyboard shortcuts.
  */
 export class MoveActions {
+  /**
+   * Stored to enable us to restore monkey patch.
+   */
+  private oldShortcutRegistryOnKeyDown:
+    | typeof ShortcutRegistry.registry.onKeyDown
+    | null = null;
+
   constructor(private mover: Mover) {}
 
   private shortcuts: ShortcutRegistry.KeyboardShortcut[] = [
@@ -154,6 +161,32 @@ export class MoveActions {
     for (const menuItem of this.menuItems) {
       ContextMenuRegistry.registry.register(menuItem);
     }
+
+    // Monkey patch shortcut registry to finish any in-progress move for all
+    // non-move-related actions.
+    this.oldShortcutRegistryOnKeyDown = ShortcutRegistry.registry.onKeyDown;
+    ShortcutRegistry.registry.onKeyDown = (workspace, e) => {
+      if (!this.oldShortcutRegistryOnKeyDown) return false;
+      // @ts-expect-error private method
+      const key = ShortcutRegistry.registry.serializeKeyEvent(e);
+      const moveShortcutNames =
+        ShortcutRegistry.registry.getShortcutNamesByKeyCode(key);
+      if (
+        !this.shortcuts.some((shortcut) =>
+          moveShortcutNames?.includes(shortcut.name),
+        )
+      ) {
+        if (this.mover.isMoving(workspace)) {
+          this.mover.finishMove(workspace);
+        }
+      }
+
+      return this.oldShortcutRegistryOnKeyDown.call(
+        ShortcutRegistry.registry,
+        workspace,
+        e,
+      );
+    };
   }
 
   /**
@@ -165,6 +198,10 @@ export class MoveActions {
     }
     for (const menuItem of this.menuItems) {
       ContextMenuRegistry.registry.unregister(menuItem.id);
+    }
+
+    if (this.oldShortcutRegistryOnKeyDown) {
+      ShortcutRegistry.registry.onKeyDown = this.oldShortcutRegistryOnKeyDown;
     }
   }
 }
