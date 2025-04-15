@@ -1,5 +1,6 @@
-# Build & lint checks workflow
-name: Build & Lint Checks
+# Workflow for running automated tests.
+
+name: Automated Tests
 
 on:
   workflow_dispatch:
@@ -12,9 +13,16 @@ permissions:
   contents: read
 
 jobs:
-  build_tip_of_tree_v12:
-    name: Build test (against tip-of-tree core v12)
-    runs-on: ubuntu-latest
+  webdriverio_tests_tip_of_tree_v12:
+    name: WebdriverIO tests (against tip-of-tree core v12)
+    timeout-minutes: 10
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
     steps:
       - name: Checkout experimentation plugin
         uses: actions/checkout@v4
@@ -52,16 +60,23 @@ jobs:
           npm link blockly
           cd ..
 
-      - name: Verify build
+      - name: Run tests
         run: |
           cd main
-          npm run build
+          npm run test
 
-  build:
-    name: Build test (against pinned v12)
+  webdriverio_tests:
+    name: WebdriverIO tests (against pinned v12)
     # Don't run pinned version checks for PRs.
     if: ${{ !github.base_ref }}
-    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
     steps:
       - name: Checkout experimentation plugin
         uses: actions/checkout@v4
@@ -74,41 +89,5 @@ jobs:
       - name: NPM install
         run: npm install
 
-      - name: Verify build
-        run: npm run build
-
-  lint:
-    name: Eslint check
-    timeout-minutes: 5
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-
-      - name: NPM install
-        run: npm install
-
-      - name: Eslint check format
-        run: npm run lint
-
-  format:
-    name: Prettier check
-    timeout-minutes: 5
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-
-      - name: NPM install
-        run: npm install
-
-      - name: Prettier check format
-        run: npm run format:check
+      - name: Run tests
+        run: npm run test
