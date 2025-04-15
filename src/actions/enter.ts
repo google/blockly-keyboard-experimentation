@@ -132,8 +132,8 @@ export class EnterAction {
     const newBlock = this.createNewBlock(workspace);
     if (!newBlock) return;
 
-    const startConnection = stationaryNode
-      ? this.navigation.findBestInsertionConnection(stationaryNode, newBlock)
+    const insertStartPoint = stationaryNode
+      ? this.navigation.findInsertStartPoint(stationaryNode, newBlock)
       : null;
     if (workspace.getTopBlocks().includes(newBlock)) {
       this.positionNewTopLevelBlock(workspace, newBlock);
@@ -145,7 +145,7 @@ export class EnterAction {
     this.navigation.focusWorkspace(workspace);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     workspace.getCursor()?.setCurNode(ASTNode.createBlockNode(newBlock)!);
-    this.mover.startMove(workspace, startConnection);
+    this.mover.startMove(workspace, insertStartPoint);
   }
 
   /**

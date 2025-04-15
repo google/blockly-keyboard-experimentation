@@ -404,8 +404,8 @@ export class Navigation {
       const passiveFocusNode = this.passiveFocusIndicator.getCurNode();
       this.passiveFocusIndicator.hide();
       const disposed = passiveFocusNode?.getSourceBlock()?.disposed;
-      // If there's a gesture then it will either set the node if it has not 
-      // been disposed (which can happen when blocks are reloaded) or be a click 
+      // If there's a gesture then it will either set the node if it has not
+      // been disposed (which can happen when blocks are reloaded) or be a click
       // that should not set one.
       if (!Blockly.Gesture.inProgress() && passiveFocusNode && !disposed) {
         cursor.setCurNode(passiveFocusNode);
@@ -662,15 +662,13 @@ export class Navigation {
   }
 
   /**
-   * Tries to intelligently connect the blocks or connections
-   * represented by the given nodes, based on node types and locations.
+   * Finds the starting point for an insert.
    *
-   * @param stationaryNode The first node to connect.
+   * @param stationaryNode The first node to find a connection for.
    * @param movingBlock The block we're moving.
-   * @returns True if the key was handled; false if something went
-   *     wrong.
+   * @returns The initial connection to use or begin move mode at.
    */
-  findBestInsertionConnection(
+  findInsertStartPoint(
     stationaryNode: Blockly.ASTNode,
     movingBlock: Blockly.BlockSvg,
   ): Blockly.RenderedConnection | null {
@@ -680,7 +678,7 @@ export class Navigation {
     if (stationaryNode.getType() === Blockly.ASTNode.types.FIELD) {
       const sourceBlock = stationaryNode.getSourceBlock();
       if (!sourceBlock) return null;
-      return this.findBestInsertionConnection(
+      return this.findInsertStartPoint(
         Blockly.ASTNode.createBlockNode(sourceBlock),
         movingBlock,
       );
@@ -696,7 +694,7 @@ export class Navigation {
       ) {
         const sourceBlock = stationaryNode.getSourceBlock();
         if (!sourceBlock) return null;
-        return this.findBestInsertionConnection(
+        return this.findInsertStartPoint(
           Blockly.ASTNode.createBlockNode(sourceBlock),
           movingBlock,
         );
@@ -743,7 +741,7 @@ export class Navigation {
         ) {
           const parent = stationaryNode.getSourceBlock()?.getParent();
           if (!parent) return null;
-          return this.findBestInsertionConnection(
+          return this.findInsertStartPoint(
             Blockly.ASTNode.createBlockNode(parent),
             movingBlock,
           );
@@ -770,7 +768,7 @@ export class Navigation {
     stationaryNode: Blockly.ASTNode,
     movingBlock: Blockly.BlockSvg,
   ): boolean {
-    const destConnection = this.findBestInsertionConnection(
+    const destConnection = this.findInsertStartPoint(
       stationaryNode,
       movingBlock,
     );

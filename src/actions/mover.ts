@@ -102,13 +102,13 @@ export class Mover {
    * Should only be called if canMove has returned true.
    *
    * @param workspace The workspace we might be moving on.
-   * @param startConnection The starting point for the move, if other than the current
-   *     position.
+   * @param insertStartPoint The starting point for the move in the insert case,
+   *     when the block should be deleted if aborted rather than reverted.
    * @returns True iff a move has successfully begun.
    */
   startMove(
     workspace: WorkspaceSvg,
-    startConnection: RenderedConnection | null = null,
+    insertStartPoint: RenderedConnection | null = null,
   ) {
     const cursor = workspace?.getCursor();
     const block = this.getCurrentBlock(workspace);
@@ -119,7 +119,7 @@ export class Mover {
     cursor.setCurNode(ASTNode.createBlockNode(block));
 
     this.patchWorkspace(workspace);
-    this.patchDragStrategy(block, startConnection);
+    this.patchDragStrategy(block, insertStartPoint);
     // Begin dragging block.
     const DraggerClass = registry.getClassFromOptions(
       registry.Type.BLOCK_DRAGGER,
@@ -172,9 +172,20 @@ export class Mover {
     const info = this.moves.get(workspace);
     if (!info) throw new Error('no move info for workspace');
 
-    // Monkey patch dragger to trigger call to draggable.revertDrag.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (info.dragger as any).shouldReturnToStart = () => true;
+    // If it's an insert-style move then we delete the block.
+    const keyboardDragStrategy =
+      info.block.getDragStrategy() as KeyboardDragStrategy;
+    const {insertStartPoint: startConnection} = keyboardDragStrategy;
+
+    if (startConnection) {
+      // Monkey patch dragger to trigger delete.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (info.dragger as any).wouldDeleteDraggable = () => true;
+    } else {
+      // Monkey patch dragger to trigger call to draggable.revertDrag.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (info.dragger as any).shouldReturnToStart = () => true;
+    }
     const blockSvg = info.block;
 
     // Explicitly call `hidePreview` because it is not called in revertDrag.
@@ -182,7 +193,7 @@ export class Mover {
     blockSvg.dragStrategy.connectionPreviewer.hidePreview();
     info.dragger.onDragEnd(
       info.fakePointerEvent('pointerup'),
-      new utils.Coordinate(0, 0),
+      info.startLocation,
     );
 
     this.unpatchWorkspace(workspace);
@@ -303,15 +314,15 @@ export class Mover {
    * Monkeypatch: replace the block's drag strategy and cache the old value.
    *
    * @param block The block to patch.
-   * @param initialConnection The starting connection.
+   * @param insertStartPoint The starting connection.
    */
   private patchDragStrategy(
     block: BlockSvg,
-    initialConnection: RenderedConnection | null,
+    insertStartPoint: RenderedConnection | null,
   ) {
     // @ts-expect-error block.dragStrategy is private.
     this.oldDragStrategy = block.dragStrategy;
-    block.setDragStrategy(new KeyboardDragStrategy(block, initialConnection));
+    block.setDragStrategy(new KeyboardDragStrategy(block, insertStartPoint));
   }
 
   /**

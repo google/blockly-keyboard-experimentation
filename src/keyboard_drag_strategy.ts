@@ -37,7 +37,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
 
   constructor(
     block: BlockSvg,
-    private startConnection: RenderedConnection | null,
+    public insertStartPoint: RenderedConnection | null,
   ) {
     super(block);
   }
@@ -269,7 +269,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
    */
   private createInitialCandidate(): ConnectionCandidate | null {
     // @ts-expect-error startParentConn is private.
-    const neighbour = this.startConnection ?? this.startParentConn;
+    const neighbour = this.insertStartPoint ?? this.startParentConn;
     if (neighbour) {
       this.searchNode = ASTNode.createConnectionNode(neighbour);
       switch (neighbour.type) {
