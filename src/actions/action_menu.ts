@@ -6,7 +6,6 @@
 
 import {
   ASTNode,
-  Connection,
   ContextMenu,
   ContextMenuRegistry,
   ShortcutRegistry,
@@ -21,10 +20,6 @@ const KeyCodes = BlocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
   ShortcutRegistry.registry,
 );
-
-export interface ScopeWithConnection extends ContextMenuRegistry.Scope {
-  connection?: Connection;
-}
 
 /**
  * Keyboard shortcut to show the action menu on Cmr/Ctrl/Alt+Enter key.
@@ -114,10 +109,10 @@ export class ActionMenu {
         const connection = node.getLocation() as RenderedConnection;
         rtl = connection.getSourceBlock().RTL;
 
-        // Slightly hacky: get insert action from registry.  Hacky
-        // because registry typings don't include {connection: ...} as
-        // a possible kind of scope.
-        const menuOptions = this.addConnectionItems(connection, menuOpenEvent);
+        const menuOptions = ContextMenuRegistry.registry.getContextMenuOptions(
+          {focusedNode: connection},
+          menuOpenEvent,
+        );
         // If no valid options, don't show a menu
         if (!menuOptions?.length) return true;
         const location = this.calculateLocationForConnectionMenu(connection);
@@ -151,45 +146,6 @@ export class ActionMenu {
         );
     }, 10);
     return true;
-  }
-
-  /**
-   * Add menu items for a context menu on a connection scope.
-   *
-   * @param connection The connection on which the menu is shown.
-   * @param menuOpenEvent The event that opened this context menu.
-   */
-  private addConnectionItems(connection: Connection, menuOpenEvent: Event) {
-    const menuOptions: Array<
-      | ContextMenuRegistry.ContextMenuOption
-      | ContextMenuRegistry.LegacyContextMenuOption
-    > = [];
-    const possibleOptions = [
-      this.getContextMenuAction('insert'),
-      this.getContextMenuAction('blockPasteFromContextMenu'),
-    ];
-
-    // Check preconditions and get menu texts.
-    const scope = {
-      connection,
-    } as unknown as ContextMenuRegistry.Scope;
-
-    for (const option of possibleOptions) {
-      const precondition = option.preconditionFn?.(scope, menuOpenEvent);
-      if (precondition === 'hidden') continue;
-      const displayText =
-        (typeof option.displayText === 'function'
-          ? option.displayText(scope)
-          : option.displayText) ?? '';
-      menuOptions.push({
-        text: displayText,
-        enabled: precondition === 'enabled',
-        callback: option.callback,
-        scope,
-        weight: option.weight,
-      });
-    }
-    return menuOptions;
   }
 
   /**

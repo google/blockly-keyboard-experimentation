@@ -12,7 +12,8 @@ import {
 import * as Constants from '../constants';
 import type {WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
-import {ScopeWithConnection} from './action_menu';
+
+import * as Blockly from 'blockly/core';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 
@@ -70,21 +71,25 @@ export class InsertAction {
       displayText: () => {
         return 'Insert Block (I)';
       },
-      preconditionFn: (scope: ScopeWithConnection) => {
-        const block = scope.block ?? scope.connection?.getSourceBlock();
+      preconditionFn: (scope: ContextMenuRegistry.Scope) => {
+        let block;
+        if (scope.focusedNode instanceof Blockly.Block) {
+          block = scope.focusedNode;
+        } else if (scope.focusedNode instanceof Blockly.Connection) {
+          block = scope.focusedNode.getSourceBlock();
+        }
         const ws = block?.workspace as WorkspaceSvg | null;
         if (!ws) return 'hidden';
 
         return this.insertPrecondition(ws) ? 'enabled' : 'hidden';
       },
-      callback: (scope: ScopeWithConnection) => {
+      callback: (scope: ContextMenuRegistry.Scope) => {
         const ws =
-          scope.block?.workspace ??
-          (scope.connection?.getSourceBlock().workspace as WorkspaceSvg);
+          scope.focusedNode?.workspace ??
+          (scope.focusedNode?.getSourceBlock().workspace as WorkspaceSvg);
         if (!ws) return false;
         this.insertCallback(ws);
       },
-      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'insert',
       weight: 9,
     };

@@ -17,8 +17,8 @@ import {
 import * as Constants from '../constants';
 import type {BlockSvg, WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
-import {ScopeWithConnection} from './action_menu';
 import {getShortActionShortcut} from '../shortcut_formatting';
+import * as Blockly from 'blockly';
 
 const KeyCodes = blocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -306,19 +306,28 @@ export class Clipboard {
   private registerPasteContextMenuAction() {
     const pasteAction: ContextMenuRegistry.RegistryItem = {
       displayText: (scope) => `Paste (${getShortActionShortcut('paste')})`,
-      preconditionFn: (scope: ScopeWithConnection) => {
-        const block = scope.block ?? scope.connection?.getSourceBlock();
+      preconditionFn: (scope: ContextMenuRegistry.Scope) => {
+        let block;
+        if (scope.focusedNode instanceof Blockly.Block) {
+          block = scope.focusedNode;
+        } else if (scope.focusedNode instanceof Blockly.Connection) {
+          block = scope.focusedNode.getSourceBlock();
+        }
         const ws = block?.workspace as WorkspaceSvg | null;
         if (!ws) return 'hidden';
         return this.pastePrecondition(ws) ? 'enabled' : 'disabled';
       },
-      callback: (scope: ScopeWithConnection) => {
-        const block = scope.block ?? scope.connection?.getSourceBlock();
+      callback: (scope: ContextMenuRegistry.Scope) => {
+        let block;
+        if (scope.focusedNode instanceof Blockly.Block) {
+          block = scope.focusedNode;
+        } else if (scope.focusedNode instanceof Blockly.Connection) {
+          block = scope.focusedNode.getSourceBlock();
+        }
         const ws = block?.workspace as WorkspaceSvg | null;
         if (!ws) return;
         return this.pasteCallback(ws);
       },
-      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'blockPasteFromContextMenu',
       weight: BASE_WEIGHT + 2,
     };
