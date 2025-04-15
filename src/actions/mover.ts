@@ -313,7 +313,8 @@ export class Mover {
    * Monkeypatch: replace the block's drag strategy and cache the old value.
    *
    * @param block The block to patch.
-   * @param insertStartPoint The starting connection.
+   * @param insertStartPoint The starting point for the move in the insert case,
+   *     when the block should be deleted if aborted rather than reverted.
    */
   private patchDragStrategy(
     block: BlockSvg,
