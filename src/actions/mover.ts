@@ -177,11 +177,10 @@ export class Mover {
       info.block.getDragStrategy() as KeyboardDragStrategy;
     const {insertStartPoint} = keyboardDragStrategy;
 
-    if (insertStartPoint) {
-      // Monkey patch dragger to trigger delete.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (info.dragger as any).wouldDeleteDraggable = () => true;
-    } else {
+    // Monkey patch dragger to trigger delete.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (info.dragger as any).wouldDeleteDraggable = () => !!insertStartPoint;
+    if (!insertStartPoint) {
       // Monkey patch dragger to trigger call to draggable.revertDrag.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (info.dragger as any).shouldReturnToStart = () => true;
@@ -191,6 +190,10 @@ export class Mover {
     // Explicitly call `hidePreview` because it is not called in revertDrag.
     // @ts-expect-error Access to private property dragStrategy.
     blockSvg.dragStrategy.connectionPreviewer.hidePreview();
+    // Prevent the stragegy connecting the block so we just delete one block.
+    // @ts-expect-error Access to private property dragStrategy.
+    blockSvg.dragStrategy.connectionCandidate = null;
+
     info.dragger.onDragEnd(
       info.fakePointerEvent('pointerup'),
       info.startLocation,
