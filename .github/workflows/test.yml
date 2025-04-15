@@ -60,4 +60,6 @@ jobs:
           cd ..
 
       - name: Run tests
-        run: npm run test
+        run: |
+          cd main
+          npm run test
