@@ -19,6 +19,7 @@ import type {BlockSvg, WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
 import {ScopeWithConnection} from './action_menu';
 import {getShortActionShortcut} from '../shortcut_formatting';
+import {toast} from '../toast';
 
 const KeyCodes = blocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -274,8 +275,14 @@ export class Clipboard {
     this.copyData = sourceBlock.toCopyData();
     this.copyWorkspace = sourceBlock.workspace;
     const copied = !!this.copyData;
-    if (copied && navigationState === Constants.STATE.FLYOUT) {
-      this.navigation.focusWorkspace(workspace);
+    if (copied) {
+      if (navigationState === Constants.STATE.FLYOUT) {
+        this.navigation.focusWorkspace(workspace);
+      }
+      toast(workspace, {
+        message: `Copied. Press ${getShortActionShortcut('paste')} to paste.`,
+        duration: 7000,
+      });
     }
     return copied;
   }
