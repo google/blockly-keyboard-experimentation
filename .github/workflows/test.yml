@@ -1,6 +1,6 @@
 # Workflow for running automated tests.
 
-name: WebdriverIO Tests
+name: Automated Tests
 
 on:
   workflow_dispatch:
