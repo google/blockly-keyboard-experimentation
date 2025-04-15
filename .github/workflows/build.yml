@@ -1,7 +1,12 @@
 # Build workflow
 name: Build
 
-on: [pull_request, workflow_dispatch]
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -10,16 +15,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 20.x
         uses: actions/setup-node@v4
         with:
-          node-version: latest
+          node-version: 20.x
           cache: 'npm'
-      - run: npm ci
+
+      - name: Npm Install
+        run: npm install
+
+      - name: Verify build
       - run: npm run build
-      - run: npm run lint
 
   lint:
     timeout-minutes: 5
@@ -32,10 +40,10 @@ jobs:
         with:
           node-version: 20.x
 
-      - name: Npm Install
+      - name: NPM install
         run: npm install
 
-      - name: Lint
+      - name: Eslint check format
         run: npm run lint
 
   format:
@@ -49,8 +57,8 @@ jobs:
         with:
           node-version: 20.x
 
-      - name: Npm Install
+      - name: NPM install
         run: npm install
 
-      - name: Check Format
+      - name: Prettier check format
         run: npm run format:check
