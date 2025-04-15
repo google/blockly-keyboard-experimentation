@@ -9,7 +9,6 @@ import {
   Events,
   ShortcutRegistry,
   utils as BlocklyUtils,
-  dialog,
 } from 'blockly/core';
 
 import type {
@@ -22,8 +21,12 @@ import type {
 
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
-import {getShortActionShortcut} from '../shortcut_formatting';
 import {Mover} from './mover';
+import {
+  showConstrainedMovementHint,
+  showHelpHint,
+  showUnconstrainedMoveHint,
+} from '../hints';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 
@@ -104,9 +107,7 @@ export class EnterAction {
     } else if (nodeType === ASTNode.types.BLOCK) {
       const block = curNode.getLocation() as Block;
       if (!this.tryShowFullBlockFieldEditor(block)) {
-        const shortcut = getShortActionShortcut('list_shortcuts');
-        const message = `Press ${shortcut} for help on keyboard controls`;
-        dialog.alert(message);
+        showHelpHint(workspace);
       }
     } else if (curNode.isConnection() || nodeType === ASTNode.types.WORKSPACE) {
       this.navigation.openToolboxOrFlyout(workspace);
@@ -120,6 +121,7 @@ export class EnterAction {
    * Tries to find a connection on the block to connect to the marked
    * location. If no connection has been marked, or there is not a compatible
    * connection then the block is placed on the workspace.
+   * Trigger a toast per session if possible.
    *
    * @param workspace The main workspace. The workspace
    *     the block will be placed on.
@@ -150,6 +152,16 @@ export class EnterAction {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     workspace.getCursor()?.setCurNode(ASTNode.createBlockNode(newBlock)!);
     this.mover.startMove(workspace);
+
+    const isTopLevelBlock =
+      !newBlock.outputConnection &&
+      !newBlock.nextConnection &&
+      !newBlock.previousConnection;
+    if (isTopLevelBlock) {
+      showUnconstrainedMoveHint(workspace, false);
+    } else {
+      showConstrainedMovementHint(workspace);
+    }
   }
 
   /**
