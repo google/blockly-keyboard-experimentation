@@ -18,7 +18,7 @@ jobs:
       - name: Checkout experimentation plugin
         uses: actions/checkout@v4
         with:
-          path: plugin
+          path: main
 
       - name: Checkout core Blockly
         uses: actions/checkout@v4
@@ -47,13 +47,13 @@ jobs:
           npm run package
           cd dist
           npm link
-          cd ../../plugin
+          cd ../../main
           npm link blockly
           cd ..
 
       - name: Verify build
         run: |
-          cd plugin
+          cd main
           npm run build
 
   lint:
