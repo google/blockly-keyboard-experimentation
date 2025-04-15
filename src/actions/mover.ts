@@ -175,9 +175,9 @@ export class Mover {
     // If it's an insert-style move then we delete the block.
     const keyboardDragStrategy =
       info.block.getDragStrategy() as KeyboardDragStrategy;
-    const {insertStartPoint: startConnection} = keyboardDragStrategy;
+    const {insertStartPoint} = keyboardDragStrategy;
 
-    if (startConnection) {
+    if (insertStartPoint) {
       // Monkey patch dragger to trigger delete.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (info.dragger as any).wouldDeleteDraggable = () => true;
