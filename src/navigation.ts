@@ -749,9 +749,7 @@ export class Navigation {
         return stationaryBlock.outputConnection;
       }
     }
-    this.warn(
-      `Unexpected case in findBestInsertionConnection ${stationaryType}.`,
-    );
+    this.warn(`Unexpected case in findInsertStartPoint ${stationaryType}.`);
     return null;
   }
 
