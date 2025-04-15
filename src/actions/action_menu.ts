@@ -90,11 +90,10 @@ export class ActionMenu {
    * @param workspace The workspace.
    */
   private openActionMenu(workspace: WorkspaceSvg): boolean {
-    let menuOptions: Array<
-      | ContextMenuRegistry.ContextMenuOption
-      | ContextMenuRegistry.LegacyContextMenuOption
-    > = [];
     let rtl: boolean;
+
+    // TODO(#362): Pass this through the precondition and callback instead of making it up.
+    const menuOpenEvent = new KeyboardEvent('keydown');
 
     const cursor = workspace.getCursor();
     if (!cursor) throw new Error('workspace has no cursor');
@@ -104,19 +103,7 @@ export class ActionMenu {
     switch (nodeType) {
       case ASTNode.types.BLOCK: {
         const block = node.getLocation() as BlockSvg;
-        rtl = block.RTL;
-        // Reimplement BlockSvg.prototype.generateContextMenu as that
-        // method is protected.
-        if (!workspace.options.readOnly && block.contextMenu) {
-          menuOptions = ContextMenuRegistry.registry.getContextMenuOptions(
-            ContextMenuRegistry.ScopeType.BLOCK,
-            {block},
-          );
-
-          // Allow the block to add or modify menuOptions.
-          block.customContextMenu?.(menuOptions);
-        }
-        // End reimplement.
+        block.showContextMenu(menuOpenEvent);
         break;
       }
 
@@ -124,13 +111,23 @@ export class ActionMenu {
       case ASTNode.types.NEXT:
       case ASTNode.types.PREVIOUS:
       case ASTNode.types.INPUT: {
-        const connection = node.getLocation() as Connection;
+        const connection = node.getLocation() as RenderedConnection;
         rtl = connection.getSourceBlock().RTL;
 
         // Slightly hacky: get insert action from registry.  Hacky
         // because registry typings don't include {connection: ...} as
         // a possible kind of scope.
-        this.addConnectionItems(connection, menuOptions);
+        const menuOptions = this.addConnectionItems(connection, menuOpenEvent);
+        // If no valid options, don't show a menu
+        if (!menuOptions?.length) return true;
+        const location = this.calculateLocationForConnectionMenu(connection);
+        ContextMenu.show(menuOpenEvent, menuOptions, rtl, workspace, location);
+        break;
+      }
+
+      case ASTNode.types.WORKSPACE: {
+        const workspace = node.getLocation() as WorkspaceSvg;
+        workspace.showContextMenu(menuOpenEvent);
         break;
       }
 
@@ -139,9 +136,6 @@ export class ActionMenu {
         return false;
     }
 
-    if (!menuOptions?.length) return true;
-    const fakeEvent = this.fakeEventForNode(node);
-    ContextMenu.show(fakeEvent, menuOptions, rtl, workspace);
     setTimeout(() => {
       WidgetDiv.getDiv()
         ?.querySelector('.blocklyMenu')
@@ -163,15 +157,13 @@ export class ActionMenu {
    * Add menu items for a context menu on a connection scope.
    *
    * @param connection The connection on which the menu is shown.
-   * @param menuOptions The list of options, which may be modified by this method.
+   * @param menuOpenEvent The event that opened this context menu.
    */
-  private addConnectionItems(
-    connection: Connection,
-    menuOptions: Array<
+  private addConnectionItems(connection: Connection, menuOpenEvent: Event) {
+    const menuOptions: Array<
       | ContextMenuRegistry.ContextMenuOption
       | ContextMenuRegistry.LegacyContextMenuOption
-    >,
-  ) {
+    > = [];
     const possibleOptions = [
       this.getContextMenuAction('insert'),
       this.getContextMenuAction('blockPasteFromContextMenu'),
@@ -183,7 +175,7 @@ export class ActionMenu {
     } as unknown as ContextMenuRegistry.Scope;
 
     for (const option of possibleOptions) {
-      const precondition = option.preconditionFn?.(scope);
+      const precondition = option.preconditionFn?.(scope, menuOpenEvent);
       if (precondition === 'hidden') continue;
       const displayText =
         (typeof option.displayText === 'function'
@@ -220,35 +212,13 @@ export class ActionMenu {
   }
 
   /**
-   * Create a fake PointerEvent for opening the action menu for the
-   * given ASTNode.
-   *
-   * @param node The node to open the action menu for.
-   * @returns A synthetic pointerdown PointerEvent.
-   */
-  private fakeEventForNode(node: ASTNode): PointerEvent {
-    switch (node.getType()) {
-      case ASTNode.types.BLOCK:
-        return this.fakeEventForBlock(node.getLocation() as BlockSvg);
-      case ASTNode.types.NEXT:
-      case ASTNode.types.PREVIOUS:
-      case ASTNode.types.INPUT:
-        return this.fakeEventForConnectionNode(
-          node.getLocation() as RenderedConnection,
-        );
-      default:
-        throw new TypeError('unhandled node type');
-    }
-  }
-
-  /**
    * Create a fake PointerEvent for opening the action menu on the specified
    * block.
    *
    * @param block The block to open the action menu for.
-   * @returns A synthetic pointerdown PointerEvent.
+   * @returns screen coordinates of where to show a menu for a block
    */
-  private fakeEventForBlock(block: BlockSvg) {
+  private calculateLocationOfBlock(block: BlockSvg): BlocklyUtils.Coordinate {
     // Get the location of the top-left corner of the block in
     // screen coordinates.
     const blockCoords = BlocklyUtils.svgMath.wsToScreenCoordinates(
@@ -264,16 +234,12 @@ export class ActionMenu {
       ?.getSvgRoot()
       ?.getBoundingClientRect();
 
-    const clientY =
+    const y =
       fieldBoundingClientRect && fieldBoundingClientRect.height
         ? fieldBoundingClientRect.y + fieldBoundingClientRect.height
         : blockCoords.y + block.height;
 
-    // Create a fake event for the action menu code to work from.
-    return new PointerEvent('pointerdown', {
-      clientX: blockCoords.x + 5,
-      clientY: clientY + 5,
-    });
+    return new BlocklyUtils.Coordinate(blockCoords.x + 5, y + 5);
   }
 
   /**
@@ -284,17 +250,17 @@ export class ActionMenu {
    * context menu for the source block.
    *
    * @param connection The node to open the action menu for.
-   * @returns A synthetic pointerdown PointerEvent.
+   * @returns Screen coordinates of where to show menu for a connection node.
    */
-  private fakeEventForConnectionNode(
+  private calculateLocationForConnectionMenu(
     connection: RenderedConnection,
-  ): PointerEvent {
+  ): BlocklyUtils.Coordinate {
     const block = connection.getSourceBlock() as BlockSvg;
     const workspace = block.workspace as WorkspaceSvg;
 
     if (typeof connection.x !== 'number') {
       // No coordinates for connection?  Fall back to the parent block.
-      return this.fakeEventForBlock(block);
+      return this.calculateLocationOfBlock(block);
     }
     const connectionWSCoords = new BlocklyUtils.Coordinate(
       connection.x,
@@ -304,9 +270,6 @@ export class ActionMenu {
       workspace,
       connectionWSCoords,
     );
-    return new PointerEvent('pointerdown', {
-      clientX: connectionScreenCoords.x + 5,
-      clientY: connectionScreenCoords.y + 5,
-    });
+    return connectionScreenCoords.translate(5, 5);
   }
 }

@@ -151,21 +151,20 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     const cursor = draggingBlock.workspace.getCursor() as LineCursor;
     if (!cursor) return null;
 
+    // Helper function for traversal.
+    function isConnection(node: ASTNode | null): boolean {
+      return !!node && node.isConnection();
+    }
+
     const connectionChecker = draggingBlock.workspace.connectionChecker;
     let candidateConnection: ConnectionCandidate | null = null;
     let potential: ASTNode | null = this.searchNode;
     const dir = this.currentDragDirection;
     while (potential && !candidateConnection) {
       if (dir === Direction.Up || dir === Direction.Left) {
-        potential = cursor.getPreviousNode(potential, (node) => {
-          // @ts-expect-error isConnectionType is private.
-          return node && ASTNode.isConnectionType(node.getType());
-        });
+        potential = cursor.getPreviousNode(potential, isConnection, true);
       } else if (dir === Direction.Down || dir === Direction.Right) {
-        potential = cursor.getNextNode(potential, (node) => {
-          // @ts-expect-error isConnectionType is private.
-          return node && ASTNode.isConnectionType(node.getType());
-        });
+        potential = cursor.getNextNode(potential, isConnection, true);
       }
 
       localConns.forEach((conn: RenderedConnection) => {
