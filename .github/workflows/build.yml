@@ -1,5 +1,5 @@
 # Build & lint checks workflow
-name: Build & Lint checks
+name: Build & Lint Checks
 
 on:
   workflow_dispatch:
