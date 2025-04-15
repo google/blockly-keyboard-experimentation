@@ -71,7 +71,11 @@ export class InsertAction {
       displayText: () => {
         return 'Insert Block (I)';
       },
-      preconditionFn: (scope: ContextMenuRegistry.Scope) => {
+      preconditionFn: (
+        scope: ContextMenuRegistry.Scope,
+        menuOpenEvent: Event,
+      ) => {
+        if (menuOpenEvent instanceof PointerEvent) return 'hidden';
         let block;
         if (scope.focusedNode instanceof Blockly.Block) {
           block = scope.focusedNode;
