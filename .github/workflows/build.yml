@@ -20,3 +20,37 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run lint
+
+  lint:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Npm Install
+        run: npm install
+
+      - name: Lint
+        run: npm run lint
+
+  format:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Npm Install
+        run: npm install
+
+      - name: Check Format
+        run: npm run format:check
