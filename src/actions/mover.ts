@@ -199,7 +199,6 @@ export class Mover {
     this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
-
     return true;
   }
 
