@@ -15,7 +15,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout experimentation plugin
+        uses: actions/checkout@v4
+        with:
+          path: plugin
+
+      - name: Checkout core Blockly
+        uses: actions/checkout@v4
+        with:
+          repository: 'google/blockly'
+          ref: 'rc/v12.0.0'
+          path: core-blockly
 
       - name: Use Node.js 20.x
         uses: actions/setup-node@v4
@@ -23,11 +33,29 @@ jobs:
           node-version: 20.x
           cache: 'npm'
 
-      - name: Npm Install
-        run: npm install
+      - name: NPM install
+        run: |
+          cd main
+          npm install
+          cd ..
+          cd core-blockly
+          npm install
+          cd ..
+
+      - name: Link latest Blockly v12
+        run: |
+          cd core-blockly
+          npm run package
+          cd dist
+          npm link
+          cd ../../plugin
+          npm link blockly
+          cd ..
 
       - name: Verify build
-        run: npm run build
+        run: |
+          cd plugin
+          npm run build
 
   lint:
     timeout-minutes: 5
