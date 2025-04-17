@@ -676,8 +676,10 @@ export class Navigation {
   ): Blockly.RenderedConnection | null {
     const stationaryType = stationaryNode.getType();
     const stationaryLoc = stationaryNode.getLocation();
+    const movingHasOutput = !!movingBlock.outputConnection;
 
     if (stationaryNode.getType() === Blockly.ASTNode.types.FIELD) {
+      // Can't connect a block to a field, so try going up to the source block.
       const sourceBlock = stationaryNode.getSourceBlock();
       if (!sourceBlock) return null;
       return this.findInsertStartPoint(
@@ -691,7 +693,7 @@ export class Navigation {
       // Move to the block if we're trying to insert a statement block into
       // a value connection.
       if (
-        !movingBlock.outputConnection &&
+        !movingHasOutput &&
         stationaryAsConnection.type === Blockly.ConnectionType.INPUT_VALUE
       ) {
         const sourceBlock = stationaryNode.getSourceBlock();
@@ -711,7 +713,7 @@ export class Navigation {
       const stationaryBlock = stationaryLoc as Blockly.BlockSvg;
 
       // 1. Connect blocks to first compatible input
-      const inputType = movingBlock.outputConnection
+      const inputType = movingHasOutput
         ? Blockly.inputs.inputTypes.VALUE
         : Blockly.inputs.inputTypes.STATEMENT;
       const compatibleInputs = stationaryBlock.inputList.filter(
@@ -730,17 +732,24 @@ export class Navigation {
       }
 
       // 2. Connect statement blocks to next connection.
-      if (stationaryBlock.nextConnection && !movingBlock.outputConnection) {
+      if (stationaryBlock.nextConnection && !movingHasOutput) {
         return stationaryBlock.nextConnection;
       }
 
       // 3. Output connection. This will wrap around or displace.
       if (stationaryBlock.outputConnection) {
-        // Move to parent if we're trying to insert a statement block.
-        if (
-          !movingBlock.outputConnection &&
+        // Try to wrap.
+        const target = stationaryBlock.outputConnection.targetConnection;
+        if (movingHasOutput && target) {
+          const sourceNode = Blockly.ASTNode.createConnectionNode(target);
+          if (sourceNode) {
+            return this.findInsertStartPoint(sourceNode, movingBlock);
+          }
+        } else if (
+          !movingHasOutput &&
           stationaryNode.getType() === Blockly.ASTNode.types.BLOCK
         ) {
+          // Move to parent if we're trying to insert a statement block.
           const parent = stationaryNode.getSourceBlock()?.getParent();
           if (!parent) return null;
           return this.findInsertStartPoint(
