@@ -140,8 +140,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     draggingBlock: BlockSvg,
     localConns: RenderedConnection[],
   ): ConnectionCandidate | null {
-    // TODO(#385): Make sure this works for any cursor, not just LineCursor.
-    const cursor = draggingBlock.workspace.getCursor() as LineCursor;
+    const cursor = draggingBlock.workspace.getCursor();
     if (!cursor) return null;
 
     // Helper function for traversal.
