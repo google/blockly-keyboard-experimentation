@@ -441,7 +441,7 @@ export class Navigation {
     if (cursor && (ignorePopUpDivs || !popUpDivsShowing)) {
       const curNode = cursor.getCurNode();
       if (curNode) {
-        this.passiveFocusIndicator.show(curNode);
+        // this.passiveFocusIndicator.show(curNode);
       }
       // It's initially null so this is a valid state despite the types.
       cursor.setCurNode(null);

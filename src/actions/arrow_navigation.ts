@@ -166,7 +166,11 @@ export class ArrowNavigation {
               return isHandled;
             case Constants.STATE.TOOLBOX:
               // TODO: Move this into cursor?
-              isHandled = toolbox.selectNext();
+              if (!toolbox.getSelectedItem()) {
+                const firstItem = toolbox.getToolboxItems().find((item) => item.isSelectable()) ?? null;
+                toolbox.setSelectedItem(firstItem);
+                isHandled = true;
+              } else isHandled = toolbox.selectNext();
               const selectedItem = toolbox.getSelectedItem();
               if (selectedItem) {
                 Blockly.getFocusManager().focusNode(selectedItem);
