@@ -60,12 +60,14 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       // The next constrained move will resume the search from the current
       // candidate location.
       this.searchNode = ASTNode.createConnectionNode(neighbour);
-      // The moving block will be positioned slightly down and to the
-      // right of the connection it found.
-      // @ts-expect-error block is private.
-      this.block.moveDuringDrag(
-        new utils.Coordinate(neighbour.x + 10, neighbour.y + 10),
-      );
+      if (this.isConstrainedMovement()) {
+        // Position the moving block down and slightly to the right of the
+        // target connection.
+        // @ts-expect-error block is private.
+        this.block.moveDuringDrag(
+          new utils.Coordinate(neighbour.x + 10, neighbour.y + 10),
+        );
+      }
     } else {
       // Handle the case when unconstrained drag was far from any candidate.
       this.searchNode = null;
