@@ -8,6 +8,7 @@ import {ASTNode, ShortcutRegistry, utils as BlocklyUtils} from 'blockly/core';
 
 import type {Field, Toolbox, WorkspaceSvg} from 'blockly/core';
 
+import * as Blockly from 'blockly/core';
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
 
@@ -47,6 +48,7 @@ export class ArrowNavigation {
    * Adds all arrow key navigation shortcuts to the registry.
    */
   install() {
+    console.log('@@@@@ install arrow keys');
     const shortcuts: {
       [name: string]: ShortcutRegistry.KeyboardShortcut;
     } = {
@@ -73,12 +75,15 @@ export class ArrowNavigation {
               }
               return isHandled;
             case Constants.STATE.TOOLBOX:
-              isHandled =
-                toolbox && typeof toolbox.onShortcut === 'function'
-                  ? toolbox.onShortcut(shortcut)
-                  : false;
-              if (!isHandled) {
-                this.navigation.focusFlyout(workspace);
+              isHandled = toolbox.selectChild();
+              // isHandled =
+              //   toolbox && typeof toolbox.onShortcut === 'function'
+              //     ? toolbox.onShortcut(shortcut)
+              //     : false;
+              const flyout = toolbox.getFlyout();
+              if (!isHandled && flyout) {
+                Blockly.getFocusManager().focusTree(flyout.getWorkspace());
+                // this.navigation.focusFlyout(workspace);
               }
               return true;
             default:
@@ -111,12 +116,15 @@ export class ArrowNavigation {
               }
               return isHandled;
             case Constants.STATE.FLYOUT:
-              this.navigation.focusToolbox(workspace);
+              Blockly.getFocusManager().focusTree(toolbox);
+              // this.navigation.focusToolbox(workspace);
               return true;
             case Constants.STATE.TOOLBOX:
-              return toolbox && typeof toolbox.onShortcut === 'function'
-                ? toolbox.onShortcut(shortcut)
-                : false;
+              isHandled = toolbox.selectParent();
+              return isHandled;
+              // return toolbox && typeof toolbox.onShortcut === 'function'
+              //   ? toolbox.onShortcut(shortcut)
+              //   : false;
             default:
               return false;
           }
@@ -157,9 +165,20 @@ export class ArrowNavigation {
               }
               return isHandled;
             case Constants.STATE.TOOLBOX:
-              return toolbox && typeof toolbox.onShortcut === 'function'
-                ? toolbox.onShortcut(shortcut)
-                : false;
+              // TODO: Move this into cursor?
+              if (!toolbox.getSelectedItem()) {
+                const firstItem = toolbox.getToolboxItems().find((item) => item.isSelectable()) ?? null;
+                toolbox.setSelectedItem(firstItem);
+                isHandled = true;
+              } else isHandled = toolbox.selectNext();
+              const selectedItem = toolbox.getSelectedItem();
+              if (selectedItem) {
+                Blockly.getFocusManager().focusNode(selectedItem);
+              }
+              return isHandled;
+              // return toolbox && typeof toolbox.onShortcut === 'function'
+              //   ? toolbox.onShortcut(shortcut)
+              //   : false;
             default:
               return false;
           }
@@ -205,9 +224,16 @@ export class ArrowNavigation {
               }
               return isHandled;
             case Constants.STATE.TOOLBOX:
-              return toolbox && typeof toolbox.onShortcut === 'function'
-                ? toolbox.onShortcut(shortcut)
-                : false;
+              // TODO: Move this into cursor?
+              isHandled = toolbox.selectPrevious();
+              const selectedItem = toolbox.getSelectedItem();
+              if (selectedItem) {
+                Blockly.getFocusManager().focusNode(selectedItem);
+              }
+              return isHandled;
+              // return toolbox && typeof toolbox.onShortcut === 'function'
+              //   ? toolbox.onShortcut(shortcut)
+              //   : false;
             default:
               return false;
           }
