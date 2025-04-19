@@ -149,7 +149,7 @@ export class EnterAction {
     this.navigation.focusWorkspace(workspace);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     workspace.getCursor()?.setCurNode(ASTNode.createBlockNode(newBlock)!);
-    this.mover.startMove(workspace);
+    this.mover.startMove(workspace, newBlock);
   }
 
   /**

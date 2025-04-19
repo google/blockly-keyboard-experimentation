@@ -5,6 +5,7 @@
  */
 
 import {
+  BlockSvg,
   ContextMenuRegistry,
   ShortcutRegistry,
   utils,
@@ -28,8 +29,14 @@ export class MoveActions {
     // Begin and end move.
     {
       name: 'Start move',
-      preconditionFn: (workspace) => this.mover.canMove(workspace),
-      callback: (workspace) => this.mover.startMove(workspace),
+      preconditionFn: (workspace) => {
+        const startBlock = this.getCurrentBlock(workspace);
+        return !!startBlock && this.mover.canMove(workspace, startBlock);
+      },
+      callback: (workspace) => {
+        const startBlock = this.getCurrentBlock(workspace);
+        return !!startBlock && this.mover.startMove(workspace, startBlock);
+      },
       keyCodes: [KeyCodes.M],
     },
     {
@@ -131,12 +138,17 @@ export class MoveActions {
         const workspace = scope.block?.workspace as WorkspaceSvg | null;
         if (!workspace || menuOpenEvent instanceof PointerEvent)
           return 'hidden';
-        return this.mover.canMove(workspace) ? 'enabled' : 'disabled';
+
+        const startBlock = this.getCurrentBlock(workspace);
+        return !!startBlock && this.mover.canMove(workspace, startBlock)
+          ? 'enabled'
+          : 'disabled';
       },
       callback: (scope) => {
         const workspace = scope.block?.workspace as WorkspaceSvg | null;
         if (!workspace) return false;
-        this.mover.startMove(workspace);
+        const startBlock = this.getCurrentBlock(workspace);
+        return !!startBlock && this.mover.startMove(workspace, startBlock);
       },
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'move',
@@ -167,5 +179,31 @@ export class MoveActions {
     for (const menuItem of this.menuItems) {
       ContextMenuRegistry.registry.unregister(menuItem.id);
     }
+  }
+
+  /**
+   * Get the source block for the cursor location, or undefined if no
+   * source block can be found.
+   * If the cursor is on a shadow block, walks up the tree until it finds
+   * a non-shadow block to drag.
+   *
+   * @param workspace The workspace to inspect for a cursor.
+   * @returns The source block, or undefined if no appropriate block
+   *     could be found.
+   */
+  getCurrentBlock(workspace: WorkspaceSvg): BlockSvg | undefined {
+    const curNode = workspace?.getCursor()?.getCurNode();
+    let block = curNode?.getSourceBlock();
+    if (!block) return undefined;
+    while (block && block.isShadow()) {
+      block = block.getParent();
+      if (!block) {
+        throw new Error(
+          'Tried to drag a shadow block with no parent. ' +
+            'Shadow blocks should always have parents.',
+        );
+      }
+    }
+    return block as BlockSvg;
   }
 }
