@@ -4,11 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type {BlockSvg, IDragger, IDragStrategy, Gesture} from 'blockly';
+import type {
+  BlockSvg,
+  IDragger,
+  IDragStrategy,
+  Gesture,
+  RenderedConnection,
+} from 'blockly';
 import {
   ASTNode,
   common,
   Connection,
+  Events,
   registry,
   utils,
   WorkspaceSvg,
@@ -95,9 +102,14 @@ export class Mover {
    * Should only be called if canMove has returned true.
    *
    * @param workspace The workspace we might be moving on.
+   * @param insertStartPoint The starting point for the move in the insert case,
+   *     when the block should be deleted if aborted rather than reverted.
    * @returns True iff a move has successfully begun.
    */
-  startMove(workspace: WorkspaceSvg) {
+  startMove(
+    workspace: WorkspaceSvg,
+    insertStartPoint: RenderedConnection | null = null,
+  ) {
     const cursor = workspace?.getCursor();
     const block = this.getCurrentBlock(workspace);
     if (!cursor || !block) throw new Error('precondition failure');
@@ -107,7 +119,7 @@ export class Mover {
     cursor.setCurNode(ASTNode.createBlockNode(block));
 
     this.patchWorkspace(workspace);
-    this.patchDragStrategy(block);
+    this.patchDragStrategy(block, insertStartPoint);
     // Begin dragging block.
     const DraggerClass = registry.getClassFromOptions(
       registry.Type.BLOCK_DRAGGER,
@@ -145,6 +157,7 @@ export class Mover {
     this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
+
     return true;
   }
 
@@ -160,17 +173,31 @@ export class Mover {
     const info = this.moves.get(workspace);
     if (!info) throw new Error('no move info for workspace');
 
-    // Monkey patch dragger to trigger call to draggable.revertDrag.
+    // If it's an insert-style move then we delete the block.
+    const keyboardDragStrategy =
+      info.block.getDragStrategy() as KeyboardDragStrategy;
+    const {insertStartPoint} = keyboardDragStrategy;
+
+    // Monkey patch dragger to trigger delete.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (info.dragger as any).shouldReturnToStart = () => true;
+    (info.dragger as any).wouldDeleteDraggable = () => !!insertStartPoint;
+    if (!insertStartPoint) {
+      // Monkey patch dragger to trigger call to draggable.revertDrag.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (info.dragger as any).shouldReturnToStart = () => true;
+    }
     const blockSvg = info.block;
 
     // Explicitly call `hidePreview` because it is not called in revertDrag.
     // @ts-expect-error Access to private property dragStrategy.
     blockSvg.dragStrategy.connectionPreviewer.hidePreview();
+    // Prevent the stragegy connecting the block so we just delete one block.
+    // @ts-expect-error Access to private property dragStrategy.
+    blockSvg.dragStrategy.connectionCandidate = null;
+
     info.dragger.onDragEnd(
       info.fakePointerEvent('pointerup'),
-      new utils.Coordinate(0, 0),
+      info.startLocation,
     );
 
     this.unpatchWorkspace(workspace);
@@ -290,11 +317,16 @@ export class Mover {
    * Monkeypatch: replace the block's drag strategy and cache the old value.
    *
    * @param block The block to patch.
+   * @param insertStartPoint The starting point for the move in the insert case,
+   *     when the block should be deleted if aborted rather than reverted.
    */
-  private patchDragStrategy(block: BlockSvg) {
+  private patchDragStrategy(
+    block: BlockSvg,
+    insertStartPoint: RenderedConnection | null,
+  ) {
     // @ts-expect-error block.dragStrategy is private.
     this.oldDragStrategy = block.dragStrategy;
-    block.setDragStrategy(new KeyboardDragStrategy(block));
+    block.setDragStrategy(new KeyboardDragStrategy(block, insertStartPoint));
   }
 
   /**
