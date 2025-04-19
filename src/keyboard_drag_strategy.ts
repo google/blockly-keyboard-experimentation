@@ -42,7 +42,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   constructor(
     private block: BlockSvg,
     private navigation: Navigation,
-    private isNewBlock: boolean,
+    readonly isNewBlock: boolean,
   ) {
     super(block);
     this.cursor = block.workspace.getCursor();
