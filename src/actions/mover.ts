@@ -63,11 +63,10 @@ export class Mover {
    * currently has focus on the given workspace.
    *
    * @param workspace The workspace to move on.
+   * @param block The block to try to drag.
    * @returns True iff we can begin a move.
    */
-  canMove(workspace: WorkspaceSvg) {
-    const block = this.getCurrentBlock(workspace);
-
+  canMove(workspace: WorkspaceSvg, block: BlockSvg) {
     return !!(
       this.navigation.getState(workspace) === Constants.STATE.WORKSPACE &&
       this.navigation.canCurrentlyEdit(workspace) &&
@@ -96,12 +95,12 @@ export class Mover {
    * Should only be called if canMove has returned true.
    *
    * @param workspace The workspace we might be moving on.
+   * @param block The block to start dragging.
    * @returns True iff a move has successfully begun.
    */
-  startMove(workspace: WorkspaceSvg) {
+  startMove(workspace: WorkspaceSvg, block: BlockSvg) {
     const cursor = workspace?.getCursor();
-    const block = this.getCurrentBlock(workspace);
-    if (!cursor || !block) throw new Error('precondition failure');
+    if (!cursor) throw new Error('precondition failure');
 
     // Select and focus block.
     common.setSelected(block);
@@ -231,32 +230,6 @@ export class Mover {
     info.dragger.onDrag(info.fakePointerEvent('pointermove'), info.totalDelta);
     this.scrollCurrentBlockIntoView(workspace);
     return true;
-  }
-
-  /**
-   * Get the source block for the cursor location, or undefined if no
-   * source block can be found.
-   * If the cursor is on a shadow block, walks up the tree until it finds
-   * a non-shadow block to drag.
-   *
-   * @param workspace The workspace to inspect for a cursor.
-   * @returns The source block, or undefined if no appropriate block
-   *     could be found.
-   */
-  protected getCurrentBlock(workspace: WorkspaceSvg): BlockSvg | undefined {
-    const curNode = workspace?.getCursor()?.getCurNode();
-    let block = curNode?.getSourceBlock();
-    if (!block) return undefined;
-    while (block && block.isShadow()) {
-      block = block.getParent();
-      if (!block) {
-        throw new Error(
-          'Tried to drag a shadow block with no parent. ' +
-            'Shadow blocks should always have parents.',
-        );
-      }
-    }
-    return block as BlockSvg;
   }
 
   /**
