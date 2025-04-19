@@ -15,7 +15,6 @@ import {
   utils,
 } from 'blockly';
 import {Direction, getDirectionFromXY} from './drag_direction';
-import {Navigation} from './navigation';
 
 // Copied in from core because it is not exported.
 interface ConnectionCandidate {
@@ -39,12 +38,14 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
 
   private cursor: LineCursor | null;
 
+  isNewBlock: boolean;
+
   constructor(
     private block: BlockSvg,
-    private navigation: Navigation,
-    readonly isNewBlock: boolean,
+    private insertStartPoint: RenderedConnection | null,
   ) {
     super(block);
+    this.isNewBlock = !!this.insertStartPoint;
     this.cursor = block.workspace.getCursor();
   }
 
@@ -279,7 +280,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
    */
   private createInitialCandidate(): ConnectionCandidate | null {
     // @ts-expect-error startParentConn is private.
-    const neighbour = this.startParentConn;
+    const neighbour = this.insertStartPoint ?? this.startParentConn;
     if (neighbour) {
       this.searchNode = ASTNode.createConnectionNode(neighbour);
       switch (neighbour.type) {

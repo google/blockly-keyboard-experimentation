@@ -36,7 +36,7 @@ export class MoveActions {
       callback: (workspace) => {
         const startBlock = this.getCurrentBlock(workspace);
         return (
-          !!startBlock && this.mover.startMove(workspace, startBlock, false)
+          !!startBlock && this.mover.startMove(workspace, startBlock, null)
         );
       },
       keyCodes: [KeyCodes.M],
@@ -151,7 +151,7 @@ export class MoveActions {
         if (!workspace) return false;
         const startBlock = this.getCurrentBlock(workspace);
         return (
-          !!startBlock && this.mover.startMove(workspace, startBlock, false)
+          !!startBlock && this.mover.startMove(workspace, startBlock, null)
         );
       },
       scopeType: ContextMenuRegistry.ScopeType.BLOCK,
