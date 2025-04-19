@@ -5,7 +5,14 @@
  */
 
 import type {BlockSvg, IDragger, IDragStrategy, Gesture} from 'blockly';
-import {Connection, registry, utils, WorkspaceSvg} from 'blockly';
+import {
+  ASTNode,
+  Connection,
+  dragging,
+  registry,
+  utils,
+  WorkspaceSvg,
+} from 'blockly';
 import * as Constants from '../constants';
 import {Direction, getXYFromDirection} from '../drag_direction';
 import {KeyboardDragStrategy} from '../keyboard_drag_strategy';
@@ -42,6 +49,18 @@ export class Mover {
    * of a keyboard drag and reset at the end of a keyboard drag.
    */
   oldGetGesture: ((e: PointerEvent) => Gesture | null) | null = null;
+
+  /**
+   * The stashed wouldDeleteDraggable function, which is sometimes replaced
+   * during a keyboard drag and is reset at the end of a keyboard drag.
+   */
+  oldWouldDeleteDraggable: (() => boolean) | null = null;
+
+  /**
+   * The stashed shouldReturnToStart function, which is sometimes replaced
+   * during a keyboard drag and is reset at the end of a keyboard drag.
+   */
+  oldShouldReturnToStart: (() => boolean) | null = null;
 
   /**
    * The block's base drag strategy, which will be overridden during
@@ -153,21 +172,37 @@ export class Mover {
     const info = this.moves.get(workspace);
     if (!info) throw new Error('no move info for workspace');
 
-    // Monkey patch dragger to trigger call to draggable.revertDrag.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (info.dragger as any).shouldReturnToStart = () => true;
-    const blockSvg = info.block;
+    const dragStrategy = info.block.getDragStrategy() as KeyboardDragStrategy;
+    this.patchDragger(
+      info.dragger as dragging.Dragger,
+      dragStrategy.isNewBlock,
+    );
 
     // Explicitly call `hidePreview` because it is not called in revertDrag.
-    // @ts-expect-error Access to private property dragStrategy.
-    blockSvg.dragStrategy.connectionPreviewer.hidePreview();
+    // @ts-expect-error Access to private property connectionPreviewer.
+    dragStrategy.connectionPreviewer.hidePreview();
+
+    // Save the position so we can put the cursor in a reasonable spot.
+    // @ts-expect-error Access to private property connectionCandidate.
+    const target = dragStrategy.connectionCandidate?.neighbour;
+
+    // Prevent the stragegy connecting the block so we just delete one block.
+    // @ts-expect-error Access to private property connectionCandidate.
+    dragStrategy.connectionCandidate = null;
+
     info.dragger.onDragEnd(
       info.fakePointerEvent('pointerup'),
-      new utils.Coordinate(0, 0),
+      info.startLocation,
     );
+
+    if (target) {
+      const newNode = ASTNode.createConnectionNode(target);
+      if (newNode) workspace.getCursor()?.setCurNode(newNode);
+    }
 
     this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
+    this.unpatchDragger(info.dragger as dragging.Dragger);
     this.moves.delete(workspace);
     // Delay scroll until after block has finished moving.
     setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0);
@@ -257,6 +292,7 @@ export class Mover {
       (workspace as any).getGesture = this.oldGetGesture;
     }
   }
+
   /**
    * Monkeypatch: replace the block's drag strategy and cache the old value.
    *
@@ -297,6 +333,48 @@ export class Mover {
         blockToView.getBoundingRectangleWithoutChildren(),
         padding,
       );
+    }
+  }
+
+  /**
+   * Monkeypatch: override either wouldDeleteDraggable or shouldReturnToStart,
+   * based on whether this was an insertion of a new block or a movement of
+   * an existing block.
+   *
+   * @param dragger The dragger to patch.
+   * @param isNewBlock Whether the moving block was created for this action.
+   */
+  private patchDragger(dragger: dragging.Dragger, isNewBlock: boolean) {
+    if (isNewBlock) {
+      // @ts-expect-error dragger.wouldDeleteDraggable is private.
+      this.oldWouldDeleteDraggable = dragger.wouldDeleteDraggable;
+      // Monkey patch dragger to trigger delete.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (dragger as any).wouldDeleteDraggable = () => true;
+    } else {
+      // @ts-expect-error dragger.shouldReturnToStart is private.
+      this.oldShouldReturnToStart = dragger.shouldReturnToStart;
+      // Monkey patch dragger to trigger call to draggable.revertDrag.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (dragger as any).shouldReturnToStart = () => true;
+    }
+  }
+
+  /**
+   * Undo the monkeypatching of the block dragger.
+   *
+   * @param dragger The dragger to patch.
+   */
+  private unpatchDragger(dragger: dragging.Dragger) {
+    if (this.oldWouldDeleteDraggable) {
+      // @ts-expect-error dragger.wouldDeleteDraggable is private.
+      dragger.wouldDeleteDraggable = this.oldWouldDeleteDraggable;
+      this.oldWouldDeleteDraggable = null;
+    }
+    if (this.oldShouldReturnToStart) {
+      // @ts-expect-error dragger.shouldReturnToStart is private.
+      dragger.shouldReturnToStart = this.oldShouldReturnToStart;
+      this.oldShouldReturnToStart = null;
     }
   }
 }
