@@ -133,14 +133,9 @@ export class EnterAction {
     const stationaryNode = this.navigation.getStationaryNode(workspace);
     const newBlock = this.createNewBlock(workspace);
     if (!newBlock) return;
-    if (stationaryNode) {
-      if (!this.navigation.tryToConnectBlock(stationaryNode, newBlock)) {
-        console.warn(
-          'Something went wrong while inserting a block from the flyout.',
-        );
-      }
-    }
-
+    const insertStartPoint = stationaryNode
+      ? this.navigation.findInsertStartPoint(stationaryNode, newBlock)
+      : null;
     if (workspace.getTopBlocks().includes(newBlock)) {
       this.positionNewTopLevelBlock(workspace, newBlock);
     }
@@ -151,7 +146,7 @@ export class EnterAction {
     this.navigation.focusWorkspace(workspace);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     workspace.getCursor()?.setCurNode(ASTNode.createBlockNode(newBlock)!);
-    this.mover.startMove(workspace, newBlock, true);
+    this.mover.startMove(workspace, newBlock, insertStartPoint);
 
     const isStartBlock =
       !newBlock.outputConnection &&

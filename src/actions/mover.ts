@@ -4,7 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type {BlockSvg, IDragger, IDragStrategy, Gesture} from 'blockly';
+import type {
+  BlockSvg,
+  IDragger,
+  IDragStrategy,
+  Gesture,
+  RenderedConnection,
+} from 'blockly';
 import {
   ASTNode,
   Connection,
@@ -108,12 +114,17 @@ export class Mover {
    *
    * @param workspace The workspace we might be moving on.
    * @param block The block to start dragging.
-   * @param isNewBlock Whether the moving block was created for this action.
+   * @param insertStartPoint Where to insert the block, or null if the block
+   *     already existed.
    * @returns True iff a move has successfully begun.
    */
-  startMove(workspace: WorkspaceSvg, block: BlockSvg, isNewBlock: boolean) {
+  startMove(
+    workspace: WorkspaceSvg,
+    block: BlockSvg,
+    insertStartPoint: RenderedConnection | null,
+  ) {
     this.patchWorkspace(workspace);
-    this.patchDragStrategy(block, isNewBlock);
+    this.patchDragStrategy(block, insertStartPoint);
     // Begin dragging block.
     const DraggerClass = registry.getClassFromOptions(
       registry.Type.BLOCK_DRAGGER,
@@ -297,14 +308,16 @@ export class Mover {
    * Monkeypatch: replace the block's drag strategy and cache the old value.
    *
    * @param block The block to patch.
-   * @param isNewBlock Whether the moving block was created for this action.
+   * @param insertStartPoint Where to insert the block, or null if the block
+   *     already existed.
    */
-  private patchDragStrategy(block: BlockSvg, isNewBlock: boolean) {
+  private patchDragStrategy(
+    block: BlockSvg,
+    insertStartPoint: RenderedConnection | null,
+  ) {
     // @ts-expect-error block.dragStrategy is private.
     this.oldDragStrategy = block.dragStrategy;
-    block.setDragStrategy(
-      new KeyboardDragStrategy(block, this.navigation, isNewBlock),
-    );
+    block.setDragStrategy(new KeyboardDragStrategy(block, insertStartPoint));
   }
 
   /**
