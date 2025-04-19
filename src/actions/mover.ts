@@ -5,12 +5,7 @@
  */
 
 import type {BlockSvg, IDragger, IDragStrategy, Gesture} from 'blockly';
-import {
-  Connection,
-  registry,
-  utils,
-  WorkspaceSvg,
-} from 'blockly';
+import {Connection, registry, utils, WorkspaceSvg} from 'blockly';
 import * as Constants from '../constants';
 import {Direction, getXYFromDirection} from '../drag_direction';
 import {KeyboardDragStrategy} from '../keyboard_drag_strategy';
@@ -94,14 +89,12 @@ export class Mover {
    *
    * @param workspace The workspace we might be moving on.
    * @param block The block to start dragging.
+   * @param isNewBlock Whether the moving block was created for this action.
    * @returns True iff a move has successfully begun.
    */
-  startMove(workspace: WorkspaceSvg, block: BlockSvg) {
-    const cursor = workspace?.getCursor();
-    if (!cursor) throw new Error('precondition failure');
-
+  startMove(workspace: WorkspaceSvg, block: BlockSvg, isNewBlock: boolean) {
     this.patchWorkspace(workspace);
-    this.patchDragStrategy(block);
+    this.patchDragStrategy(block, isNewBlock);
     // Begin dragging block.
     const DraggerClass = registry.getClassFromOptions(
       registry.Type.BLOCK_DRAGGER,
@@ -268,11 +261,14 @@ export class Mover {
    * Monkeypatch: replace the block's drag strategy and cache the old value.
    *
    * @param block The block to patch.
+   * @param isNewBlock Whether the moving block was created for this action.
    */
-  private patchDragStrategy(block: BlockSvg) {
+  private patchDragStrategy(block: BlockSvg, isNewBlock: boolean) {
     // @ts-expect-error block.dragStrategy is private.
     this.oldDragStrategy = block.dragStrategy;
-    block.setDragStrategy(new KeyboardDragStrategy(block, this.navigation));
+    block.setDragStrategy(
+      new KeyboardDragStrategy(block, this.navigation, isNewBlock),
+    );
   }
 
   /**
