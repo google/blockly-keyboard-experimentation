@@ -5,10 +5,12 @@
  */
 
 import {
+  common,
   ASTNode,
   BlockSvg,
   ConnectionType,
   RenderedConnection,
+  LineCursor,
   dragging,
   utils,
 } from 'blockly';
@@ -36,14 +38,21 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   /** Where a constrained movement should start when traversing the tree. */
   private searchNode: ASTNode | null = null;
 
+  private cursor: LineCursor | null;
+
   constructor(
     private block: BlockSvg,
     private navigation: Navigation,
   ) {
     super(block);
+    this.cursor = block.workspace.getCursor();
   }
 
   override startDrag(e?: PointerEvent) {
+    if (!this.cursor) throw new Error('precondition failure');
+    // Select and focus block.
+    common.setSelected(this.block);
+    this.cursor.setCurNode(ASTNode.createBlockNode(this.block));
     super.startDrag(e);
     // Set position of the dragging block, so that it doesn't pop
     // to the top left of the workspace.
@@ -155,8 +164,9 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     draggingBlock: BlockSvg,
     localConns: RenderedConnection[],
   ): ConnectionCandidate | null {
-    const cursor = draggingBlock.workspace.getCursor();
-    if (!cursor) return null;
+    // TODO: Handle the case where the cursor is null, or never return null
+    // from workspace.getCursor()
+    if (!this.cursor) throw new Error('precondition failure');
 
     // Helper function for traversal.
     function isConnection(node: ASTNode | null): boolean {
@@ -169,9 +179,9 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     const dir = this.currentDragDirection;
     while (potential && !candidateConnection) {
       if (dir === Direction.Up || dir === Direction.Left) {
-        potential = cursor.getPreviousNode(potential, isConnection, true);
+        potential = this.cursor.getPreviousNode(potential, isConnection, true);
       } else if (dir === Direction.Down || dir === Direction.Right) {
-        potential = cursor.getNextNode(potential, isConnection, true);
+        potential = this.cursor.getNextNode(potential, isConnection, true);
       }
 
       localConns.forEach((conn: RenderedConnection) => {

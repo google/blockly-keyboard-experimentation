@@ -6,8 +6,6 @@
 
 import type {BlockSvg, IDragger, IDragStrategy, Gesture} from 'blockly';
 import {
-  ASTNode,
-  common,
   Connection,
   registry,
   utils,
@@ -101,10 +99,6 @@ export class Mover {
   startMove(workspace: WorkspaceSvg, block: BlockSvg) {
     const cursor = workspace?.getCursor();
     if (!cursor) throw new Error('precondition failure');
-
-    // Select and focus block.
-    common.setSelected(block);
-    cursor.setCurNode(ASTNode.createBlockNode(block));
 
     this.patchWorkspace(workspace);
     this.patchDragStrategy(block);
