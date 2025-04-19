@@ -305,7 +305,7 @@ export class Mover {
   private patchDragStrategy(block: BlockSvg) {
     // @ts-expect-error block.dragStrategy is private.
     this.oldDragStrategy = block.dragStrategy;
-    block.setDragStrategy(new KeyboardDragStrategy(block));
+    block.setDragStrategy(new KeyboardDragStrategy(block, this.navigation));
   }
 
   /**

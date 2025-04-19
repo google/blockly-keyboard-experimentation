@@ -14,6 +14,7 @@ import {
 } from 'blockly';
 import {Direction, getDirectionFromXY} from './drag_direction';
 import {showUnconstrainedMoveHint} from './hints';
+import {Navigation} from './navigation';
 
 // Copied in from core because it is not exported.
 interface ConnectionCandidate {
@@ -34,6 +35,13 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
 
   /** Where a constrained movement should start when traversing the tree. */
   private searchNode: ASTNode | null = null;
+
+  constructor(
+    private block: BlockSvg,
+    private navigation: Navigation,
+  ) {
+    super(block);
+  }
 
   override startDrag(e?: PointerEvent) {
     super.startDrag(e);
@@ -63,7 +71,6 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       if (this.isConstrainedMovement()) {
         // Position the moving block down and slightly to the right of the
         // target connection.
-        // @ts-expect-error block is private.
         this.block.moveDuringDrag(
           new utils.Coordinate(neighbour.x + 10, neighbour.y + 10),
         );
@@ -225,7 +232,6 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     // @ts-expect-error connectionCandidate is private
     const candidate = this.connectionCandidate as ConnectionCandidate;
     if (!candidate || !previewer) return;
-    // @ts-expect-error block is private
     const block = this.block;
 
     // This is essentially a copy of the second half of updateConnectionPreview
@@ -276,14 +282,12 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
         case ConnectionType.INPUT_VALUE:
           return {
             neighbour: neighbour,
-            // @ts-expect-error block is private.
             local: this.block.outputConnection,
             distance: 0,
           };
         case ConnectionType.NEXT_STATEMENT:
           return {
             neighbour: neighbour,
-            // @ts-expect-error block is private.
             local: this.block.previousConnection,
             distance: 0,
           };
