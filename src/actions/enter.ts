@@ -128,7 +128,10 @@ export class EnterAction {
    */
   private insertFromFlyout(workspace: WorkspaceSvg) {
     workspace.setResizesEnabled(false);
-    Events.setGroup(true);
+    const existingGroup = Events.getGroup();
+    if (!existingGroup) {
+      Events.setGroup(true);
+    }
 
     const stationaryNode = this.navigation.getStationaryNode(workspace);
     const newBlock = this.createNewBlock(workspace);
@@ -140,7 +143,6 @@ export class EnterAction {
       this.positionNewTopLevelBlock(workspace, newBlock);
     }
 
-    Events.setGroup(false);
     workspace.setResizesEnabled(true);
 
     this.navigation.focusWorkspace(workspace);
