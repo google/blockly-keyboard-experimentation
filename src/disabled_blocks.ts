@@ -18,10 +18,10 @@ export function enableBlocksOnDrag(event: Blockly.Events.Abstract) {
   // This listener only runs on Drag events that have a valid
   // workspace and block id.
   if (!isBlockDrag(event)) return;
+  if (!event.blockId) return;
   const eventWorkspace = Blockly.common.getWorkspaceById(
     event.workspaceId,
   ) as Blockly.WorkspaceSvg;
-  if (!event.blockId) return;
   const block = eventWorkspace.getBlockById(event.blockId);
   if (!block) return;
 
