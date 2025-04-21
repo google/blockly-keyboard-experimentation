@@ -25,8 +25,8 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
 export class MoveActions {
   constructor(private mover: Mover) {}
 
-  private shortcutNames: Array<string> = [];
-  private menuItemNames: Array<string> = [];
+  private shortcutNames: string[] = [];
+  private menuItemNames: string[] = [];
 
   private registerShortcuts() {
     const shortcuts: ShortcutRegistry.KeyboardShortcut[] = [
