@@ -7,6 +7,7 @@
 import {
   ASTNode,
   Events,
+  Msg,
   ShortcutRegistry,
   utils as BlocklyUtils,
   dialog,
@@ -105,7 +106,7 @@ export class EnterAction {
       const block = curNode.getLocation() as Block;
       if (!this.tryShowFullBlockFieldEditor(block)) {
         const shortcut = getShortActionShortcut('list_shortcuts');
-        const message = `Press ${shortcut} for help on keyboard controls`;
+        const message = Msg['HELP_PROMPT'].replace('%1', shortcut);
         dialog.alert(message);
       }
     } else if (curNode.isConnection() || nodeType === ASTNode.types.WORKSPACE) {
