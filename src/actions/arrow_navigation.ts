@@ -47,6 +47,70 @@ export class ArrowNavigation {
    * Adds all arrow key navigation shortcuts to the registry.
    */
   install() {
+    const navigateIn = (
+      workspace: WorkspaceSvg,
+      e: Event,
+      shortcut: ShortcutRegistry.KeyboardShortcut,
+    ): boolean => {
+      const toolbox = workspace.getToolbox() as Toolbox;
+      let isHandled = false;
+      switch (this.navigation.getState(workspace)) {
+        case Constants.STATE.WORKSPACE:
+          isHandled = this.fieldShortcutHandler(workspace, shortcut);
+          if (!isHandled && workspace) {
+            if (
+              !this.navigation.defaultWorkspaceCursorPositionIfNeeded(workspace)
+            ) {
+              workspace.getCursor()?.in();
+            }
+            isHandled = true;
+          }
+          return isHandled;
+        case Constants.STATE.TOOLBOX:
+          isHandled =
+            toolbox && typeof toolbox.onShortcut === 'function'
+              ? toolbox.onShortcut(shortcut)
+              : false;
+          if (!isHandled) {
+            this.navigation.focusFlyout(workspace);
+          }
+          return true;
+        default:
+          return false;
+      }
+    };
+
+    const navigateOut = (
+      workspace: WorkspaceSvg,
+      e: Event,
+      shortcut: ShortcutRegistry.KeyboardShortcut,
+    ): boolean => {
+      const toolbox = workspace.getToolbox() as Toolbox;
+      let isHandled = false;
+      switch (this.navigation.getState(workspace)) {
+        case Constants.STATE.WORKSPACE:
+          isHandled = this.fieldShortcutHandler(workspace, shortcut);
+          if (!isHandled && workspace) {
+            if (
+              !this.navigation.defaultWorkspaceCursorPositionIfNeeded(workspace)
+            ) {
+              workspace.getCursor()?.out();
+            }
+            isHandled = true;
+          }
+          return isHandled;
+        case Constants.STATE.FLYOUT:
+          this.navigation.focusToolbox(workspace);
+          return true;
+        case Constants.STATE.TOOLBOX:
+          return toolbox && typeof toolbox.onShortcut === 'function'
+            ? toolbox.onShortcut(shortcut)
+            : false;
+        default:
+          return false;
+      }
+    };
+
     const shortcuts: {
       [name: string]: ShortcutRegistry.KeyboardShortcut;
     } = {
@@ -56,34 +120,9 @@ export class ArrowNavigation {
         preconditionFn: (workspace) =>
           this.navigation.canCurrentlyNavigate(workspace),
         callback: (workspace, e, shortcut) => {
-          const toolbox = workspace.getToolbox() as Toolbox;
-          let isHandled = false;
-          switch (this.navigation.getState(workspace)) {
-            case Constants.STATE.WORKSPACE:
-              isHandled = this.fieldShortcutHandler(workspace, shortcut);
-              if (!isHandled && workspace) {
-                if (
-                  !this.navigation.defaultWorkspaceCursorPositionIfNeeded(
-                    workspace,
-                  )
-                ) {
-                  workspace.getCursor()?.in();
-                }
-                isHandled = true;
-              }
-              return isHandled;
-            case Constants.STATE.TOOLBOX:
-              isHandled =
-                toolbox && typeof toolbox.onShortcut === 'function'
-                  ? toolbox.onShortcut(shortcut)
-                  : false;
-              if (!isHandled) {
-                this.navigation.focusFlyout(workspace);
-              }
-              return true;
-            default:
-              return false;
-          }
+          return workspace.RTL
+            ? navigateOut(workspace, e, shortcut)
+            : navigateIn(workspace, e, shortcut);
         },
         keyCodes: [KeyCodes.RIGHT],
       },
@@ -94,32 +133,9 @@ export class ArrowNavigation {
         preconditionFn: (workspace) =>
           this.navigation.canCurrentlyNavigate(workspace),
         callback: (workspace, e, shortcut) => {
-          const toolbox = workspace.getToolbox() as Toolbox;
-          let isHandled = false;
-          switch (this.navigation.getState(workspace)) {
-            case Constants.STATE.WORKSPACE:
-              isHandled = this.fieldShortcutHandler(workspace, shortcut);
-              if (!isHandled && workspace) {
-                if (
-                  !this.navigation.defaultWorkspaceCursorPositionIfNeeded(
-                    workspace,
-                  )
-                ) {
-                  workspace.getCursor()?.out();
-                }
-                isHandled = true;
-              }
-              return isHandled;
-            case Constants.STATE.FLYOUT:
-              this.navigation.focusToolbox(workspace);
-              return true;
-            case Constants.STATE.TOOLBOX:
-              return toolbox && typeof toolbox.onShortcut === 'function'
-                ? toolbox.onShortcut(shortcut)
-                : false;
-            default:
-              return false;
-          }
+          return workspace.RTL
+            ? navigateIn(workspace, e, shortcut)
+            : navigateOut(workspace, e, shortcut);
         },
         keyCodes: [KeyCodes.LEFT],
       },
