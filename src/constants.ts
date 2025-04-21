@@ -12,6 +12,8 @@
  * @author aschmiedt@google.com (Abby Schmiedt)
  */
 
+import {Msg} from 'blockly/core';
+
 /**
  * Keyboard navigation states.
  * The different parts of Blockly that the user navigates between.
@@ -70,29 +72,31 @@ export const SHORTCUT_CATEGORIES: Record<
   // better text because temporarily the name in the table is derived from
   // these id-like names.
   Array<SHORTCUT_NAMES | 'undo' | 'redo' | 'cut' | 'copy' | 'paste' | 'delete'>
-> = {
-  'General': [
-    SHORTCUT_NAMES.MENU,
-    SHORTCUT_NAMES.EDIT_OR_CONFIRM,
-    SHORTCUT_NAMES.EXIT,
-    SHORTCUT_NAMES.TOOLBOX,
-    SHORTCUT_NAMES.CLEAN_UP,
-    SHORTCUT_NAMES.LIST_SHORTCUTS,
-  ],
-  'Editing': [
-    SHORTCUT_NAMES.INSERT,
-    'delete',
-    SHORTCUT_NAMES.DISCONNECT,
-    'cut',
-    'copy',
-    'paste',
-    'undo',
-    'redo',
-  ],
-  'Code navigation': [
-    SHORTCUT_NAMES.UP,
-    SHORTCUT_NAMES.DOWN,
-    SHORTCUT_NAMES.RIGHT,
-    SHORTCUT_NAMES.LEFT,
-  ],
-};
+> = {};
+
+SHORTCUT_CATEGORIES[Msg['SHORTCUTS_GENERAL']] = [
+  SHORTCUT_NAMES.MENU,
+  SHORTCUT_NAMES.EDIT_OR_CONFIRM,
+  SHORTCUT_NAMES.EXIT,
+  SHORTCUT_NAMES.TOOLBOX,
+  SHORTCUT_NAMES.CLEAN_UP,
+  SHORTCUT_NAMES.LIST_SHORTCUTS,
+];
+
+SHORTCUT_CATEGORIES[Msg['SHORTCUTS_EDITING']] = [
+  SHORTCUT_NAMES.INSERT,
+  'delete',
+  SHORTCUT_NAMES.DISCONNECT,
+  'cut',
+  'copy',
+  'paste',
+  'undo',
+  'redo',
+];
+
+SHORTCUT_CATEGORIES[Msg['SHORTCUTS_CODE_NAVIGATION']] = [
+  SHORTCUT_NAMES.UP,
+  SHORTCUT_NAMES.DOWN,
+  SHORTCUT_NAMES.RIGHT,
+  SHORTCUT_NAMES.LEFT,
+];

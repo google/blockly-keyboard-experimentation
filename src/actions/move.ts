@@ -7,12 +7,14 @@
 import {
   BlockSvg,
   ContextMenuRegistry,
+  Msg,
   ShortcutRegistry,
   utils,
   WorkspaceSvg,
 } from 'blockly';
 import {Direction} from '../drag_direction';
 import {Mover} from './mover';
+import {getShortActionShortcut} from '../shortcut_formatting';
 
 const KeyCodes = utils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -28,7 +30,7 @@ export class MoveActions {
   private shortcuts: ShortcutRegistry.KeyboardShortcut[] = [
     // Begin and end move.
     {
-      name: 'Start move',
+      name: Msg['START_MOVE'],
       preconditionFn: (workspace) => {
         const startBlock = this.getCurrentBlock(workspace);
         return !!startBlock && this.mover.canMove(workspace, startBlock);
@@ -42,14 +44,14 @@ export class MoveActions {
       keyCodes: [KeyCodes.M],
     },
     {
-      name: 'Finish move',
+      name: Msg['FINISH_MOVE'],
       preconditionFn: (workspace) => this.mover.isMoving(workspace),
       callback: (workspace) => this.mover.finishMove(workspace),
       keyCodes: [KeyCodes.ENTER, KeyCodes.SPACE],
       allowCollision: true,
     },
     {
-      name: 'Abort move',
+      name: Msg['ABORT_MOVE'],
       preconditionFn: (workspace) => this.mover.isMoving(workspace),
       callback: (workspace) => this.mover.abortMove(workspace),
       keyCodes: [KeyCodes.ESC],
@@ -58,7 +60,7 @@ export class MoveActions {
 
     // Constrained moves.
     {
-      name: 'Move left, constrained',
+      name: Msg['MOVE_LEFT_CONSTRAINED'],
       preconditionFn: (workspace) => this.mover.isMoving(workspace),
       callback: (workspace) =>
         this.mover.moveConstrained(workspace, Direction.Left),
@@ -66,7 +68,7 @@ export class MoveActions {
       allowCollision: true,
     },
     {
-      name: 'Move right constrained',
+      name: Msg['MOVE_RIGHT_CONSTRAINED'],
       preconditionFn: (workspace) => this.mover.isMoving(workspace),
       callback: (workspace) =>
         this.mover.moveConstrained(workspace, Direction.Right),
@@ -74,7 +76,7 @@ export class MoveActions {
       allowCollision: true,
     },
     {
-      name: 'Move up, constrained',
+      name: Msg['MOVE_UP_CONSTRAINED'],
       preconditionFn: (workspace) => this.mover.isMoving(workspace),
       callback: (workspace) =>
         this.mover.moveConstrained(workspace, Direction.Up),
@@ -82,7 +84,7 @@ export class MoveActions {
       allowCollision: true,
     },
     {
-      name: 'Move down constrained',
+      name: Msg['MOVE_DOWN_CONSTRAINED'],
       preconditionFn: (workspace) => this.mover.isMoving(workspace),
       callback: (workspace) =>
         this.mover.moveConstrained(workspace, Direction.Down),
@@ -92,7 +94,7 @@ export class MoveActions {
 
     // Unconstrained moves.
     {
-      name: 'Move left, unconstrained',
+      name: Msg['MOVE_LEFT_UNCONSTRAINED'],
       preconditionFn: (workspace) => this.mover.isMoving(workspace),
       callback: (workspace) =>
         this.mover.moveUnconstrained(workspace, Direction.Left),
@@ -102,7 +104,7 @@ export class MoveActions {
       ],
     },
     {
-      name: 'Move right, unconstrained',
+      name: Msg['MOVE_RIGHT_UNCONSTRAINED'],
       preconditionFn: (workspace) => this.mover.isMoving(workspace),
       callback: (workspace) =>
         this.mover.moveUnconstrained(workspace, Direction.Right),
@@ -112,7 +114,7 @@ export class MoveActions {
       ],
     },
     {
-      name: 'Move up unconstrained',
+      name: Msg['MOVE_UP_UNCONSTRAINED'],
       preconditionFn: (workspace) => this.mover.isMoving(workspace),
       callback: (workspace) =>
         this.mover.moveUnconstrained(workspace, Direction.Up),
@@ -122,7 +124,7 @@ export class MoveActions {
       ],
     },
     {
-      name: 'Move down, unconstrained',
+      name: Msg['MOVE_DOWN_UNCONSTRAINED'],
       preconditionFn: (workspace) => this.mover.isMoving(workspace),
       callback: (workspace) =>
         this.mover.moveUnconstrained(workspace, Direction.Down),
@@ -135,7 +137,10 @@ export class MoveActions {
 
   menuItems: ContextMenuRegistry.RegistryItem[] = [
     {
-      displayText: 'Move Block (M)',
+      displayText: Msg['MOVE_BLOCK'].replace(
+        '%1',
+        getShortActionShortcut(Msg['START_MOVE']),
+      ),
       preconditionFn: (scope, menuOpenEvent) => {
         const workspace = scope.block?.workspace as WorkspaceSvg | null;
         if (!workspace || menuOpenEvent instanceof PointerEvent)

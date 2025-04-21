@@ -7,10 +7,12 @@
 import {
   ContextMenuRegistry,
   Gesture,
+  Msg,
   ShortcutRegistry,
   utils as BlocklyUtils,
   LineCursor,
 } from 'blockly';
+import {getShortActionShortcut} from '../shortcut_formatting';
 import * as Constants from '../constants';
 import type {WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
@@ -102,8 +104,9 @@ export class DeleteAction {
 
     const deleteItem: ContextMenuRegistry.RegistryItem = {
       displayText: (scope) => {
+        const shortcut = getShortActionShortcut(this.deleteShortcutName);
         if (!this.oldContextMenuItem) {
-          return 'Delete block (Del)';
+          return Msg['DELETE_BLOCK'].replace('%1', shortcut);
         }
 
         type DisplayTextFn = (p1: ContextMenuRegistry.Scope) => string;
@@ -111,7 +114,7 @@ export class DeleteAction {
         // of blocks that will be deleted.
         const oldDisplayText = this.oldContextMenuItem
           .displayText as DisplayTextFn;
-        return oldDisplayText(scope) + ' (Del)';
+        return oldDisplayText(scope) + ` (${shortcut})`;
       },
       preconditionFn: (scope, menuOpenEvent: Event) => {
         const ws = scope.block?.workspace;
