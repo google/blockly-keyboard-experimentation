@@ -7,6 +7,7 @@
 import * as Blockly from 'blockly/core';
 import {NavigationController} from './navigation_controller';
 import {getFlyoutElement, getToolboxElement} from './workspace_utilities';
+import {enableBlocksOnDrag} from './disabled_blocks';
 
 /** Options object for KeyboardNavigation instances. */
 export interface NavigationOptions {
@@ -92,6 +93,9 @@ export class KeyboardNavigation {
     this.setGlowTheme();
 
     this.cursor = new Blockly.LineCursor(workspace, options.cursor);
+
+    // Add the event listener to enable disabled blocks on drag.
+    workspace.addChangeListener(enableBlocksOnDrag);
 
     // Ensure that only the root SVG G (group) has a tab index.
     this.injectionDivTabIndex = workspace
@@ -232,6 +236,9 @@ export class KeyboardNavigation {
         flyout.getWorkspace().markFocused = this.oldFlyoutMarkFocused;
       }
     }
+
+    // Remove the event listener that enables blocks on drag
+    this.workspace.removeChangeListener(enableBlocksOnDrag);
 
     this.workspace.getSvgGroup().removeEventListener('blur', this.blurListener);
     this.workspace
