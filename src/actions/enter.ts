@@ -22,6 +22,8 @@ import type {
 
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
+import {getShortActionShortcut} from '../shortcut_formatting';
+import {Mover} from './mover';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 
@@ -29,7 +31,10 @@ const KeyCodes = BlocklyUtils.KeyCodes;
  * Class for registering a shortcut for the enter action.
  */
 export class EnterAction {
-  constructor(private navigation: Navigation) {}
+  constructor(
+    private mover: Mover,
+    private navigation: Navigation,
+  ) {}
 
   /**
    * Adds the enter action shortcut to the registry.
@@ -99,14 +104,9 @@ export class EnterAction {
     } else if (nodeType === ASTNode.types.BLOCK) {
       const block = curNode.getLocation() as Block;
       if (!this.tryShowFullBlockFieldEditor(block)) {
-        const metaKey = navigator.platform.startsWith('Mac') ? 'Cmd' : 'Ctrl';
-        const canMoveInHint = `Press right arrow to move in or ${metaKey} + Enter for more options`;
-        const genericHint = `Press ${metaKey} + Enter for options`;
-        const hint =
-          curNode.in()?.getSourceBlock() === block
-            ? canMoveInHint
-            : genericHint;
-        dialog.alert(hint);
+        const shortcut = getShortActionShortcut('list_shortcuts');
+        const message = `Press ${shortcut} for help on keyboard controls`;
+        dialog.alert(message);
       }
     } else if (curNode.isConnection() || nodeType === ASTNode.types.WORKSPACE) {
       this.navigation.openToolboxOrFlyout(workspace);
@@ -149,6 +149,7 @@ export class EnterAction {
     this.navigation.focusWorkspace(workspace);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     workspace.getCursor()?.setCurNode(ASTNode.createBlockNode(newBlock)!);
+    this.mover.startMove(workspace);
   }
 
   /**

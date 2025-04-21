@@ -23,6 +23,8 @@ import {javascriptGenerator} from 'blockly/javascript';
 import {load} from './loadTestBlocks';
 import {runCode, registerRunCodeShortcut} from './runCode';
 
+(window as any).Blockly = Blockly;
+
 /**
  * Parse query params for inject and navigation options and update
  * the fields on the options form to match.

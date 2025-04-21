@@ -51,7 +51,8 @@ export class EditAction {
   private registerContextMenuAction() {
     const editAboveItem: ContextMenuRegistry.RegistryItem = {
       displayText: 'Edit Block contents (→︎)',
-      preconditionFn: (scope: ContextMenuRegistry.Scope) => {
+      preconditionFn: (scope: ContextMenuRegistry.Scope, menuOpenEvent) => {
+        if (menuOpenEvent instanceof PointerEvent) return 'hidden';
         const workspace = scope.block?.workspace;
         if (!workspace || !this.navigation.canCurrentlyNavigate(workspace)) {
           return 'disabled';

@@ -29,6 +29,12 @@ export class DeleteAction {
   private oldContextMenuItem: ContextMenuRegistry.RegistryItem | null = null;
 
   /**
+   * Saved delete shortcut, which is re-registered when this action
+   * is uninstalled.
+   */
+  private oldDeleteShortcut: ShortcutRegistry.KeyboardShortcut | null = null;
+
+  /**
    * Registration name for the keyboard shortcut.
    */
   private deleteShortcutName = Constants.SHORTCUT_NAMES.DELETE;
@@ -53,12 +59,22 @@ export class DeleteAction {
       ContextMenuRegistry.registry.register(this.oldContextMenuItem);
     }
     ShortcutRegistry.registry.unregister(this.deleteShortcutName);
+    if (this.oldDeleteShortcut) {
+      ShortcutRegistry.registry.register(this.oldDeleteShortcut);
+    }
   }
 
   /**
    * Create and register the keyboard shortcut for this action.
    */
   private registerShortcut() {
+    this.oldDeleteShortcut = ShortcutRegistry.registry.getRegistry()['delete'];
+
+    if (!this.oldDeleteShortcut) return;
+
+    // Unregister the original shortcut.
+    ShortcutRegistry.registry.unregister(this.oldDeleteShortcut.name);
+
     const deleteShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: this.deleteShortcutName,
       preconditionFn: this.deletePrecondition.bind(this),
@@ -66,6 +82,7 @@ export class DeleteAction {
       keyCodes: [KeyCodes.DELETE, KeyCodes.BACKSPACE],
       allowCollision: true,
     };
+
     ShortcutRegistry.registry.register(deleteShortcut);
   }
 
@@ -96,13 +113,14 @@ export class DeleteAction {
           .displayText as DisplayTextFn;
         return oldDisplayText(scope) + ' (Del)';
       },
-      preconditionFn: (scope) => {
+      preconditionFn: (scope, menuOpenEvent: Event) => {
         const ws = scope.block?.workspace;
 
         // Run the original precondition code, from the context menu option.
         // If the item would be hidden or disabled, respect it.
         const originalPreconditionResult =
-          this.oldContextMenuItem?.preconditionFn?.(scope) ?? 'enabled';
+          this.oldContextMenuItem?.preconditionFn?.(scope, menuOpenEvent) ??
+          'enabled';
         if (!ws || originalPreconditionResult !== 'enabled') {
           return originalPreconditionResult;
         }
@@ -139,6 +157,7 @@ export class DeleteAction {
   private deletePrecondition(workspace: WorkspaceSvg) {
     const sourceBlock = workspace.getCursor()?.getCurNode()?.getSourceBlock();
     return (
+      !workspace.isDragging() &&
       this.navigation.canCurrentlyEdit(workspace) &&
       !!sourceBlock?.isDeletable()
     );
