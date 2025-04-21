@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {WorkspaceSvg, Toast} from 'blockly';
+import {Msg, WorkspaceSvg, Toast} from 'blockly';
 import {SHORTCUT_NAMES} from './constants';
 import {getShortActionShortcut} from './shortcut_formatting';
 
@@ -104,7 +104,7 @@ export function clearPasteHints(workspace: WorkspaceSvg) {
  */
 export function showHelpHint(workspace: WorkspaceSvg) {
   const shortcut = getShortActionShortcut('list_shortcuts');
-  const message = `Press ${shortcut} for help on keyboard controls`;
+  const message = Msg['HELP_PROMPT'].replace('%1', shortcut);
   const id = helpHintId;
   Toast.show(workspace, {message, id});
 }
