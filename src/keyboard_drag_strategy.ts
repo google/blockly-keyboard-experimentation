@@ -8,7 +8,6 @@ import {
   ASTNode,
   BlockSvg,
   ConnectionType,
-  LineCursor,
   RenderedConnection,
   dragging,
   utils,

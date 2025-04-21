@@ -86,8 +86,11 @@ export class ActionMenu {
     const node = cursor.getCurNode();
     if (!node) return false;
     // TODO(google/blockly#8847): Add typeguard for IContextMenu in core when this moves over
-    const location = node.getLocation() as any;
-    if (location.showContextMenu) {
+    const location = node.getLocation();
+    if (
+      'showContextMenu' in location &&
+      typeof location.showContextMenu === 'function'
+    ) {
       location.showContextMenu(menuOpenEvent);
     } else {
       console.info(`No action menu for ASTNode of type ${node.getType()}`);
