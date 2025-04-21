@@ -6,6 +6,7 @@
 
 import {ShortcutRegistry, utils as BlocklyUtils} from 'blockly/core';
 
+import * as Blockly from 'blockly/core';
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
 
@@ -29,7 +30,11 @@ export class ExitAction {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.FLYOUT:
           case Constants.STATE.TOOLBOX:
-            this.navigation.focusWorkspace(workspace);
+            Blockly.getFocusManager().focusTree(workspace);
+            if (!Blockly.Gesture.inProgress()) {
+              workspace.hideChaff();
+            }
+            // this.navigation.focusWorkspace(workspace);
             return true;
           default:
             return false;
