@@ -318,12 +318,15 @@ export class Mover {
    * Scrolls the current block into view if one exists.
    *
    * @param workspace The workspace to get current block from.
+   * @param padding Amount of spacing to put between the bounds and the edge of
+   *     the workspace's viewport.
    */
-  private scrollCurrentBlockIntoView(workspace: WorkspaceSvg) {
+  private scrollCurrentBlockIntoView(workspace: WorkspaceSvg, padding = 0) {
     const blockToView = this.getCurrentBlock(workspace);
     if (blockToView) {
       workspace.scrollBoundsIntoView(
         blockToView.getBoundingRectangleWithoutChildren(),
+        padding,
       );
     }
   }
