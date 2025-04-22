@@ -145,7 +145,7 @@ export class Mover {
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
     // Delay scroll until after block has finished moving.
-    setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0)
+    setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0);
     return true;
   }
 
@@ -178,7 +178,7 @@ export class Mover {
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
     // Delay scroll until after block has finished moving.
-    setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0)
+    setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0);
     return true;
   }
 
@@ -315,7 +315,7 @@ export class Mover {
   }
 
   /**
-   * Scrolls the current block into view if exists one.
+   * Scrolls the current block into view if one exists.
    *
    * @param workspace The workspace to get current block from.
    */
