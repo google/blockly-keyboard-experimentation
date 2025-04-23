@@ -321,7 +321,7 @@ export class Mover {
    * @param padding Amount of spacing to put between the bounds and the edge of
    *     the workspace's viewport.
    */
-  private scrollCurrentBlockIntoView(workspace: WorkspaceSvg, padding = 0) {
+  private scrollCurrentBlockIntoView(workspace: WorkspaceSvg, padding = 10) {
     const blockToView = this.getCurrentBlock(workspace);
     if (blockToView) {
       workspace.scrollBoundsIntoView(
