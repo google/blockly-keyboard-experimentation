@@ -190,7 +190,7 @@ const simpleCircle = {
           'STATEMENTS': {
             'block': {
               'type': 'p5_canvas',
-              'id': 'spya_H-5F=K8+DhedX$y',
+              'id': 'create_canvas_1',
               'deletable': false,
               'movable': false,
               'fields': {
@@ -200,12 +200,12 @@ const simpleCircle = {
               'next': {
                 'block': {
                   'type': 'p5_background_color',
-                  'id': 'i/Hvi~^DYffkN/WpT_Ck',
+                  'id': 'set_background_color_1',
                   'inputs': {
                     'COLOR': {
                       'shadow': {
                         'type': 'colour_picker',
-                        'id': 'B:zpi7kg+.GF_Dutd9GL',
+                        'id': 'set_background_color_1_color',
                         'fields': {
                           'COLOUR': '#9999ff',
                         },
@@ -220,7 +220,7 @@ const simpleCircle = {
       },
       {
         'type': 'p5_draw',
-        'id': '3iI4f%2#Gmk}=OjI7(8h',
+        'id': 'draw_root',
         'x': 0,
         'y': 332,
         'deletable': false,
@@ -234,7 +234,7 @@ const simpleCircle = {
                 'COLOR': {
                   'shadow': {
                     'type': 'colour_picker',
-                    'id': 'gq(POne}j:hVw%C3t{vx',
+                    'id': 'draw_circle_1_color',
                     'fields': {
                       'COLOUR': '#ffff00',
                     },
