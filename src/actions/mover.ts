@@ -55,12 +55,6 @@ export class Mover {
    */
   private oldDragStrategy: IDragStrategy | null = null;
 
-  /**
-   * The current block being moved, which is set at the start of a move and
-   * reset at the end of a move.
-   */
-  private currentBlock: BlockSvg | null = null;
-
   constructor(protected navigation: Navigation) {}
 
   /**
@@ -107,7 +101,6 @@ export class Mover {
     const cursor = workspace?.getCursor();
     const block = this.getCurrentBlock(workspace);
     if (!cursor || !block) throw new Error('precondition failure');
-    this.currentBlock = block;
 
     // Select and focus block.
     common.setSelected(block);
@@ -148,13 +141,11 @@ export class Mover {
       new utils.Coordinate(0, 0),
     );
 
-    // Scroll into view after block has finished moving.
-    setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0);
-
     this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
-    this.currentBlock = null;
+    // Delay scroll until after block has finished moving.
+    setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0);
     return true;
   }
 
@@ -183,13 +174,11 @@ export class Mover {
       new utils.Coordinate(0, 0),
     );
 
-    // Scroll into view after block has finished moving.
-    setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0);
-
     this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
-    this.currentBlock = null;
+    // Delay scroll until after block has finished moving.
+    setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0);
     return true;
   }
 
@@ -328,14 +317,15 @@ export class Mover {
   /**
    * Scrolls the current block into view if one exists.
    *
-   * @param workspace The workspace to scroll the given bounds into view in.
+   * @param workspace The workspace to get current block from.
    * @param padding Amount of spacing to put between the bounds and the edge of
    *     the workspace's viewport.
    */
   private scrollCurrentBlockIntoView(workspace: WorkspaceSvg, padding = 10) {
-    if (this.currentBlock) {
+    const blockToView = this.getCurrentBlock(workspace);
+    if (blockToView) {
       workspace.scrollBoundsIntoView(
-        this.currentBlock.getBoundingRectangleWithoutChildren(),
+        blockToView.getBoundingRectangleWithoutChildren(),
         padding,
       );
     }
