@@ -25,12 +25,6 @@ import {Navigation} from '../navigation';
 const UNCONSTRAINED_MOVE_DISTANCE = 20;
 
 /**
- * Amount of space to put between a moving block and the edge of
- * the workspace's viewport, when making a constrained move.
- */
-const CONSTRAINED_MOVE_BLOCK_SPACING = 100;
-
-/**
  * Low-level code for moving blocks with keyboard shortcuts.
  */
 export class Mover {
@@ -218,7 +212,7 @@ export class Mover {
     );
 
     info.updateTotalDelta();
-    this.scrollCurrentBlockIntoView(workspace, CONSTRAINED_MOVE_BLOCK_SPACING);
+    this.scrollCurrentBlockIntoView(workspace);
     return true;
   }
 
