@@ -180,6 +180,10 @@ export class NavigationController {
   }
 
   handleBlurWorkspace(workspace: Blockly.WorkspaceSvg) {
+    // Before we blur, end any ongoing move
+    if (this.mover.isMoving(workspace)) {
+      this.mover.finishMove(workspace);
+    }
     this.navigation.handleBlurWorkspace(workspace);
   }
 
