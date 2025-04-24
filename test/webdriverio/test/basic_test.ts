@@ -127,7 +127,10 @@ suite('Keyboard navigation', function () {
     await this.browser.keys(Key.ArrowRight);
     await this.browser.pause(PAUSE_TIME);
 
-    chai.assert.equal(await getCurrentCursorNodeId(this.browser), 'create_canvas_1');
+    chai.assert.equal(
+      await getCurrentCursorNodeId(this.browser),
+      'create_canvas_1',
+    );
     chai.assert.equal(
       await getCurrentCursorNodeType(this.browser),
       Blockly.ASTNode.types.FIELD,
