@@ -205,7 +205,9 @@ export async function clickBlock(
       const block = workspaceSvg.getBlockById(blockId);
       if (block) {
         // Ensure the block we want to click is within the viewport.
-        workspaceSvg.scrollBoundsIntoView(block.getBoundingRectangleWithoutChildren());
+        workspaceSvg.scrollBoundsIntoView(
+          block.getBoundingRectangleWithoutChildren(),
+        );
         for (const input of block.inputList) {
           for (const field of input.fieldRow) {
             if (field instanceof Blockly.FieldLabel) {

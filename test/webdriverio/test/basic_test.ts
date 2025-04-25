@@ -11,8 +11,9 @@ import {
   testFileLocations,
   PAUSE_TIME,
   getBlockElementById,
-  clickBlock,} from './test_setup.js';
-import {Key, ClickOptions,} from 'webdriverio';
+  clickBlock,
+} from './test_setup.js';
+import {Key, ClickOptions} from 'webdriverio';
 
 suite('Keyboard navigation', function () {
   // Setting timeout to unlimited as these tests take a longer time to run than most mocha test
