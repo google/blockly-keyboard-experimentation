@@ -90,6 +90,7 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   const injectOptions = {
     toolbox,
     renderer,
+    rtl: true,
   };
   const blocklyDiv = document.getElementById('blocklyDiv');
   if (!blocklyDiv) {
