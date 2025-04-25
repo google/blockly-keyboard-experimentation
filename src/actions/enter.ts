@@ -153,11 +153,11 @@ export class EnterAction {
     workspace.getCursor()?.setCurNode(ASTNode.createBlockNode(newBlock)!);
     this.mover.startMove(workspace);
 
-    const isTopLevelBlock =
+    const isStartBlock =
       !newBlock.outputConnection &&
       !newBlock.nextConnection &&
       !newBlock.previousConnection;
-    if (isTopLevelBlock) {
+    if (isStartBlock) {
       showUnconstrainedMoveHint(workspace, false);
     } else {
       showConstrainedMovementHint(workspace);
