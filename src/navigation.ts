@@ -239,10 +239,10 @@ export class Navigation {
     if (!e.workspaceId) {
       return;
     }
-    const flyoutWorkspace = Blockly.Workspace.getById(
-      e.workspaceId,
-    ) as Blockly.WorkspaceSvg;
-    const mainWorkspace = flyoutWorkspace.targetWorkspace;
+    const flyoutWorkspace = Blockly.Workspace.getById(e.workspaceId) as
+      | Blockly.WorkspaceSvg
+      | undefined;
+    const mainWorkspace = flyoutWorkspace?.targetWorkspace;
     if (!mainWorkspace) {
       return;
     }
