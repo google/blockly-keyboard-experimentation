@@ -17,6 +17,7 @@ import * as Constants from '../constants';
 import {Direction, getXYFromDirection} from '../drag_direction';
 import {KeyboardDragStrategy} from '../keyboard_drag_strategy';
 import {Navigation} from '../navigation';
+import {MoveIcon} from '../move_icon';
 
 /**
  * The distance to move an item, in workspace coordinates, when
@@ -122,6 +123,7 @@ export class Mover {
     // Begin drag.
     dragger.onDragStart(info.fakePointerEvent('pointerdown'));
     info.updateTotalDelta();
+    block.addIcon(new MoveIcon(block));
     return true;
   }
 
@@ -141,6 +143,8 @@ export class Mover {
       info.fakePointerEvent('pointerup'),
       new utils.Coordinate(0, 0),
     );
+
+    info.block.removeIcon(MoveIcon.type);
 
     this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
@@ -166,6 +170,8 @@ export class Mover {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (info.dragger as any).shouldReturnToStart = () => true;
     const blockSvg = info.block;
+
+    blockSvg.removeIcon(MoveIcon.type);
 
     // Explicitly call `hidePreview` because it is not called in revertDrag.
     // @ts-expect-error Access to private property dragStrategy.
