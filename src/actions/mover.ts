@@ -340,7 +340,7 @@ export class Mover {
    *     the workspace's viewport.
    */
   private scrollCurrentBlockIntoView(workspace: WorkspaceSvg, padding = 10) {
-    const blockToView = this.getCurrentBlock(workspace);
+    const blockToView = this.moves.get(workspace)?.block;
     if (blockToView) {
       workspace.scrollBoundsIntoView(
         blockToView.getBoundingRectangleWithoutChildren(),
