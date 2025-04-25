@@ -28,12 +28,14 @@ export class MoveIndicatorBubble
    *
    * @param sourceBlock The block this bubble should be associated with.
    */
+  /* eslint-disable @typescript-eslint/naming-convention */
   constructor(private sourceBlock: Blockly.BlockSvg) {
     this.svgRoot = Blockly.utils.dom.createSvgElement(
       Blockly.utils.Svg.G,
       {},
       this.sourceBlock.workspace.getBubbleCanvas(),
     );
+    const rtl = this.sourceBlock.workspace.RTL;
     Blockly.utils.dom.createSvgElement(
       Blockly.utils.Svg.CIRCLE,
       {
@@ -42,7 +44,7 @@ export class MoveIndicatorBubble
         'stroke': 'grey',
         'stroke-width': '1',
         'r': 20,
-        'cx': 20,
+        'cx': 20 * (rtl ? -1 : 1),
         'cy': 20,
       },
       this.svgRoot,
@@ -56,7 +58,7 @@ export class MoveIndicatorBubble
         'stroke-linejoin': 'round',
         'stroke-width': '2',
         'd': 'm18 9l3 3l-3 3m-3-3h6M6 9l-3 3l3 3m-3-3h6m0 6l3 3l3-3m-3-3v6m3-15l-3-3l-3 3m3-3v6',
-        'transform': 'translate(8 8)',
+        'transform': `translate(${(rtl ? -4 : 1) * 8} 8)`,
       },
       this.svgRoot,
     );
