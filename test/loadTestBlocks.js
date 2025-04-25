@@ -182,7 +182,7 @@ const simpleCircle = {
     'blocks': [
       {
         'type': 'p5_setup',
-        'id': '5.{;T}3Qv}Awi:1M$:ut',
+        'id': 'p5_setup_1',
         'x': 0,
         'y': 75,
         'deletable': false,

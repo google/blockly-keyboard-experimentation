@@ -201,8 +201,11 @@ export async function clickBlock(
   // In the browser context, find the element that we want and give it a findable ID.
   await browser.execute(
     (blockId, newElemId) => {
-      const block = Blockly.getMainWorkspace().getBlockById(blockId);
+      const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
+      const block = workspaceSvg.getBlockById(blockId);
       if (block) {
+        // Ensure the block we want to click is within the viewport.
+        workspaceSvg.scrollBoundsIntoView(block.getBoundingRectangleWithoutChildren());
         for (const input of block.inputList) {
           for (const field of input.fieldRow) {
             if (field instanceof Blockly.FieldLabel) {
@@ -214,9 +217,9 @@ export async function clickBlock(
             }
           }
         }
+        // No label field found. Fall back to the block's SVG root.
+        block.getSvgRoot().id = findableId;
       }
-      // No label field found. Fall back to the block's SVG root.
-      (block as Blockly.BlockSvg).getSvgRoot().id = findableId;
     },
     block.id,
     findableId,
