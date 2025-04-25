@@ -290,7 +290,7 @@ export class KeyboardNavigation {
    * Toggle visibility of a help dialog for the keyboard shortcuts.
    */
   toggleShortcutDialog(): void {
-    this.navigationController.shortcutDialog.toggle();
+    this.navigationController.shortcutDialog.toggle(this.workspace);
   }
 
   /**

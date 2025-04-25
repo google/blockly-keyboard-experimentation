@@ -13,6 +13,7 @@ import {
   utils,
 } from 'blockly';
 import {Direction, getDirectionFromXY} from './drag_direction';
+import {showUnconstrainedMoveHint} from './hints';
 
 // Copied in from core because it is not exported.
 interface ConnectionCandidate {
@@ -70,6 +71,12 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     } else {
       // Handle the case when unconstrained drag was far from any candidate.
       this.searchNode = null;
+
+      if (this.isConstrainedMovement()) {
+        // @ts-expect-error private field
+        const workspace = this.workspace;
+        showUnconstrainedMoveHint(workspace, true);
+      }
     }
   }
 
