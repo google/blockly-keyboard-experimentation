@@ -145,6 +145,8 @@ export class Mover {
     this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
+    // Delay scroll until after block has finished moving.
+    setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0);
     return true;
   }
 
@@ -176,6 +178,8 @@ export class Mover {
     this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
+    // Delay scroll until after block has finished moving.
+    setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0);
     return true;
   }
 
@@ -198,6 +202,7 @@ export class Mover {
     );
 
     info.updateTotalDelta();
+    this.scrollCurrentBlockIntoView(workspace);
     return true;
   }
 
@@ -219,6 +224,7 @@ export class Mover {
     info.totalDelta.y += y * UNCONSTRAINED_MOVE_DISTANCE * workspace.scale;
 
     info.dragger.onDrag(info.fakePointerEvent('pointermove'), info.totalDelta);
+    this.scrollCurrentBlockIntoView(workspace);
     return true;
   }
 
@@ -306,6 +312,23 @@ export class Mover {
     if (this.oldDragStrategy) {
       block.setDragStrategy(this.oldDragStrategy);
       this.oldDragStrategy = null;
+    }
+  }
+
+  /**
+   * Scrolls the current block into view if one exists.
+   *
+   * @param workspace The workspace to get current block from.
+   * @param padding Amount of spacing to put between the bounds and the edge of
+   *     the workspace's viewport.
+   */
+  private scrollCurrentBlockIntoView(workspace: WorkspaceSvg, padding = 10) {
+    const blockToView = this.getCurrentBlock(workspace);
+    if (blockToView) {
+      workspace.scrollBoundsIntoView(
+        blockToView.getBoundingRectangleWithoutChildren(),
+        padding,
+      );
     }
   }
 }
