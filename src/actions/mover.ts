@@ -18,6 +18,7 @@ import {Direction, getXYFromDirection} from '../drag_direction';
 import {KeyboardDragStrategy} from '../keyboard_drag_strategy';
 import {Navigation} from '../navigation';
 import {MoveIcon} from '../move_icon';
+import {clearMoveHints} from '../hints';
 
 /**
  * The distance to move an item, in workspace coordinates, when
@@ -136,6 +137,8 @@ export class Mover {
    * @returns True iff move successfully finished.
    */
   finishMove(workspace: WorkspaceSvg) {
+    clearMoveHints(workspace);
+
     const info = this.moves.get(workspace);
     if (!info) throw new Error('no move info for workspace');
 
@@ -163,6 +166,8 @@ export class Mover {
    * @returns True iff move successfully aborted.
    */
   abortMove(workspace: WorkspaceSvg) {
+    clearMoveHints(workspace);
+
     const info = this.moves.get(workspace);
     if (!info) throw new Error('no move info for workspace');
 

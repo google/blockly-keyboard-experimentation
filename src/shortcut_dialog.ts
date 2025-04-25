@@ -11,6 +11,7 @@ import {
   getLongActionShortcutsAsKeys,
   upperCaseFirst,
 } from './shortcut_formatting';
+import {clearHelpHint} from './hints';
 
 /**
  * Class for handling the shortcuts dialog.
@@ -64,7 +65,12 @@ export class ShortcutDialog {
     }
   }
 
-  toggle() {
+  toggle(workspace: Blockly.WorkspaceSvg) {
+    clearHelpHint(workspace);
+    this.toggleInternal();
+  }
+
+  toggleInternal() {
     if (this.modalContainer && this.shortcutDialog) {
       // Use built in dialog methods.
       if (this.shortcutDialog.hasAttribute('open')) {
@@ -132,7 +138,7 @@ export class ShortcutDialog {
       // Can we also intercept the Esc key to dismiss.
       if (this.closeButton) {
         this.closeButton.addEventListener('click', (e) => {
-          this.toggle();
+          this.toggleInternal();
         });
       }
     }
@@ -161,8 +167,8 @@ export class ShortcutDialog {
     /** List all of the currently registered shortcuts. */
     const announceShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.LIST_SHORTCUTS,
-      callback: () => {
-        this.toggle();
+      callback: (workspace) => {
+        this.toggle(workspace);
         return true;
       },
       keyCodes: [Blockly.utils.KeyCodes.SLASH],
