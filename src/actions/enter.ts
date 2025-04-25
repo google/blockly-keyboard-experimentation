@@ -128,6 +128,7 @@ export class EnterAction {
    */
   private insertFromFlyout(workspace: WorkspaceSvg) {
     workspace.setResizesEnabled(false);
+    // Create a new event group or append to the existing group.
     const existingGroup = Events.getGroup();
     if (!existingGroup) {
       Events.setGroup(true);

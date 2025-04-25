@@ -206,7 +206,7 @@ export class Mover {
       info.startLocation,
     );
 
-    if (target) {
+    if (dragStrategy.isNewBlock && target) {
       const newNode = ASTNode.createConnectionNode(target);
       if (newNode) workspace.getCursor()?.setCurNode(newNode);
     }

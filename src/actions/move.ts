@@ -199,7 +199,7 @@ export class MoveActions {
     const curNode = workspace?.getCursor()?.getCurNode();
     let block = curNode?.getSourceBlock();
     if (!block) return undefined;
-    while (block && block.isShadow()) {
+    while (block?.isShadow()) {
       block = block.getParent();
       if (!block) {
         throw new Error(

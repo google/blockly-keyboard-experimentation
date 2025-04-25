@@ -5,7 +5,6 @@
  */
 
 import {
-  common,
   ASTNode,
   BlockSvg,
   ConnectionType,
@@ -52,8 +51,6 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
 
   override startDrag(e?: PointerEvent) {
     if (!this.cursor) throw new Error('precondition failure');
-    // Select and focus block.
-    common.setSelected(this.block);
     this.cursor.setCurNode(ASTNode.createBlockNode(this.block));
     super.startDrag(e);
     // Set position of the dragging block, so that it doesn't pop
@@ -166,8 +163,6 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     draggingBlock: BlockSvg,
     localConns: RenderedConnection[],
   ): ConnectionCandidate | null {
-    // TODO: Handle the case where the cursor is null, or never return null
-    // from workspace.getCursor()
     if (!this.cursor) throw new Error('precondition failure');
 
     // Helper function for traversal.

@@ -770,8 +770,7 @@ export class Navigation {
    *
    * @param stationaryNode The first node to connect.
    * @param movingBlock The block we're moving.
-   * @returns True if the key was handled; false if something went
-   *     wrong.
+   * @returns True if the connection was successful, false otherwise.
    */
   tryToConnectBlock(
     stationaryNode: Blockly.ASTNode,
@@ -784,6 +783,7 @@ export class Navigation {
     if (!destConnection) return false;
     return this.insertBlock(movingBlock, destConnection);
   }
+
   /**
    * Disconnects the block from its parent and moves it to the position of the
    * workspace node.
