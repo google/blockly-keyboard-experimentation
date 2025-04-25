@@ -57,18 +57,6 @@ export class Mover {
   oldGetGesture: ((e: PointerEvent) => Gesture | null) | null = null;
 
   /**
-   * The stashed wouldDeleteDraggable function, which is sometimes replaced
-   * during a keyboard drag and is reset at the end of a keyboard drag.
-   */
-  oldWouldDeleteDraggable: (() => boolean) | null = null;
-
-  /**
-   * The stashed shouldReturnToStart function, which is sometimes replaced
-   * during a keyboard drag and is reset at the end of a keyboard drag.
-   */
-  oldShouldReturnToStart: (() => boolean) | null = null;
-
-  /**
    * The block's base drag strategy, which will be overridden during
    * keyboard drags and reset at the end of the drag.
    */
@@ -213,7 +201,6 @@ export class Mover {
 
     this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
-    this.unpatchDragger(info.dragger as dragging.Dragger);
     this.moves.delete(workspace);
     // Delay scroll until after block has finished moving.
     setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0);
@@ -359,35 +346,13 @@ export class Mover {
    */
   private patchDragger(dragger: dragging.Dragger, isNewBlock: boolean) {
     if (isNewBlock) {
-      // @ts-expect-error dragger.wouldDeleteDraggable is private.
-      this.oldWouldDeleteDraggable = dragger.wouldDeleteDraggable;
       // Monkey patch dragger to trigger delete.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (dragger as any).wouldDeleteDraggable = () => true;
     } else {
-      // @ts-expect-error dragger.shouldReturnToStart is private.
-      this.oldShouldReturnToStart = dragger.shouldReturnToStart;
       // Monkey patch dragger to trigger call to draggable.revertDrag.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (dragger as any).shouldReturnToStart = () => true;
-    }
-  }
-
-  /**
-   * Undo the monkeypatching of the block dragger.
-   *
-   * @param dragger The dragger to patch.
-   */
-  private unpatchDragger(dragger: dragging.Dragger) {
-    if (this.oldWouldDeleteDraggable) {
-      // @ts-expect-error dragger.wouldDeleteDraggable is private.
-      dragger.wouldDeleteDraggable = this.oldWouldDeleteDraggable;
-      this.oldWouldDeleteDraggable = null;
-    }
-    if (this.oldShouldReturnToStart) {
-      // @ts-expect-error dragger.shouldReturnToStart is private.
-      dragger.shouldReturnToStart = this.oldShouldReturnToStart;
-      this.oldShouldReturnToStart = null;
     }
   }
 }
