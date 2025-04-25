@@ -128,30 +128,28 @@ export class EnterAction {
    */
   private insertFromFlyout(workspace: WorkspaceSvg) {
     workspace.setResizesEnabled(false);
-    Events.setGroup(true);
+    // Create a new event group or append to the existing group.
+    const existingGroup = Events.getGroup();
+    if (!existingGroup) {
+      Events.setGroup(true);
+    }
 
     const stationaryNode = this.navigation.getStationaryNode(workspace);
     const newBlock = this.createNewBlock(workspace);
     if (!newBlock) return;
-    if (stationaryNode) {
-      if (!this.navigation.tryToConnectBlock(stationaryNode, newBlock)) {
-        console.warn(
-          'Something went wrong while inserting a block from the flyout.',
-        );
-      }
-    }
-
+    const insertStartPoint = stationaryNode
+      ? this.navigation.findInsertStartPoint(stationaryNode, newBlock)
+      : null;
     if (workspace.getTopBlocks().includes(newBlock)) {
       this.positionNewTopLevelBlock(workspace, newBlock);
     }
 
-    Events.setGroup(false);
     workspace.setResizesEnabled(true);
 
     this.navigation.focusWorkspace(workspace);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     workspace.getCursor()?.setCurNode(ASTNode.createBlockNode(newBlock)!);
-    this.mover.startMove(workspace);
+    this.mover.startMove(workspace, newBlock, insertStartPoint);
 
     const isStartBlock =
       !newBlock.outputConnection &&

@@ -4,11 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type {BlockSvg, IDragger, IDragStrategy, Gesture} from 'blockly';
+import type {
+  BlockSvg,
+  IDragger,
+  IDragStrategy,
+  Gesture,
+  RenderedConnection,
+} from 'blockly';
 import {
   ASTNode,
-  common,
   Connection,
+  dragging,
   registry,
   utils,
   WorkspaceSvg,
@@ -63,11 +69,10 @@ export class Mover {
    * currently has focus on the given workspace.
    *
    * @param workspace The workspace to move on.
+   * @param block The block to try to drag.
    * @returns True iff we can begin a move.
    */
-  canMove(workspace: WorkspaceSvg) {
-    const block = this.getCurrentBlock(workspace);
-
+  canMove(workspace: WorkspaceSvg, block: BlockSvg) {
     return !!(
       this.navigation.getState(workspace) === Constants.STATE.WORKSPACE &&
       this.navigation.canCurrentlyEdit(workspace) &&
@@ -96,19 +101,18 @@ export class Mover {
    * Should only be called if canMove has returned true.
    *
    * @param workspace The workspace we might be moving on.
+   * @param block The block to start dragging.
+   * @param insertStartPoint Where to insert the block, or null if the block
+   *     already existed.
    * @returns True iff a move has successfully begun.
    */
-  startMove(workspace: WorkspaceSvg) {
-    const cursor = workspace?.getCursor();
-    const block = this.getCurrentBlock(workspace);
-    if (!cursor || !block) throw new Error('precondition failure');
-
-    // Select and focus block.
-    common.setSelected(block);
-    cursor.setCurNode(ASTNode.createBlockNode(block));
-
+  startMove(
+    workspace: WorkspaceSvg,
+    block: BlockSvg,
+    insertStartPoint: RenderedConnection | null,
+  ) {
     this.patchWorkspace(workspace);
-    this.patchDragStrategy(block);
+    this.patchDragStrategy(block, insertStartPoint);
     // Begin dragging block.
     const DraggerClass = registry.getClassFromOptions(
       registry.Type.BLOCK_DRAGGER,
@@ -167,18 +171,33 @@ export class Mover {
     const info = this.moves.get(workspace);
     if (!info) throw new Error('no move info for workspace');
 
-    // Monkey patch dragger to trigger call to draggable.revertDrag.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (info.dragger as any).shouldReturnToStart = () => true;
-    const blockSvg = info.block;
+    const dragStrategy = info.block.getDragStrategy() as KeyboardDragStrategy;
+    this.patchDragger(
+      info.dragger as dragging.Dragger,
+      dragStrategy.isNewBlock,
+    );
 
     // Explicitly call `hidePreview` because it is not called in revertDrag.
-    // @ts-expect-error Access to private property dragStrategy.
-    blockSvg.dragStrategy.connectionPreviewer.hidePreview();
+    // @ts-expect-error Access to private property connectionPreviewer.
+    dragStrategy.connectionPreviewer.hidePreview();
+
+    // Save the position so we can put the cursor in a reasonable spot.
+    // @ts-expect-error Access to private property connectionCandidate.
+    const target = dragStrategy.connectionCandidate?.neighbour;
+
+    // Prevent the stragegy connecting the block so we just delete one block.
+    // @ts-expect-error Access to private property connectionCandidate.
+    dragStrategy.connectionCandidate = null;
+
     info.dragger.onDragEnd(
       info.fakePointerEvent('pointerup'),
-      new utils.Coordinate(0, 0),
+      info.startLocation,
     );
+
+    if (dragStrategy.isNewBlock && target) {
+      const newNode = ASTNode.createConnectionNode(target);
+      if (newNode) workspace.getCursor()?.setCurNode(newNode);
+    }
 
     this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
@@ -234,32 +253,6 @@ export class Mover {
   }
 
   /**
-   * Get the source block for the cursor location, or undefined if no
-   * source block can be found.
-   * If the cursor is on a shadow block, walks up the tree until it finds
-   * a non-shadow block to drag.
-   *
-   * @param workspace The workspace to inspect for a cursor.
-   * @returns The source block, or undefined if no appropriate block
-   *     could be found.
-   */
-  protected getCurrentBlock(workspace: WorkspaceSvg): BlockSvg | undefined {
-    const curNode = workspace?.getCursor()?.getCurNode();
-    let block = curNode?.getSourceBlock();
-    if (!block) return undefined;
-    while (block && block.isShadow()) {
-      block = block.getParent();
-      if (!block) {
-        throw new Error(
-          'Tried to drag a shadow block with no parent. ' +
-            'Shadow blocks should always have parents.',
-        );
-      }
-    }
-    return block as BlockSvg;
-  }
-
-  /**
    * Monkeypatch over workspace functions to consider keyboard drags as
    * well as mouse/pointer drags.
    *
@@ -297,15 +290,21 @@ export class Mover {
       (workspace as any).getGesture = this.oldGetGesture;
     }
   }
+
   /**
    * Monkeypatch: replace the block's drag strategy and cache the old value.
    *
    * @param block The block to patch.
+   * @param insertStartPoint Where to insert the block, or null if the block
+   *     already existed.
    */
-  private patchDragStrategy(block: BlockSvg) {
+  private patchDragStrategy(
+    block: BlockSvg,
+    insertStartPoint: RenderedConnection | null,
+  ) {
     // @ts-expect-error block.dragStrategy is private.
     this.oldDragStrategy = block.dragStrategy;
-    block.setDragStrategy(new KeyboardDragStrategy(block));
+    block.setDragStrategy(new KeyboardDragStrategy(block, insertStartPoint));
   }
 
   /**
@@ -328,12 +327,32 @@ export class Mover {
    *     the workspace's viewport.
    */
   private scrollCurrentBlockIntoView(workspace: WorkspaceSvg, padding = 10) {
-    const blockToView = this.getCurrentBlock(workspace);
+    const blockToView = this.moves.get(workspace)?.block;
     if (blockToView) {
       workspace.scrollBoundsIntoView(
         blockToView.getBoundingRectangleWithoutChildren(),
         padding,
       );
+    }
+  }
+
+  /**
+   * Monkeypatch: override either wouldDeleteDraggable or shouldReturnToStart,
+   * based on whether this was an insertion of a new block or a movement of
+   * an existing block.
+   *
+   * @param dragger The dragger to patch.
+   * @param isNewBlock Whether the moving block was created for this action.
+   */
+  private patchDragger(dragger: dragging.Dragger, isNewBlock: boolean) {
+    if (isNewBlock) {
+      // Monkey patch dragger to trigger delete.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (dragger as any).wouldDeleteDraggable = () => true;
+    } else {
+      // Monkey patch dragger to trigger call to draggable.revertDrag.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (dragger as any).shouldReturnToStart = () => true;
     }
   }
 }

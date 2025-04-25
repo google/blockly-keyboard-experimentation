@@ -9,6 +9,7 @@ import {
   BlockSvg,
   ConnectionType,
   RenderedConnection,
+  LineCursor,
   dragging,
   utils,
 } from 'blockly';
@@ -35,7 +36,22 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   /** Where a constrained movement should start when traversing the tree. */
   private searchNode: ASTNode | null = null;
 
+  private cursor: LineCursor | null;
+
+  isNewBlock: boolean;
+
+  constructor(
+    private block: BlockSvg,
+    private insertStartPoint: RenderedConnection | null,
+  ) {
+    super(block);
+    this.isNewBlock = !!this.insertStartPoint;
+    this.cursor = block.workspace.getCursor();
+  }
+
   override startDrag(e?: PointerEvent) {
+    if (!this.cursor) throw new Error('precondition failure');
+    this.cursor.setCurNode(ASTNode.createBlockNode(this.block));
     super.startDrag(e);
     // Set position of the dragging block, so that it doesn't pop
     // to the top left of the workspace.
@@ -63,7 +79,6 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       if (this.isConstrainedMovement()) {
         // Position the moving block down and slightly to the right of the
         // target connection.
-        // @ts-expect-error block is private.
         this.block.moveDuringDrag(
           new utils.Coordinate(neighbour.x + 10, neighbour.y + 10),
         );
@@ -148,8 +163,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     draggingBlock: BlockSvg,
     localConns: RenderedConnection[],
   ): ConnectionCandidate | null {
-    const cursor = draggingBlock.workspace.getCursor();
-    if (!cursor) return null;
+    if (!this.cursor) throw new Error('precondition failure');
 
     // Helper function for traversal.
     function isConnection(node: ASTNode | null): boolean {
@@ -162,9 +176,9 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     const dir = this.currentDragDirection;
     while (potential && !candidateConnection) {
       if (dir === Direction.Up || dir === Direction.Left) {
-        potential = cursor.getPreviousNode(potential, isConnection, true);
+        potential = this.cursor.getPreviousNode(potential, isConnection, true);
       } else if (dir === Direction.Down || dir === Direction.Right) {
-        potential = cursor.getNextNode(potential, isConnection, true);
+        potential = this.cursor.getNextNode(potential, isConnection, true);
       }
 
       localConns.forEach((conn: RenderedConnection) => {
@@ -225,7 +239,6 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     // @ts-expect-error connectionCandidate is private
     const candidate = this.connectionCandidate as ConnectionCandidate;
     if (!candidate || !previewer) return;
-    // @ts-expect-error block is private
     const block = this.block;
 
     // This is essentially a copy of the second half of updateConnectionPreview
@@ -269,21 +282,19 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
    */
   private createInitialCandidate(): ConnectionCandidate | null {
     // @ts-expect-error startParentConn is private.
-    const neighbour = this.startParentConn;
+    const neighbour = this.insertStartPoint ?? this.startParentConn;
     if (neighbour) {
       this.searchNode = ASTNode.createConnectionNode(neighbour);
       switch (neighbour.type) {
         case ConnectionType.INPUT_VALUE:
           return {
             neighbour: neighbour,
-            // @ts-expect-error block is private.
             local: this.block.outputConnection,
             distance: 0,
           };
         case ConnectionType.NEXT_STATEMENT:
           return {
             neighbour: neighbour,
-            // @ts-expect-error block is private.
             local: this.block.previousConnection,
             distance: 0,
           };
