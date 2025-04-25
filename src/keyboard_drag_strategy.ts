@@ -14,6 +14,7 @@ import {
 } from 'blockly';
 import {Direction, getDirectionFromXY} from './drag_direction';
 import {showUnconstrainedMoveHint} from './hints';
+import {MoveIcon} from './move_icon';
 
 // Copied in from core because it is not exported.
 interface ConnectionCandidate {
@@ -44,6 +45,8 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     // @ts-expect-error connectionCandidate is private.
     this.connectionCandidate = this.createInitialCandidate();
     this.forceShowPreview();
+    // @ts-expect-error block is private.
+    this.block.addIcon(new MoveIcon(this.block));
   }
 
   override drag(newLoc: utils.Coordinate, e?: PointerEvent): void {
@@ -78,6 +81,12 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
         showUnconstrainedMoveHint(workspace, true);
       }
     }
+  }
+
+  override endDrag(e?: PointerEvent) {
+    super.endDrag(e);
+    // @ts-expect-error block is private.
+    this.block.removeIcon(MoveIcon.type);
   }
 
   /**
