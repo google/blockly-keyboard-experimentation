@@ -119,7 +119,7 @@ suite('Keyboard navigation', function () {
     );
   });
 
-  test('Right from block selects field', async function () {
+  test('Right from block selects first field', async function () {
     await focusWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await setCurrentCursorNodeById(this.browser, 'create_canvas_1');
