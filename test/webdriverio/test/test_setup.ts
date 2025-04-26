@@ -180,9 +180,11 @@ export async function setCurrentCursorNodeById(
   return await browser.execute((blockId) => {
     const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
     const rootBlock = workspaceSvg.getBlockById(blockId);
-    workspaceSvg
-      .getCursor()
-      ?.setCurNode(Blockly.ASTNode.createBlockNode(rootBlock!)!);
+    if (rootBlock) {
+      workspaceSvg
+        .getCursor()
+        ?.setCurNode(Blockly.ASTNode.createBlockNode(rootBlock));
+    }
   }, blockId);
 }
 
