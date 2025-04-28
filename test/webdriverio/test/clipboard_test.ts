@@ -35,7 +35,7 @@ suite('Clipboard test', function () {
 
   test('Copy and paste while block selected', async function () {
     const block = await getBlockElementById(this.browser, 'draw_circle_1');
-    await clickBlock(this.browser, block, {button: 1} as ClickOptions);
+    await clickBlock(this.browser, block, {button: 0} as ClickOptions);
 
     // Copy and paste
     await this.browser.keys([Key.Ctrl, 'c']);
@@ -55,7 +55,7 @@ suite('Clipboard test', function () {
 
   test('Cut and paste while block selected', async function () {
     const block = await getBlockElementById(this.browser, 'draw_circle_1');
-    await clickBlock(this.browser, block, {button: 1} as ClickOptions);
+    await clickBlock(this.browser, block, {button: 0} as ClickOptions);
 
     // Cut and paste
     await this.browser.keys([Key.Ctrl, 'x']);
