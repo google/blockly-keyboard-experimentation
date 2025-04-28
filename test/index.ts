@@ -104,6 +104,8 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   new KeyboardNavigation(workspace, navigationOptions);
   registerRunCodeShortcut();
 
+  Blockly.ContextMenuItems.registerCommentOptions();
+
   // Disable blocks that aren't inside the setup or draw loops.
   workspace.addChangeListener(Blockly.Events.disableOrphans);
 
