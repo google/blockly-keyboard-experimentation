@@ -177,10 +177,6 @@ export class Mover {
       dragStrategy.isNewBlock,
     );
 
-    // Explicitly call `hidePreview` because it is not called in revertDrag.
-    // @ts-expect-error Access to private property connectionPreviewer.
-    dragStrategy.connectionPreviewer.hidePreview();
-
     // Save the position so we can put the cursor in a reasonable spot.
     // @ts-expect-error Access to private property connectionCandidate.
     const target = dragStrategy.connectionCandidate?.neighbour;
