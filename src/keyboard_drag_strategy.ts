@@ -61,7 +61,6 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     // @ts-expect-error connectionCandidate is private.
     this.connectionCandidate = this.createInitialCandidate();
     this.forceShowPreview();
-    // @ts-expect-error block is private.
     this.block.addIcon(new MoveIcon(this.block));
   }
 
@@ -100,7 +99,6 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
 
   override endDrag(e?: PointerEvent) {
     super.endDrag(e);
-    // @ts-expect-error block is private.
     this.block.removeIcon(MoveIcon.type);
   }
 
