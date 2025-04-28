@@ -32,6 +32,11 @@ import {clearMoveHints} from '../hints';
 const UNCONSTRAINED_MOVE_DISTANCE = 20;
 
 /**
+ * The amount of additional padding to include during a constrained move.
+ */
+const CONSTRAINED_ADDITIONAL_PADDING = 70;
+
+/**
  * Low-level code for moving blocks with keyboard shortcuts.
  */
 export class Mover {
@@ -226,7 +231,7 @@ export class Mover {
     );
 
     info.updateTotalDelta();
-    this.scrollCurrentBlockIntoView(workspace);
+    this.scrollCurrentBlockIntoView(workspace, CONSTRAINED_ADDITIONAL_PADDING);
     return true;
   }
 
@@ -326,13 +331,15 @@ export class Mover {
    * @param padding Amount of spacing to put between the bounds and the edge of
    *     the workspace's viewport.
    */
-  private scrollCurrentBlockIntoView(workspace: WorkspaceSvg, padding = 10) {
+  private scrollCurrentBlockIntoView(workspace: WorkspaceSvg, padding = 0) {
     const blockToView = this.moves.get(workspace)?.block;
     if (blockToView) {
-      workspace.scrollBoundsIntoView(
-        blockToView.getBoundingRectangleWithoutChildren(),
-        padding,
-      );
+      const bounds = blockToView.getBoundingRectangleWithoutChildren().clone();
+      bounds.top -= padding;
+      bounds.bottom += padding;
+      bounds.left -= padding;
+      bounds.right += padding;
+      workspace.scrollBoundsIntoView(bounds);
     }
   }
 
