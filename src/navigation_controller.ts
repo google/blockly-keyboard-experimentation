@@ -171,53 +171,6 @@ export class NavigationController {
     this.navigation.removeWorkspace(workspace);
   }
 
-  focusWorkspace(workspace: WorkspaceSvg) {
-    this.navigation.focusWorkspace(workspace);
-  }
-
-  handleFocusWorkspace(workspace: Blockly.WorkspaceSvg) {
-    this.navigation.handleFocusWorkspace(workspace);
-  }
-
-  handleBlurWorkspace(workspace: Blockly.WorkspaceSvg) {
-    // Before we blur, end any ongoing move
-    if (this.mover.isMoving(workspace)) {
-      this.mover.finishMove(workspace);
-    }
-    this.navigation.handleBlurWorkspace(workspace);
-  }
-
-  handleFocusOutWidgetDropdownDiv(
-    workspace: Blockly.WorkspaceSvg,
-    relatedTarget: EventTarget | null,
-  ) {
-    this.navigation.handleFocusOutWidgetDropdownDiv(workspace, relatedTarget);
-  }
-
-  focusToolbox(workspace: Blockly.WorkspaceSvg) {
-    this.navigation.focusToolbox(workspace);
-  }
-
-  handleFocusToolbox(workspace: Blockly.WorkspaceSvg) {
-    this.navigation.handleFocusToolbox(workspace);
-  }
-
-  handleBlurToolbox(workspace: Blockly.WorkspaceSvg, closeFlyout: boolean) {
-    this.navigation.handleBlurToolbox(workspace, closeFlyout);
-  }
-
-  focusFlyout(workspace: Blockly.WorkspaceSvg) {
-    this.navigation.focusFlyout(workspace);
-  }
-
-  handleFocusFlyout(workspace: Blockly.WorkspaceSvg) {
-    this.navigation.handleFocusFlyout(workspace);
-  }
-
-  handleBlurFlyout(workspace: Blockly.WorkspaceSvg, closeFlyout: boolean) {
-    this.navigation.handleBlurFlyout(workspace, closeFlyout);
-  }
-
   /**
    * Turns on keyboard navigation.
    *
@@ -252,11 +205,10 @@ export class NavigationController {
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
-            if (!workspace.getToolbox()) {
-              this.navigation.focusFlyout(workspace);
-            } else {
-              this.navigation.focusToolbox(workspace);
-            }
+            Blockly.getFocusManager()
+              .focusTree(
+                workspace.getToolbox() ?? workspace.getFlyout() ?? workspace
+              );
             return true;
           default:
             return false;

@@ -9,14 +9,12 @@ import {
   Events,
   ShortcutRegistry,
   utils as BlocklyUtils,
-} from 'blockly/core';
-
-import type {
   Block,
   BlockSvg,
   Field,
   FlyoutButton,
   WorkspaceSvg,
+  getFocusManager
 } from 'blockly/core';
 
 import * as Constants from '../constants';
@@ -134,7 +132,7 @@ export class EnterAction {
       Events.setGroup(true);
     }
 
-    const stationaryNode = this.navigation.getStationaryNode(workspace);
+    const stationaryNode = this.navigation.getFocusedASTNode(workspace);
     const newBlock = this.createNewBlock(workspace);
     if (!newBlock) return;
     const insertStartPoint = stationaryNode
@@ -146,7 +144,7 @@ export class EnterAction {
 
     workspace.setResizesEnabled(true);
 
-    this.navigation.focusWorkspace(workspace);
+    getFocusManager().focusTree(workspace);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     workspace.getCursor()?.setCurNode(ASTNode.createBlockNode(newBlock)!);
     this.mover.startMove(workspace, newBlock, insertStartPoint);

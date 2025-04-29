@@ -8,6 +8,7 @@ import {ASTNode, ShortcutRegistry, utils as BlocklyUtils} from 'blockly/core';
 
 import type {Field, Toolbox, WorkspaceSvg} from 'blockly/core';
 
+import * as Blockly from 'blockly/core';
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
 
@@ -67,12 +68,11 @@ export class ArrowNavigation {
           }
           return isHandled;
         case Constants.STATE.TOOLBOX:
-          isHandled =
-            toolbox && typeof toolbox.onShortcut === 'function'
-              ? toolbox.onShortcut(shortcut)
-              : false;
-          if (!isHandled) {
-            this.navigation.focusFlyout(workspace);
+          // @ts-expect-error private method
+          isHandled = toolbox && toolbox.selectChild();
+          const flyout = workspace.getFlyout();
+          if (!isHandled && flyout) {
+            Blockly.getFocusManager().focusTree(flyout.getWorkspace());
           }
           return true;
         default:
@@ -100,12 +100,13 @@ export class ArrowNavigation {
           }
           return isHandled;
         case Constants.STATE.FLYOUT:
-          this.navigation.focusToolbox(workspace);
+          if (toolbox) {
+            Blockly.getFocusManager().focusTree(toolbox);
+          }
           return true;
         case Constants.STATE.TOOLBOX:
-          return toolbox && typeof toolbox.onShortcut === 'function'
-            ? toolbox.onShortcut(shortcut)
-            : false;
+          // @ts-expect-error private method
+          return toolbox && toolbox.selectParent();
         default:
           return false;
       }
@@ -173,9 +174,20 @@ export class ArrowNavigation {
               }
               return isHandled;
             case Constants.STATE.TOOLBOX:
-              return toolbox && typeof toolbox.onShortcut === 'function'
-                ? toolbox.onShortcut(shortcut)
-                : false;
+              if (!toolbox) return false;
+              if (!toolbox.getSelectedItem()) {
+                const firstItem = toolbox.getToolboxItems().find((item) => item.isSelectable()) ?? null;
+                toolbox.setSelectedItem(firstItem);
+                isHandled = true;
+              } else {
+                // @ts-expect-error private method
+                isHandled = toolbox.selectNext();
+              }
+              const selectedItem = toolbox.getSelectedItem();
+              if (selectedItem) {
+                Blockly.getFocusManager().focusNode(selectedItem);
+              }
+              return isHandled;
             default:
               return false;
           }
@@ -221,9 +233,14 @@ export class ArrowNavigation {
               }
               return isHandled;
             case Constants.STATE.TOOLBOX:
-              return toolbox && typeof toolbox.onShortcut === 'function'
-                ? toolbox.onShortcut(shortcut)
-                : false;
+              if (!toolbox) return false;
+              // @ts-expect-error private method
+              isHandled = toolbox.selectPrevious();
+              const selectedItem = toolbox.getSelectedItem();
+              if (selectedItem) {
+                Blockly.getFocusManager().focusNode(selectedItem);
+              }
+              return isHandled;
             default:
               return false;
           }
