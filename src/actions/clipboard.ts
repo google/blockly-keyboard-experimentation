@@ -20,6 +20,7 @@ import {Navigation} from '../navigation';
 import {getShortActionShortcut} from '../shortcut_formatting';
 import * as Blockly from 'blockly';
 import {clearPasteHints, showCopiedHint, showCutHint} from '../hints';
+import {Inserter} from './inserter';
 
 const KeyCodes = blocklyUtils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -46,7 +47,10 @@ export class Clipboard {
   /** The workspace a copy or cut keyboard shortcut happened in. */
   private copyWorkspace: WorkspaceSvg | null = null;
 
-  constructor(private navigation: Navigation) {}
+  constructor(
+    private navigation: Navigation,
+    private inserter: Inserter,
+  ) {}
 
   /**
    * Install these actions as both keyboard shortcuts and context menu items.
@@ -370,26 +374,13 @@ export class Clipboard {
   private pasteCallback(workspace: WorkspaceSvg) {
     if (!this.copyData || !this.copyWorkspace) return false;
     clearPasteHints(workspace);
-
+    const copyDataLocal = this.copyData;
     const pasteWorkspace = this.copyWorkspace.isFlyout
       ? workspace
       : this.copyWorkspace;
 
-    const targetNode = this.navigation.getStationaryNode(pasteWorkspace);
-    // If we're pasting in the flyout it still targets the workspace. Focus first
-    // so ensure correct selection handling.
-    this.navigation.focusWorkspace(workspace);
-
-    Events.setGroup(true);
-    const block = clipboard.paste(this.copyData, pasteWorkspace) as BlockSvg;
-    if (block) {
-      if (targetNode) {
-        this.navigation.tryToConnectBlock(targetNode, block);
-      }
-      Events.setGroup(false);
-      return true;
-    }
-    Events.setGroup(false);
-    return false;
+    return this.inserter.insert(pasteWorkspace, () => {
+      return clipboard.paste(copyDataLocal, pasteWorkspace) as BlockSvg;
+    });
   }
 }

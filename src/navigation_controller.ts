@@ -37,6 +37,7 @@ import {ActionMenu} from './actions/action_menu';
 import {MoveActions} from './actions/move';
 import {Mover} from './actions/mover';
 import {UndoRedoAction} from './actions/undo_redo';
+import {Inserter} from './actions/inserter';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 
@@ -47,6 +48,8 @@ export class NavigationController {
   private navigation: Navigation = new Navigation();
 
   private mover = new Mover(this.navigation);
+
+  private inserter = new Inserter(this.mover, this.navigation);
 
   shortcutDialog: ShortcutDialog = new ShortcutDialog();
 
@@ -62,7 +65,7 @@ export class NavigationController {
   /** Keyboard shortcut for disconnection. */
   disconnectAction: DisconnectAction = new DisconnectAction(this.navigation);
 
-  clipboard: Clipboard = new Clipboard(this.navigation);
+  clipboard: Clipboard = new Clipboard(this.navigation, this.inserter);
 
   workspaceMovement: WorkspaceMovement = new WorkspaceMovement(this.navigation);
 
@@ -71,7 +74,7 @@ export class NavigationController {
 
   exitAction: ExitAction = new ExitAction(this.navigation);
 
-  enterAction: EnterAction = new EnterAction(this.mover, this.navigation);
+  enterAction: EnterAction = new EnterAction(this.navigation, this.inserter);
 
   undoRedoAction: UndoRedoAction = new UndoRedoAction();
 
