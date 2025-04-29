@@ -155,6 +155,88 @@ export async function getSelectedBlockId(browser: WebdriverIO.Browser) {
   });
 }
 
+/**
+ * Clicks in the workspace to focus it.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ */
+export async function focusWorkspace(browser: WebdriverIO.Browser) {
+  const workspaceElement = await browser.$(
+    '#blocklyDiv > div > svg.blocklySvg > g',
+  );
+  await workspaceElement.click();
+}
+
+/**
+ * Select a block with the given id as the current cursor node.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param blockId The id of the block to select.
+ */
+export async function setCurrentCursorNodeById(
+  browser: WebdriverIO.Browser,
+  blockId: string,
+) {
+  return await browser.execute((blockId) => {
+    const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
+    const rootBlock = workspaceSvg.getBlockById(blockId);
+    if (rootBlock) {
+      workspaceSvg
+        .getCursor()
+        ?.setCurNode(Blockly.ASTNode.createBlockNode(rootBlock));
+    }
+  }, blockId);
+}
+
+/**
+ * Get the ID of the block at the current cursor node.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @returns A Promise that resolves to the ID of the current cursor node.
+ */
+export async function getCurrentCursorNodeId(
+  browser: WebdriverIO.Browser,
+): Promise<string | undefined> {
+  return await browser.execute(() => {
+    const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
+    return workspaceSvg.getCursor()?.getCurNode()?.getSourceBlock()?.id;
+  });
+}
+
+/**
+ * Get the type of the current cursor node.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @returns A Promise that resolves to the type of the current cursor node.
+ */
+export async function getCurrentCursorNodeType(
+  browser: WebdriverIO.Browser,
+): Promise<string | undefined> {
+  return await browser.execute(() => {
+    const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
+    return workspaceSvg.getCursor()?.getCurNode()?.getType();
+  });
+}
+
+/**
+ * Get the field name of the current cursor node.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @returns A Promise that resolves to the field name of the current cursor node.
+ */
+export async function getCurrentCursorNodeFieldName(
+  browser: WebdriverIO.Browser,
+): Promise<string | undefined> {
+  return await browser.execute(() => {
+    const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
+    const field = workspaceSvg
+      .getCursor()
+      ?.getCurNode()
+      ?.getLocation() as Blockly.Field;
+    return field.name;
+  });
+}
+
 export interface ElementWithId extends WebdriverIO.Element {
   id: string;
 }

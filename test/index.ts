@@ -129,4 +129,9 @@ document.addEventListener('DOMContentLoaded', () => {
   addP5();
   createWorkspace();
   document.getElementById('run')?.addEventListener('click', runCode);
+  // Add Blockly to the global scope so that test code can access it to
+  // verify state after keypresses.
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  window.Blockly = Blockly;
 });
