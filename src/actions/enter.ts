@@ -14,7 +14,7 @@ import {
   Field,
   FlyoutButton,
   WorkspaceSvg,
-  getFocusManager
+  getFocusManager,
 } from 'blockly/core';
 
 import * as Constants from '../constants';

@@ -54,6 +54,7 @@ export class ArrowNavigation {
       shortcut: ShortcutRegistry.KeyboardShortcut,
     ): boolean => {
       const toolbox = workspace.getToolbox() as Toolbox;
+      const flyout = workspace.getFlyout();
       let isHandled = false;
       switch (this.navigation.getState(workspace)) {
         case Constants.STATE.WORKSPACE:
@@ -70,7 +71,6 @@ export class ArrowNavigation {
         case Constants.STATE.TOOLBOX:
           // @ts-expect-error private method
           isHandled = toolbox && toolbox.selectChild();
-          const flyout = workspace.getFlyout();
           if (!isHandled && flyout) {
             Blockly.getFocusManager().focusTree(flyout.getWorkspace());
           }
@@ -174,18 +174,22 @@ export class ArrowNavigation {
               }
               return isHandled;
             case Constants.STATE.TOOLBOX:
-              if (!toolbox) return false;
-              if (!toolbox.getSelectedItem()) {
-                const firstItem = toolbox.getToolboxItems().find((item) => item.isSelectable()) ?? null;
-                toolbox.setSelectedItem(firstItem);
-                isHandled = true;
-              } else {
-                // @ts-expect-error private method
-                isHandled = toolbox.selectNext();
-              }
-              const selectedItem = toolbox.getSelectedItem();
-              if (selectedItem) {
-                Blockly.getFocusManager().focusNode(selectedItem);
+              if (toolbox) {
+                if (!toolbox.getSelectedItem()) {
+                  const firstItem =
+                    toolbox
+                      .getToolboxItems()
+                      .find((item) => item.isSelectable()) ?? null;
+                  toolbox.setSelectedItem(firstItem);
+                  isHandled = true;
+                } else {
+                  // @ts-expect-error private method
+                  isHandled = toolbox.selectNext();
+                }
+                const selectedItem = toolbox.getSelectedItem();
+                if (selectedItem) {
+                  Blockly.getFocusManager().focusNode(selectedItem);
+                }
               }
               return isHandled;
             default:
@@ -233,12 +237,13 @@ export class ArrowNavigation {
               }
               return isHandled;
             case Constants.STATE.TOOLBOX:
-              if (!toolbox) return false;
-              // @ts-expect-error private method
-              isHandled = toolbox.selectPrevious();
-              const selectedItem = toolbox.getSelectedItem();
-              if (selectedItem) {
-                Blockly.getFocusManager().focusNode(selectedItem);
+              if (toolbox) {
+                // @ts-expect-error private method
+                isHandled = toolbox.selectPrevious();
+                const selectedItem = toolbox.getSelectedItem();
+                if (selectedItem) {
+                  Blockly.getFocusManager().focusNode(selectedItem);
+                }
               }
               return isHandled;
             default:

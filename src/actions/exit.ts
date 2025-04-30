@@ -8,7 +8,7 @@ import {
   ShortcutRegistry,
   utils as BlocklyUtils,
   getFocusManager,
-  Gesture
+  Gesture,
 } from 'blockly/core';
 
 import * as Constants from '../constants';

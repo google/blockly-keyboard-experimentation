@@ -13,7 +13,7 @@ import {
   clipboard,
   ICopyData,
   LineCursor,
-  getFocusManager
+  getFocusManager,
 } from 'blockly';
 import * as Constants from '../constants';
 import type {BlockSvg, WorkspaceSvg} from 'blockly';

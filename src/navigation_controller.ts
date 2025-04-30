@@ -205,10 +205,9 @@ export class NavigationController {
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
-            Blockly.getFocusManager()
-              .focusTree(
-                workspace.getToolbox() ?? workspace.getFlyout() ?? workspace
-              );
+            Blockly.getFocusManager().focusTree(
+              workspace.getToolbox() ?? workspace.getFlyout() ?? workspace,
+            );
             return true;
           default:
             return false;

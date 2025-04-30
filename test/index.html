@@ -97,39 +97,55 @@
         font-weight: bold;
       }
 
-      .blocklyActiveFocus:is(.blocklyField,.blocklyPath,.blocklyHighlightedConnectionPath) {
+      .blocklyActiveFocus:is(
+          .blocklyField,
+          .blocklyPath,
+          .blocklyHighlightedConnectionPath
+        ) {
         stroke: #ffa200;
         stroke-width: 3px;
         outline-width: 0px;
       }
-      .blocklyActiveFocus > .blocklyFlyoutBackground, .blocklyActiveFocus > .blocklyMainBackground {
+      .blocklyActiveFocus > .blocklyFlyoutBackground,
+      .blocklyActiveFocus > .blocklyMainBackground {
         stroke: #ffa200;
         stroke-width: 3px;
       }
-      .blocklyActiveFocus:is(.blocklyFlyout,.blocklyWorkspace) {
+      .blocklyActiveFocus:is(.blocklyFlyout, .blocklyWorkspace) {
         outline-width: 0px;
       }
-      .blocklyActiveFocus:is(.blocklyToolbox,.blocklyToolboxCategoryContainer) {
+      .blocklyActiveFocus:is(
+          .blocklyToolbox,
+          .blocklyToolboxCategoryContainer
+        ) {
         outline: 3px solid #ffa200;
       }
-      .blocklyPassiveFocus:is(.blocklyField,.blocklyPath,.blocklyHighlightedConnectionPath) {
+      .blocklyPassiveFocus:is(
+          .blocklyField,
+          .blocklyPath,
+          .blocklyHighlightedConnectionPath
+        ) {
         stroke: #ffa200;
         stroke-dasharray: 5px 3px;
         stroke-width: 3px;
       }
-      .blocklyPassiveFocus > .blocklyFlyoutBackground, .blocklyPassiveFocus > .blocklyMainBackground {
+      .blocklyPassiveFocus > .blocklyFlyoutBackground,
+      .blocklyPassiveFocus > .blocklyMainBackground {
         stroke: #ffa200;
         stroke-dasharray: 5px 3px;
         stroke-width: 3px;
       }
-      .blocklyPassiveFocus:is(.blocklyToolbox,.blocklyToolboxCategoryContainer) {
+      .blocklyPassiveFocus:is(
+          .blocklyToolbox,
+          .blocklyToolboxCategoryContainer
+        ) {
         border: 3px dashed #ffa200;
       }
       .blocklySelected:is(.blocklyPath) {
         stroke: #ffa200;
         stroke-width: 5;
       }
-      .blocklySelected>.blocklyPathLight {
+      .blocklySelected > .blocklyPathLight {
         display: none;
       }
     </style>
