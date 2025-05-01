@@ -73,6 +73,7 @@ export class ArrowNavigation {
           isHandled = toolbox && toolbox.selectChild();
           if (!isHandled && flyout) {
             Blockly.getFocusManager().focusTree(flyout.getWorkspace());
+            this.navigation.defaultFlyoutCursorIfNeeded(workspace);
           }
           return true;
         default:

@@ -15,6 +15,7 @@ import {
   ASTNode,
   Connection,
   dragging,
+  getFocusManager,
   registry,
   utils,
   WorkspaceSvg,
@@ -132,6 +133,9 @@ export class Mover {
     // Begin drag.
     dragger.onDragStart(info.fakePointerEvent('pointerdown'));
     info.updateTotalDelta();
+    // In case the block is detached, ensure that it still retains focus
+    // (otherwise dragging will break).
+    getFocusManager().focusNode(block);
     return true;
   }
 
@@ -159,6 +163,8 @@ export class Mover {
     this.moves.delete(workspace);
     // Delay scroll until after block has finished moving.
     setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0);
+    // If the block gets reattached, ensure it retains focus.
+    getFocusManager().focusNode(info.block);
     return true;
   }
 
@@ -205,6 +211,8 @@ export class Mover {
     this.moves.delete(workspace);
     // Delay scroll until after block has finished moving.
     setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0);
+    // If the block gets reattached, ensure it retains focus.
+    getFocusManager().focusNode(info.block);
     return true;
   }
 
