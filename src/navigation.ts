@@ -17,12 +17,6 @@ import {
   registrationType as cursorRegistrationType,
   FlyoutCursor,
 } from './flyout_cursor';
-import {
-  getFlyoutElement,
-  getToolboxElement,
-  getWorkspaceElement,
-} from './workspace_utilities';
-import {PassiveFocus} from './passive_focus';
 
 /**
  * The default coordinate to use when focusing on the workspace and no
@@ -45,12 +39,6 @@ const WS_COORDINATE_ON_DELETE: Blockly.utils.Coordinate =
  */
 export class Navigation {
   /**
-   * Object holding the location of the cursor for each workspace.
-   * Possible locations of the cursor are: workspace, flyout or toolbox.
-   */
-  workspaceStates: {[index: string]: Constants.STATE} = {};
-
-  /**
    * Wrapper for method that deals with workspace changes.
    * Used for removing change listener.
    */
@@ -67,11 +55,6 @@ export class Navigation {
    * Used when removing change listeners in dispose.
    */
   protected workspaces: Blockly.WorkspaceSvg[] = [];
-
-  /**
-   * An object that renders a passive focus indicator at a specified location.
-   */
-  private passiveFocusIndicator: PassiveFocus = new PassiveFocus();
 
   /**
    * Constructor for keyboard navigation.
@@ -114,7 +97,6 @@ export class Navigation {
     if (workspaceIdx > -1) {
       this.workspaces.splice(workspaceIdx, 1);
     }
-    this.passiveFocusIndicator.dispose();
     workspace.removeChangeListener(this.wsChangeWrapper);
 
     if (flyout) {
@@ -123,35 +105,55 @@ export class Navigation {
   }
 
   /**
-   * Sets the state for the given workspace.
-   *
-   * @param workspace The workspace to set the state on.
-   * @param state The navigation state.
-   */
-  setState(workspace: Blockly.WorkspaceSvg, state: Constants.STATE) {
-    this.workspaceStates[workspace.id] = state;
-  }
-
-  /**
    * Gets the navigation state of the current workspace.
+   *
+   * Note that this assumes a workspace with passive focus (including for its
+   * toolbox or flyout) has a state of NOWHERE.
    *
    * @param workspace The workspace to get the state of.
    * @returns The state of the given workspace.
    */
   getState(workspace: Blockly.WorkspaceSvg): Constants.STATE {
-    return this.workspaceStates[workspace.id];
+    const focusedTree = Blockly.getFocusManager().getFocusedTree();
+    if (focusedTree instanceof Blockly.WorkspaceSvg) {
+      if (focusedTree.isFlyout && workspace === focusedTree.targetWorkspace) {
+        return Constants.STATE.FLYOUT;
+      } else if (workspace === focusedTree) {
+        return Constants.STATE.WORKSPACE;
+      }
+    } else if (focusedTree instanceof Blockly.Toolbox) {
+      if (workspace === focusedTree.getWorkspace()) {
+        return Constants.STATE.TOOLBOX;
+      }
+    } else if (focusedTree instanceof Blockly.Flyout) {
+      if (workspace === focusedTree.targetWorkspace) {
+        return Constants.STATE.FLYOUT;
+      }
+    }
+    // Either a non-Blockly element currently has DOM focus, or a different
+    // workspace holds it.
+    return Constants.STATE.NOWHERE;
   }
 
   /**
-   * Gets the node to use as context for insert operations.
+   * Searches the specified workspace for an ASTNode representation of its
+   * current focused node (which may be active or passive).
    *
-   * @param workspace The main workspace.
+   * @param workspace The workspace being searched.
+   * @returns An ASTNode representation of the current focused node, or null if
+   *     the specified workspace either doesn't have a focused node, or it
+   *     cannot be represented as an ASTNode.
    */
-  getStationaryNode(workspace: Blockly.WorkspaceSvg) {
-    return (
-      this.passiveFocusIndicator.getCurNode() ??
-      workspace.getCursor()?.getCurNode()
-    );
+  getFocusedASTNode(workspace: Blockly.WorkspaceSvg): Blockly.ASTNode | null {
+    const passive = Blockly.FocusableTreeTraverser.findFocusedNode(workspace);
+    if (passive instanceof Blockly.BlockSvg) {
+      return Blockly.ASTNode.createBlockNode(passive);
+    } else if (passive instanceof Blockly.Field) {
+      return Blockly.ASTNode.createFieldNode(passive);
+    } else if (passive instanceof Blockly.Connection) {
+      return Blockly.ASTNode.createConnectionNode(passive);
+    }
+    return null;
   }
 
   /**
@@ -213,19 +215,6 @@ export class Navigation {
           this.handleBlockMutation(workspace, e as Blockly.Events.BlockChange);
         }
         break;
-      case Blockly.Events.BLOCK_CREATE:
-        if (workspace.isDragging()) {
-          // Hide the passive focus indicator when dragging so as not to fight
-          // with the drop cues. Safe because of the gesture monkey patch.
-          this.passiveFocusIndicator.hide();
-        }
-        break;
-    }
-
-    // Hiding the cursor isn't permanent and can show again when we render.
-    // Rehide it:
-    if (this.passiveFocusIndicator.isVisible()) {
-      workspace.getCursor()?.hide();
     }
   }
 
@@ -372,191 +361,10 @@ export class Navigation {
         Blockly.ASTNode.createStackNode(curNodeBlock),
       );
     }
-    this.focusFlyout(mainWorkspace);
-  }
-
-  /**
-   * Sets browser focus to the workspace.
-   *
-   * @param workspace The workspace to focus.
-   */
-  focusWorkspace(workspace: Blockly.WorkspaceSvg) {
-    getWorkspaceElement(workspace).focus();
-  }
-
-  /**
-   * Sets the navigation state to workspace and moves the cursor to either the
-   * top block on a workspace or to the workspace. Switches from passive focus
-   * indication to showing the cursor.
-   *
-   * @param workspace The workspace that has gained focus.
-   */
-  handleFocusWorkspace(workspace: Blockly.WorkspaceSvg) {
-    this.setState(workspace, Constants.STATE.WORKSPACE);
-    if (!Blockly.Gesture.inProgress()) {
-      workspace.hideChaff();
-      // This will make a selection which would interfere with any gesture.
-      this.defaultWorkspaceCursorPositionIfNeeded(workspace);
+    const flyout = mainWorkspace.getFlyout();
+    if (flyout) {
+      Blockly.getFocusManager().focusTree(flyout.getWorkspace());
     }
-
-    const cursor = workspace.getCursor();
-    if (cursor) {
-      const passiveFocusNode = this.passiveFocusIndicator.getCurNode();
-      this.passiveFocusIndicator.hide();
-      const disposed = passiveFocusNode?.getSourceBlock()?.disposed;
-      // If there's a gesture then it will either set the node if it has not
-      // been disposed (which can happen when blocks are reloaded) or be a click
-      // that should not set one.
-      if (!Blockly.Gesture.inProgress() && passiveFocusNode && !disposed) {
-        cursor.setCurNode(passiveFocusNode);
-      }
-    }
-  }
-
-  /**
-   * Clears navigation state and switches to using the passive focus indicator
-   * if it is not the context menu / field input that is causing blur.
-   *
-   * @param workspace The workspace that has lost focus.
-   * @param ignorePopUpDivs Whether to skip the focus indicator change when
-   *     the widget/dropdown divs are open.
-   */
-  handleBlurWorkspace(
-    workspace: Blockly.WorkspaceSvg,
-    ignorePopUpDivs = false,
-  ) {
-    this.setState(workspace, Constants.STATE.NOWHERE);
-    const cursor = workspace.getCursor();
-    const popUpDivsShowing =
-      Blockly.WidgetDiv.isVisible() || Blockly.DropDownDiv.isVisible();
-    if (cursor && (ignorePopUpDivs || !popUpDivsShowing)) {
-      const curNode = cursor.getCurNode();
-      if (curNode) {
-        this.passiveFocusIndicator.show(curNode);
-      }
-      // It's initially null so this is a valid state despite the types.
-      cursor.setCurNode(null);
-    }
-  }
-
-  /**
-   * Handle the widget or dropdown div losing focus (via focusout).
-   *
-   * Because we skip the widget/dropdown div cases in `handleBlurWorkspace` we need
-   * to catch them here.
-   *
-   * @param workspace The workspace.
-   * @param relatedTarget The related target (newly focused element if any).
-   */
-  handleFocusOutWidgetDropdownDiv(
-    workspace: Blockly.WorkspaceSvg,
-    relatedTarget: EventTarget | null,
-  ) {
-    if (relatedTarget === null) {
-      // Workaround:
-      // Skip document.body/null case until this blur bug is fixed to avoid
-      // flipping to passive focus as the user moves their mouse over the
-      // colour picker.
-      // https://github.com/google/blockly-samples/issues/2498
-      return;
-    }
-    if (relatedTarget !== getWorkspaceElement(workspace)) {
-      this.handleBlurWorkspace(workspace, true);
-    }
-  }
-
-  /**
-   * Sets browser focus to the toolbox (if any).
-   *
-   * @param workspace The workspace with the toolbox.
-   */
-  focusToolbox(workspace: Blockly.WorkspaceSvg) {
-    getToolboxElement(workspace)?.focus();
-  }
-
-  /**
-   * Sets the navigation state to toolbox and selects the first category in the
-   * toolbox. No-op if a toolbox does not exist on the given workspace.
-   *
-   * @param workspace The workspace to get the toolbox on.
-   */
-  handleFocusToolbox(workspace: Blockly.WorkspaceSvg) {
-    const toolbox = workspace.getToolbox();
-    if (!toolbox) {
-      return;
-    }
-    this.setState(workspace, Constants.STATE.TOOLBOX);
-
-    if (!toolbox.getSelectedItem() && toolbox instanceof Blockly.Toolbox) {
-      // Find the first item that is selectable.
-      const toolboxItems = toolbox.getToolboxItems();
-      for (let i = 0, toolboxItem; (toolboxItem = toolboxItems[i]); i++) {
-        if (toolboxItem.isSelectable()) {
-          toolbox.selectItemByPosition(i);
-          break;
-        }
-      }
-    }
-  }
-
-  /**
-   * Clears the navigation state and closes the flyout if `allowClose` is true
-   * and a gesture is not in progress.
-   *
-   * @param workspace The workspace the flyout is on.
-   * @param closeFlyout True to close the flyout, false otherwise.
-   */
-  handleBlurToolbox(workspace: Blockly.WorkspaceSvg, closeFlyout: boolean) {
-    this.setState(workspace, Constants.STATE.NOWHERE);
-    if (closeFlyout) {
-      workspace.hideChaff();
-    }
-  }
-
-  /**
-   * Sets browser focus to the flyout (if any).
-   *
-   * @param workspace The workspace with the flyout.
-   */
-  focusFlyout(workspace: Blockly.WorkspaceSvg) {
-    getFlyoutElement(workspace)?.focus();
-  }
-
-  /**
-   * Sets the navigation state to flyout and moves the cursor to the first
-   * block or button in the flyout. We disable tabbing to the toolbox while
-   * the flyout has focus as we use left/right for that.
-   *
-   * @param workspace The workspace the flyout is on.
-   */
-  handleFocusFlyout(workspace: Blockly.WorkspaceSvg) {
-    // Note this can happen when the flyout was already focussed as regrettably
-    // a click on the flyout calls markFocused() on the workspace SVG and the
-    // focus is then redirected back to the flyout.
-
-    this.setState(workspace, Constants.STATE.FLYOUT);
-    this.getFlyoutCursor(workspace)?.draw();
-
-    // This doesn't identify a click on the scrollbars which will unfortunately
-    // default the cursor if the flyout didn't already have focus.
-    if (!Blockly.Gesture.inProgress()) {
-      this.defaultFlyoutCursorIfNeeded(workspace);
-    }
-  }
-
-  /**
-   * Clears the navigation state and closes the flyout if `allowClose` is true
-   * and a gesture is not in progress.
-   *
-   * @param workspace The workspace the flyout is on.
-   * @param closeFlyout True to close the flyout, false otherwise.
-   */
-  handleBlurFlyout(workspace: Blockly.WorkspaceSvg, closeFlyout: boolean) {
-    this.setState(workspace, Constants.STATE.NOWHERE);
-    if (closeFlyout) {
-      workspace.hideChaff();
-    }
-    this.getFlyoutCursor(workspace)?.hide();
   }
 
   /**
@@ -1121,10 +929,12 @@ export class Navigation {
    * @param workspace The active workspace.
    */
   openToolboxOrFlyout(workspace: Blockly.WorkspaceSvg) {
-    if (workspace.getToolbox()) {
-      this.focusToolbox(workspace);
-    } else {
-      this.focusFlyout(workspace);
+    const toolbox = workspace.getToolbox();
+    const flyout = workspace.getFlyout();
+    if (toolbox) {
+      Blockly.getFocusManager().focusTree(toolbox);
+    } else if (flyout) {
+      Blockly.getFocusManager().focusTree(flyout.getWorkspace());
     }
   }
 
