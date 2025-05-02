@@ -13,6 +13,7 @@ import {
   clipboard,
   ICopyData,
   LineCursor,
+  getFocusManager,
 } from 'blockly';
 import * as Constants from '../constants';
 import type {BlockSvg, WorkspaceSvg} from 'blockly';
@@ -281,7 +282,7 @@ export class Clipboard {
     const copied = !!this.copyData;
     if (copied) {
       if (navigationState === Constants.STATE.FLYOUT) {
-        this.navigation.focusWorkspace(workspace);
+        getFocusManager().focusTree(workspace);
       }
       showCopiedHint(workspace);
     }
@@ -375,10 +376,10 @@ export class Clipboard {
       ? workspace
       : this.copyWorkspace;
 
-    const targetNode = this.navigation.getStationaryNode(pasteWorkspace);
-    // If we're pasting in the flyout it still targets the workspace. Focus first
-    // so ensure correct selection handling.
-    this.navigation.focusWorkspace(workspace);
+    const targetNode = this.navigation.getFocusedASTNode(pasteWorkspace);
+    // If we're pasting in the flyout it still targets the workspace. Focus
+    // first as to ensure correct selection handling.
+    getFocusManager().focusTree(workspace);
 
     Events.setGroup(true);
     const block = clipboard.paste(this.copyData, pasteWorkspace) as BlockSvg;

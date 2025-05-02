@@ -16,10 +16,9 @@ import {
   testSetup,
   testFileLocations,
   PAUSE_TIME,
-  getBlockElementById,
-  clickBlock,
+  tabNavigateToWorkspace,
 } from './test_setup.js';
-import {Key, ClickOptions} from 'webdriverio';
+import {Key} from 'webdriverio';
 
 suite('Keyboard navigation', function () {
   // Setting timeout to unlimited as these tests take a longer time to run than most mocha test
@@ -39,10 +38,8 @@ suite('Keyboard navigation', function () {
   });
 
   test('Selected block', async function () {
-    const block = await getBlockElementById(this.browser, 'p5_draw_1');
-    await clickBlock(this.browser, block, {button: 0} as ClickOptions);
-    await this.browser.pause(PAUSE_TIME);
-
+    await tabNavigateToWorkspace(this.browser);
+    
     for (let i = 0; i < 14; i++) {
       await this.browser.keys(Key.ArrowDown);
       await this.browser.pause(PAUSE_TIME);

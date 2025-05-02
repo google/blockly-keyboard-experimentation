@@ -4,7 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ShortcutRegistry, utils as BlocklyUtils} from 'blockly/core';
+import {
+  ShortcutRegistry,
+  utils as BlocklyUtils,
+  getFocusManager,
+  Gesture,
+} from 'blockly/core';
 
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
@@ -29,7 +34,10 @@ export class ExitAction {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.FLYOUT:
           case Constants.STATE.TOOLBOX:
-            this.navigation.focusWorkspace(workspace);
+            getFocusManager().focusTree(workspace);
+            if (!Gesture.inProgress()) {
+              workspace.hideChaff();
+            }
             return true;
           default:
             return false;

@@ -293,6 +293,34 @@ export async function getBlockElementById(
 }
 
 /**
+ * Uses tabs to navigate to the workspace on the test page (i.e. by going
+ * through top-level tab stops).
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param hasToolbox Whether a toolbox is configured on the test page.
+ * @param hasFlyout Whether a flyout is configured on the test page.
+ */
+export async function tabNavigateToWorkspace(
+  browser: WebdriverIO.Browser,
+  hasToolbox = true,
+  hasFlyout = true,
+) {
+  if (hasToolbox) tabNavigateForward(browser);
+  if (hasFlyout) tabNavigateForward(browser);
+  tabNavigateForward(browser); // Tab to the workspace itself.
+}
+
+/**
+ * Navigates forward to the test page's next tab stop.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ */
+export async function tabNavigateForward(browser: WebdriverIO.Browser) {
+  await browser.keys(webdriverio.Key.Tab);
+  await browser.pause(PAUSE_TIME);
+}
+
+/**
  * Copied from blockly browser test_setup.mjs and amended for typescript
  *
  * Find a clickable element on the block and click it.
