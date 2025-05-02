@@ -9,12 +9,15 @@ import {
   Events,
   ShortcutRegistry,
   utils as BlocklyUtils,
+  getFocusManager,
+} from 'blockly/core';
+
+import type {
   Block,
   BlockSvg,
   Field,
   FlyoutButton,
   WorkspaceSvg,
-  getFocusManager,
 } from 'blockly/core';
 
 import * as Constants from '../constants';
