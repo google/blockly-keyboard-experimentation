@@ -134,6 +134,10 @@ const createTestUrl = (options?: URLSearchParams) => {
 export const testFileLocations = {
   BASE: createTestUrl(),
   // eslint-disable-next-line @typescript-eslint/naming-convention
+  NAVIGATION_TEST_BLOCKS: createTestUrl(
+    new URLSearchParams({scenario: 'navigationTestBlocks'}),
+  ),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   BASE_RTL: createTestUrl(new URLSearchParams({rtl: 'true'})),
   GERAS: createTestUrl(new URLSearchParams({renderer: 'geras'})),
   // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -179,13 +183,41 @@ export async function setCurrentCursorNodeById(
 ) {
   return await browser.execute((blockId) => {
     const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
-    const rootBlock = workspaceSvg.getBlockById(blockId);
-    if (rootBlock) {
+    const block = workspaceSvg.getBlockById(blockId);
+    if (block) {
       workspaceSvg
         .getCursor()
-        ?.setCurNode(Blockly.ASTNode.createBlockNode(rootBlock));
+        ?.setCurNode(Blockly.ASTNode.createBlockNode(block));
     }
   }, blockId);
+}
+
+/**
+ * Select a block with the given id as the current cursor node.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param blockId The id of the block to select.
+ * @param fieldName The name of the field on the block to select.
+ */
+export async function setCurrentCursorNodeByIdAndFieldName(
+  browser: WebdriverIO.Browser,
+  blockId: string,
+  fieldName: string,
+) {
+  return await browser.execute(
+    (blockId, fieldName) => {
+      const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
+      const block = workspaceSvg.getBlockById(blockId);
+      const field = block?.getField(fieldName);
+      if (field) {
+        workspaceSvg
+          .getCursor()
+          ?.setCurNode(Blockly.ASTNode.createFieldNode(field));
+      }
+    },
+    blockId,
+    fieldName,
+  );
 }
 
 /**
