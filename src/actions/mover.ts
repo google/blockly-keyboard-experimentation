@@ -127,6 +127,7 @@ export class Mover {
     if (!DraggerClass) throw new Error('no Dragger registered');
     const dragger = new DraggerClass(block, workspace);
     // Record that a move is in progress and start dragging.
+    workspace.setKeyboardMoveInProgress(true);
     const info = new MoveInfo(block, dragger);
     this.moves.set(workspace, info);
     // Begin drag.
@@ -157,6 +158,7 @@ export class Mover {
     this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
+    workspace.setKeyboardMoveInProgress(false);
     // Delay scroll until after block has finished moving.
     setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0);
     return true;
@@ -203,6 +205,7 @@ export class Mover {
     this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
+    workspace.setKeyboardMoveInProgress(false);
     // Delay scroll until after block has finished moving.
     setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0);
     return true;
