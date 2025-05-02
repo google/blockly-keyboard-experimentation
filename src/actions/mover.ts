@@ -116,7 +116,6 @@ export class Mover {
     block: BlockSvg,
     insertStartPoint: RenderedConnection | null,
   ) {
-    this.patchWorkspace(workspace);
     this.patchDragStrategy(block, insertStartPoint);
     // Begin dragging block.
     const DraggerClass = registry.getClassFromOptions(
@@ -155,7 +154,6 @@ export class Mover {
       new utils.Coordinate(0, 0),
     );
 
-    this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
     workspace.setKeyboardMoveInProgress(false);
@@ -202,7 +200,6 @@ export class Mover {
       if (newNode) workspace.getCursor()?.setCurNode(newNode);
     }
 
-    this.unpatchWorkspace(workspace);
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
     workspace.setKeyboardMoveInProgress(false);
@@ -254,45 +251,6 @@ export class Mover {
     info.dragger.onDrag(info.fakePointerEvent('pointermove'), info.totalDelta);
     this.scrollCurrentBlockIntoView(workspace);
     return true;
-  }
-
-  /**
-   * Monkeypatch over workspace functions to consider keyboard drags as
-   * well as mouse/pointer drags.
-   *
-   * @param workspace The workspace to patch.
-   */
-  private patchWorkspace(workspace: WorkspaceSvg) {
-    // Keyboard drags are real drags.
-    this.oldIsDragging = workspace.isDragging;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (workspace as any).isDragging = () => this.isMoving(workspace);
-
-    // Ignore mouse/pointer events during keyboard drags.
-    this.oldGetGesture = workspace.getGesture;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (workspace as any).getGesture = (e: PointerEvent) => {
-      // Normally these would be called from Gesture.doStart.
-      e.preventDefault();
-      e.stopPropagation();
-      return null;
-    };
-  }
-
-  /**
-   * Remove monkeypatches on the workspace.
-   *
-   * @param workspace The workspace to unpatch.
-   */
-  private unpatchWorkspace(workspace: WorkspaceSvg) {
-    if (this.oldIsDragging) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (workspace as any).isDragging = this.oldIsDragging;
-    }
-    if (this.oldGetGesture) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (workspace as any).getGesture = this.oldGetGesture;
-    }
   }
 
   /**
