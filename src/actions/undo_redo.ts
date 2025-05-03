@@ -4,7 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ShortcutRegistry, ShortcutItems, WorkspaceSvg} from 'blockly/core';
+import {
+  ContextMenuRegistry,
+  ShortcutRegistry,
+  ShortcutItems,
+  WorkspaceSvg,
+} from 'blockly/core';
 
 /**
  * Class for registering a shortcut for undo/redo actions.
@@ -22,9 +27,12 @@ export class UndoRedoAction {
       this.originalUndo = undo;
       const patchedUndo = {
         ...this.originalUndo,
-        preconditionFn: (workspace: WorkspaceSvg) => {
+        preconditionFn: (
+          workspace: WorkspaceSvg,
+          scope: ContextMenuRegistry.Scope,
+        ) => {
           return !!(
-            !workspace.isDragging() && undo.preconditionFn?.(workspace)
+            !workspace.isDragging() && undo.preconditionFn?.(workspace, scope)
           );
         },
         allowCollision: true,
@@ -39,9 +47,12 @@ export class UndoRedoAction {
       this.originalRedo = redo;
       const patchedRedo = {
         ...this.originalRedo,
-        preconditionFn: (workspace: WorkspaceSvg) => {
+        preconditionFn: (
+          workspace: WorkspaceSvg,
+          scope: ContextMenuRegistry.Scope,
+        ) => {
           return !!(
-            !workspace.isDragging() && redo.preconditionFn?.(workspace)
+            !workspace.isDragging() && redo.preconditionFn?.(workspace, scope)
           );
         },
         allowCollision: true,
