@@ -5,13 +5,13 @@
  */
 
 import {
-  ASTNode,
   BlockSvg,
   ConnectionType,
   RenderedConnection,
   LineCursor,
   dragging,
   utils,
+  INavigable,
 } from 'blockly';
 import {Direction, getDirectionFromXY} from './drag_direction';
 import {showUnconstrainedMoveHint} from './hints';
@@ -35,7 +35,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   private currentDragDirection: Direction | null = null;
 
   /** Where a constrained movement should start when traversing the tree. */
-  private searchNode: ASTNode | null = null;
+  private searchNode: RenderedConnection | null = null;
 
   private cursor: LineCursor | null;
 
@@ -52,7 +52,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
 
   override startDrag(e?: PointerEvent) {
     if (!this.cursor) throw new Error('precondition failure');
-    this.cursor.setCurNode(ASTNode.createBlockNode(this.block));
+    this.cursor.setCurNode(this.block);
     super.startDrag(e);
     // Set position of the dragging block, so that it doesn't pop
     // to the top left of the workspace.
@@ -77,7 +77,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
         .neighbour;
       // The next constrained move will resume the search from the current
       // candidate location.
-      this.searchNode = ASTNode.createConnectionNode(neighbour);
+      this.searchNode = neighbour;
       if (this.isConstrainedMovement()) {
         // Position the moving block down and slightly to the right of the
         // target connection.
@@ -173,13 +173,15 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     if (!this.cursor) throw new Error('precondition failure');
 
     // Helper function for traversal.
-    function isConnection(node: ASTNode | null): boolean {
-      return !!node && node.isConnection();
+    function isConnection(
+      node: INavigable<any> | null,
+    ): node is RenderedConnection {
+      return node instanceof RenderedConnection;
     }
 
     const connectionChecker = draggingBlock.workspace.connectionChecker;
     let candidateConnection: ConnectionCandidate | null = null;
-    let potential: ASTNode | null = this.searchNode;
+    let potential: INavigable<any> | null = this.searchNode;
     const dir = this.currentDragDirection;
     while (potential && !candidateConnection) {
       if (dir === Direction.Up || dir === Direction.Left) {
@@ -189,11 +191,13 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       }
 
       localConns.forEach((conn: RenderedConnection) => {
-        const location = potential?.getLocation() as RenderedConnection;
-        if (connectionChecker.canConnect(conn, location, true, Infinity)) {
+        if (
+          isConnection(potential) &&
+          connectionChecker.canConnect(conn, potential, true, Infinity)
+        ) {
           candidateConnection = {
             local: conn,
-            neighbour: location,
+            neighbour: potential,
             distance: 0,
           };
         }
@@ -291,7 +295,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     // @ts-expect-error startParentConn is private.
     const neighbour = this.insertStartPoint ?? this.startParentConn;
     if (neighbour) {
-      this.searchNode = ASTNode.createConnectionNode(neighbour);
+      this.searchNode = neighbour;
       switch (neighbour.type) {
         case ConnectionType.INPUT_VALUE:
           return {

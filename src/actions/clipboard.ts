@@ -13,10 +13,11 @@ import {
   clipboard,
   ICopyData,
   LineCursor,
+  FocusableTreeTraverser,
   getFocusManager,
 } from 'blockly';
 import * as Constants from '../constants';
-import type {BlockSvg, WorkspaceSvg} from 'blockly';
+import type {BlockSvg, WorkspaceSvg, INavigable} from 'blockly';
 import {Navigation} from '../navigation';
 import {getShortActionShortcut} from '../shortcut_formatting';
 import * as Blockly from 'blockly';
@@ -134,17 +135,15 @@ export class Clipboard {
    */
   private cutPrecondition(workspace: WorkspaceSvg) {
     if (this.navigation.canCurrentlyEdit(workspace)) {
-      const curNode = workspace.getCursor()?.getCurNode();
-      if (curNode && curNode.getSourceBlock()) {
-        const sourceBlock = curNode.getSourceBlock();
-        return !!(
-          !Gesture.inProgress() &&
-          sourceBlock &&
-          sourceBlock.isDeletable() &&
-          sourceBlock.isMovable() &&
-          !sourceBlock.workspace.isFlyout
-        );
-      }
+      const sourceBlock = workspace.getCursor()?.getSourceBlock();
+
+      return !!(
+        !Gesture.inProgress() &&
+        sourceBlock &&
+        sourceBlock.isDeletable() &&
+        sourceBlock.isMovable() &&
+        !sourceBlock.workspace.isFlyout
+      );
     }
     return false;
   }
@@ -161,9 +160,7 @@ export class Clipboard {
   private cutCallback(workspace: WorkspaceSvg) {
     const cursor = workspace.getCursor();
     if (!cursor) throw new TypeError('no cursor');
-    const sourceBlock = cursor
-      .getCurNode()
-      ?.getSourceBlock() as BlockSvg | null;
+    const sourceBlock = cursor.getSourceBlock();
     if (!sourceBlock) throw new TypeError('no source block');
     this.copyData = sourceBlock.toCopyData();
     this.copyWorkspace = sourceBlock.workspace;
@@ -235,8 +232,7 @@ export class Clipboard {
     if (!this.navigation.canCurrentlyEdit(workspace)) return false;
     switch (this.navigation.getState(workspace)) {
       case Constants.STATE.WORKSPACE: {
-        const curNode = workspace?.getCursor()?.getCurNode();
-        const source = curNode?.getSourceBlock();
+        const source = workspace?.getCursor()?.getSourceBlock();
         return !!(
           source?.isDeletable() &&
           source?.isMovable() &&
@@ -245,10 +241,7 @@ export class Clipboard {
       }
       case Constants.STATE.FLYOUT: {
         const flyoutWorkspace = workspace.getFlyout()?.getWorkspace();
-        const sourceBlock = flyoutWorkspace
-          ?.getCursor()
-          ?.getCurNode()
-          ?.getSourceBlock();
+        const sourceBlock = flyoutWorkspace?.getCursor()?.getSourceBlock();
         return !!(sourceBlock && !Gesture.inProgress());
       }
       default:
@@ -271,10 +264,7 @@ export class Clipboard {
     if (navigationState === Constants.STATE.FLYOUT) {
       activeWorkspace = workspace.getFlyout()?.getWorkspace();
     }
-    const sourceBlock = activeWorkspace
-      ?.getCursor()
-      ?.getCurNode()
-      ?.getSourceBlock() as BlockSvg;
+    const sourceBlock = activeWorkspace?.getCursor()?.getSourceBlock();
     if (!sourceBlock) return false;
 
     this.copyData = sourceBlock.toCopyData();
@@ -376,7 +366,9 @@ export class Clipboard {
       ? workspace
       : this.copyWorkspace;
 
-    const targetNode = this.navigation.getFocusedASTNode(pasteWorkspace);
+    const targetNode = FocusableTreeTraverser.findFocusedNode(
+      pasteWorkspace,
+    ) as unknown as INavigable<any>;
     // If we're pasting in the flyout it still targets the workspace. Focus
     // first as to ensure correct selection handling.
     getFocusManager().focusTree(workspace);

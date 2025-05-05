@@ -155,7 +155,7 @@ export class DeleteAction {
    * @returns True iff `deleteCallback` function should be called.
    */
   private deletePrecondition(workspace: WorkspaceSvg) {
-    const sourceBlock = workspace.getCursor()?.getCurNode()?.getSourceBlock();
+    const sourceBlock = workspace.getCursor()?.getSourceBlock();
     return (
       !workspace.isDragging() &&
       this.navigation.canCurrentlyEdit(workspace) &&
@@ -178,9 +178,7 @@ export class DeleteAction {
     const cursor = workspace.getCursor();
     if (!cursor) return false;
 
-    const sourceBlock = cursor
-      .getCurNode()
-      ?.getSourceBlock() as BlockSvg | null;
+    const sourceBlock = cursor.getSourceBlock();
     if (!sourceBlock) return false;
     // Delete or backspace.
     // There is an event if this is triggered from a keyboard shortcut,

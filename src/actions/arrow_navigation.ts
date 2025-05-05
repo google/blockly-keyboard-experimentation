@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ASTNode, ShortcutRegistry, utils as BlocklyUtils} from 'blockly/core';
+import {ShortcutRegistry, utils as BlocklyUtils, Field} from 'blockly/core';
 
-import type {Field, Toolbox, WorkspaceSvg} from 'blockly/core';
+import type {Toolbox, WorkspaceSvg} from 'blockly/core';
 
 import * as Blockly from 'blockly/core';
 import * as Constants from '../constants';
@@ -38,8 +38,8 @@ export class ArrowNavigation {
       return false;
     }
     const curNode = cursor.getCurNode();
-    if (curNode?.getType() === ASTNode.types.FIELD) {
-      return (curNode.getLocation() as Field).onShortcut(shortcut);
+    if (curNode instanceof Field) {
+      return curNode.onShortcut(shortcut);
     }
     return false;
   }
