@@ -181,9 +181,7 @@ export async function setCurrentCursorNodeById(
     const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
     const rootBlock = workspaceSvg.getBlockById(blockId);
     if (rootBlock) {
-      workspaceSvg
-        .getCursor()
-        ?.setCurNode(Blockly.ASTNode.createBlockNode(rootBlock));
+      workspaceSvg.getCursor()?.setCurNode(rootBlock);
     }
   }, blockId);
 }
@@ -199,7 +197,7 @@ export async function getCurrentCursorNodeId(
 ): Promise<string | undefined> {
   return await browser.execute(() => {
     const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
-    return workspaceSvg.getCursor()?.getCurNode()?.getSourceBlock()?.id;
+    return workspaceSvg.getCursor()?.getSourceBlock()?.id;
   });
 }
 
@@ -214,7 +212,28 @@ export async function getCurrentCursorNodeType(
 ): Promise<string | undefined> {
   return await browser.execute(() => {
     const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
-    return workspaceSvg.getCursor()?.getCurNode()?.getType();
+    const node = workspaceSvg.getCursor()?.getCurNode();
+    if (node instanceof Blockly.WorkspaceSvg) {
+      return 'workspace';
+    } else if (node instanceof Blockly.BlockSvg) {
+      return 'block';
+    } else if (node instanceof Blockly.Field) {
+      return 'field';
+    } else if (node instanceof Blockly.FlyoutButton) {
+      return 'button';
+    } else if (node instanceof Blockly.RenderedConnection) {
+      if (node.getParentInput()) {
+        return 'input';
+      }
+
+      if (node.type === Blockly.ConnectionType.OUTPUT_VALUE) {
+        return 'output';
+      } else if (node.type === Blockly.ConnectionType.NEXT_STATEMENT) {
+        return 'next';
+      } else if (node.type === Blockly.ConnectionType.PREVIOUS_STATEMENT) {
+        return 'previous';
+      }
+    }
   });
 }
 
@@ -229,10 +248,7 @@ export async function getCurrentCursorNodeFieldName(
 ): Promise<string | undefined> {
   return await browser.execute(() => {
     const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
-    const field = workspaceSvg
-      .getCursor()
-      ?.getCurNode()
-      ?.getLocation() as Blockly.Field;
+    const field = workspaceSvg.getCursor()?.getCurNode() as Blockly.Field;
     return field.name;
   });
 }
