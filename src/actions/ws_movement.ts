@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ASTNode, ShortcutRegistry, utils as BlocklyUtils} from 'blockly';
+import {ShortcutRegistry, utils as BlocklyUtils} from 'blockly';
 import * as Constants from '../constants';
 import type {WorkspaceSvg} from 'blockly';
 import {Navigation} from 'src/navigation';
@@ -103,24 +103,7 @@ export class WorkspaceMovement {
     xDirection: number,
     yDirection: number,
   ): boolean {
-    const cursor = workspace.getCursor();
-    if (!cursor) return false;
-    const curNode = cursor?.getCurNode();
-    if (!curNode || curNode.getType() !== ASTNode.types.WORKSPACE) return false;
-
-    const wsCoord = curNode.getWsCoordinate();
-    if (!wsCoord) return false;
-
-    const newX = xDirection * WS_MOVE_DISTANCE + wsCoord.x;
-    const newY = yDirection * WS_MOVE_DISTANCE + wsCoord.y;
-
-    cursor.setCurNode(
-      ASTNode.createWorkspaceNode(
-        workspace,
-        new BlocklyUtils.Coordinate(newX, newY),
-      ),
-    );
-    return true;
+    return false;
   }
 
   /**
@@ -129,15 +112,11 @@ export class WorkspaceMovement {
    * @param workspace The workspace the cursor is on.
    */
   createWSCursor(workspace: WorkspaceSvg) {
-    const workspaceNode = ASTNode.createWorkspaceNode(
-      workspace,
-      new BlocklyUtils.Coordinate(10, 10),
-    );
     const cursor = workspace.getCursor();
 
-    if (!cursor || !workspaceNode) return false;
+    if (!cursor) return false;
 
-    cursor.setCurNode(workspaceNode);
+    cursor.setCurNode(workspace);
     return true;
   }
 }
