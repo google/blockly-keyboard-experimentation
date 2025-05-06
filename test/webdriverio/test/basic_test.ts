@@ -48,7 +48,7 @@ suite('Keyboard navigation', function () {
     const selectedId = await this.browser.execute(() => {
       return Blockly.common.getSelected()?.id;
     });
-    chai.assert.equal(selectedId, 'simple_circle_1');
+    chai.assert.equal(selectedId, 'controls_repeat_1');
     chai.assert.equal(
       await getCurrentCursorNodeType(this.browser),
       Blockly.ASTNode.types.BLOCK,
