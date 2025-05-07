@@ -196,10 +196,9 @@ export class MoveActions {
    *     could be found.
    */
   getCurrentBlock(workspace: WorkspaceSvg): BlockSvg | undefined {
-    const curNode = workspace?.getCursor()?.getCurNode();
-    let block = curNode?.getSourceBlock();
+    let block = workspace?.getCursor()?.getSourceBlock();
     if (!block) return undefined;
-    while (block?.isShadow()) {
+    while (block.isShadow()) {
       block = block.getParent();
       if (!block) {
         throw new Error(
@@ -208,6 +207,6 @@ export class MoveActions {
         );
       }
     }
-    return block as BlockSvg;
+    return block;
   }
 }

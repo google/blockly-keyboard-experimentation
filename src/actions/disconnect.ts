@@ -5,14 +5,13 @@
  */
 
 import {
-  ASTNode,
   BlockSvg,
   RenderedConnection,
   ShortcutRegistry,
   utils as BlocklyUtils,
 } from 'blockly';
 import * as Constants from '../constants';
-import type {WorkspaceSvg} from 'blockly';
+import type {WorkspaceSvg, INavigable} from 'blockly';
 import {Navigation} from '../navigation';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
@@ -80,45 +79,46 @@ export class DisconnectAction {
     if (!cursor) {
       return;
     }
-    let curNode: ASTNode | null = cursor.getCurNode();
+    let curNode: INavigable<any> | null = cursor.getCurNode();
     let wasVisitingConnection = true;
-    while (curNode && !curNode.isConnection()) {
-      const location = curNode.getLocation();
-      if (location instanceof BlockSvg) {
-        const previous = location.previousConnection;
-        const output = location.outputConnection;
+    while (
+      curNode &&
+      !(curNode instanceof RenderedConnection && curNode.isConnected())
+    ) {
+      if (curNode instanceof BlockSvg) {
+        const previous = curNode.previousConnection;
+        const output = curNode.outputConnection;
         if (previous?.isConnected()) {
-          curNode = ASTNode.createConnectionNode(previous);
+          curNode = previous;
           break;
         } else if (output?.isConnected()) {
-          curNode = ASTNode.createConnectionNode(output);
+          curNode = output;
           break;
         }
       }
 
-      curNode = curNode.out();
+      curNode = workspace.getNavigator().getParent(curNode);
       wasVisitingConnection = false;
     }
     if (!curNode) {
       console.log('Unable to find a connection to disconnect');
       return;
     }
-    const curConnection = curNode.getLocation() as RenderedConnection;
-    if (!curConnection.isConnected()) {
+    if (!(curNode instanceof RenderedConnection && curNode.isConnected())) {
       return;
     }
-    const targetConnection = curConnection.targetConnection;
+    const targetConnection = curNode.targetConnection;
     if (!targetConnection) {
       throw new Error('Must have target if connected');
     }
 
-    const superiorConnection = curConnection.isSuperior()
-      ? curConnection
+    const superiorConnection = curNode.isSuperior()
+      ? curNode
       : targetConnection;
 
-    const inferiorConnection = curConnection.isSuperior()
+    const inferiorConnection = curNode.isSuperior()
       ? targetConnection
-      : curConnection;
+      : curNode;
 
     if (inferiorConnection.getSourceBlock().isShadow()) {
       return;
@@ -135,8 +135,7 @@ export class DisconnectAction {
     rootBlock.bringToFront();
 
     if (wasVisitingConnection) {
-      const connectionNode = ASTNode.createConnectionNode(superiorConnection);
-      workspace.getCursor()?.setCurNode(connectionNode);
+      workspace.getCursor()?.setCurNode(superiorConnection);
     }
   }
 }
