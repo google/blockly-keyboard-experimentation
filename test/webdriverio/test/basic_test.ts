@@ -281,7 +281,7 @@ suite('Keyboard navigation on Blocks', function () {
   });
 });
 
-// These tests fail because focusing on a field doesn't update the cursor
+// TODO(#499) These tests fail because focusing on a field doesn't update the cursor
 suite.skip('Keyboard navigation on Fields', function () {
   // Setting timeout to unlimited as these tests take a longer time to run than most mocha test
   this.timeout(0);
