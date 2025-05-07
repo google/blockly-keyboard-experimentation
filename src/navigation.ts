@@ -790,10 +790,6 @@ export class Navigation {
       workspace.keyboardAccessibilityMode
     ) {
       workspace.keyboardAccessibilityMode = false;
-      workspace.getCursor()?.hide();
-      if (this.getFlyoutCursor(workspace)) {
-        this.getFlyoutCursor(workspace)?.hide();
-      }
     }
   }
 
