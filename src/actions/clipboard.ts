@@ -238,8 +238,10 @@ export class Clipboard {
         return 'disabled';
       },
       callback: (scope, menuOpenEvent) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return;
+        if (!isCopyable(scope.focusedNode)) return false;
+        const ws = scope.focusedNode.workspace;
+        if (!(ws instanceof WorkspaceSvg)) return false;
+
         return this.copyCallback(ws, menuOpenEvent, undefined, scope);
       },
       id: 'blockCopyFromContextMenu',
