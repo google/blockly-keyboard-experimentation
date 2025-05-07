@@ -226,7 +226,8 @@ export async function getCurrentFocusNodeId(
   browser: WebdriverIO.Browser,
 ): Promise<string | undefined> {
   return await browser.execute(() => {
-    return Blockly.getFocusManager().getFocusedNode()?.getFocusableElement()?.id;
+    return Blockly.getFocusManager().getFocusedNode()?.getFocusableElement()
+      ?.id;
   });
 }
 
@@ -242,7 +243,8 @@ export async function getFocusedConnectionType(
   browser: WebdriverIO.Browser,
 ): Promise<number | undefined> {
   return await browser.execute(() => {
-    const connection = Blockly.getFocusManager().getFocusedNode() as Blockly.RenderedConnection;
+    const connection =
+      Blockly.getFocusManager().getFocusedNode() as Blockly.RenderedConnection;
     return connection.type;
   });
 }

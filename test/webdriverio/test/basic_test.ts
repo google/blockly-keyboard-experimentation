@@ -303,10 +303,7 @@ suite.skip('Keyboard navigation on Fields', function () {
     await this.browser.keys(Key.ArrowUp);
     await this.browser.pause(PAUSE_TIME);
 
-    chai.assert.equal(
-      await getCurrentFocusNodeId(this.browser),
-      'p5_canvas_1',
-    );
+    chai.assert.equal(await getCurrentFocusNodeId(this.browser), 'p5_canvas_1');
   });
 
   test('Left from first field selects block', async function () {
@@ -321,10 +318,7 @@ suite.skip('Keyboard navigation on Fields', function () {
     await this.browser.keys(Key.ArrowLeft);
     await this.browser.pause(PAUSE_TIME);
 
-    chai.assert.equal(
-      await getCurrentFocusNodeId(this.browser),
-      'p5_canvas_1',
-    );
+    chai.assert.equal(await getCurrentFocusNodeId(this.browser), 'p5_canvas_1');
   });
 
   test('Right from first field selects second field', async function () {
@@ -343,10 +337,7 @@ suite.skip('Keyboard navigation on Fields', function () {
       .expect(await getCurrentFocusNodeId(this.browser))
       .to.include('p5_canvas_1_field_');
 
-    chai.assert.equal(
-      await getFocusedFieldName(this.browser),
-      'HIGHT',
-    );
+    chai.assert.equal(await getFocusedFieldName(this.browser), 'HIGHT');
   });
 
   test('Left from second field selects first field', async function () {
@@ -365,10 +356,7 @@ suite.skip('Keyboard navigation on Fields', function () {
       .expect(await getCurrentFocusNodeId(this.browser))
       .to.include('p5_canvas_1_field_');
 
-    chai.assert.equal(
-      await getFocusedFieldName(this.browser),
-      'WIDTH',
-    );
+    chai.assert.equal(await getFocusedFieldName(this.browser), 'WIDTH');
   });
 
   test("Right from second field selects block's next connection", async function () {
@@ -432,5 +420,4 @@ suite.skip('Keyboard navigation on Fields', function () {
       Blockly.ConnectionType.INPUT_VALUE,
     );
   });
-
 });
