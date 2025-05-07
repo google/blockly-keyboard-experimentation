@@ -6,28 +6,22 @@
 
 import {
   ContextMenuRegistry,
-  Gesture,
   ShortcutRegistry,
-  Events,
-  Msg,
-  utils as blocklyUtils,
-  clipboard,
   ICopyData,
-  LineCursor,
-  FocusableTreeTraverser,
-  getFocusManager,
+  isCopyable,
+  isDeletable,
+  isDraggable,
+  Msg,
+  ShortcutItems,
+  Flyout,
+  getMainWorkspace,
 } from 'blockly';
 import * as Constants from '../constants';
-import type {BlockSvg, WorkspaceSvg} from 'blockly';
+import {WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
 import {getShortActionShortcut} from '../shortcut_formatting';
-import * as Blockly from 'blockly';
 import {clearPasteHints, showCopiedHint, showCutHint} from '../hints';
-
-const KeyCodes = blocklyUtils.KeyCodes;
-const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
-  ShortcutRegistry.registry,
-);
+import {IFocusableNode} from 'blockly/core';
 
 /**
  * Weight for the first of these three items in the context menu.
@@ -36,6 +30,14 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
  * the order within the clipboard group.
  */
 const BASE_WEIGHT = 12;
+
+/** Type of the callback function for keyboard shortcuts. */
+type ShortcutCallback = (
+  workspace: WorkspaceSvg,
+  e: Event,
+  shortcut: ShortcutRegistry.KeyboardShortcut,
+  scope: ContextMenuRegistry.Scope,
+) => boolean;
 
 /**
  * Logic and state for cut/copy/paste actions as both keyboard shortcuts
@@ -48,6 +50,10 @@ export class Clipboard {
 
   /** The workspace a copy or cut keyboard shortcut happened in. */
   private copyWorkspace: WorkspaceSvg | null = null;
+
+  private oldCutCallback: ShortcutCallback | undefined;
+  private oldCopyCallback: ShortcutCallback | undefined;
+  private oldPasteCallback: ShortcutCallback | undefined;
 
   constructor(private navigation: Navigation) {}
 
@@ -67,7 +73,9 @@ export class Clipboard {
 
   /**
    * Uninstall this action as both a keyboard shortcut and a context menu item.
-   * Reinstall the original context menu action if possible.
+   * N. B. This does *not* currently reinstall the original keyboard shortcuts.
+   * You should manually reinstall the previously registered shortcuts (either
+   * from core or from another plugin you may be using).
    */
   uninstall() {
     ContextMenuRegistry.registry.unregister('blockCutFromContextMenu');
@@ -81,44 +89,65 @@ export class Clipboard {
 
   /**
    * Create and register the keyboard shortcut for the cut action.
+   * Identical to the one in core but adds a toast after successful cut.
    */
   private registerCutShortcut() {
+    const oldCutShortcut =
+      ShortcutRegistry.registry.getRegistry()[ShortcutItems.names.CUT];
+    if (!oldCutShortcut)
+      throw new Error('No cut keyboard shortcut registered initially');
+
+    this.oldCutCallback = oldCutShortcut.callback;
+
     const cutShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.CUT,
-      preconditionFn: this.cutPrecondition.bind(this),
+      preconditionFn: oldCutShortcut.preconditionFn,
       callback: this.cutCallback.bind(this),
-      keyCodes: [
-        createSerializedKey(KeyCodes.X, [KeyCodes.CTRL]),
-        createSerializedKey(KeyCodes.X, [KeyCodes.ALT]),
-        createSerializedKey(KeyCodes.X, [KeyCodes.META]),
-      ],
-      allowCollision: true,
+      // The registry gives back keycodes as an object instead of an array
+      // See https://github.com/google/blockly/issues/9008
+      keyCodes: Object.values(oldCutShortcut.keyCodes ?? []),
+      allowCollision: false,
     };
 
+    ShortcutRegistry.registry.unregister(ShortcutItems.names.CUT);
     ShortcutRegistry.registry.register(cutShortcut);
   }
 
   /**
-   * Register the cut block action as a context menu item on blocks.
-   * This function mixes together the keyboard and context menu preconditions
-   * but only calls the keyboard callback.
+   * Register the cut block action as a context menu item.
+   * The context menu uses its own preconditionFn (that doesn't check
+   * if a gesture is in progress, because one always is in the context
+   * menu). It calls the cut callback that is shared between keyboard
+   * and context menu.
    */
   private registerCutContextMenuAction() {
     const cutAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) =>
-        Msg['CUT_SHORTCUT'].replace('%1', getShortActionShortcut('cut')),
+      displayText: (scope) => Msg['CUT_SHORTCUT'].replace('%1', getShortActionShortcut(Constants.SHORTCUT_NAMES.CUT)),
       preconditionFn: (scope) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return 'hidden';
+        const focused = scope.focusedNode;
 
-        return this.cutPrecondition(ws) ? 'enabled' : 'disabled';
+        if (!focused || !isCopyable(focused)) return 'hidden';
+
+        const workspace = focused.workspace;
+        if (
+          !workspace.isReadOnly() &&
+          isDeletable(focused) &&
+          focused.isDeletable() &&
+          isDraggable(focused) &&
+          focused.isMovable() &&
+          !focused.workspace.isFlyout
+        )
+          return 'enabled';
+
+        return 'disabled';
       },
-      callback: (scope) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return;
-        return this.cutCallback(ws);
+      callback: (scope, menuOpenEvent) => {
+        if (!isCopyable(scope.focusedNode)) return false;
+        const ws = scope.focusedNode.workspace;
+        if (!(ws instanceof WorkspaceSvg)) return false;
+
+        return this.cutCallback(ws, menuOpenEvent, undefined, scope);
       },
-      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'blockCutFromContextMenu',
       weight: BASE_WEIGHT,
     };
@@ -127,94 +156,90 @@ export class Clipboard {
   }
 
   /**
-   * Precondition function for cutting a block from keyboard
-   * navigation. This precondition is shared between keyboard shortcuts
-   * and context menu items.
+   * The callback for the cut action. Uses the registered version of the cut callback
+   * to perform the cut logic, then pops a toast if cut happened.
    *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @returns True iff `cutCallback` function should be called.
+   * @param workspace Workspace where shortcut happened.
+   * @param e menu open event or keyboard event
+   * @param shortcut keyboard shortcut or undefined for context menus
+   * @param scope scope of the shortcut or context menu item
+   * @returns true if a cut happened, false otherwise
    */
-  private cutPrecondition(workspace: WorkspaceSvg) {
-    if (this.navigation.canCurrentlyEdit(workspace)) {
-      const sourceBlock = workspace.getCursor()?.getSourceBlock();
-
-      return !!(
-        !Gesture.inProgress() &&
-        sourceBlock &&
-        sourceBlock.isDeletable() &&
-        sourceBlock.isMovable() &&
-        !sourceBlock.workspace.isFlyout
-      );
-    }
-    return false;
-  }
-
-  /**
-   * Callback function for cutting a block from keyboard
-   * navigation. This callback is shared between keyboard shortcuts
-   * and context menu items.
-   *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @returns True if this function successfully handled cutting.
-   */
-  private cutCallback(workspace: WorkspaceSvg) {
-    const cursor = workspace.getCursor();
-    if (!cursor) throw new TypeError('no cursor');
-    const sourceBlock = cursor.getSourceBlock();
-    if (!sourceBlock) throw new TypeError('no source block');
-    this.copyData = sourceBlock.toCopyData();
-    this.copyWorkspace = sourceBlock.workspace;
-    if (cursor instanceof LineCursor) cursor.preDelete(sourceBlock);
-    sourceBlock.checkAndDelete();
-    if (cursor instanceof LineCursor) cursor.postDelete();
-    const cut = !!this.copyData;
-    if (cut) {
+  private cutCallback(
+    workspace: WorkspaceSvg,
+    e: Event,
+    shortcut: ShortcutRegistry.KeyboardShortcut | undefined,
+    scope: ContextMenuRegistry.Scope,
+  ) {
+    const didCut =
+      !!this.oldCutCallback &&
+      this.oldCutCallback(workspace, e, shortcut, scope);
+    if (didCut) {
       showCutHint(workspace);
     }
-    return true;
+    return didCut;
   }
 
   /**
    * Create and register the keyboard shortcut for the copy action.
+   * Identical to the one in core but pops a toast after succesful copy.
    */
   private registerCopyShortcut() {
+    const oldCopyShortcut =
+      ShortcutRegistry.registry.getRegistry()[ShortcutItems.names.COPY];
+    if (!oldCopyShortcut)
+      throw new Error('No copy keyboard shortcut registered initially');
+
+    this.oldCopyCallback = oldCopyShortcut.callback;
+
     const copyShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.COPY,
-      preconditionFn: this.copyPrecondition.bind(this),
+      preconditionFn: oldCopyShortcut.preconditionFn,
       callback: this.copyCallback.bind(this),
-      keyCodes: [
-        createSerializedKey(KeyCodes.C, [KeyCodes.CTRL]),
-        createSerializedKey(KeyCodes.C, [KeyCodes.ALT]),
-        createSerializedKey(KeyCodes.C, [KeyCodes.META]),
-      ],
-      allowCollision: true,
+      // The registry gives back keycodes as an object instead of an array
+      // See https://github.com/google/blockly/issues/9008
+      keyCodes: Object.values(oldCopyShortcut.keyCodes ?? []),
+      allowCollision: false,
     };
+
+    ShortcutRegistry.registry.unregister(ShortcutItems.names.COPY);
     ShortcutRegistry.registry.register(copyShortcut);
   }
 
   /**
-   * Register the copy block action as a context menu item on blocks.
-   * This function mixes together the keyboard and context menu preconditions
-   * but only calls the keyboard callback.
+   * Register the copy block action as a context menu item.
+   * The context menu uses its own preconditionFn (that doesn't check
+   * if a gesture is in progress, because one always is in the context
+   * menu). It calls the copy callback that is shared between keyboard
+   * and context menu.
    */
   private registerCopyContextMenuAction() {
     const copyAction: ContextMenuRegistry.RegistryItem = {
       displayText: (scope) =>
-        Msg['COPY_SHORTCUT'].replace('%1', getShortActionShortcut('copy')),
+        Msg['COPY_SHORTCUT'].replace('%1', getShortActionShortcut(Constants.SHORTCUT_NAMES.COPY)),
       preconditionFn: (scope) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return 'hidden';
+        const focused = scope.focusedNode;
 
-        return this.copyPrecondition(ws) ? 'enabled' : 'disabled';
+        if (!focused || !isCopyable(focused)) return 'hidden';
+
+        const workspace = focused.workspace;
+        if (
+          !workspace.isReadOnly() &&
+          isDeletable(focused) &&
+          focused.isDeletable() &&
+          isDraggable(focused) &&
+          focused.isMovable() &&
+          !focused.workspace.isFlyout
+        )
+          return 'enabled';
+
+        return 'disabled';
       },
-      callback: (scope) => {
+      callback: (scope, menuOpenEvent) => {
         const ws = scope.block?.workspace;
         if (!ws) return;
-        return this.copyCallback(ws);
+        return this.copyCallback(ws, menuOpenEvent, undefined, scope);
       },
-      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
       id: 'blockCopyFromContextMenu',
       weight: BASE_WEIGHT + 1,
     };
@@ -223,113 +248,98 @@ export class Clipboard {
   }
 
   /**
-   * Precondition function for copying a block from keyboard
-   * navigation. This precondition is shared between keyboard shortcuts
-   * and context menu items.
+   * The callback for the copy action. Uses the registered version of the copy callback
+   * to perform the copy logic, then pops a toast if copy happened.
    *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @returns True iff `copyCallback` function should be called.
+   * @param workspace Workspace where shortcut happened.
+   * @param e menu open event or keyboard event
+   * @param shortcut keyboard shortcut or undefined for context menus
+   * @param scope scope of the shortcut or context menu item
+   * @returns true if a copy happened, false otherwise
    */
-  private copyPrecondition(workspace: WorkspaceSvg) {
-    if (!this.navigation.canCurrentlyEdit(workspace)) return false;
-    switch (this.navigation.getState(workspace)) {
-      case Constants.STATE.WORKSPACE: {
-        const source = workspace?.getCursor()?.getSourceBlock();
-        return !!(
-          source?.isDeletable() &&
-          source?.isMovable() &&
-          !Gesture.inProgress()
-        );
-      }
-      case Constants.STATE.FLYOUT: {
-        const flyoutWorkspace = workspace.getFlyout()?.getWorkspace();
-        const sourceBlock = flyoutWorkspace?.getCursor()?.getSourceBlock();
-        return !!(sourceBlock && !Gesture.inProgress());
-      }
-      default:
-        return false;
-    }
-  }
-
-  /**
-   * Callback function for copying a block from keyboard
-   * navigation. This callback is shared between keyboard shortcuts
-   * and context menu items.
-   *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @returns True if this function successfully handled copying.
-   */
-  private copyCallback(workspace: WorkspaceSvg) {
-    const navigationState = this.navigation.getState(workspace);
-    let activeWorkspace: WorkspaceSvg | undefined = workspace;
-    if (navigationState === Constants.STATE.FLYOUT) {
-      activeWorkspace = workspace.getFlyout()?.getWorkspace();
-    }
-    const sourceBlock = activeWorkspace?.getCursor()?.getSourceBlock();
-    if (!sourceBlock) return false;
-
-    this.copyData = sourceBlock.toCopyData();
-    this.copyWorkspace = sourceBlock.workspace;
-    const copied = !!this.copyData;
-    if (copied) {
-      if (navigationState === Constants.STATE.FLYOUT) {
-        getFocusManager().focusTree(workspace);
-      }
+  private copyCallback(
+    workspace: WorkspaceSvg,
+    e: Event,
+    shortcut: ShortcutRegistry.KeyboardShortcut | undefined,
+    scope: ContextMenuRegistry.Scope,
+  ) {
+    const didCopy =
+      !!this.oldCopyCallback &&
+      this.oldCopyCallback(workspace, e, shortcut, scope);
+    if (didCopy) {
       showCopiedHint(workspace);
     }
-    return copied;
+    return didCopy;
   }
 
   /**
    * Create and register the keyboard shortcut for the paste action.
+   * Identical to the one in core but clears any paste toasts after.
    */
   private registerPasteShortcut() {
+    const oldPasteShortcut =
+      ShortcutRegistry.registry.getRegistry()[ShortcutItems.names.PASTE];
+    if (!oldPasteShortcut)
+      throw new Error('No paste keyboard shortcut registered initially');
+
+    this.oldPasteCallback = oldPasteShortcut.callback;
+
     const pasteShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.PASTE,
-      preconditionFn: this.pastePrecondition.bind(this),
-      callback: this.pasteCallback.bind(this),
-      keyCodes: [
-        createSerializedKey(KeyCodes.V, [KeyCodes.CTRL]),
-        createSerializedKey(KeyCodes.V, [KeyCodes.ALT]),
-        createSerializedKey(KeyCodes.V, [KeyCodes.META]),
-      ],
-      allowCollision: true,
+      preconditionFn: (
+        workspace: WorkspaceSvg,
+        scope: ContextMenuRegistry.Scope,
+      ) => {
+        // Don't use the workspace given as we don't want to paste in the flyout, for example
+        const pasteWorkspace = this.getPasteWorkspace(scope);
+        if (!pasteWorkspace || pasteWorkspace.isReadOnly()) return false;
+        return true;
+      },
+      callback: (
+        workspace: WorkspaceSvg,
+        e: Event,
+        shortcut: ShortcutRegistry.KeyboardShortcut,
+        scope: ContextMenuRegistry.Scope,
+      ) => {
+        // Don't use the workspace given as we don't want to paste in the flyout, for example
+        const pasteWorkspace = this.getPasteWorkspace(scope);
+        if (!pasteWorkspace) return false;
+        return this.pasteCallback(pasteWorkspace, e, shortcut, scope);
+      },
+      // The registry gives back keycodes as an object instead of an array
+      // See https://github.com/google/blockly/issues/9008
+      keyCodes: Object.values(oldPasteShortcut.keyCodes ?? []),
+      allowCollision: false,
     };
+
+    ShortcutRegistry.registry.unregister(ShortcutItems.names.PASTE);
     ShortcutRegistry.registry.register(pasteShortcut);
   }
 
   /**
-   * Register the paste block action as a context menu item on blocks.
-   * This function mixes together the keyboard and context menu preconditions
-   * but only calls the keyboard callback.
+   * Register the paste block action as a context menu item.
+   * The context menu uses its own preconditionFn (that doesn't check
+   * if a gesture is in progress, because one always is in the context
+   * menu). It calls the paste callback that is shared between keyboard
+   * and context menu.
    */
   private registerPasteContextMenuAction() {
     const pasteAction: ContextMenuRegistry.RegistryItem = {
       displayText: (scope) =>
-        Msg['PASTE_SHORTCUT'].replace('%1', getShortActionShortcut('paste')),
+        Msg['PASTE_SHORTCUT'].replace('%1', getShortActionShortcut(Constants.SHORTCUT_NAMES.PASTE)),
       preconditionFn: (scope: ContextMenuRegistry.Scope) => {
-        let block;
-        if (scope.focusedNode instanceof Blockly.Block) {
-          block = scope.focusedNode;
-        } else if (scope.focusedNode instanceof Blockly.Connection) {
-          block = scope.focusedNode.getSourceBlock();
-        }
-        const ws = block?.workspace as WorkspaceSvg | null;
-        if (!ws) return 'hidden';
-        return this.pastePrecondition(ws) ? 'enabled' : 'disabled';
+        const workspace = this.getPasteWorkspace(scope);
+        if (!workspace) return 'hidden';
+
+        // Unfortunately, this will return enabled even if nothing is in the clipboard
+        // This is because the clipboard data is not actually exposed in core
+        // so there's no way to check
+        return workspace.isReadOnly() ? 'disabled' : 'enabled';
       },
-      callback: (scope: ContextMenuRegistry.Scope) => {
-        let block;
-        if (scope.focusedNode instanceof Blockly.Block) {
-          block = scope.focusedNode;
-        } else if (scope.focusedNode instanceof Blockly.Connection) {
-          block = scope.focusedNode.getSourceBlock();
-        }
-        const ws = block?.workspace as WorkspaceSvg | null;
-        if (!ws) return;
-        return this.pasteCallback(ws);
+      callback: (scope: ContextMenuRegistry.Scope, menuOpenEvent: Event) => {
+        const workspace = this.getPasteWorkspace(scope);
+        if (!workspace) return;
+        return this.pasteCallback(workspace, menuOpenEvent, undefined, scope);
       },
       id: 'blockPasteFromContextMenu',
       weight: BASE_WEIGHT + 2,
@@ -339,52 +349,58 @@ export class Clipboard {
   }
 
   /**
-   * Precondition function for pasting a block from keyboard
-   * navigation. This precondition is shared between keyboard shortcuts
-   * and context menu items.
+   * Gets the workspace where something should be pasted.
+   * Tries to get the workspace the focusable item is on,
+   * or the target workspace if the focusable item is in a flyout,
+   * or falls back to the main workspace.
    *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @returns True iff `pasteCallback` function should be called.
+   * @param scope scope from the action that initiated the paste
+   * @returns a workspace to paste into if possible, otherwise null
    */
-  private pastePrecondition(workspace: WorkspaceSvg) {
-    if (!this.copyData || !this.copyWorkspace) return false;
+  private getPasteWorkspace(scope: ContextMenuRegistry.Scope) {
+    const focusTree = (scope.focusedNode as IFocusableNode).getFocusableTree();
+    let workspace;
+    if (focusTree instanceof WorkspaceSvg) {
+      workspace = focusTree;
+    } else if (focusTree instanceof Flyout) {
+      // Seems like this case doesn't actually happen and a
+      // (flyout) Workspace is returned instead, but it's possible
+      workspace = focusTree.targetWorkspace;
+    } else {
+      // Give up and just paste in the main workspace
+      workspace = getMainWorkspace() as WorkspaceSvg;
+    }
 
-    return this.navigation.canCurrentlyEdit(workspace) && !Gesture.inProgress();
+    if (!workspace) return null;
+    // If we're trying to paste in a flyout, paste in the target workspace instead
+    if (workspace.isFlyout)
+      workspace = workspace.targetWorkspace as WorkspaceSvg;
+
+    return workspace;
   }
 
   /**
-   * Callback function for pasting a block from keyboard
-   * navigation. This callback is shared between keyboard shortcuts
-   * and context menu items.
+   * The callback for the paste action. Uses the registered version of the paste callback
+   * to perform the paste logic, then clears any toasts about pasting.
    *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @returns True if this function successfully handled pasting.
+   * @param workspace Workspace where shortcut happened.
+   * @param e menu open event or keyboard event
+   * @param shortcut keyboard shortcut or undefined for context menus
+   * @param scope scope of the shortcut or context menu item
+   * @returns true if a paste happened, false otherwise
    */
-  private pasteCallback(workspace: WorkspaceSvg) {
-    if (!this.copyData || !this.copyWorkspace) return false;
+  private pasteCallback(
+    workspace: WorkspaceSvg,
+    e: Event,
+    shortcut: ShortcutRegistry.KeyboardShortcut | undefined,
+    scope: ContextMenuRegistry.Scope,
+  ) {
+    const didPaste = !!this.oldPasteCallback && this.oldPasteCallback();
+
+    // Clear the paste hints regardless of whether something was pasted
+    // Some implementations of paste are async and we should clear the hint
+    // once the user initiates the paste action.
     clearPasteHints(workspace);
-
-    const pasteWorkspace = this.copyWorkspace.isFlyout
-      ? workspace
-      : this.copyWorkspace;
-
-    const targetNode = FocusableTreeTraverser.findFocusedNode(pasteWorkspace);
-    // If we're pasting in the flyout it still targets the workspace. Focus
-    // first as to ensure correct selection handling.
-    getFocusManager().focusTree(workspace);
-
-    Events.setGroup(true);
-    const block = clipboard.paste(this.copyData, pasteWorkspace) as BlockSvg;
-    if (block) {
-      if (targetNode) {
-        this.navigation.tryToConnectBlock(targetNode, block);
-      }
-      Events.setGroup(false);
-      return true;
-    }
-    Events.setGroup(false);
-    return false;
+    return didPaste;
   }
 }
