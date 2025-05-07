@@ -14,6 +14,7 @@ import {
   getSelectedBlockId,
   ElementWithId,
   tabNavigateToWorkspace,
+  setCurrentCursorNodeById,
 } from './test_setup.js';
 import {Key, KeyAction, PointerAction, WheelAction} from 'webdriverio';
 
@@ -30,10 +31,7 @@ suite('Clipboard test', function () {
   test('Copy and paste while block selected', async function () {
     // Navigate to draw_circle_1.
     await tabNavigateToWorkspace(this.browser);
-    for (let i = 0; i < 8; i++) {
-      await this.browser.keys(Key.ArrowDown);
-      await this.browser.pause(PAUSE_TIME);
-    }
+    await setCurrentCursorNodeById(this.browser, 'draw_circle_1');
 
     // Copy and paste
     await this.browser.keys([Key.Ctrl, 'c']);
@@ -54,10 +52,7 @@ suite('Clipboard test', function () {
   test('Cut and paste while block selected', async function () {
     // Navigate to draw_circle_1.
     await tabNavigateToWorkspace(this.browser);
-    for (let i = 0; i < 8; i++) {
-      await this.browser.keys(Key.ArrowDown);
-      await this.browser.pause(PAUSE_TIME);
-    }
+    await setCurrentCursorNodeById(this.browser, 'draw_circle_1');
     const block = await getBlockElementById(this.browser, 'draw_circle_1');
 
     // Cut and paste
