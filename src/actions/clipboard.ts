@@ -168,7 +168,9 @@ export class Clipboard {
   private cutCallback(
     workspace: WorkspaceSvg,
     e: Event,
-    shortcut: ShortcutRegistry.KeyboardShortcut | undefined,
+    shortcut: ShortcutRegistry.KeyboardShortcut = {
+      name: Constants.SHORTCUT_NAMES.CUT,
+    },
     scope: ContextMenuRegistry.Scope,
   ) {
     const didCut =
@@ -260,7 +262,9 @@ export class Clipboard {
   private copyCallback(
     workspace: WorkspaceSvg,
     e: Event,
-    shortcut: ShortcutRegistry.KeyboardShortcut | undefined,
+    shortcut: ShortcutRegistry.KeyboardShortcut = {
+      name: Constants.SHORTCUT_NAMES.CUT,
+    },
     scope: ContextMenuRegistry.Scope,
   ) {
     const didCopy =
@@ -392,10 +396,14 @@ export class Clipboard {
   private pasteCallback(
     workspace: WorkspaceSvg,
     e: Event,
-    shortcut: ShortcutRegistry.KeyboardShortcut | undefined,
+    shortcut: ShortcutRegistry.KeyboardShortcut = {
+      name: Constants.SHORTCUT_NAMES.CUT,
+    },
     scope: ContextMenuRegistry.Scope,
   ) {
-    const didPaste = !!this.oldPasteCallback && this.oldPasteCallback();
+    const didPaste =
+      !!this.oldPasteCallback &&
+      this.oldPasteCallback(workspace, e, shortcut, scope);
 
     // Clear the paste hints regardless of whether something was pasted
     // Some implementations of paste are async and we should clear the hint
