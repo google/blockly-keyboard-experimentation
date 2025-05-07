@@ -185,9 +185,7 @@ export async function setCurrentCursorNodeById(
     const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
     const block = workspaceSvg.getBlockById(blockId);
     if (block) {
-      workspaceSvg
-        .getCursor()
-        ?.setCurNode(Blockly.ASTNode.createBlockNode(block));
+      block.getFocusableElement()?.focus();
     }
   }, blockId);
 }
@@ -210,9 +208,7 @@ export async function setCurrentCursorNodeByIdAndFieldName(
       const block = workspaceSvg.getBlockById(blockId);
       const field = block?.getField(fieldName);
       if (field) {
-        workspaceSvg
-          .getCursor()
-          ?.setCurNode(Blockly.ASTNode.createFieldNode(field));
+        field.getFocusableElement()?.focus();
       }
     },
     blockId,
@@ -221,50 +217,49 @@ export async function setCurrentCursorNodeByIdAndFieldName(
 }
 
 /**
- * Get the ID of the block at the current cursor node.
+ * Get the ID of the block that is currently focused.
  *
  * @param browser The active WebdriverIO Browser object.
  * @returns A Promise that resolves to the ID of the current cursor node.
  */
-export async function getCurrentCursorNodeId(
+export async function getCurrentFocusNodeId(
   browser: WebdriverIO.Browser,
 ): Promise<string | undefined> {
   return await browser.execute(() => {
-    const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
-    return workspaceSvg.getCursor()?.getCurNode()?.getSourceBlock()?.id;
+    return Blockly.getFocusManager().getFocusedNode()?.getFocusableElement()?.id;
   });
 }
 
 /**
- * Get the type of the current cursor node.
+ * Get the connection type of the current focused node. Assumes the current node
+ * is a connection.
  *
  * @param browser The active WebdriverIO Browser object.
- * @returns A Promise that resolves to the type of the current cursor node.
+ * @returns A Promise that resolves to the connection type of the current cursor
+ * node.
  */
-export async function getCurrentCursorNodeType(
+export async function getFocusedConnectionType(
   browser: WebdriverIO.Browser,
-): Promise<string | undefined> {
+): Promise<number | undefined> {
   return await browser.execute(() => {
-    const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
-    return workspaceSvg.getCursor()?.getCurNode()?.getType();
+    const connection = Blockly.getFocusManager().getFocusedNode() as Blockly.RenderedConnection;
+    return connection.type;
   });
 }
 
 /**
- * Get the field name of the current cursor node.
+ * Get the field name of the current focused node. Assumes the current node
+ * is a field.
  *
  * @param browser The active WebdriverIO Browser object.
- * @returns A Promise that resolves to the field name of the current cursor node.
+ * @returns A Promise that resolves to the field name of the current focused
+ * node.
  */
-export async function getCurrentCursorNodeFieldName(
+export async function getFocusedFieldName(
   browser: WebdriverIO.Browser,
 ): Promise<string | undefined> {
   return await browser.execute(() => {
-    const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
-    const field = workspaceSvg
-      .getCursor()
-      ?.getCurNode()
-      ?.getLocation() as Blockly.Field;
+    const field = Blockly.getFocusManager().getFocusedNode() as Blockly.Field;
     return field.name;
   });
 }
