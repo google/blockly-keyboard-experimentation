@@ -255,9 +255,8 @@ suite('Keyboard navigation on Blocks', function () {
       .to.include('controls_repeat_ext_1_connection_');
   });
 
-  /*
   // This test fails because the curly quote icons get selected.
-  test('Right from text block selects input and skips curly quote icons', async function () {
+  test.skip('Right from text block selects input and skips curly quote icons', async function () {
     await focusWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await setCurrentCursorNodeById(this.browser, 'text_print_1');
@@ -265,30 +264,24 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.keys(Key.ArrowRight);
     await this.browser.pause(PAUSE_TIME);
 
-    chai.assert.equal(await getCurrentCursorNodeId(this.browser), 'text_1');
-    chai.assert.equal(
-      await getCurrentCursorNodeType(this.browser),
-      Blockly.ASTNode.types.BLOCK,
-    );
+    chai.assert.equal(await getCurrentFocusNodeId(this.browser), 'text_1');
 
     await this.browser.keys(Key.ArrowRight);
     await this.browser.pause(PAUSE_TIME);
 
     chai.assert.equal(
-      await getCurrentCursorNodeId(this.browser),
+      await getCurrentFocusNodeId(this.browser),
       'text_print_1',
     );
     chai.assert.equal(
-      await getCurrentCursorNodeType(this.browser),
+      await getCurrentFocusNodeId(this.browser),
       Blockly.ASTNode.types.NEXT,
     );
   });
-  */
 });
 
-/*
 // These tests fail because focusing on a field doesn't update the cursor
-suite('Keyboard navigation on Fields', function () {
+suite.skip('Keyboard navigation on Fields', function () {
   // Setting timeout to unlimited as these tests take a longer time to run than most mocha test
   this.timeout(0);
 
@@ -440,4 +433,3 @@ suite('Keyboard navigation on Fields', function () {
   });
 
 });
-*/
