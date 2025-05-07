@@ -15,7 +15,7 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
 );
 
 /**
- * Keyboard shortcut to show the action menu on Cmr/Ctrl/Alt+Enter key.
+ * Keyboard shortcut to show the action menu on Cmd/Ctrl/Alt+Enter key.
  */
 export class ActionMenu {
   /**
@@ -86,14 +86,13 @@ export class ActionMenu {
     const node = cursor.getCurNode();
     if (!node) return false;
     // TODO(google/blockly#8847): Add typeguard for IContextMenu in core when this moves over
-    const location = node.getLocation();
     if (
-      'showContextMenu' in location &&
-      typeof location.showContextMenu === 'function'
+      'showContextMenu' in node &&
+      typeof node.showContextMenu === 'function'
     ) {
-      location.showContextMenu(menuOpenEvent);
+      node.showContextMenu(menuOpenEvent);
     } else {
-      console.info(`No action menu for ASTNode of type ${node.getType()}`);
+      console.info(`No action menu for node ${node}`);
       return false;
     }
 

@@ -33,12 +33,12 @@ export class FlyoutCursor extends Blockly.LineCursor {
    * @returns The next element, or null if the current node is
    *     not set or there is no next value.
    */
-  override next(): Blockly.ASTNode | null {
+  override next(): Blockly.INavigable<any> | null {
     const curNode = this.getCurNode();
     if (!curNode) {
       return null;
     }
-    const newNode = curNode.next();
+    const newNode = this.workspace.getNavigator().getNextSibling(curNode);
 
     if (newNode) {
       this.setCurNode(newNode);
@@ -61,12 +61,12 @@ export class FlyoutCursor extends Blockly.LineCursor {
    * @returns The previous element, or null if the current
    *     node is not set or there is no previous value.
    */
-  override prev(): Blockly.ASTNode | null {
+  override prev(): Blockly.INavigable<any> | null {
     const curNode = this.getCurNode();
     if (!curNode) {
       return null;
     }
-    const newNode = curNode.prev();
+    const newNode = this.workspace.getNavigator().getPreviousSibling(curNode);
 
     if (newNode) {
       this.setCurNode(newNode);
@@ -83,25 +83,19 @@ export class FlyoutCursor extends Blockly.LineCursor {
     return null;
   }
 
-  override setCurNode(node: Blockly.ASTNode | null) {
+  override setCurNode(node: Blockly.INavigable<any> | null) {
     super.setCurNode(node);
 
-    const location = node?.getLocation();
     let bounds: Blockly.utils.Rect | undefined;
     if (
-      location &&
-      'getBoundingRectangle' in location &&
-      typeof location.getBoundingRectangle === 'function'
+      node &&
+      'getBoundingRectangle' in node &&
+      typeof node.getBoundingRectangle === 'function'
     ) {
-      bounds = location.getBoundingRectangle();
-    } else if (location instanceof Blockly.FlyoutButton) {
-      const {x, y} = location.getPosition();
-      bounds = new Blockly.utils.Rect(
-        y,
-        y + location.height,
-        x,
-        x + location.width,
-      );
+      bounds = node.getBoundingRectangle();
+    } else if (node instanceof Blockly.FlyoutButton) {
+      const {x, y} = node.getPosition();
+      bounds = new Blockly.utils.Rect(y, y + node.height, x, x + node.width);
     }
 
     if (!(bounds instanceof Blockly.utils.Rect)) return;

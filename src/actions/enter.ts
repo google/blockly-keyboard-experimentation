@@ -5,20 +5,19 @@
  */
 
 import {
-  ASTNode,
   Events,
   ShortcutRegistry,
   utils as BlocklyUtils,
   getFocusManager,
+  BlockSvg,
+  FlyoutButton,
+  RenderedConnection,
+  WorkspaceSvg,
+  Field,
+  FocusableTreeTraverser,
 } from 'blockly/core';
 
-import type {
-  Block,
-  BlockSvg,
-  Field,
-  FlyoutButton,
-  WorkspaceSvg,
-} from 'blockly/core';
+import type {Block, INavigable} from 'blockly/core';
 
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
@@ -72,15 +71,10 @@ export class EnterAction {
               return false;
             }
             curNode = flyoutCursor.getCurNode();
-            nodeType = curNode?.getType();
-
-            switch (nodeType) {
-              case ASTNode.types.STACK:
-                this.insertFromFlyout(workspace);
-                break;
-              case ASTNode.types.BUTTON:
-                this.triggerButtonCallback(workspace);
-                break;
+            if (curNode instanceof BlockSvg) {
+              this.insertFromFlyout(workspace);
+            } else if (curNode instanceof FlyoutButton) {
+              this.triggerButtonCallback(workspace);
             }
 
             return true;
@@ -102,18 +96,17 @@ export class EnterAction {
     if (!cursor) return;
     const curNode = cursor.getCurNode();
     if (!curNode) return;
-    const nodeType = curNode.getType();
-    if (nodeType === ASTNode.types.FIELD) {
-      (curNode.getLocation() as Field).showEditor();
-    } else if (nodeType === ASTNode.types.BLOCK) {
-      const block = curNode.getLocation() as Block;
-      if (!this.tryShowFullBlockFieldEditor(block)) {
+    if (curNode instanceof Field) {
+      curNode.showEditor();
+    } else if (curNode instanceof BlockSvg) {
+      if (!this.tryShowFullBlockFieldEditor(curNode)) {
         showHelpHint(workspace);
       }
-    } else if (curNode.isConnection() || nodeType === ASTNode.types.WORKSPACE) {
+    } else if (
+      curNode instanceof RenderedConnection ||
+      curNode instanceof WorkspaceSvg
+    ) {
       this.navigation.openToolboxOrFlyout(workspace);
-    } else if (nodeType === ASTNode.types.STACK) {
-      console.warn('Cannot mark a stack.');
     }
   }
 
@@ -135,7 +128,9 @@ export class EnterAction {
       Events.setGroup(true);
     }
 
-    const stationaryNode = this.navigation.getFocusedASTNode(workspace);
+    const stationaryNode = FocusableTreeTraverser.findFocusedNode(
+      workspace,
+    ) as unknown as INavigable<any>;
     const newBlock = this.createNewBlock(workspace);
     if (!newBlock) return;
     const insertStartPoint = stationaryNode
@@ -148,8 +143,7 @@ export class EnterAction {
     workspace.setResizesEnabled(true);
 
     getFocusManager().focusTree(workspace);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    workspace.getCursor()?.setCurNode(ASTNode.createBlockNode(newBlock)!);
+    workspace.getCursor()?.setCurNode(newBlock);
     this.mover.startMove(workspace, newBlock, insertStartPoint);
 
     const isStartBlock =
@@ -253,11 +247,8 @@ export class EnterAction {
    *     containing a flyout with a button.
    */
   private triggerButtonCallback(workspace: WorkspaceSvg) {
-    const button = this.navigation
-      .getFlyoutCursor(workspace)
-      ?.getCurNode()
-      ?.getLocation() as FlyoutButton | undefined;
-    if (!button) return;
+    const button = this.navigation.getFlyoutCursor(workspace)?.getCurNode();
+    if (!(button instanceof FlyoutButton)) return;
 
     const flyoutButtonCallbacks: Map<string, (p1: FlyoutButton) => void> =
       // @ts-expect-error private field access
@@ -310,11 +301,8 @@ export class EnterAction {
       return null;
     }
 
-    const curBlock = this.navigation
-      .getFlyoutCursor(workspace)
-      ?.getCurNode()
-      ?.getLocation() as BlockSvg | undefined;
-    if (!curBlock?.isEnabled()) {
+    const curBlock = this.navigation.getFlyoutCursor(workspace)?.getCurNode();
+    if (!(curBlock instanceof BlockSvg) || !curBlock.isEnabled()) {
       console.warn("Can't insert a disabled block.");
       return null;
     }

@@ -12,7 +12,6 @@ import type {
   RenderedConnection,
 } from 'blockly';
 import {
-  ASTNode,
   Connection,
   dragging,
   getFocusManager,
@@ -202,8 +201,7 @@ export class Mover {
     );
 
     if (dragStrategy.isNewBlock && target) {
-      const newNode = ASTNode.createConnectionNode(target);
-      if (newNode) workspace.getCursor()?.setCurNode(newNode);
+      workspace.getCursor()?.setCurNode(target);
     }
 
     this.unpatchDragStrategy(info.block);
