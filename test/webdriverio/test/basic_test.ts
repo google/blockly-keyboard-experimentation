@@ -275,8 +275,8 @@ suite('Keyboard navigation on Blocks', function () {
       'text_print_1',
     );
     chai.assert.equal(
-      await getCurrentFocusNodeId(this.browser),
-      Blockly.ASTNode.types.NEXT,
+      await getFocusedConnectionType(this.browser),
+      Blockly.ConnectionType.NEXT_STATEMENT,
     );
   });
 });
