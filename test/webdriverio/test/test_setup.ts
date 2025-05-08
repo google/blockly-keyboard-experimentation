@@ -232,6 +232,24 @@ export async function getCurrentFocusNodeId(
 }
 
 /**
+ * Get the block type of the current focused node. Assumes the current node
+ * is a block.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @returns A Promise that resolves to the block type of the current cursor
+ * node.
+ */
+export async function getFocusedBlockType(
+  browser: WebdriverIO.Browser,
+): Promise<string | undefined> {
+  return await browser.execute(() => {
+    const block = Blockly.getFocusManager().getFocusedNode() as
+      | Blockly.BlockSvg
+      | undefined;
+    return block?.type;
+  });
+}
+/**
  * Get the connection type of the current focused node. Assumes the current node
  * is a connection.
  *
