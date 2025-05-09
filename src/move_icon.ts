@@ -79,6 +79,13 @@ export class MoveIcon implements Blockly.IIcon, Blockly.IHasBubble {
   }
 
   /**
+   * Returns this icon's bubble.
+   */
+  getBubble(): Blockly.IBubble | null {
+    return this.moveIndicator;
+  }
+
+  /**
    * Called when the location of this icon's block changes.
    *
    * @param blockOrigin The new location of this icon's block.
@@ -111,4 +118,25 @@ export class MoveIcon implements Blockly.IIcon, Blockly.IHasBubble {
   async setBubbleVisible(visible: boolean) {}
 
   initView(pointerDownListener: (e: PointerEvent) => void) {}
+
+  /** See IFocusableNode.getFocusableElement. */
+  getFocusableElement(): HTMLElement | SVGElement {
+    throw new Error('This node is not focusable.');
+  }
+
+  /** See IFocusableNode.getFocusableTree. */
+  getFocusableTree(): Blockly.IFocusableTree {
+    throw new Error('This node is not focusable.');
+  }
+
+  /** See IFocusableNode.onNodeFocus. */
+  onNodeFocus(): void {}
+
+  /** See IFocusableNode.onNodeBlur. */
+  onNodeBlur(): void {}
+
+  /** See IFocusableNode.canBeFocused. */
+  canBeFocused(): boolean {
+    return false;
+  }
 }

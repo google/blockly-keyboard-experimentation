@@ -143,4 +143,25 @@ export class MoveIndicatorBubble
   revertDrag() {}
 
   setDeleteStyle(enable: boolean) {}
+
+  /** See IFocusableNode.getFocusableElement. */
+  getFocusableElement(): HTMLElement | SVGElement {
+    throw new Error('This node is not focusable.');
+  }
+
+  /** See IFocusableNode.getFocusableTree. */
+  getFocusableTree(): Blockly.IFocusableTree {
+    throw new Error('This node is not focusable.');
+  }
+
+  /** See IFocusableNode.onNodeFocus. */
+  onNodeFocus(): void {}
+
+  /** See IFocusableNode.onNodeBlur. */
+  onNodeBlur(): void {}
+
+  /** See IFocusableNode.canBeFocused. */
+  canBeFocused(): boolean {
+    return false;
+  }
 }
