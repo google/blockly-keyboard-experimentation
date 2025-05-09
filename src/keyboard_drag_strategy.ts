@@ -297,18 +297,26 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     if (neighbour) {
       this.searchNode = neighbour;
       switch (neighbour.type) {
-        case ConnectionType.INPUT_VALUE:
-          return {
-            neighbour: neighbour,
-            local: this.block.outputConnection,
-            distance: 0,
-          };
-        case ConnectionType.NEXT_STATEMENT:
-          return {
-            neighbour: neighbour,
-            local: this.block.previousConnection,
-            distance: 0,
-          };
+        case ConnectionType.INPUT_VALUE: {
+          if (this.block.outputConnection) {
+            return {
+              neighbour: neighbour,
+              local: this.block.outputConnection,
+              distance: 0,
+            };
+          }
+          break;
+        }
+        case ConnectionType.NEXT_STATEMENT: {
+          if (this.block.previousConnection) {
+            return {
+              neighbour: neighbour,
+              local: this.block.previousConnection,
+              distance: 0,
+            };
+          }
+          break;
+        }
       }
     }
     return null;
