@@ -208,7 +208,11 @@ export async function setCurrentCursorNodeByIdAndFieldName(
       const block = workspaceSvg.getBlockById(blockId);
       const field = block?.getField(fieldName);
       if (field) {
-        field.getFocusableElement()?.focus();
+        // TODO: Stop referencing getCursor() and use focus() instead.
+        // getCursor().setCurNode() calls Marker.setCurNode(), but focus() does
+        // not accomplish the same goal yet.
+        workspaceSvg.getCursor()?.setCurNode(field);
+        // field.getFocusableElement()?.focus();
       }
     },
     blockId,

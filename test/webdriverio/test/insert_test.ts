@@ -15,7 +15,7 @@ import {
   testSetup,
 } from './test_setup.js';
 
-suite.only('Insert test', function () {
+suite('Insert test', function () {
   // Setting timeout to unlimited as these tests take longer time to run
   this.timeout(0);
 
