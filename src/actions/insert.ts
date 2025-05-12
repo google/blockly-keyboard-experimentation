@@ -88,9 +88,13 @@ export class InsertAction {
         return this.insertPrecondition(ws) ? 'enabled' : 'hidden';
       },
       callback: (scope: ContextMenuRegistry.Scope) => {
-        const ws =
-          scope.focusedNode?.workspace ??
-          (scope.focusedNode?.getSourceBlock().workspace as WorkspaceSvg);
+        let block;
+        if (scope.focusedNode instanceof Blockly.Block) {
+          block = scope.focusedNode;
+        } else if (scope.focusedNode instanceof Blockly.Connection) {
+          block = scope.focusedNode.getSourceBlock();
+        }
+        const ws = block?.workspace as WorkspaceSvg | null;
         if (!ws) return false;
         this.insertCallback(ws);
       },
