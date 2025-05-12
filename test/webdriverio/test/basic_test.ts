@@ -256,8 +256,7 @@ suite('Keyboard navigation on Blocks', function () {
       .to.include('controls_repeat_ext_1_connection_');
   });
 
-  // This test fails because the curly quote icons get selected.
-  test.skip('Right from text block selects input and skips curly quote icons', async function () {
+  test('Right from text block selects shadow block then field', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await setCurrentCursorNodeById(this.browser, 'text_print_1');
@@ -270,10 +269,16 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.keys(Key.ArrowRight);
     await this.browser.pause(PAUSE_TIME);
 
-    chai.assert.equal(
-      await getCurrentFocusNodeId(this.browser),
-      'text_print_1',
-    );
+    chai
+      .expect(await getCurrentFocusNodeId(this.browser))
+      .to.include('text_1_field_');
+
+    await this.browser.keys(Key.ArrowRight);
+    await this.browser.pause(PAUSE_TIME);
+
+    chai
+      .expect(await getCurrentFocusNodeId(this.browser))
+      .to.include('text_print_1_connection_');
     chai.assert.equal(
       await getFocusedConnectionType(this.browser),
       Blockly.ConnectionType.NEXT_STATEMENT,
@@ -282,7 +287,7 @@ suite('Keyboard navigation on Blocks', function () {
 });
 
 // TODO(#499) These tests fail because focusing on a field doesn't update the cursor
-suite.skip('Keyboard navigation on Fields', function () {
+suite('Keyboard navigation on Fields', function () {
   // Setting timeout to unlimited as these tests take a longer time to run than most mocha test
   this.timeout(0);
 
@@ -337,7 +342,7 @@ suite.skip('Keyboard navigation on Fields', function () {
       .expect(await getCurrentFocusNodeId(this.browser))
       .to.include('p5_canvas_1_field_');
 
-    chai.assert.equal(await getFocusedFieldName(this.browser), 'HIGHT');
+    chai.assert.equal(await getFocusedFieldName(this.browser), 'HEIGHT');
   });
 
   test('Left from second field selects first field', async function () {
@@ -371,10 +376,9 @@ suite.skip('Keyboard navigation on Fields', function () {
     await this.browser.keys(Key.ArrowRight);
     await this.browser.pause(PAUSE_TIME);
 
-    chai.assert.containSubset(
-      await getCurrentFocusNodeId(this.browser),
-      'p5_canvas_1_connection_',
-    );
+    chai
+      .expect(await getCurrentFocusNodeId(this.browser))
+      .to.include('p5_canvas_1_connection_');
   });
 
   test("Down from field selects block's next connection", async function () {
@@ -417,7 +421,7 @@ suite.skip('Keyboard navigation on Fields', function () {
 
     chai.assert.equal(
       await getFocusedConnectionType(this.browser),
-      Blockly.ConnectionType.INPUT_VALUE,
+      Blockly.ConnectionType.NEXT_STATEMENT,
     );
   });
 });
