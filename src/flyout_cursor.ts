@@ -33,7 +33,7 @@ export class FlyoutCursor extends Blockly.LineCursor {
    * @returns The next element, or null if the current node is
    *     not set or there is no next value.
    */
-  override next(): Blockly.INavigable<any> | null {
+  override next(): Blockly.IFocusableNode | null {
     const curNode = this.getCurNode();
     if (!curNode) {
       return null;
@@ -47,21 +47,12 @@ export class FlyoutCursor extends Blockly.LineCursor {
   }
 
   /**
-   * This is a no-op since a flyout cursor can not go in.
-   *
-   * @returns Always null.
-   */
-  override in(): null {
-    return null;
-  }
-
-  /**
    * Moves the cursor to the previous stack of blocks in the flyout.
    *
    * @returns The previous element, or null if the current
    *     node is not set or there is no previous value.
    */
-  override prev(): Blockly.INavigable<any> | null {
+  override prev(): Blockly.IFocusableNode | null {
     const curNode = this.getCurNode();
     if (!curNode) {
       return null;
@@ -74,16 +65,7 @@ export class FlyoutCursor extends Blockly.LineCursor {
     return newNode;
   }
 
-  /**
-   * This is a  no-op since a flyout cursor can not go out.
-   *
-   * @returns Always null.
-   */
-  override out(): null {
-    return null;
-  }
-
-  override setCurNode(node: Blockly.INavigable<any> | null) {
+  override setCurNode(node: Blockly.IFocusableNode | null) {
     super.setCurNode(node);
 
     let bounds: Blockly.utils.Rect | undefined;

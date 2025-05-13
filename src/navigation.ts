@@ -15,7 +15,6 @@ import * as Constants from './constants';
 import {
   registrationName as cursorRegistrationName,
   registrationType as cursorRegistrationType,
-  FlyoutCursor,
 } from './flyout_cursor';
 
 /**
@@ -151,7 +150,7 @@ export class Navigation {
     if (FlyoutCursorClass) {
       flyoutWorkspace
         .getMarkerManager()
-        .setCursor(new Blockly.LineCursor(flyout.getWorkspace()));
+        .setCursor(new FlyoutCursorClass(flyout));
     }
   }
 
@@ -258,7 +257,7 @@ export class Navigation {
   }
 
   private isFlyoutItemDisposed(
-    node: Blockly.INavigable<any>,
+    node: Blockly.IFocusableNode,
     sourceBlock: Blockly.BlockSvg | null,
   ) {
     if (sourceBlock?.disposed) {
@@ -368,9 +367,7 @@ export class Navigation {
         : flyoutContents[flyoutContents.length - 1];
     if (!defaultFlyoutItem) return false;
     const defaultFlyoutItemElement = defaultFlyoutItem.getElement();
-    flyoutCursor.setCurNode(
-      defaultFlyoutItemElement as unknown as Blockly.INavigable<any>,
-    );
+    flyoutCursor.setCurNode(defaultFlyoutItemElement);
     return true;
   }
 
@@ -420,11 +417,11 @@ export class Navigation {
    * @param workspace The main workspace the flyout is on.
    * @returns The flyout's cursor or null if no flyout exists.
    */
-  getFlyoutCursor(workspace: Blockly.WorkspaceSvg): FlyoutCursor | null {
+  getFlyoutCursor(workspace: Blockly.WorkspaceSvg): Blockly.LineCursor | null {
     const flyout = workspace.getFlyout();
     const cursor = flyout ? flyout.getWorkspace().getCursor() : null;
 
-    return cursor as FlyoutCursor;
+    return cursor;
   }
 
   /**
@@ -437,7 +434,7 @@ export class Navigation {
    *     wrong.
    */
   findInsertStartPoint(
-    stationaryNode: Blockly.INavigable<any>,
+    stationaryNode: Blockly.IFocusableNode,
     movingBlock: Blockly.BlockSvg,
   ): Blockly.RenderedConnection | null {
     const movingHasOutput = !!movingBlock.outputConnection;
@@ -517,7 +514,7 @@ export class Navigation {
    * @returns True if the connection was successful, false otherwise.
    */
   tryToConnectBlock(
-    stationaryNode: Blockly.INavigable<any>,
+    stationaryNode: Blockly.IFocusableNode,
     movingBlock: Blockly.BlockSvg,
   ): boolean {
     const destConnection = this.findInsertStartPoint(

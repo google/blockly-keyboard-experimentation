@@ -44,9 +44,6 @@ function getOptions() {
     renderer = 'thrasos';
   }
 
-  const noStackParam = params.get('noStack');
-  const stackConnections = !noStackParam;
-
   const toolboxParam = params.get('toolbox');
   const toolbox = toolboxParam ?? 'toolbox';
   const toolboxObject =
@@ -57,7 +54,6 @@ function getOptions() {
 
   return {
     scenario,
-    stackConnections,
     renderer,
     toolbox: toolboxObject,
     rtl,
@@ -71,7 +67,7 @@ function getOptions() {
  * @returns The created workspace.
  */
 function createWorkspace(): Blockly.WorkspaceSvg {
-  const {scenario, stackConnections, renderer, toolbox, rtl} = getOptions();
+  const {scenario, renderer, toolbox, rtl} = getOptions();
 
   const injectOptions = {
     toolbox,
@@ -84,10 +80,7 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   }
   const workspace = Blockly.inject(blocklyDiv, injectOptions);
 
-  const navigationOptions = {
-    cursor: {stackConnections},
-  };
-  new KeyboardNavigation(workspace, navigationOptions);
+  new KeyboardNavigation(workspace);
 
   // Disable blocks that aren't inside the setup or draw loops.
   workspace.addChangeListener(Blockly.Events.disableOrphans);

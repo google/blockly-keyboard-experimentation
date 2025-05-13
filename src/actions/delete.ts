@@ -12,7 +12,7 @@ import {
   LineCursor,
 } from 'blockly';
 import * as Constants from '../constants';
-import type {BlockSvg, WorkspaceSvg} from 'blockly';
+import type {WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
