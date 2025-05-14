@@ -17,7 +17,7 @@ import {
   FocusableTreeTraverser,
 } from 'blockly/core';
 
-import type {Block, INavigable} from 'blockly/core';
+import type {Block} from 'blockly/core';
 
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
@@ -59,7 +59,6 @@ export class EnterAction {
 
         let flyoutCursor;
         let curNode;
-        let nodeType;
 
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
@@ -128,9 +127,7 @@ export class EnterAction {
       Events.setGroup(true);
     }
 
-    const stationaryNode = FocusableTreeTraverser.findFocusedNode(
-      workspace,
-    ) as unknown as INavigable<any>;
+    const stationaryNode = FocusableTreeTraverser.findFocusedNode(workspace);
     const newBlock = this.createNewBlock(workspace);
     if (!newBlock) return;
     const insertStartPoint = stationaryNode

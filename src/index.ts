@@ -8,16 +8,6 @@ import * as Blockly from 'blockly/core';
 import {NavigationController} from './navigation_controller';
 import {enableBlocksOnDrag} from './disabled_blocks';
 
-/** Options object for KeyboardNavigation instances. */
-export interface NavigationOptions {
-  cursor: Partial<Blockly.CursorOptions>;
-}
-
-/** Default options for LineCursor instances. */
-const defaultOptions: NavigationOptions = {
-  cursor: {},
-};
-
 /** Plugin for keyboard navigation. */
 export class KeyboardNavigation {
   /** The workspace. */
@@ -38,18 +28,10 @@ export class KeyboardNavigation {
   /**
    * Constructs the keyboard navigation.
    *
-   * @param workspace The workspace that the plugin will
-   *     be added to.
-   * @param options Options.
+   * @param workspace The workspace that the plugin will be added to.
    */
-  constructor(
-    workspace: Blockly.WorkspaceSvg,
-    options: Partial<NavigationOptions>,
-  ) {
+  constructor(workspace: Blockly.WorkspaceSvg) {
     this.workspace = workspace;
-
-    // Regularise options and apply defaults.
-    options = {...defaultOptions, ...options};
 
     this.navigationController = new NavigationController();
     this.navigationController.init();
@@ -59,7 +41,7 @@ export class KeyboardNavigation {
     this.originalTheme = workspace.getTheme();
     this.setGlowTheme();
 
-    this.cursor = new Blockly.LineCursor(workspace, options.cursor);
+    this.cursor = new Blockly.LineCursor(workspace);
 
     // Add the event listener to enable disabled blocks on drag.
     workspace.addChangeListener(enableBlocksOnDrag);

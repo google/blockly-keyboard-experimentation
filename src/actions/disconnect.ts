@@ -11,7 +11,7 @@ import {
   utils as BlocklyUtils,
 } from 'blockly';
 import * as Constants from '../constants';
-import type {WorkspaceSvg, INavigable} from 'blockly';
+import type {WorkspaceSvg, IFocusableNode} from 'blockly';
 import {Navigation} from '../navigation';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
@@ -79,7 +79,7 @@ export class DisconnectAction {
     if (!cursor) {
       return;
     }
-    let curNode: INavigable<any> | null = cursor.getCurNode();
+    let curNode: IFocusableNode | null = cursor.getCurNode();
     let wasVisitingConnection = true;
     while (
       curNode &&

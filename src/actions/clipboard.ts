@@ -17,7 +17,7 @@ import {
   getFocusManager,
 } from 'blockly';
 import * as Constants from '../constants';
-import type {BlockSvg, WorkspaceSvg, INavigable} from 'blockly';
+import type {BlockSvg, WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
 import {getShortActionShortcut} from '../shortcut_formatting';
 import * as Blockly from 'blockly';
@@ -366,9 +366,7 @@ export class Clipboard {
       ? workspace
       : this.copyWorkspace;
 
-    const targetNode = FocusableTreeTraverser.findFocusedNode(
-      pasteWorkspace,
-    ) as unknown as INavigable<any>;
+    const targetNode = FocusableTreeTraverser.findFocusedNode(pasteWorkspace);
     // If we're pasting in the flyout it still targets the workspace. Focus
     // first as to ensure correct selection handling.
     getFocusManager().focusTree(workspace);

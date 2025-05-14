@@ -44,13 +44,12 @@ suite('Keyboard navigation on Blocks', function () {
       await this.browser.pause(PAUSE_TIME);
     }
 
-    const selectedId = await this.browser.execute(() => {
-      return Blockly.common.getSelected()?.id;
-    });
-    chai.assert.equal(selectedId, 'controls_repeat_1');
+    chai
+      .expect(await getCurrentFocusNodeId(this.browser))
+      .equal('controls_if_2');
   });
 
-  test('Down from statement block selects next connection', async function () {
+  test('Down from statement block selects next block across stacks', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await setCurrentCursorNodeById(this.browser, 'p5_canvas_1');
@@ -58,17 +57,10 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.keys(Key.ArrowDown);
     await this.browser.pause(PAUSE_TIME);
 
-    chai
-      .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('p5_canvas_1_connection_');
-
-    chai.assert.equal(
-      await getFocusedConnectionType(this.browser),
-      Blockly.ConnectionType.NEXT_STATEMENT,
-    );
+    chai.expect(await getCurrentFocusNodeId(this.browser)).equal('p5_draw_1');
   });
 
-  test("Up from statement block selects previous block's connection", async function () {
+  test('Up from statement block selects previous block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await setCurrentCursorNodeById(this.browser, 'simple_circle_1');
@@ -78,46 +70,27 @@ suite('Keyboard navigation on Blocks', function () {
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('draw_emoji_1_connection_');
-
-    chai.assert.equal(
-      await getFocusedConnectionType(this.browser),
-      Blockly.ConnectionType.NEXT_STATEMENT,
-    );
+      .equal('draw_emoji_1');
   });
 
-  test('Down from parent block selects input connection', async function () {
+  test('Down from parent block selects first child block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await setCurrentCursorNodeById(this.browser, 'p5_setup_1');
     await this.browser.pause(PAUSE_TIME);
     await this.browser.keys(Key.ArrowDown);
     await this.browser.pause(PAUSE_TIME);
-    chai
-      .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('p5_setup_1_connection_');
-
-    chai.assert.equal(
-      await getFocusedConnectionType(this.browser),
-      Blockly.ConnectionType.NEXT_STATEMENT,
-    );
+    chai.expect(await getCurrentFocusNodeId(this.browser)).equal('p5_canvas_1');
   });
 
-  test('Up from child block selects input connection', async function () {
+  test('Up from child block selects parent block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await setCurrentCursorNodeById(this.browser, 'p5_canvas_1');
     await this.browser.pause(PAUSE_TIME);
     await this.browser.keys(Key.ArrowUp);
     await this.browser.pause(PAUSE_TIME);
-    chai
-      .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('p5_setup_1_connection_');
-
-    chai.assert.equal(
-      await getFocusedConnectionType(this.browser),
-      Blockly.ConnectionType.NEXT_STATEMENT,
-    );
+    chai.expect(await getCurrentFocusNodeId(this.browser)).equal('p5_setup_1');
   });
 
   test('Right from block selects first field', async function () {
@@ -205,8 +178,7 @@ suite('Keyboard navigation on Blocks', function () {
     );
   });
 
-  // Test will fail until we update to a newer version of field-colour
-  test.skip("Right from last inline input selects block's next connection", async function () {
+  test('Right from last inline input selects next block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await setCurrentCursorNodeById(this.browser, 'colour_picker_1');
@@ -216,16 +188,10 @@ suite('Keyboard navigation on Blocks', function () {
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('simple_circle_1_connection_');
-
-    chai.assert.equal(
-      await getFocusedConnectionType(this.browser),
-      Blockly.ConnectionType.NEXT_STATEMENT,
-    );
+      .equal('controls_repeat_ext_1');
   });
 
-  // Test will fail until we update to a newer version of field-colour
-  test.skip("Down from inline input selects block's next connection", async function () {
+  test('Down from inline input selects next block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await setCurrentCursorNodeById(this.browser, 'colour_picker_1');
@@ -235,25 +201,20 @@ suite('Keyboard navigation on Blocks', function () {
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('simple_circle_1_connection_');
-
-    chai.assert.equal(
-      await getFocusedConnectionType(this.browser),
-      Blockly.ConnectionType.NEXT_STATEMENT,
-    );
+      .equal('controls_repeat_ext_1');
   });
 
-  test("Down from inline input selects block's child connection", async function () {
+  test("Down from inline input selects block's child block", async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
-    await setCurrentCursorNodeById(this.browser, 'math_number_2');
+    await setCurrentCursorNodeById(this.browser, 'logic_boolean_1');
     await this.browser.pause(PAUSE_TIME);
     await this.browser.keys(Key.ArrowDown);
     await this.browser.pause(PAUSE_TIME);
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('controls_repeat_ext_1_connection_');
+      .equal('text_print_1');
   });
 
   test('Right from text block selects shadow block then field', async function () {
@@ -278,11 +239,7 @@ suite('Keyboard navigation on Blocks', function () {
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('text_print_1_connection_');
-    chai.assert.equal(
-      await getFocusedConnectionType(this.browser),
-      Blockly.ConnectionType.NEXT_STATEMENT,
-    );
+      .equal('controls_repeat_1');
   });
 });
 
@@ -364,7 +321,7 @@ suite('Keyboard navigation on Fields', function () {
     chai.assert.equal(await getFocusedFieldName(this.browser), 'WIDTH');
   });
 
-  test("Right from second field selects block's next connection", async function () {
+  test('Right from second field selects next block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await setCurrentCursorNodeByIdAndFieldName(
@@ -376,12 +333,10 @@ suite('Keyboard navigation on Fields', function () {
     await this.browser.keys(Key.ArrowRight);
     await this.browser.pause(PAUSE_TIME);
 
-    chai
-      .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('p5_canvas_1_connection_');
+    chai.expect(await getCurrentFocusNodeId(this.browser)).equal('p5_draw_1');
   });
 
-  test("Down from field selects block's next connection", async function () {
+  test('Down from field selects next block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await setCurrentCursorNodeByIdAndFieldName(
@@ -393,17 +348,10 @@ suite('Keyboard navigation on Fields', function () {
     await this.browser.keys(Key.ArrowDown);
     await this.browser.pause(PAUSE_TIME);
 
-    chai
-      .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('p5_canvas_1_connection_');
-
-    chai.assert.equal(
-      await getFocusedConnectionType(this.browser),
-      Blockly.ConnectionType.NEXT_STATEMENT,
-    );
+    chai.expect(await getCurrentFocusNodeId(this.browser)).equal('p5_draw_1');
   });
 
-  test("Down from field selects block's child connection", async function () {
+  test("Down from field selects block's child block", async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await setCurrentCursorNodeByIdAndFieldName(
@@ -417,11 +365,6 @@ suite('Keyboard navigation on Fields', function () {
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('controls_repeat_1_connection_');
-
-    chai.assert.equal(
-      await getFocusedConnectionType(this.browser),
-      Blockly.ConnectionType.NEXT_STATEMENT,
-    );
+      .equal('draw_emoji_1');
   });
 });

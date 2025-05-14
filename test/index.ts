@@ -49,9 +49,6 @@ function getOptions() {
     renderer = 'thrasos';
   }
 
-  const noStackParam = params.get('noStack');
-  const stackConnections = !noStackParam;
-
   const toolboxParam = params.get('toolbox');
   const toolbox = toolboxParam ?? 'toolbox';
   const toolboxObject =
@@ -66,13 +63,10 @@ function getOptions() {
     (document.getElementById('toolbox') as HTMLSelectElement).value = toolbox;
     (document.getElementById('renderer') as HTMLSelectElement).value = renderer;
     (document.getElementById('scenario') as HTMLSelectElement).value = scenario;
-    (document.getElementById('noStack') as HTMLInputElement).checked =
-      !stackConnections;
   });
 
   return {
     scenario,
-    stackConnections,
     renderer,
     toolbox: toolboxObject,
   };
@@ -85,7 +79,7 @@ function getOptions() {
  * @returns The created workspace.
  */
 function createWorkspace(): Blockly.WorkspaceSvg {
-  const {scenario, stackConnections, renderer, toolbox} = getOptions();
+  const {scenario, renderer, toolbox} = getOptions();
 
   const injectOptions = {
     toolbox,
@@ -97,10 +91,7 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   }
   const workspace = Blockly.inject(blocklyDiv, injectOptions);
 
-  const navigationOptions = {
-    cursor: {stackConnections},
-  };
-  new KeyboardNavigation(workspace, navigationOptions);
+  new KeyboardNavigation(workspace);
   registerRunCodeShortcut();
 
   // Disable blocks that aren't inside the setup or draw loops.

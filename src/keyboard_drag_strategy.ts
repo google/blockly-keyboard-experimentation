@@ -10,7 +10,6 @@ import {
   RenderedConnection,
   dragging,
   utils,
-  INavigable,
 } from 'blockly';
 import {Direction, getDirectionFromXY} from './drag_direction';
 import {showUnconstrainedMoveHint} from './hints';
