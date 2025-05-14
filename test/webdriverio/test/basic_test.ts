@@ -46,7 +46,7 @@ suite('Keyboard navigation on Blocks', function () {
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('controls_if_2');
+      .equal('controls_if_2');
   });
 
   test('Down from statement block selects next block across stacks', async function () {
@@ -57,9 +57,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.keys(Key.ArrowDown);
     await this.browser.pause(PAUSE_TIME);
 
-    chai
-      .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('p5_draw_1');
+    chai.expect(await getCurrentFocusNodeId(this.browser)).equal('p5_draw_1');
   });
 
   test('Up from statement block selects previous block', async function () {
@@ -72,7 +70,7 @@ suite('Keyboard navigation on Blocks', function () {
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('draw_emoji_1');
+      .equal('draw_emoji_1');
   });
 
   test('Down from parent block selects first child block', async function () {
@@ -82,9 +80,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await this.browser.keys(Key.ArrowDown);
     await this.browser.pause(PAUSE_TIME);
-    chai
-      .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('p5_canvas_1');
+    chai.expect(await getCurrentFocusNodeId(this.browser)).equal('p5_canvas_1');
   });
 
   test('Up from child block selects parent block', async function () {
@@ -94,9 +90,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await this.browser.keys(Key.ArrowUp);
     await this.browser.pause(PAUSE_TIME);
-    chai
-      .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('p5_setup_1');
+    chai.expect(await getCurrentFocusNodeId(this.browser)).equal('p5_setup_1');
   });
 
   test('Right from block selects first field', async function () {
@@ -194,7 +188,7 @@ suite('Keyboard navigation on Blocks', function () {
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('controls_repeat_ext_1');
+      .equal('controls_repeat_ext_1');
   });
 
   test('Down from inline input selects next block', async function () {
@@ -207,7 +201,7 @@ suite('Keyboard navigation on Blocks', function () {
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('controls_repeat_ext_1');
+      .equal('controls_repeat_ext_1');
   });
 
   test("Down from inline input selects block's child block", async function () {
@@ -220,7 +214,7 @@ suite('Keyboard navigation on Blocks', function () {
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('text_print_1');
+      .equal('text_print_1');
   });
 
   test('Right from text block selects shadow block then field', async function () {
@@ -245,7 +239,7 @@ suite('Keyboard navigation on Blocks', function () {
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('controls_repeat_1');
+      .equal('controls_repeat_1');
   });
 });
 
@@ -339,9 +333,7 @@ suite('Keyboard navigation on Fields', function () {
     await this.browser.keys(Key.ArrowRight);
     await this.browser.pause(PAUSE_TIME);
 
-    chai
-      .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('p5_draw_1');
+    chai.expect(await getCurrentFocusNodeId(this.browser)).equal('p5_draw_1');
   });
 
   test('Down from field selects next block', async function () {
@@ -356,9 +348,7 @@ suite('Keyboard navigation on Fields', function () {
     await this.browser.keys(Key.ArrowDown);
     await this.browser.pause(PAUSE_TIME);
 
-    chai
-      .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('p5_draw_1');
+    chai.expect(await getCurrentFocusNodeId(this.browser)).equal('p5_draw_1');
   });
 
   test("Down from field selects block's child block", async function () {
@@ -375,6 +365,6 @@ suite('Keyboard navigation on Fields', function () {
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('draw_emoji_1');
+      .equal('draw_emoji_1');
   });
 });
