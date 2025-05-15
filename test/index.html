@@ -31,13 +31,6 @@
         width: 100%;
         max-height: 100%;
         position: relative;
-        --outline-width: 5px;
-      }
-
-      .blocklyFlyout {
-        top: var(--outline-width);
-        left: var(--outline-width);
-        height: calc(100% - calc(var(--outline-width) * 2));
       }
 
       .blocklyToolboxDiv ~ .blocklyFlyout:focus {
@@ -97,52 +90,70 @@
         font-weight: bold;
       }
 
-      .blocklyActiveFocus:is(
-          .blocklyField,
-          .blocklyPath,
+      html {
+        --blockly-active-node-color: #ffa200;
+        --blockly-active-tree-color: #60a5fa;
+        --blockly-selection-width: 3px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+
+      /* Blocks, connections and fields. */
+      .blocklyKeyboardNavigation
+        .blocklyActiveFocus:is(.blocklyPath, .blocklyHighlightedConnectionPath),
+      .blocklyKeyboardNavigation
+        .blocklyActiveFocus.blocklyField
+        > .blocklyFieldRect {
+        stroke: var(--blockly-active-node-color);
+        stroke-width: var(--blockly-selection-width);
+      }
+      .blocklyKeyboardNavigation
+        .blocklyPassiveFocus:is(
+          .blocklyPath:not(.blocklyFlyout .blocklyPath),
           .blocklyHighlightedConnectionPath
-        ) {
-        stroke: #ffa200;
-        stroke-width: 3px;
-      }
-      .blocklyActiveFocus > .blocklyFlyoutBackground,
-      .blocklyActiveFocus > .blocklyMainBackground {
-        stroke: #ffa200;
-        stroke-width: 3px;
-      }
-      .blocklyActiveFocus:is(
-          .blocklyToolbox,
-          .blocklyToolboxCategoryContainer
-        ) {
-        outline: 3px solid #ffa200;
-      }
-      .blocklyPassiveFocus:is(
-          .blocklyField,
-          .blocklyPath,
-          .blocklyHighlightedConnectionPath
-        ) {
-        stroke: #ffa200;
+        ),
+      .blocklyKeyboardNavigation
+        .blocklyPassiveFocus.blocklyField
+        > .blocklyFieldRect {
+        stroke: var(--blockly-active-node-color);
         stroke-dasharray: 5px 3px;
-        stroke-width: 3px;
+        stroke-width: var(--blockly-selection-width);
       }
-      .blocklyPassiveFocus > .blocklyFlyoutBackground,
-      .blocklyPassiveFocus > .blocklyMainBackground {
-        stroke: #ffa200;
-        stroke-dasharray: 5px 3px;
-        stroke-width: 3px;
+      .blocklyKeyboardNavigation
+        .blocklyPassiveFocus.blocklyHighlightedConnectionPath {
+        /* The connection path is being unexpectedly hidden in core */
+        display: unset !important;
       }
-      .blocklyPassiveFocus:is(
-          .blocklyToolbox,
-          .blocklyToolboxCategoryContainer
-        ) {
-        border: 3px dashed #ffa200;
+
+      /* Toolbox and flyout. */
+      .blocklyKeyboardNavigation .blocklyFlyout:has(.blocklyActiveFocus),
+      .blocklyKeyboardNavigation .blocklyToolbox:has(.blocklyActiveFocus),
+      .blocklyKeyboardNavigation
+        .blocklyActiveFocus:is(.blocklyFlyout, .blocklyToolbox) {
+        outline-offset: calc(var(--blockly-selection-width) * -1);
+        outline: var(--blockly-selection-width) solid
+          var(--blockly-active-tree-color);
       }
-      .blocklySelected:is(.blocklyPath) {
-        stroke: #ffa200;
-        stroke-width: 5;
+      /* Workspace */
+      .blocklyKeyboardNavigation
+        .blocklyWorkspace:has(.blocklyActiveFocus)
+        .blocklyWorkspaceFocusRing,
+      .blocklyKeyboardNavigation
+        .blocklyWorkspace.blocklyActiveFocus
+        .blocklyWorkspaceFocusRing {
+        stroke: var(--blockly-active-tree-color);
+        stroke-width: calc(var(--blockly-selection-width) * 2);
       }
-      .blocklySelected > .blocklyPathLight {
-        display: none;
+      .blocklyKeyboardNavigation
+        .blocklyWorkspace.blocklyActiveFocus
+        .blocklyWorkspaceSelectionRing {
+        stroke: var(--blockly-active-node-color);
+        stroke-width: var(--blockly-selection-width);
+      }
+      .blocklyKeyboardNavigation
+        .blocklyToolboxCategoryContainer:focus-visible {
+        outline: none;
       }
     </style>
   </head>
