@@ -58,7 +58,7 @@ jobs:
           npm run build
 
   build:
-    name: Build test (against pinned v12.0.0)
+    name: Build test (against pinned v12)
     # Don't run pinned version checks for PRs.
     if: ${{ !github.base_ref }}
     runs-on: ubuntu-latest
