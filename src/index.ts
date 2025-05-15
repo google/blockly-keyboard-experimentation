@@ -109,8 +109,14 @@ export class KeyboardNavigation {
     const metrics = this.workspace.getMetrics();
     ring.setAttribute('x', (metrics.absoluteLeft + inset).toString());
     ring.setAttribute('y', (metrics.absoluteTop + inset).toString());
-    ring.setAttribute('width', (metrics.viewWidth - inset * 2).toString());
-    ring.setAttribute('height', (metrics.svgHeight - inset * 2).toString());
+    ring.setAttribute(
+      'width',
+      Math.max(0, metrics.viewWidth - inset * 2).toString(),
+    );
+    ring.setAttribute(
+      'height',
+      Math.max(0, metrics.svgHeight - inset * 2).toString(),
+    );
   }
 
   /**
