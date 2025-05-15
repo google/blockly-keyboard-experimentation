@@ -35,6 +35,7 @@ export class KeyboardNavigation {
    * Focus ring in the workspace.
    */
   private workspaceFocusRing: Element | null = null;
+
   /**
    * Selection ring inside the workspace.
    */
