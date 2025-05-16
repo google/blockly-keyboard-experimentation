@@ -221,7 +221,7 @@ export async function setCurrentCursorNodeByIdAndFieldName(
 }
 
 /**
- * Get the ID of the block that is currently focused.
+ * Get the ID of the node that is currently focused.
  *
  * @param browser The active WebdriverIO Browser object.
  * @returns A Promise that resolves to the ID of the current cursor node.
@@ -232,6 +232,24 @@ export async function getCurrentFocusNodeId(
   return await browser.execute(() => {
     return Blockly.getFocusManager().getFocusedNode()?.getFocusableElement()
       ?.id;
+  });
+}
+
+/**
+ * Get the ID of the block that is currently focused.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @returns A Promise that resolves to the ID of the currently focused block.
+ */
+export async function getCurrentFocusedBlockId(
+  browser: WebdriverIO.Browser,
+): Promise<string | undefined> {
+  return await browser.execute(() => {
+    const focusedNode = Blockly.getFocusManager().getFocusedNode();
+    if (focusedNode && focusedNode instanceof Blockly.BlockSvg) {
+      return focusedNode.id;
+    }
+    return undefined;
   });
 }
 
@@ -337,65 +355,4 @@ export async function tabNavigateToWorkspace(
 export async function tabNavigateForward(browser: WebdriverIO.Browser) {
   await browser.keys(webdriverio.Key.Tab);
   await browser.pause(PAUSE_TIME);
-}
-
-/**
- * Copied from blockly browser test_setup.mjs and amended for typescript
- *
- * Find a clickable element on the block and click it.
- * We can't always use the block's SVG root because clicking will always happen
- * in the middle of the block's bounds (including children) by default, which
- * causes problems if it has holes (e.g. statement inputs). Instead, this tries
- * to get the first text field on the block. It falls back on the block's SVG root.
- *
- * @param browser The active WebdriverIO Browser object.
- * @param block The block to click, as an interactable element.
- * @param clickOptions The options to pass to webdriverio's element.click function.
- * @return A Promise that resolves when the actions are completed.
- */
-export async function clickBlock(
-  browser: WebdriverIO.Browser,
-  block: ElementWithId,
-  clickOptions: webdriverio.ClickOptions,
-) {
-  const findableId = 'clickTargetElement';
-  // In the browser context, find the element that we want and give it a findable ID.
-  await browser.execute(
-    (blockId, newElemId) => {
-      const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
-      const block = workspaceSvg.getBlockById(blockId);
-      if (block) {
-        // Ensure the block we want to click is within the viewport.
-        workspaceSvg.scrollBoundsIntoView(
-          block.getBoundingRectangleWithoutChildren(),
-        );
-        for (const input of block.inputList) {
-          for (const field of input.fieldRow) {
-            if (field instanceof Blockly.FieldLabel) {
-              const fieldSvg = field.getSvgRoot();
-              if (fieldSvg) {
-                fieldSvg.id = newElemId;
-                return;
-              }
-            }
-          }
-        }
-        // No label field found. Fall back to the block's SVG root.
-        block.getSvgRoot().id = findableId;
-      }
-    },
-    block.id,
-    findableId,
-  );
-
-  // In the test context, get the Webdriverio Element that we've identified.
-  const elem = await browser.$(`#${findableId}`);
-
-  await elem.click(clickOptions);
-
-  // In the browser context, remove the ID.
-  await browser.execute((elemId) => {
-    const clickElem = document.getElementById(elemId);
-    clickElem?.removeAttribute('id');
-  }, findableId);
 }

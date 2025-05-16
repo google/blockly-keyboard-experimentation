@@ -10,7 +10,7 @@ import {
   setCurrentCursorNodeById,
   setCurrentCursorNodeByIdAndFieldName,
   getCurrentFocusNodeId,
-  getFocusedConnectionType,
+  getCurrentFocusedBlockId,
   getFocusedFieldName,
   testSetup,
   testFileLocations,
@@ -45,7 +45,7 @@ suite('Keyboard navigation on Blocks', function () {
     }
 
     chai
-      .expect(await getCurrentFocusNodeId(this.browser))
+      .expect(await getCurrentFocusedBlockId(this.browser))
       .equal('controls_if_2');
   });
 
@@ -57,7 +57,9 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.keys(Key.ArrowDown);
     await this.browser.pause(PAUSE_TIME);
 
-    chai.expect(await getCurrentFocusNodeId(this.browser)).equal('p5_draw_1');
+    chai
+      .expect(await getCurrentFocusedBlockId(this.browser))
+      .equal('p5_draw_1');
   });
 
   test('Up from statement block selects previous block', async function () {
@@ -69,7 +71,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
 
     chai
-      .expect(await getCurrentFocusNodeId(this.browser))
+      .expect(await getCurrentFocusedBlockId(this.browser))
       .equal('draw_emoji_1');
   });
 
@@ -80,7 +82,9 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await this.browser.keys(Key.ArrowDown);
     await this.browser.pause(PAUSE_TIME);
-    chai.expect(await getCurrentFocusNodeId(this.browser)).equal('p5_canvas_1');
+    chai
+      .expect(await getCurrentFocusedBlockId(this.browser))
+      .equal('p5_canvas_1');
   });
 
   test('Up from child block selects parent block', async function () {
@@ -90,7 +94,9 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await this.browser.keys(Key.ArrowUp);
     await this.browser.pause(PAUSE_TIME);
-    chai.expect(await getCurrentFocusNodeId(this.browser)).equal('p5_setup_1');
+    chai
+      .expect(await getCurrentFocusedBlockId(this.browser))
+      .equal('p5_setup_1');
   });
 
   test('Right from block selects first field', async function () {
@@ -117,7 +123,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
 
     chai.assert.equal(
-      await getCurrentFocusNodeId(this.browser),
+      await getCurrentFocusedBlockId(this.browser),
       'colour_picker_1',
     );
   });
@@ -131,7 +137,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
 
     chai.assert.equal(
-      await getCurrentFocusNodeId(this.browser),
+      await getCurrentFocusedBlockId(this.browser),
       'controls_repeat_ext_1',
     );
   });
@@ -145,7 +151,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
 
     chai.assert.equal(
-      await getCurrentFocusNodeId(this.browser),
+      await getCurrentFocusedBlockId(this.browser),
       'math_modulo_1',
     );
   });
@@ -159,7 +165,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
 
     chai.assert.equal(
-      await getCurrentFocusNodeId(this.browser),
+      await getCurrentFocusedBlockId(this.browser),
       'math_number_3',
     );
   });
@@ -173,7 +179,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
 
     chai.assert.equal(
-      await getCurrentFocusNodeId(this.browser),
+      await getCurrentFocusedBlockId(this.browser),
       'math_number_2',
     );
   });
@@ -187,7 +193,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
 
     chai
-      .expect(await getCurrentFocusNodeId(this.browser))
+      .expect(await getCurrentFocusedBlockId(this.browser))
       .equal('controls_repeat_ext_1');
   });
 
@@ -200,7 +206,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
 
     chai
-      .expect(await getCurrentFocusNodeId(this.browser))
+      .expect(await getCurrentFocusedBlockId(this.browser))
       .equal('controls_repeat_ext_1');
   });
 
@@ -213,7 +219,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
 
     chai
-      .expect(await getCurrentFocusNodeId(this.browser))
+      .expect(await getCurrentFocusedBlockId(this.browser))
       .equal('text_print_1');
   });
 
@@ -225,7 +231,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.keys(Key.ArrowRight);
     await this.browser.pause(PAUSE_TIME);
 
-    chai.assert.equal(await getCurrentFocusNodeId(this.browser), 'text_1');
+    chai.assert.equal(await getCurrentFocusedBlockId(this.browser), 'text_1');
 
     await this.browser.keys(Key.ArrowRight);
     await this.browser.pause(PAUSE_TIME);
@@ -238,7 +244,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
 
     chai
-      .expect(await getCurrentFocusNodeId(this.browser))
+      .expect(await getCurrentFocusedBlockId(this.browser))
       .equal('controls_repeat_1');
   });
 });
@@ -265,7 +271,10 @@ suite('Keyboard navigation on Fields', function () {
     await this.browser.keys(Key.ArrowUp);
     await this.browser.pause(PAUSE_TIME);
 
-    chai.assert.equal(await getCurrentFocusNodeId(this.browser), 'p5_canvas_1');
+    chai.assert.equal(
+      await getCurrentFocusedBlockId(this.browser),
+      'p5_canvas_1',
+    );
   });
 
   test('Left from first field selects block', async function () {
@@ -280,7 +289,10 @@ suite('Keyboard navigation on Fields', function () {
     await this.browser.keys(Key.ArrowLeft);
     await this.browser.pause(PAUSE_TIME);
 
-    chai.assert.equal(await getCurrentFocusNodeId(this.browser), 'p5_canvas_1');
+    chai.assert.equal(
+      await getCurrentFocusedBlockId(this.browser),
+      'p5_canvas_1',
+    );
   });
 
   test('Right from first field selects second field', async function () {
@@ -333,7 +345,9 @@ suite('Keyboard navigation on Fields', function () {
     await this.browser.keys(Key.ArrowRight);
     await this.browser.pause(PAUSE_TIME);
 
-    chai.expect(await getCurrentFocusNodeId(this.browser)).equal('p5_draw_1');
+    chai
+      .expect(await getCurrentFocusedBlockId(this.browser))
+      .equal('p5_draw_1');
   });
 
   test('Down from field selects next block', async function () {
@@ -348,7 +362,9 @@ suite('Keyboard navigation on Fields', function () {
     await this.browser.keys(Key.ArrowDown);
     await this.browser.pause(PAUSE_TIME);
 
-    chai.expect(await getCurrentFocusNodeId(this.browser)).equal('p5_draw_1');
+    chai
+      .expect(await getCurrentFocusedBlockId(this.browser))
+      .equal('p5_draw_1');
   });
 
   test("Down from field selects block's child block", async function () {
@@ -364,7 +380,7 @@ suite('Keyboard navigation on Fields', function () {
     await this.browser.pause(PAUSE_TIME);
 
     chai
-      .expect(await getCurrentFocusNodeId(this.browser))
+      .expect(await getCurrentFocusedBlockId(this.browser))
       .equal('draw_emoji_1');
   });
 });

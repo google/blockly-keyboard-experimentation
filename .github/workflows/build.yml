@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build_tip_of_tree_v12:
-    name: Build test (against tip-of-tree core v12)
+    name: Build test (against tip-of-tree core develop)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout experimentation plugin
@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: 'google/blockly'
-          ref: 'rc/v12.0.0'
+          ref: 'develop'
           path: core-blockly
 
       - name: Use Node.js 20.x
@@ -42,7 +42,7 @@ jobs:
           npm install
           cd ..
 
-      - name: Link latest Blockly v12
+      - name: Link latest Blockly develop
         run: |
           cd core-blockly
           npm run package
