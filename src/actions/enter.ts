@@ -6,6 +6,7 @@
 
 import {
   Events,
+  Msg,
   ShortcutRegistry,
   utils as BlocklyUtils,
   getFocusManager,

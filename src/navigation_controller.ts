@@ -239,10 +239,10 @@ export class NavigationController {
       ShortcutRegistry.registry.register(shortcut);
     }
     this.deleteAction.install();
-    this.editAction.install();
     this.insertAction.install();
     this.workspaceMovement.install();
     this.arrowNavigation.install();
+    this.editAction.install();
     this.exitAction.install();
     this.enterAction.install();
     this.disconnectAction.install();
