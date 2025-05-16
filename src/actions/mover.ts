@@ -128,7 +128,7 @@ export class Mover {
     // Set up a blur listener to end the move if the user clicks away
     const blurListener = () => {
       this.finishMove(workspace);
-    }
+    };
     // Record that a move is in progress and start dragging.
     workspace.setKeyboardMoveInProgress(true);
     const info = new MoveInfo(block, dragger, blurListener);
@@ -139,7 +139,7 @@ export class Mover {
     // In case the block is detached, ensure that it still retains focus
     // (otherwise dragging will break).
     getFocusManager().focusNode(block);
-    block.getFocusableElement().addEventListener('blur', blurListener)
+    block.getFocusableElement().addEventListener('blur', blurListener);
     return true;
   }
 
@@ -158,7 +158,9 @@ export class Mover {
     if (!info) throw new Error('no move info for workspace');
 
     // Remove the blur listener before ending the drag
-    info.block.getFocusableElement().removeEventListener('blur', info.blurListener);
+    info.block
+      .getFocusableElement()
+      .removeEventListener('blur', info.blurListener);
 
     info.dragger.onDragEnd(
       info.fakePointerEvent('pointerup'),
