@@ -38,8 +38,8 @@ suite.only('Deleting Blocks', function () {
       .expect(await blockIsPresent(this.browser, 'controls_if_2'))
       .equal(true);
 
-      await this.browser.keys(Key.Backspace);
-      await this.browser.pause(PAUSE_TIME);
+    await this.browser.keys(Key.Backspace);
+    await this.browser.pause(PAUSE_TIME);
 
     chai
       .expect(await blockIsPresent(this.browser, 'controls_if_2'))
@@ -60,8 +60,8 @@ suite.only('Deleting Blocks', function () {
       .expect(await blockIsPresent(this.browser, 'controls_if_2'))
       .equal(true);
 
-      await this.browser.keys([Key.Ctrl, 'x']);
-      await this.browser.pause(PAUSE_TIME);
+    await this.browser.keys([Key.Ctrl, 'x']);
+    await this.browser.pause(PAUSE_TIME);
 
     chai
       .expect(await blockIsPresent(this.browser, 'controls_if_2'))
@@ -126,8 +126,8 @@ suite.only('Deleting Blocks', function () {
       .expect(await blockIsPresent(this.browser, 'logic_boolean_1'))
       .equal(true);
 
-      await this.browser.keys(Key.Backspace);
-      await this.browser.pause(PAUSE_TIME);
+    await this.browser.keys(Key.Backspace);
+    await this.browser.pause(PAUSE_TIME);
 
     chai
       .expect(await blockIsPresent(this.browser, 'logic_boolean_1'))
@@ -148,8 +148,8 @@ suite.only('Deleting Blocks', function () {
       .expect(await blockIsPresent(this.browser, 'logic_boolean_1'))
       .equal(true);
 
-      await this.browser.keys([Key.Ctrl, 'x']);
-      await this.browser.pause(PAUSE_TIME);
+    await this.browser.keys([Key.Ctrl, 'x']);
+    await this.browser.pause(PAUSE_TIME);
 
     chai
       .expect(await blockIsPresent(this.browser, 'logic_boolean_1'))
@@ -176,17 +176,12 @@ suite.only('Deleting Blocks', function () {
     await this.browser.keys(Key.Enter);
     await this.browser.pause(PAUSE_TIME);
 
-    chai.assert.equal(
-      'math_number',
-      await getFocusedBlockType(this.browser),
-    );
+    chai.assert.equal('math_number', await getFocusedBlockType(this.browser));
 
     await this.browser.keys(Key.Backspace);
     await this.browser.pause(PAUSE_TIME);
 
-    chai
-      .expect(await currentFocusIsMainWorkspace(this.browser))
-      .equal(true);
+    chai.expect(await currentFocusIsMainWorkspace(this.browser)).equal(true);
   });
 
   test('Cutting stranded block selects workspace', async function () {
@@ -205,18 +200,11 @@ suite.only('Deleting Blocks', function () {
     await this.browser.keys(Key.Enter);
     await this.browser.pause(PAUSE_TIME);
 
-    chai.assert.equal(
-      'math_number',
-      await getFocusedBlockType(this.browser),
-    );
+    chai.assert.equal('math_number', await getFocusedBlockType(this.browser));
 
     await this.browser.keys([Key.Ctrl, 'x']);
     await this.browser.pause(PAUSE_TIME);
 
-    chai
-      .expect(await currentFocusIsMainWorkspace(this.browser))
-      .equal(true);
+    chai.expect(await currentFocusIsMainWorkspace(this.browser)).equal(true);
   });
 });
-
-

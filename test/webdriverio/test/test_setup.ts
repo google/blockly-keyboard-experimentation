@@ -177,7 +177,10 @@ export async function focusWorkspace(browser: WebdriverIO.Browser) {
  * @param browser The active WebdriverIO Browser object.
  * @param blockId The id of the block.
  */
-export async function moveToToolboxCategory(browser: WebdriverIO.Browser, category: string) {
+export async function moveToToolboxCategory(
+  browser: WebdriverIO.Browser,
+  category: string,
+) {
   await browser.keys('t');
   const categoryIndex = await browser.execute((category) => {
     const all = Array.from(
