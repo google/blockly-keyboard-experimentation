@@ -172,6 +172,59 @@ export async function focusWorkspace(browser: WebdriverIO.Browser) {
 }
 
 /**
+ * Focuses the toolbox category with the given name.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param blockId The id of the block.
+ */
+export async function moveToToolboxCategory(browser: WebdriverIO.Browser, category: string) {
+  await browser.keys('t');
+  const categoryIndex = await browser.execute((category) => {
+    const all = Array.from(
+      document.querySelectorAll('.blocklyToolboxCategoryLabel'),
+    ).map((node) => node.textContent);
+    return all.indexOf(category);
+  }, category);
+  if (categoryIndex < 0) {
+    throw new Error(`No category found: ${category}`);
+  }
+  if (categoryIndex > 0) {
+    await browser.keys(webdriverio.Key.ArrowDown.repeat(categoryIndex));
+  }
+}
+
+/**
+ * Returns whether the workspace contains a block with the given id.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param blockId The id of the block.
+ */
+export async function blockIsPresent(
+  browser: WebdriverIO.Browser,
+  blockId: string,
+): Promise<boolean> {
+  return await browser.execute((blockId) => {
+    const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
+    const block = workspaceSvg.getBlockById(blockId);
+    return block !== null;
+  }, blockId);
+}
+
+/**
+ * Returns whether the main workspace is the current focus.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ */
+export async function currentFocusIsMainWorkspace(
+  browser: WebdriverIO.Browser,
+): Promise<boolean> {
+  return await browser.execute(() => {
+    const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
+    return Blockly.getFocusManager().getFocusedNode() === workspaceSvg;
+  });
+}
+
+/**
  * Select a block with the given id as the current cursor node.
  *
  * @param browser The active WebdriverIO Browser object.
@@ -191,7 +244,7 @@ export async function setCurrentCursorNodeById(
 }
 
 /**
- * Select a block with the given id as the current cursor node.
+ * Select a block's field with the given block id and field name.
  *
  * @param browser The active WebdriverIO Browser object.
  * @param blockId The id of the block to select.
