@@ -164,6 +164,7 @@ suite.only('Deleting Blocks', function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
 
+    // The test workspace doesn't already contain a stranded block, so add one.
     await moveToToolboxCategory(this.browser, 'Math');
     await this.browser.pause(PAUSE_TIME);
     // Move to flyout.
@@ -188,6 +189,7 @@ suite.only('Deleting Blocks', function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
 
+    // The test workspace doesn't already contain a stranded block, so add one.
     await moveToToolboxCategory(this.browser, 'Math');
     await this.browser.pause(PAUSE_TIME);
     // Move to flyout.
