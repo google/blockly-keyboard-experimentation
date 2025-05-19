@@ -5,7 +5,7 @@
  */
 
 import * as chai from 'chai';
-import {Browser, Key} from 'webdriverio';
+import {Key} from 'webdriverio';
 import {
   getFocusedBlockType,
   moveToToolboxCategory,

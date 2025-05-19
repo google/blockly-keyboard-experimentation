@@ -175,7 +175,7 @@ export async function focusWorkspace(browser: WebdriverIO.Browser) {
  * Focuses the toolbox category with the given name.
  *
  * @param browser The active WebdriverIO Browser object.
- * @param blockId The id of the block.
+ * @param category The name of the toolbox category to focus.
  */
 export async function moveToToolboxCategory(
   browser: WebdriverIO.Browser,
