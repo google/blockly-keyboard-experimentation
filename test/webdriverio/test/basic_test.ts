@@ -253,7 +253,7 @@ suite('Keyboard navigation on Blocks', function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await setCurrentCursorNodeById(this.browser, 'text_print_1');
-    await this.browser.keys("m");
+    await this.browser.keys('m');
     await this.browser.pause(PAUSE_TIME);
 
     chai.assert.isTrue(await isDragging(this.browser));

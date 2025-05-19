@@ -362,7 +362,9 @@ export async function tabNavigateForward(browser: WebdriverIO.Browser) {
  *
  * @param browser The active WebdriverIO Browser object.
  */
-export async function isDragging(browser: WebdriverIO.Browser): Promise<boolean> {
+export async function isDragging(
+  browser: WebdriverIO.Browser,
+): Promise<boolean> {
   return await browser.execute(() => {
     const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
     return workspaceSvg.isDragging();
