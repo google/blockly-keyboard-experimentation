@@ -7,6 +7,7 @@
 import * as chai from 'chai';
 import * as Blockly from 'blockly';
 import {
+  isDragging,
   setCurrentCursorNodeById,
   setCurrentCursorNodeByIdAndFieldName,
   getCurrentFocusNodeId,
@@ -246,6 +247,21 @@ suite('Keyboard navigation on Blocks', function () {
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
       .equal('controls_repeat_1');
+  });
+
+  test('Losing focus cancels move', async function () {
+    await tabNavigateToWorkspace(this.browser);
+    await this.browser.pause(PAUSE_TIME);
+    await setCurrentCursorNodeById(this.browser, 'text_print_1');
+    await this.browser.keys('m');
+    await this.browser.pause(PAUSE_TIME);
+
+    chai.assert.isTrue(await isDragging(this.browser));
+
+    await this.browser.keys(Key.Tab);
+    await this.browser.pause(PAUSE_TIME);
+
+    chai.assert.isFalse(await isDragging(this.browser));
   });
 });
 
