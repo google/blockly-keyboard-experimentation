@@ -6,9 +6,11 @@
 
 import {
   ContextMenuRegistry,
+  Msg,
   ShortcutRegistry,
   utils as BlocklyUtils,
 } from 'blockly';
+import {getShortActionShortcut} from '../shortcut_formatting';
 import * as Constants from '../constants';
 import type {WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
@@ -69,7 +71,10 @@ export class InsertAction {
   private registerContextMenuAction() {
     const insertAboveItem: ContextMenuRegistry.RegistryItem = {
       displayText: () => {
-        return 'Insert Block (I)';
+        return Msg['INSERT_BLOCK'].replace(
+          '%1',
+          getShortActionShortcut(this.insertShortcutName),
+        );
       },
       preconditionFn: (
         scope: ContextMenuRegistry.Scope,

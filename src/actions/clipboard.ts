@@ -9,6 +9,7 @@ import {
   Gesture,
   ShortcutRegistry,
   Events,
+  Msg,
   utils as blocklyUtils,
   clipboard,
   ICopyData,
@@ -104,7 +105,8 @@ export class Clipboard {
    */
   private registerCutContextMenuAction() {
     const cutAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => `Cut (${getShortActionShortcut('cut')})`,
+      displayText: (scope) =>
+        Msg['CUT_SHORTCUT'].replace('%1', getShortActionShortcut('cut')),
       preconditionFn: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return 'hidden';
@@ -199,7 +201,8 @@ export class Clipboard {
    */
   private registerCopyContextMenuAction() {
     const copyAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => `Copy (${getShortActionShortcut('copy')})`,
+      displayText: (scope) =>
+        Msg['COPY_SHORTCUT'].replace('%1', getShortActionShortcut('copy')),
       preconditionFn: (scope) => {
         const ws = scope.block?.workspace;
         if (!ws) return 'hidden';
@@ -304,7 +307,8 @@ export class Clipboard {
    */
   private registerPasteContextMenuAction() {
     const pasteAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => `Paste (${getShortActionShortcut('paste')})`,
+      displayText: (scope) =>
+        Msg['PASTE_SHORTCUT'].replace('%1', getShortActionShortcut('paste')),
       preconditionFn: (scope: ContextMenuRegistry.Scope) => {
         let block;
         if (scope.focusedNode instanceof Blockly.Block) {

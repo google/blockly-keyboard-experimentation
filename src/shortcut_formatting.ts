@@ -1,4 +1,4 @@
-import {ShortcutRegistry} from 'blockly';
+import {ShortcutRegistry, Msg} from 'blockly';
 import {keyNames} from './keynames';
 
 const isMacPlatform = navigator.platform.startsWith('Mac');
@@ -27,15 +27,15 @@ export function getLongActionShortcutsAsKeys(action: string): string[][] {
 }
 
 const longModifierNames: Record<string, string> = {
-  'Control': 'Ctrl',
-  'Meta': '⌘ Command',
-  'Alt': isMacPlatform ? '⌥ Option' : 'Alt',
+  'Control': Msg['CONTROL_KEY'],
+  'Meta': Msg['COMMAND_KEY'],
+  'Alt': isMacPlatform ? Msg['OPTION_KEY'] : Msg['ALT_KEY'],
 };
 
 const shortModifierNames: Record<string, string> = {
-  'Control': 'Ctrl',
+  'Control': Msg['CONTROL_KEY'],
   'Meta': '⌘',
-  'Alt': isMacPlatform ? '⌥' : 'Alt',
+  'Alt': isMacPlatform ? '⌥' : Msg['ALT_KEY'],
 };
 
 /**

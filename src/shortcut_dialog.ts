@@ -6,7 +6,7 @@
 
 import * as Blockly from 'blockly/core';
 import * as Constants from './constants';
-import {ShortcutRegistry} from 'blockly/core';
+import {Msg, ShortcutRegistry} from 'blockly/core';
 import {
   getLongActionShortcutsAsKeys,
   upperCaseFirst,
@@ -39,16 +39,16 @@ export class ShortcutDialog {
   getPlatform() {
     const {platform, userAgent} = navigator;
     if (platform.startsWith('Win')) {
-      return 'Windows';
+      return Msg['WINDOWS'];
     } else if (platform.startsWith('Mac')) {
-      return 'macOS';
+      return Msg['MAC_OS'];
     } else if (/\bCrOS\b/.test(userAgent)) {
       // Order is important because platform matches the Linux case below.
-      return 'ChromeOS';
+      return Msg['CHROME_OS'];
     } else if (platform.includes('Linux')) {
-      return 'Linux';
+      return Msg['LINUX'];
     } else {
-      return 'Unknown';
+      return Msg['UNKNOWN'];
     }
   }
 
