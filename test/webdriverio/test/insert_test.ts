@@ -5,9 +5,10 @@
  */
 
 import * as chai from 'chai';
-import {Browser, Key} from 'webdriverio';
+import {Key} from 'webdriverio';
 import {
   getFocusedBlockType,
+  moveToToolboxCategory,
   PAUSE_TIME,
   setCurrentCursorNodeById,
   tabNavigateToWorkspace,
@@ -44,19 +45,3 @@ suite('Insert test', function () {
     );
   });
 });
-
-async function moveToToolboxCategory(browser: Browser, category: string) {
-  await browser.keys('t');
-  const categoryIndex = await browser.execute((category) => {
-    const all = Array.from(
-      document.querySelectorAll('.blocklyToolboxCategoryLabel'),
-    ).map((node) => node.textContent);
-    return all.indexOf(category);
-  }, category);
-  if (categoryIndex < 0) {
-    throw new Error(`No category found: ${category}`);
-  }
-  if (categoryIndex > 0) {
-    await browser.keys(Key.ArrowDown.repeat(categoryIndex));
-  }
-}
