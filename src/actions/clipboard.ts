@@ -105,7 +105,7 @@ export class Clipboard {
       callback: this.cutCallback.bind(this),
       // The registry gives back keycodes as an object instead of an array
       // See https://github.com/google/blockly/issues/9008
-      keyCodes: Object.values(oldCutShortcut.keyCodes ?? []),
+      keyCodes: oldCutShortcut.keyCodes,
       allowCollision: false,
     };
 
@@ -122,25 +122,12 @@ export class Clipboard {
    */
   private registerCutContextMenuAction() {
     const cutAction: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => Msg['CUT_SHORTCUT'].replace('%1', getShortActionShortcut(Constants.SHORTCUT_NAMES.CUT)),
-      preconditionFn: (scope) => {
-        const focused = scope.focusedNode;
-
-        if (!focused || !isCopyable(focused)) return 'hidden';
-
-        const workspace = focused.workspace;
-        if (
-          !workspace.isReadOnly() &&
-          isDeletable(focused) &&
-          focused.isDeletable() &&
-          isDraggable(focused) &&
-          focused.isMovable() &&
-          !focused.workspace.isFlyout
-        )
-          return 'enabled';
-
-        return 'disabled';
-      },
+      displayText: (scope) =>
+        Msg['CUT_SHORTCUT'].replace(
+          '%1',
+          getShortActionShortcut(Constants.SHORTCUT_NAMES.CUT),
+        ),
+      preconditionFn: (scope) => this.cutCopyPrecondition(scope),
       callback: (scope, menuOpenEvent) => {
         if (!isCopyable(scope.focusedNode)) return false;
         const ws = scope.focusedNode.workspace;
@@ -153,6 +140,34 @@ export class Clipboard {
     };
 
     ContextMenuRegistry.registry.register(cutAction);
+  }
+
+  /**
+   * Precondition for cut and copy context menus. These are similar to the
+   * ones in core but they don't check if a gesture is in progress,
+   * because a gesture will always be in progress if the context menu
+   * is open.
+   *
+   * @param scope scope on which the menu was opened.
+   * @returns 'enabled', 'disabled', or 'hidden' as appropriate
+   */
+  private cutCopyPrecondition(scope: ContextMenuRegistry.Scope): string {
+    const focused = scope.focusedNode;
+
+    if (!focused || !isCopyable(focused)) return 'hidden';
+
+    const workspace = focused.workspace;
+    if (
+      !workspace.isReadOnly() &&
+      isDeletable(focused) &&
+      focused.isDeletable() &&
+      isDraggable(focused) &&
+      focused.isMovable() &&
+      !focused.workspace.isFlyout
+    )
+      return 'enabled';
+
+    return 'disabled';
   }
 
   /**
@@ -200,7 +215,7 @@ export class Clipboard {
       callback: this.copyCallback.bind(this),
       // The registry gives back keycodes as an object instead of an array
       // See https://github.com/google/blockly/issues/9008
-      keyCodes: Object.values(oldCopyShortcut.keyCodes ?? []),
+      keyCodes: oldCopyShortcut.keyCodes,
       allowCollision: false,
     };
 
@@ -218,25 +233,11 @@ export class Clipboard {
   private registerCopyContextMenuAction() {
     const copyAction: ContextMenuRegistry.RegistryItem = {
       displayText: (scope) =>
-        Msg['COPY_SHORTCUT'].replace('%1', getShortActionShortcut(Constants.SHORTCUT_NAMES.COPY)),
-      preconditionFn: (scope) => {
-        const focused = scope.focusedNode;
-
-        if (!focused || !isCopyable(focused)) return 'hidden';
-
-        const workspace = focused.workspace;
-        if (
-          !workspace.isReadOnly() &&
-          isDeletable(focused) &&
-          focused.isDeletable() &&
-          isDraggable(focused) &&
-          focused.isMovable() &&
-          !focused.workspace.isFlyout
-        )
-          return 'enabled';
-
-        return 'disabled';
-      },
+        Msg['COPY_SHORTCUT'].replace(
+          '%1',
+          getShortActionShortcut(Constants.SHORTCUT_NAMES.COPY),
+        ),
+      preconditionFn: (scope) => this.cutCopyPrecondition(scope),
       callback: (scope, menuOpenEvent) => {
         if (!isCopyable(scope.focusedNode)) return false;
         const ws = scope.focusedNode.workspace;
@@ -314,7 +315,7 @@ export class Clipboard {
       },
       // The registry gives back keycodes as an object instead of an array
       // See https://github.com/google/blockly/issues/9008
-      keyCodes: Object.values(oldPasteShortcut.keyCodes ?? []),
+      keyCodes: oldPasteShortcut.keyCodes,
       allowCollision: false,
     };
 
@@ -332,7 +333,10 @@ export class Clipboard {
   private registerPasteContextMenuAction() {
     const pasteAction: ContextMenuRegistry.RegistryItem = {
       displayText: (scope) =>
-        Msg['PASTE_SHORTCUT'].replace('%1', getShortActionShortcut(Constants.SHORTCUT_NAMES.PASTE)),
+        Msg['PASTE_SHORTCUT'].replace(
+          '%1',
+          getShortActionShortcut(Constants.SHORTCUT_NAMES.PASTE),
+        ),
       preconditionFn: (scope: ContextMenuRegistry.Scope) => {
         const workspace = this.getPasteWorkspace(scope);
         if (!workspace) return 'hidden';
