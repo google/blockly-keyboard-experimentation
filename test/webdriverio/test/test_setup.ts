@@ -330,6 +330,7 @@ export async function getFocusedBlockType(
     return block?.type;
   });
 }
+
 /**
  * Get the connection type of the current focused node. Assumes the current node
  * is a connection.
