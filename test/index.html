@@ -104,7 +104,10 @@
         .blocklyActiveFocus:is(.blocklyPath, .blocklyHighlightedConnectionPath),
       .blocklyKeyboardNavigation
         .blocklyActiveFocus.blocklyField
-        > .blocklyFieldRect {
+        > .blocklyFieldRect,
+      .blocklyKeyboardNavigation
+        .blocklyActiveFocus.blocklyIconGroup
+        > .blocklyIconShape:first-child {
         stroke: var(--blockly-active-node-color);
         stroke-width: var(--blockly-selection-width);
       }
@@ -115,7 +118,10 @@
         ),
       .blocklyKeyboardNavigation
         .blocklyPassiveFocus.blocklyField
-        > .blocklyFieldRect {
+        > .blocklyFieldRect,
+      .blocklyKeyboardNavigation
+        .blocklyPassiveFocus.blocklyIconGroup
+        > .blocklyIconShape:first-child {
         stroke: var(--blockly-active-node-color);
         stroke-dasharray: 5px 3px;
         stroke-width: var(--blockly-selection-width);
