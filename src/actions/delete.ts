@@ -4,94 +4,50 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {
-  ContextMenuRegistry,
-  Gesture,
-  Msg,
-  ShortcutRegistry,
-  utils as BlocklyUtils,
-  LineCursor,
-} from 'blockly';
+import {ContextMenuRegistry, Msg, ShortcutItems} from 'blockly';
 import {getShortActionShortcut} from '../shortcut_formatting';
-import * as Constants from '../constants';
-import type {WorkspaceSvg} from 'blockly';
-import {Navigation} from '../navigation';
-
-const KeyCodes = BlocklyUtils.KeyCodes;
 
 /**
  * Action to delete the block the cursor is currently on.
- * Registers itself as both a keyboard shortcut and a context menu item.
  */
 export class DeleteAction {
   /**
-   * Saved context menu item, which is re-registered when this action
-   * is uninstalled.
+   * Saved context menu item display text function, which is restored
+   * when this action is uninstalled.
+   */
+  private oldDisplayText:
+    | ((scope: ContextMenuRegistry.Scope) => string | HTMLElement)
+    | string
+    | HTMLElement
+    | undefined = undefined;
+
+  /**
+   * Saved context menu item, which has its display text restored when
+   * this action is uninstalled.
    */
   private oldContextMenuItem: ContextMenuRegistry.RegistryItem | null = null;
 
-  /**
-   * Saved delete shortcut, which is re-registered when this action
-   * is uninstalled.
-   */
-  private oldDeleteShortcut: ShortcutRegistry.KeyboardShortcut | null = null;
-
-  /**
-   * Registration name for the keyboard shortcut.
-   */
-  private deleteShortcutName = Constants.SHORTCUT_NAMES.DELETE;
-
-  constructor(private navigation: Navigation) {}
+  constructor() {}
 
   /**
    * Install this action as both a keyboard shortcut and a context menu item.
    */
   install() {
-    this.registerShortcut();
     this.registerContextMenuAction();
   }
 
   /**
-   * Uninstall this action as both a keyboard shortcut and a context menu item.
-   * Reinstall the original context menu action if possible.
+   * Reinstall the original context menu display text if possible.
    */
   uninstall() {
-    ContextMenuRegistry.registry.unregister('blockDeleteFromContextMenu');
-    if (this.oldContextMenuItem) {
-      ContextMenuRegistry.registry.register(this.oldContextMenuItem);
-    }
-    ShortcutRegistry.registry.unregister(this.deleteShortcutName);
-    if (this.oldDeleteShortcut) {
-      ShortcutRegistry.registry.register(this.oldDeleteShortcut);
+    if (this.oldContextMenuItem && this.oldDisplayText) {
+      this.oldContextMenuItem.displayText = this.oldDisplayText;
     }
   }
 
   /**
-   * Create and register the keyboard shortcut for this action.
-   */
-  private registerShortcut() {
-    this.oldDeleteShortcut = ShortcutRegistry.registry.getRegistry()['delete'];
-
-    if (!this.oldDeleteShortcut) return;
-
-    // Unregister the original shortcut.
-    ShortcutRegistry.registry.unregister(this.oldDeleteShortcut.name);
-
-    const deleteShortcut: ShortcutRegistry.KeyboardShortcut = {
-      name: this.deleteShortcutName,
-      preconditionFn: this.deletePrecondition.bind(this),
-      callback: this.deleteCallback.bind(this),
-      keyCodes: [KeyCodes.DELETE, KeyCodes.BACKSPACE],
-      allowCollision: true,
-    };
-
-    ShortcutRegistry.registry.register(deleteShortcut);
-  }
-
-  /**
-   * Register the delete block action as a context menu item on blocks.
-   * This function mixes together the keyboard and context menu preconditions
-   * but only calls the keyboard callback.
+   * Updates the text of the context menu delete action to include
+   * the keyboard shortcut.
    */
   private registerContextMenuAction() {
     this.oldContextMenuItem =
@@ -99,105 +55,22 @@ export class DeleteAction {
 
     if (!this.oldContextMenuItem) return;
 
-    // Unregister the original item.
-    ContextMenuRegistry.registry.unregister(this.oldContextMenuItem.id);
+    this.oldDisplayText = this.oldContextMenuItem.displayText;
 
-    const deleteItem: ContextMenuRegistry.RegistryItem = {
-      displayText: (scope) => {
-        const shortcut = getShortActionShortcut(this.deleteShortcutName);
-        if (!this.oldContextMenuItem) {
-          return Msg['DELETE_BLOCK'].replace('%1', shortcut);
-        }
+    const displayText = (scope: ContextMenuRegistry.Scope) => {
+      const shortcut = getShortActionShortcut(ShortcutItems.names.DELETE);
 
-        type DisplayTextFn = (p1: ContextMenuRegistry.Scope) => string;
-        // Use the original item's text, which is dynamic based on the number
-        // of blocks that will be deleted.
-        const oldDisplayText = this.oldContextMenuItem
-          .displayText as DisplayTextFn;
-        return oldDisplayText(scope) + ` (${shortcut})`;
-      },
-      preconditionFn: (scope, menuOpenEvent: Event) => {
-        const ws = scope.block?.workspace;
+      // Use the original item's text, which is dynamic based on the number
+      // of blocks that will be deleted.
+      if (typeof this.oldDisplayText === 'function') {
+        return this.oldDisplayText(scope) + ` (${shortcut})`;
+      } else if (typeof this.oldDisplayText === 'string') {
+        return this.oldDisplayText + ` (${shortcut})`;
+      }
 
-        // Run the original precondition code, from the context menu option.
-        // If the item would be hidden or disabled, respect it.
-        const originalPreconditionResult =
-          this.oldContextMenuItem?.preconditionFn?.(scope, menuOpenEvent) ??
-          'enabled';
-        if (!ws || originalPreconditionResult !== 'enabled') {
-          return originalPreconditionResult;
-        }
-
-        // Return enabled if the keyboard shortcut precondition is allowed,
-        // and disabled if the context menu precondition is met but the keyboard
-        // shortcut precondition is not met.
-        return this.deletePrecondition(ws) ? 'enabled' : 'disabled';
-      },
-      callback: (scope) => {
-        const ws = scope.block?.workspace;
-        if (!ws) return;
-
-        // Delete the block(s), and put the cursor back in a sane location.
-        return this.deleteCallback(ws, null);
-      },
-      scopeType: ContextMenuRegistry.ScopeType.BLOCK,
-      id: 'blockDeleteFromContextMenu',
-      weight: 11,
+      return Msg['DELETE_BLOCK'].replace('%1', shortcut);
     };
 
-    ContextMenuRegistry.registry.register(deleteItem);
-  }
-
-  /**
-   * Precondition function for deleting a block from keyboard
-   * navigation. This precondition is shared between keyboard shortcuts
-   * and context menu items.
-   *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @returns True iff `deleteCallback` function should be called.
-   */
-  private deletePrecondition(workspace: WorkspaceSvg) {
-    const sourceBlock = workspace.getCursor()?.getSourceBlock();
-    return (
-      !workspace.isDragging() &&
-      this.navigation.canCurrentlyEdit(workspace) &&
-      !!sourceBlock?.isDeletable()
-    );
-  }
-
-  /**
-   * Callback function for deleting a block from keyboard
-   * navigation. This callback is shared between keyboard shortcuts
-   * and context menu items.
-   *
-   * @param workspace The `WorkspaceSvg` where the shortcut was
-   *     invoked.
-   * @param e The originating event for a keyboard shortcut, or null
-   *     if called from a context menu.
-   * @returns True if this function successfully handled deletion.
-   */
-  private deleteCallback(workspace: WorkspaceSvg, e: Event | null) {
-    const cursor = workspace.getCursor();
-    if (!cursor) return false;
-
-    const sourceBlock = cursor.getSourceBlock();
-    if (!sourceBlock) return false;
-    // Delete or backspace.
-    // There is an event if this is triggered from a keyboard shortcut,
-    // but not if it's triggered from a context menu.
-    if (e) {
-      // Stop the browser from going back to the previous page.
-      // Do this first to prevent an error in the delete code from resulting
-      // in data loss.
-      e.preventDefault();
-    }
-    // Don't delete while dragging.  Jeez.
-    if (Gesture.inProgress()) false;
-
-    if (cursor instanceof LineCursor) cursor.preDelete(sourceBlock);
-    sourceBlock.checkAndDelete();
-    if (cursor instanceof LineCursor) cursor.postDelete();
-    return true;
+    this.oldContextMenuItem.displayText = displayText;
   }
 }
