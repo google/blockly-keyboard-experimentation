@@ -7,9 +7,7 @@
 import * as chai from 'chai';
 import {
   blockIsPresent,
-  currentFocusIsMainWorkspace,
   setCurrentCursorNodeById,
-  getCurrentFocusNodeId,
   getCurrentFocusedBlockId,
   getFocusedBlockType,
   moveToToolboxCategory,
@@ -51,7 +49,7 @@ suite('Deleting Blocks', function () {
       .to.include('controls_if_1');
   });
 
-  test('Cutting block selects previous connection', async function () {
+  test('Cutting block selects parent block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await setCurrentCursorNodeById(this.browser, 'controls_if_2');
@@ -69,8 +67,8 @@ suite('Deleting Blocks', function () {
       .equal(false);
 
     chai
-      .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('controls_if_1_connection_');
+      .expect(await getCurrentFocusedBlockId(this.browser))
+      .to.include('controls_if_1');
   });
 
   test('Deleting block also deletes children and inputs', async function () {
@@ -139,7 +137,7 @@ suite('Deleting Blocks', function () {
       .to.include('controls_if_2');
   });
 
-  test('Cutting inline input selects parent connection', async function () {
+  test('Cutting inline input selects parent block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await setCurrentCursorNodeById(this.browser, 'logic_boolean_1');
@@ -157,8 +155,8 @@ suite('Deleting Blocks', function () {
       .equal(false);
 
     chai
-      .expect(await getCurrentFocusNodeId(this.browser))
-      .to.include('controls_if_2_connection_');
+      .expect(await getCurrentFocusedBlockId(this.browser))
+      .to.include('controls_if_2');
   });
 
   test('Deleting stranded block selects top block', async function () {
@@ -194,7 +192,7 @@ suite('Deleting Blocks', function () {
     );
   });
 
-  test('Cutting stranded block selects workspace', async function () {
+  test('Cutting stranded block selects top block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
 
@@ -216,6 +214,9 @@ suite('Deleting Blocks', function () {
     await this.browser.keys([Key.Ctrl, 'x']);
     await this.browser.pause(PAUSE_TIME);
 
-    chai.expect(await currentFocusIsMainWorkspace(this.browser)).equal(true);
+    chai.assert.equal(
+      await getCurrentFocusedBlockId(this.browser),
+      'p5_setup_1',
+    );
   });
 });

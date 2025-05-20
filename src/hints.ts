@@ -68,8 +68,8 @@ export function clearMoveHints(workspace: WorkspaceSvg) {
  */
 export function showCopiedHint(workspace: WorkspaceSvg) {
   Toast.show(workspace, {
-    message: `Copied. Press ${getShortActionShortcut('paste')} to paste.`,
-    duration: 7000,
+    message: `Copied. Press ${getShortActionShortcut(SHORTCUT_NAMES.PASTE)} to paste.`,
+    duration: 7,
     id: copiedHintId,
   });
 }
@@ -81,8 +81,8 @@ export function showCopiedHint(workspace: WorkspaceSvg) {
  */
 export function showCutHint(workspace: WorkspaceSvg) {
   Toast.show(workspace, {
-    message: `Cut. Press ${getShortActionShortcut('paste')} to paste.`,
-    duration: 7000,
+    message: `Cut. Press ${getShortActionShortcut(SHORTCUT_NAMES.PASTE)} to paste.`,
+    duration: 7,
     id: cutHintId,
   });
 }
