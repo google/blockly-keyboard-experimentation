@@ -9,7 +9,6 @@ import {getShortActionShortcut} from '../shortcut_formatting';
 
 /**
  * Action to delete the block the cursor is currently on.
- * Registers itself as both a keyboard shortcut and a context menu item.
  */
 export class DeleteAction {
   /**
