@@ -18,22 +18,6 @@ import {
 } from './flyout_cursor';
 
 /**
- * The default coordinate to use when focusing on the workspace and no
- * blocks are present. In pixel coordinates, but will be converted to
- * workspace coordinates when used to position the cursor.
- */
-const DEFAULT_WS_COORDINATE: Blockly.utils.Coordinate =
-  new Blockly.utils.Coordinate(100, 100);
-
-/**
- * The default coordinate to use when moving the cursor to the workspace
- * after a block has been deleted. In pixel coordinates, but will be
- * converted to workspace coordinates when used to position the cursor.
- */
-const WS_COORDINATE_ON_DELETE: Blockly.utils.Coordinate =
-  new Blockly.utils.Coordinate(100, 100);
-
-/**
  * Class that holds all methods necessary for keyboard navigation to work.
  */
 export class Navigation {
@@ -181,18 +165,10 @@ export class Navigation {
     if (!workspace || !workspace.keyboardAccessibilityMode) {
       return;
     }
-    switch (e.type) {
-      case Blockly.Events.DELETE:
-        this.handleBlockDeleteByDrag(
-          workspace,
-          e as Blockly.Events.BlockDelete,
-        );
-        break;
-      case Blockly.Events.BLOCK_CHANGE:
-        if ((e as Blockly.Events.BlockChange).element === 'mutation') {
-          this.handleBlockMutation(workspace, e as Blockly.Events.BlockChange);
-        }
-        break;
+    if (e.type === Blockly.Events.BLOCK_CHANGE) {
+      if ((e as Blockly.Events.BlockChange).element === 'mutation') {
+        this.handleBlockMutation(workspace, e as Blockly.Events.BlockChange);
+      }
     }
   }
 
@@ -290,31 +266,6 @@ export class Navigation {
   }
 
   /**
-   * Moves the cursor to the workspace when its parent block is deleted by
-   * being dragged to the flyout or to the trashcan.
-   *
-   * @param workspace The workspace the block was on.
-   * @param e The event emitted when a block is deleted.
-   */
-  handleBlockDeleteByDrag(
-    workspace: Blockly.WorkspaceSvg,
-    e: Blockly.Events.BlockDelete,
-  ) {
-    const deletedBlockId = e.blockId;
-    const ids = e.ids ?? [];
-    const cursor = workspace.getCursor();
-    if (!cursor) return;
-
-    // Make sure the cursor is on a block.
-    const sourceBlock = cursor.getSourceBlock();
-    if (!sourceBlock) return;
-
-    if (sourceBlock.id === deletedBlockId || ids.includes(sourceBlock.id)) {
-      cursor.setCurNode(workspace);
-    }
-  }
-
-  /**
    * Handles when a user clicks on a block in the flyout by moving the cursor
    * to that stack of blocks and setting the state of navigation to the flyout.
    *
@@ -397,10 +348,6 @@ export class Navigation {
       // disposed (which can happen when blocks are reloaded).
       return false;
     }
-    const wsCoordinates = new Blockly.utils.Coordinate(
-      DEFAULT_WS_COORDINATE.x / workspace.scale,
-      DEFAULT_WS_COORDINATE.y / workspace.scale,
-    );
     if (topBlocks.length > 0) {
       cursor.setCurNode(
         topBlocks[prefer === 'first' ? 0 : topBlocks.length - 1],

@@ -50,7 +50,7 @@ export class NavigationController {
   shortcutDialog: ShortcutDialog = new ShortcutDialog();
 
   /** Context menu and keyboard action for deletion. */
-  deleteAction: DeleteAction = new DeleteAction(this.navigation);
+  deleteAction: DeleteAction = new DeleteAction();
 
   /** Context menu and keyboard action for deletion. */
   editAction: EditAction = new EditAction(this.navigation);
