@@ -15,6 +15,7 @@ import {
   RenderedConnection,
   WorkspaceSvg,
   Field,
+  icons,
   FocusableTreeTraverser,
 } from 'blockly/core';
 
@@ -107,6 +108,8 @@ export class EnterAction {
       curNode instanceof WorkspaceSvg
     ) {
       this.navigation.openToolboxOrFlyout(workspace);
+    } else if (curNode instanceof icons.Icon) {
+      curNode.onClick();
     }
   }
 

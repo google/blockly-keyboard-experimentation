@@ -42,7 +42,6 @@ export enum SHORTCUT_NAMES {
   COPY = 'keyboard_nav_copy',
   CUT = 'keyboard_nav_cut',
   PASTE = 'keyboard_nav_paste',
-  DELETE = 'keyboard_nav_delete',
   MOVE_WS_CURSOR_UP = 'workspace_up',
   MOVE_WS_CURSOR_DOWN = 'workspace_down',
   MOVE_WS_CURSOR_LEFT = 'workspace_left',
