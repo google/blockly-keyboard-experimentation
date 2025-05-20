@@ -190,10 +190,12 @@ suite('Move tests', function () {
  */
 function getSelectedNeighbourInfo(browser: WebdriverIO.Browser) {
   return browser.execute(() => {
-    const block = Blockly.getFocusManager().getFocusedNode() as
-      | Blockly.BlockSvg
-      | undefined;
-    if (!block) throw new Error('no selected block');
+    const focused = Blockly.getFocusManager().getFocusedNode();
+    if (!focused) throw new Error('nothing focused');
+    if (!(focused instanceof Blockly.BlockSvg)) {
+      throw new TypeError('focused node is not a BlockSvg');
+    }
+    const block = focused; // Inferred as BlockSvg.
     const parent = block?.getParent();
     return {
       parentId: parent?.id ?? null,
