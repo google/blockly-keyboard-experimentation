@@ -88,7 +88,7 @@ export class MoveIndicatorBubble
    * Recalculates this bubble's location, keeping it adjacent to its block.
    */
   updateLocation() {
-    const bounds = this.sourceBlock.getBoundingRectangle();
+    const bounds = this.sourceBlock.getBoundingRectangleWithoutChildren();
     const x = this.sourceBlock.workspace.RTL
       ? bounds.left + 20
       : bounds.right - 20;
