@@ -138,6 +138,10 @@ export const testFileLocations = {
     new URLSearchParams({scenario: 'navigationTestBlocks'}),
   ),
   // eslint-disable-next-line @typescript-eslint/naming-convention
+  MOVE_TEST_BLOCKS: createTestUrl(
+    new URLSearchParams({scenario: 'moveTestBlocks'}),
+  ),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   BASE_RTL: createTestUrl(new URLSearchParams({rtl: 'true'})),
   GERAS: createTestUrl(new URLSearchParams({renderer: 'geras'})),
   // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -327,6 +331,7 @@ export async function getFocusedBlockType(
     return block?.type;
   });
 }
+
 /**
  * Get the connection type of the current focused node. Assumes the current node
  * is a connection.
