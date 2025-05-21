@@ -197,11 +197,7 @@ function getFocusedNeighbourInfo(browser: Browser) {
  *     the connected block or null if no block is connected, and
  *     shadow is true iff the connected block is a shadow.
  */
-function getConnectedBlockInfo(
-  browser: Browser,
-  id: string,
-  index: number,
-) {
+function getConnectedBlockInfo(browser: Browser, id: string, index: number) {
   return browser.execute(
     (id: string, index: number) => {
       const parent = Blockly.getMainWorkspace().getBlockById(id);
