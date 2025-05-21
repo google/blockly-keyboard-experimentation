@@ -8,7 +8,6 @@ import * as Blockly from 'blockly';
 import * as chai from 'chai';
 import {Browser, Key} from 'webdriverio';
 import {
-  getFocusedBlockType,
   PAUSE_TIME,
   setCurrentCursorNodeById,
   tabNavigateToWorkspace,
@@ -152,13 +151,14 @@ suite('Move tests', function () {
  * Get information about the currently-selected block's parent and
  * child blocks.
  *
+ * @param browser The webdriverio browser session.
  * @returns A promise setting to {parentId, parentIndex, nextId,
  *   valueId}, being respectively the parent block ID, index of parent
  *   connection, next block ID, and ID of the block connected to the
  *   zeroth value value input, or null if the given item does not
  *   exist.
  */
-function getFocusedNeighbourInfo(browser: WebdriverIO.Browser) {
+function getFocusedNeighbourInfo(browser: Browser) {
   return browser.execute(() => {
     const focused = Blockly.getFocusManager().getFocusedNode();
     if (!focused) throw new Error('nothing focused');
@@ -189,6 +189,7 @@ function getFocusedNeighbourInfo(browser: WebdriverIO.Browser) {
  * and return that block's ID and a boolean indicating whether that
  * block is a shadow or not.
  *
+ * @param browser The webdriverio browser session.
  * @param id The ID of the block having the connection we wish to examine.
  * @param index The index of the connection we wish to examine, within
  *     the array returned by calling .getConnections_(true) on that block.
@@ -197,7 +198,7 @@ function getFocusedNeighbourInfo(browser: WebdriverIO.Browser) {
  *     shadow is true iff the connected block is a shadow.
  */
 function getConnectedBlockInfo(
-  browser: WebdriverIO.Browser,
+  browser: Browser,
   id: string,
   index: number,
 ) {
