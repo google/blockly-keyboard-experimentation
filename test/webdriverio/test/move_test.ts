@@ -30,7 +30,7 @@ suite('Move tests', function () {
   // moved, with subsequent statement blocks below it in the stack
   // reattached to where the moving block was - i.e., that a stack
   // heal will occur.
-  test.only('Start moving statement blocks', async function () {
+  test('Start moving statement blocks', async function () {
     for (let i = 1; i < 7; i++) {
       // Navigate to statement_<i>.
       await tabNavigateToWorkspace(this.browser);
@@ -90,7 +90,7 @@ suite('Move tests', function () {
   // When a move of a value block begins, it is expected that block
   // and all blocks connected to its inputs will be moved - i.e., that
   // a stack heal (really: unary operator chain heal) will NOT occur.
-  test.only('Start moving value blocks', async function () {
+  test('Start moving value blocks', async function () {
     for (let i = 1; i < 7; i++) {
       // Navigate to statement_<i>.
       await tabNavigateToWorkspace(this.browser);
