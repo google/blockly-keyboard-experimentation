@@ -39,7 +39,7 @@ suite('Move tests', function () {
 
       // Get information about parent connection of selected block,
       // and block connected to selected block's next connection.
-      const info = await getSelectedNeighbourInfo(this.browser);
+      const info = await getFocusedNeighbourInfo(this.browser);
 
       chai.assert(info.parentId, 'selected block has no parent block');
       chai.assert(
@@ -54,7 +54,7 @@ suite('Move tests', function () {
       // Check that the moving block has nothing connected it its
       // next/previous connections, and same thing connected to value
       // input.
-      const newInfo = await getSelectedNeighbourInfo(this.browser);
+      const newInfo = await getFocusedNeighbourInfo(this.browser);
       chai.assert(
         newInfo.parentId === null,
         'moving block should have no parent block',
@@ -69,25 +69,16 @@ suite('Move tests', function () {
         'moving block should have same attached value block',
       );
 
-      // Get ID of next block now connected to the (former) parent
-      // connection of the currently-moving block (skipping insertion
-      // markers), and make sure it's same as the ID of the block that
-      // was formerly attached to the moving block's next connection.
-      const newNextId = await this.browser.execute(
-        (parentId: string, index: number) => {
-          const parent = Blockly.getMainWorkspace().getBlockById(parentId);
-          if (!parent) throw new Error('parent block gone');
-          let block = parent.getConnections_(true)[index].targetBlock();
-          while (block?.isInsertionMarker()) {
-            block = block.getNextBlock();
-          }
-          return block?.id;
-        },
+      // Check that the block connected to the former parent
+      // connection of the currently-moving block (if any) is the one
+      // that was attached to the moving block's next connection.
+      const parentInfo = await getConnectedBlockInfo(
+        this.browser,
         info.parentId,
         info.parentIndex,
       );
       chai.assert.strictEqual(
-        newNextId,
+        parentInfo.id,
         info.nextId,
         'former parent connection should be connected to former next block',
       );
@@ -108,7 +99,7 @@ suite('Move tests', function () {
 
       // Get information about parent connection of selected block,
       // and block connected to selected block's value input.
-      const info = await getSelectedNeighbourInfo(this.browser);
+      const info = await getFocusedNeighbourInfo(this.browser);
 
       chai.assert(info.parentId, 'selected block has no parent block');
       chai.assert(
@@ -123,7 +114,7 @@ suite('Move tests', function () {
       // Check that the moving block has nothing connected it its
       // next/previous connections, and same thing connected to value
       // input.
-      const newInfo = await getSelectedNeighbourInfo(this.browser);
+      const newInfo = await getFocusedNeighbourInfo(this.browser);
       chai.assert(
         newInfo.parentId === null,
         'moving block should have no parent block',
@@ -138,35 +129,17 @@ suite('Move tests', function () {
         'moving block should have same attached value block',
       );
 
-      // Check the (former) parent connection of the currently-moving
-      // block is (skipping insertion markers) either unconnected or
-      // connected to a shadow block, and that is is not the block
-      // (originally and still) connected to the moving block's zeroth
-      // value input.
-      const newValueInfo = await this.browser.execute(
-        (parentId: string, index: number) => {
-          const parent = Blockly.getMainWorkspace().getBlockById(parentId);
-          if (!parent) throw new Error('parent block gone');
-          let block = parent.getConnections_(true)[index].targetBlock() ?? null;
-          while (block?.isInsertionMarker()) {
-            block = block.inputList[0].connection?.targetBlock() ?? null;
-          }
-          return {
-            id: block?.id ?? null,
-            shadow: block?.isShadow() ?? null,
-          };
-        },
+      // Check that the former parent connection of the
+      // currently-moving block is either unconnected or connected to
+      // a shadow block.
+      const parentInfo = await getConnectedBlockInfo(
+        this.browser,
         info.parentId,
         info.parentIndex,
       );
       chai.assert(
-        newValueInfo.id === null || newValueInfo.shadow,
+        parentInfo.id === null || parentInfo.shadow,
         'former parent connection should be unconnected (or shadow)',
-      );
-      chai.assert.notStrictEqual(
-        newValueInfo.id,
-        info.valueId,
-        'former parent connection should NOT be connected to value block',
       );
 
       // Abort move.
@@ -179,16 +152,13 @@ suite('Move tests', function () {
  * Get information about the currently-selected block's parent and
  * child blocks.
  *
- * N.B. explicitly converts any undefined values to null because
- * browser.execute does this implicitly and so otherwise this function
- * would return values that were not compliant with its own inferred
- * type signature!
- *
- * @returns A promise setting to an object containing the parent block
- * ID, index of parent connection, next block ID, and ID of the block
- * connected to the zeroth value value input.
+ * @returns A promise setting to {parentId, parentIndex, nextId,
+ *   valueId}, being respectively the parent block ID, index of parent
+ *   connection, next block ID, and ID of the block connected to the
+ *   zeroth value value input, or null if the given item does not
+ *   exist.
  */
-function getSelectedNeighbourInfo(browser: WebdriverIO.Browser) {
+function getFocusedNeighbourInfo(browser: WebdriverIO.Browser) {
   return browser.execute(() => {
     const focused = Blockly.getFocusManager().getFocusedNode();
     if (!focused) throw new Error('nothing focused');
@@ -197,6 +167,10 @@ function getSelectedNeighbourInfo(browser: WebdriverIO.Browser) {
     }
     const block = focused; // Inferred as BlockSvg.
     const parent = block?.getParent();
+    // N.B. explicitly converts any undefined values to null because
+    // browser.execute does this implicitly and so otherwise this
+    // function would return values that were not compliant with its
+    // own inferred type signature!
     return {
       parentId: parent?.id ?? null,
       parentIndex:
@@ -207,4 +181,43 @@ function getSelectedNeighbourInfo(browser: WebdriverIO.Browser) {
       valueId: block?.inputList[0].connection?.targetBlock()?.id ?? null,
     };
   });
+}
+
+/**
+ * Given a block ID and index of a connection on that block, find the
+ * first block connected to that block (skipping any insertion markers),
+ * and return that block's ID and a boolean indicating whether that
+ * block is a shadow or not.
+ *
+ * @param id The ID of the block having the connection we wish to examine.
+ * @param index The index of the connection we wish to examine, within
+ *     the array returned by calling .getConnections_(true) on that block.
+ * @returns A promise settling to {id, shadow}, where id is the ID of
+ *     the connected block or null if no block is connected, and
+ *     shadow is true iff the connected block is a shadow.
+ */
+function getConnectedBlockInfo(
+  browser: WebdriverIO.Browser,
+  id: string,
+  index: number,
+) {
+  return browser.execute(
+    (id: string, index: number) => {
+      const parent = Blockly.getMainWorkspace().getBlockById(id);
+      if (!parent) throw new Error('parent block gone');
+      let block = parent.getConnections_(true)[index].targetBlock() ?? null;
+      while (block?.isInsertionMarker()) {
+        // If insertion marker, try to follow next or zeroth input connection.
+        const connection =
+          block.nextConnection ?? block.inputList[0].connection;
+        block = connection?.targetBlock() ?? null;
+      }
+      return {
+        id: block?.id ?? null,
+        shadow: block?.isShadow() ?? false,
+      };
+    },
+    id,
+    index,
+  );
 }
