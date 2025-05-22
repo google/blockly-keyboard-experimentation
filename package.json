@@ -48,8 +48,8 @@
     "src"
   ],
   "devDependencies": {
-    "@blockly/dev-scripts": "^4.0.1",
-    "@blockly/field-colour": "^5.0.7",
+    "@blockly/dev-scripts": "^4.0.8",
+    "@blockly/field-colour": "^6.0.0",
     "@eslint/eslintrc": "^2.1.2",
     "@eslint/js": "^8.49.0",
     "@types/chai": "^5.2.1",
@@ -74,11 +74,6 @@
   },
   "peerDependencies": {
     "blockly": "^12.0.0"
-  },
-  "overrides": {
-    "@blockly/field-colour": {
-      "blockly": "^12.0.0"
-    }
   },
   "publishConfig": {
     "access": "public",
