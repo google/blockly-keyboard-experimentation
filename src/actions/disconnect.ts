@@ -6,12 +6,14 @@
 
 import {
   BlockSvg,
-  RenderedConnection,
+  Events,
   ShortcutRegistry,
   utils as BlocklyUtils,
+  Connection,
+  ConnectionType,
 } from 'blockly';
 import * as Constants from '../constants';
-import type {WorkspaceSvg, IFocusableNode} from 'blockly';
+import type {WorkspaceSvg} from 'blockly';
 import {Navigation} from '../navigation';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
@@ -76,66 +78,16 @@ export class DisconnectAction {
    */
   disconnectBlocks(workspace: WorkspaceSvg) {
     const cursor = workspace.getCursor();
-    if (!cursor) {
-      return;
-    }
-    let curNode: IFocusableNode | null = cursor.getCurNode();
-    let wasVisitingConnection = true;
-    while (
-      curNode &&
-      !(curNode instanceof RenderedConnection && curNode.isConnected())
-    ) {
-      if (curNode instanceof BlockSvg) {
-        const previous = curNode.previousConnection;
-        const output = curNode.outputConnection;
-        if (previous?.isConnected()) {
-          curNode = previous;
-          break;
-        } else if (output?.isConnected()) {
-          curNode = output;
-          break;
-        }
-      }
+    if (!cursor) return;
+    const curNode = cursor.getCurNode();
+    if (!(curNode instanceof BlockSvg)) return;
 
-      curNode = workspace.getNavigator().getParent(curNode);
-      wasVisitingConnection = false;
-    }
-    if (!curNode) {
-      console.log('Unable to find a connection to disconnect');
-      return;
-    }
-    if (!(curNode instanceof RenderedConnection && curNode.isConnected())) {
-      return;
-    }
-    const targetConnection = curNode.targetConnection;
-    if (!targetConnection) {
-      throw new Error('Must have target if connected');
-    }
+    const healStack = !curNode.outputConnection?.isConnected();
+    Events.setGroup(true);
+    curNode.unplug(healStack);
+    Events.setGroup(false);
 
-    const superiorConnection = curNode.isSuperior()
-      ? curNode
-      : targetConnection;
-
-    const inferiorConnection = curNode.isSuperior()
-      ? targetConnection
-      : curNode;
-
-    if (inferiorConnection.getSourceBlock().isShadow()) {
-      return;
-    }
-
-    if (!inferiorConnection.getSourceBlock().isMovable()) {
-      return;
-    }
-
-    superiorConnection.disconnect();
-    inferiorConnection.bumpAwayFrom(superiorConnection);
-
-    const rootBlock = superiorConnection.getSourceBlock().getRootBlock();
-    rootBlock.bringToFront();
-
-    if (wasVisitingConnection) {
-      workspace.getCursor()?.setCurNode(superiorConnection);
-    }
+    // Needed or we end up with passive focus.
+    cursor.setCurNode(curNode);
   }
 }
