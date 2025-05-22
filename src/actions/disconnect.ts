@@ -85,6 +85,7 @@ export class DisconnectAction {
     const healStack = !curNode.outputConnection?.isConnected();
     Events.setGroup(true);
     curNode.unplug(healStack);
+    Events.setGroup(false);
 
     // Needed or we end up with passive focus.
     cursor.setCurNode(curNode);
