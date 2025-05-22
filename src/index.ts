@@ -21,12 +21,6 @@ export class KeyboardNavigation {
   private cursor: Blockly.LineCursor;
 
   /**
-   * These fields are used to preserve the workspace's initial state to restore
-   * it when/if keyboard navigation is disabled.
-   */
-  private originalTheme: Blockly.Theme;
-
-  /**
    * Input mode tracking.
    */
   private inputModeTracker: InputModeTracker;
@@ -61,9 +55,6 @@ export class KeyboardNavigation {
     this.navigationController.addWorkspace(workspace);
     this.navigationController.enable(workspace);
     this.inputModeTracker = new InputModeTracker(workspace);
-
-    this.originalTheme = workspace.getTheme();
-    this.setGlowTheme();
 
     this.cursor = new Blockly.LineCursor(workspace);
 
@@ -132,9 +123,6 @@ export class KeyboardNavigation {
 
     // Remove the event listener that enables blocks on drag
     this.workspace.removeChangeListener(enableBlocksOnDrag);
-
-    this.workspace.setTheme(this.originalTheme);
-
     this.navigationController.dispose();
     this.inputModeTracker.dispose();
   }
@@ -144,20 +132,5 @@ export class KeyboardNavigation {
    */
   toggleShortcutDialog(): void {
     this.navigationController.shortcutDialog.toggle(this.workspace);
-  }
-
-  /**
-   * Update the theme to match the selected glow colour to the cursor
-   * colour.
-   */
-  setGlowTheme() {
-    const newTheme = Blockly.Theme.defineTheme('zelosDerived', {
-      name: 'zelosDerived',
-      base: Blockly.Themes.Zelos,
-      componentStyles: {
-        selectedGlowColour: '#ffa200',
-      },
-    });
-    this.workspace.setTheme(newTheme);
   }
 }
