@@ -99,9 +99,9 @@ export class Navigation {
   getState(workspace: Blockly.WorkspaceSvg): Constants.STATE {
     const focusedTree = Blockly.getFocusManager().getFocusedTree();
     if (focusedTree instanceof Blockly.WorkspaceSvg) {
-      if (focusedTree.isFlyout && workspace === focusedTree.targetWorkspace) {
+      if (focusedTree.isFlyout) {
         return Constants.STATE.FLYOUT;
-      } else if (workspace === focusedTree) {
+      } else {
         return Constants.STATE.WORKSPACE;
       }
     } else if (focusedTree instanceof Blockly.Toolbox) {
@@ -109,9 +109,7 @@ export class Navigation {
         return Constants.STATE.TOOLBOX;
       }
     } else if (focusedTree instanceof Blockly.Flyout) {
-      if (workspace === focusedTree.targetWorkspace) {
-        return Constants.STATE.FLYOUT;
-      }
+      return Constants.STATE.FLYOUT;
     }
     // Either a non-Blockly element currently has DOM focus, or a different
     // workspace holds it.
