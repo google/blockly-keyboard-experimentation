@@ -24,7 +24,6 @@ import * as Constants from './constants';
 import {Clipboard} from './actions/clipboard';
 import {DeleteAction} from './actions/delete';
 import {EditAction} from './actions/edit';
-import {InsertAction} from './actions/insert';
 import {Navigation} from './navigation';
 import {ShortcutDialog} from './shortcut_dialog';
 import {WorkspaceMovement} from './actions/ws_movement';
@@ -54,9 +53,6 @@ export class NavigationController {
 
   /** Context menu and keyboard action for deletion. */
   editAction: EditAction = new EditAction(this.navigation);
-
-  /** Context menu and keyboard action for insertion. */
-  insertAction: InsertAction = new InsertAction(this.navigation);
 
   /** Keyboard shortcut for disconnection. */
   disconnectAction: DisconnectAction = new DisconnectAction(this.navigation);
@@ -239,7 +235,6 @@ export class NavigationController {
       ShortcutRegistry.registry.register(shortcut);
     }
     this.deleteAction.install();
-    this.insertAction.install();
     this.workspaceMovement.install();
     this.arrowNavigation.install();
     this.editAction.install();
@@ -266,7 +261,6 @@ export class NavigationController {
     this.moveActions.uninstall();
     this.deleteAction.uninstall();
     this.editAction.uninstall();
-    this.insertAction.uninstall();
     this.disconnectAction.uninstall();
     this.clipboard.uninstall();
     this.workspaceMovement.uninstall();
