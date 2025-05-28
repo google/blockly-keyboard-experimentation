@@ -431,3 +431,56 @@ export async function isDragging(
     return workspaceSvg.isDragging();
   });
 }
+
+/**
+ * Returns the result of the specificied action precondition.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param action The action to check the precondition for.
+ */
+export async function checkActionPrecondition(
+  browser: WebdriverIO.Browser,
+  action: string,
+): Promise<boolean> {
+  return await browser.execute((action) => {
+    const node = Blockly.getFocusManager().getFocusedNode();
+    let workspace;
+    if (node instanceof Blockly.BlockSvg) {
+      workspace = node.workspace as Blockly.WorkspaceSvg;
+    } else if (node instanceof Blockly.Workspace) {
+      workspace = node as Blockly.WorkspaceSvg;
+    } else if (node instanceof Blockly.Field) {
+      workspace = node.getSourceBlock()?.workspace as Blockly.WorkspaceSvg;
+    }
+
+    if (!workspace) {
+      throw new Error('Unable to derive workspace from focused node');
+    }
+    const actionItem = Blockly.ShortcutRegistry.registry.getRegistry()[action];
+    if (!actionItem || !actionItem.preconditionFn) {
+      throw new Error(
+        `No registered action or missing precondition: ${action}`,
+      );
+    }
+    return actionItem.preconditionFn(workspace, {
+      focusedNode: node ?? undefined,
+    });
+  }, action);
+}
+
+/**
+ * Wait for the specified context menu item to exist.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param itemText The display text of the context menu item to click.
+ * @param reverse Whether to check for non-existence instead.
+ * @return A Promise that resolves when the actions are completed.
+ */
+export async function contextMenuExists(
+  browser: WebdriverIO.Browser,
+  itemText: string,
+  reverse = false,
+): Promise<boolean> {
+  const item = await browser.$(`div=${itemText}`);
+  return await item.waitForExist({timeout: 200, reverse: reverse});
+}
