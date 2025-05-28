@@ -7,7 +7,7 @@
 import * as chai from 'chai';
 import {Key} from 'webdriverio';
 import {
-  checkActionPrecondition,
+  contextMenuExists,
   moveToToolboxCategory,
   PAUSE_TIME,
   setCurrentCursorNodeById,
@@ -26,12 +26,15 @@ suite('Menus test', function () {
     await this.browser.pause(PAUSE_TIME);
   });
 
-  test('Menu action returns true normally', async function () {
+  test('Menu action opens menu', async function () {
     // Navigate to draw_circle_1.
     await tabNavigateToWorkspace(this.browser);
     await setCurrentCursorNodeById(this.browser, 'draw_circle_1');
+    await this.browser.pause(PAUSE_TIME);
+    await this.browser.keys([Key.Ctrl, Key.Return]);
+    await this.browser.pause(PAUSE_TIME);
     chai.assert.isTrue(
-      await checkActionPrecondition(this.browser, 'menu'),
+      await contextMenuExists(this.browser, 'Duplicate'),
       'The menu should be openable on a block',
     );
   });
@@ -44,9 +47,11 @@ suite('Menus test', function () {
     await moveToToolboxCategory(this.browser, 'Functions');
     // Move to flyout.
     await this.browser.keys(Key.ArrowRight);
+    await this.browser.keys([Key.Ctrl, Key.Return]);
+    await this.browser.pause(PAUSE_TIME);
 
     chai.assert.isTrue(
-      await checkActionPrecondition(this.browser, 'menu'),
+      await contextMenuExists(this.browser, 'Help'),
       'The menu should be openable on a block in the toolbox',
     );
   });
@@ -57,8 +62,10 @@ suite('Menus test', function () {
     await setCurrentCursorNodeById(this.browser, 'draw_circle_1');
     // Start moving the block
     await this.browser.keys('m');
-    chai.assert.isFalse(
-      await checkActionPrecondition(this.browser, 'menu'),
+    await this.browser.keys([Key.Ctrl, Key.Return]);
+    await this.browser.pause(PAUSE_TIME);
+    chai.assert.isTrue(
+      await contextMenuExists(this.browser, 'Duplicate', true),
       'The menu should not be openable during a move',
     );
   });

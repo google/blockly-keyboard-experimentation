@@ -468,3 +468,19 @@ export async function checkActionPrecondition(
     });
   }, action);
 }
+
+/**
+ * Wait for the specified context menu item to exist.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param itemText The display text of the context menu item to click.
+ * @return A Promise that resolves when the actions are completed.
+ */
+export async function contextMenuExists(
+  browser: WebdriverIO.Browser,
+  itemText: string,
+  reverse = false,
+): Promise<boolean> {
+  const item = await browser.$(`div=${itemText}`);
+  return await item.waitForExist({timeout: 200, reverse: reverse});
+}
