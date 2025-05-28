@@ -8,7 +8,6 @@ import * as chai from 'chai';
 import {Key} from 'webdriverio';
 import {
   checkActionPrecondition,
-  getFocusedBlockType,
   moveToToolboxCategory,
   PAUSE_TIME,
   setCurrentCursorNodeById,
