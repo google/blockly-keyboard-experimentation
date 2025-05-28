@@ -10,7 +10,7 @@ import {
   getFocusedBlockType,
   moveToToolboxCategory,
   PAUSE_TIME,
-  setCurrentCursorNodeById,
+  focusOnBlock,
   tabNavigateToWorkspace,
   testFileLocations,
   testSetup,
@@ -29,7 +29,7 @@ suite('Insert test', function () {
   test('Insert C-shaped block with statement block selected', async function () {
     // Navigate to draw_circle_1.
     await tabNavigateToWorkspace(this.browser);
-    await setCurrentCursorNodeById(this.browser, 'draw_circle_1');
+    await focusOnBlock(this.browser, 'draw_circle_1');
 
     await moveToToolboxCategory(this.browser, 'Functions');
     // Move to flyout.

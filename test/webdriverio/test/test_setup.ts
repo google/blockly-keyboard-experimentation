@@ -95,7 +95,7 @@ export async function driverTeardown() {
 export async function testSetup(
   playgroundUrl: string,
 ): Promise<webdriverio.Browser> {
-  if (!driver) {
+if (!driver) {
     driver = await driverSetup();
   }
   await driver.url(playgroundUrl);
@@ -232,32 +232,31 @@ export async function currentFocusIsMainWorkspace(
 }
 
 /**
- * Select a block with the given id as the current cursor node.
+ * Focuses and selects a block with the provided ID.
  *
  * @param browser The active WebdriverIO Browser object.
- * @param blockId The id of the block to select.
+ * @param blockId The ID of the block to select.
  */
-export async function setCurrentCursorNodeById(
+export async function focusOnBlock(
   browser: WebdriverIO.Browser,
   blockId: string,
 ) {
   return await browser.execute((blockId) => {
     const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
     const block = workspaceSvg.getBlockById(blockId);
-    if (block) {
-      block.getFocusableElement()?.focus();
-    }
+    if (!block) throw new Error(`No block found with ID: ${blockId}.`);
+    Blockly.getFocusManager().focusNode(block);
   }, blockId);
 }
 
 /**
- * Select a block's field with the given block id and field name.
+ * Focuses and selects the field of a block given a block ID and field name.
  *
  * @param browser The active WebdriverIO Browser object.
- * @param blockId The id of the block to select.
+ * @param blockId The ID of the block to select.
  * @param fieldName The name of the field on the block to select.
  */
-export async function setCurrentCursorNodeByIdAndFieldName(
+export async function focusOnBlockField(
   browser: WebdriverIO.Browser,
   blockId: string,
   fieldName: string,
@@ -266,14 +265,12 @@ export async function setCurrentCursorNodeByIdAndFieldName(
     (blockId, fieldName) => {
       const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
       const block = workspaceSvg.getBlockById(blockId);
-      const field = block?.getField(fieldName);
-      if (field) {
-        // TODO: Stop referencing getCursor() and use focus() instead.
-        // getCursor().setCurNode() calls Marker.setCurNode(), but focus() does
-        // not accomplish the same goal yet.
-        workspaceSvg.getCursor()?.setCurNode(field);
-        // field.getFocusableElement()?.focus();
+      if (!block) throw new Error(`No block found with ID: ${blockId}.`);
+      const field = block.getField(fieldName);
+      if (!field) {
+        throw new Error(`No field found: ${fieldName} (block ${blockId}).`);
       }
+      Blockly.getFocusManager().focusNode(field);
     },
     blockId,
     fieldName,
