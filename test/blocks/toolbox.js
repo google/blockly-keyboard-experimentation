@@ -54,6 +54,10 @@ export const p5CategoryContents = [
     kind: 'block',
     type: 'write_text_without_shadow',
   },
+  {
+    kind: 'block',
+    type: 'buttons_block'
+  },
 ];
 
 export const toolbox = {
