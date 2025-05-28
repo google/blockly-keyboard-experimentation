@@ -474,6 +474,7 @@ export async function checkActionPrecondition(
  *
  * @param browser The active WebdriverIO Browser object.
  * @param itemText The display text of the context menu item to click.
+ * @param reverse Whether to check for non-existence instead.
  * @return A Promise that resolves when the actions are completed.
  */
 export async function contextMenuExists(
