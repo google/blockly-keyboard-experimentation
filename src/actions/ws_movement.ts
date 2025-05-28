@@ -4,7 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ShortcutRegistry, utils as BlocklyUtils} from 'blockly';
+import {
+  ShortcutRegistry,
+  utils as BlocklyUtils,
+  keyboardNavigationController,
+} from 'blockly';
 import * as Constants from '../constants';
 import type {WorkspaceSvg} from 'blockly';
 import {Navigation} from 'src/navigation';
@@ -66,7 +70,10 @@ export class WorkspaceMovement {
       name: Constants.SHORTCUT_NAMES.CREATE_WS_CURSOR,
       preconditionFn: (workspace) =>
         this.navigation.canCurrentlyEdit(workspace),
-      callback: (workspace) => this.createWSCursor(workspace),
+      callback: (workspace) => {
+        keyboardNavigationController.setIsActive(true);
+        return this.createWSCursor(workspace);
+      },
       keyCodes: [KeyCodes.W],
     },
   ];
