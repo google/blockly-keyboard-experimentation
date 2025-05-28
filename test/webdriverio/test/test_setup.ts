@@ -463,8 +463,7 @@ export async function checkActionPrecondition(
       );
     }
     return actionItem.preconditionFn(workspace, {
-      focusedNode:
-        Blockly.FocusManager.getFocusManager().getFocusedNode() ?? undefined,
+      focusedNode: node ?? undefined,
     });
   }, action);
 }
