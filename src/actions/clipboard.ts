@@ -123,6 +123,13 @@ export class Clipboard {
     ContextMenuRegistry.registry.register(cutAction);
   }
 
+  /**
+   * Precondition function for the cut context menu. This wraps the core cut
+   * precondition to support context menus.
+   *
+   * @param scope scope of the shortcut or context menu item
+   * @returns 'enabled' if the node can be cut, 'disabled' otherwise.
+   */
   private cutPrecondition(scope: ContextMenuRegistry.Scope): string {
     const focused = scope.focusedNode;
     if (!focused || !isCopyable(focused)) return 'hidden';
@@ -139,6 +146,13 @@ export class Clipboard {
     return 'disabled';
   }
 
+  /**
+   * Precondition function for the copy context menu. This wraps the core copy
+   * precondition to support context menus.
+   *
+   * @param scope scope of the shortcut or context menu item
+   * @returns 'enabled' if the node can be copied, 'disabled' otherwise.
+   */
   private copyPrecondition(scope: ContextMenuRegistry.Scope): string {
     const focused = scope.focusedNode;
     if (!focused || !isCopyable(focused)) return 'hidden';
@@ -155,6 +169,13 @@ export class Clipboard {
     return 'disabled';
   }
 
+  /**
+   * Precondition function for the paste context menu. This wraps the core
+   * paste precondition to support context menus.
+   *
+   * @param scope scope of the shortcut or context menu item
+   * @returns 'enabled' if the node can be pasted, 'disabled' otherwise.
+   */
   private pastePrecondition(scope: ContextMenuRegistry.Scope): string {
     if (!this.copyWorkspace) return 'disabled';
 
