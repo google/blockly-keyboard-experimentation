@@ -7,6 +7,7 @@
 import {
   BlockSvg,
   ContextMenuRegistry,
+  FocusManager,
   Msg,
   ShortcutRegistry,
   utils,
@@ -197,23 +198,33 @@ export class MoveActions {
     this.registerShortcuts();
     this.registerMenuItems();
 
-    // Monkey patch shortcut registry to finish any in-progress move for all
-    // non-move-related actions.
+    // Monkey patch shortcut registry to: finish any in-progress move for all
+    // non-move-related actions and bail on actions other than "escape" during
+    // ephemeral focus.
     this.oldShortcutRegistryOnKeyDown = ShortcutRegistry.registry.onKeyDown;
     ShortcutRegistry.registry.onKeyDown = (workspace, e) => {
       if (!this.oldShortcutRegistryOnKeyDown) return false;
       // @ts-expect-error private method
       const key = ShortcutRegistry.registry.serializeKeyEvent(e);
-      const moveShortcutNames =
+      const shortcutNamesForKey =
         ShortcutRegistry.registry.getShortcutNamesByKeyCode(key);
       if (
-        !this.shortcuts.some((shortcut) =>
-          moveShortcutNames?.includes(shortcut.name),
+        !this.shortcutNames.some((moveShortcutName) =>
+          shortcutNamesForKey?.includes(moveShortcutName),
         )
       ) {
         if (this.mover.isMoving(workspace)) {
           this.mover.finishMove(workspace);
         }
+      }
+
+      // @ts-expect-error private method
+      const {currentlyHoldsEphemeralFocus} = FocusManager.getFocusManager();
+      if (
+        currentlyHoldsEphemeralFocus &&
+        !shortcutNamesForKey?.includes('escape')
+      ) {
+        return false;
       }
 
       return this.oldShortcutRegistryOnKeyDown.call(
