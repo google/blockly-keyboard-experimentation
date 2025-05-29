@@ -162,6 +162,7 @@ export class Mover {
             utils.KeyCodes.UP,
             utils.KeyCodes.DOWN,
             utils.KeyCodes.ENTER,
+            utils.KeyCodes.ESC,
           ].includes(
             typeof keyCode === 'number'
               ? keyCode
@@ -235,6 +236,7 @@ export class Mover {
    * @returns True iff move successfully aborted.
    */
   abortMove(workspace: WorkspaceSvg) {
+    ShortcutRegistry.registry.unregister(COMMIT_MOVE_SHORTCUT);
     clearMoveHints(workspace);
 
     const info = this.moves.get(workspace);
