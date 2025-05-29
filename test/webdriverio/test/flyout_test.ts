@@ -11,15 +11,15 @@ import {
   testFileLocations,
   PAUSE_TIME,
   tabNavigateForward,
-  getFocusedBlockType,
   keyDown,
   tabNavigateBackward,
   tabNavigateToWorkspace,
   keyRight,
   getCurrentFocusNodeId,
+  getCurrentFocusedBlockId,
 } from './test_setup.js';
 
-suite('Toolbox and flyout test', function () {
+suite.only('Toolbox and flyout test', function () {
   // Clear the workspace and load start blocks
   setup(async function () {
     this.browser = await testSetup(testFileLocations.BASE);
@@ -46,8 +46,8 @@ suite('Toolbox and flyout test', function () {
 
     // The top block of the category should be automatically selected. See:
     // https://github.com/google/blockly/issues/8978.
-    const blockType = await getFocusedBlockType(this.browser);
-    chai.assert.strictEqual(blockType, 'controls_if');
+    const blockId = await getCurrentFocusedBlockId(this.browser);
+    chai.assert.strictEqual(blockId, 'if_block');
   });
 
   test('Tab navigating to toolbox then right arrow key should auto-select first block in flyout', async function () {
@@ -60,8 +60,8 @@ suite('Toolbox and flyout test', function () {
 
     // The top block of the category should be automatically selected. See:
     // https://github.com/google/blockly/issues/8978.
-    const blockType = await getFocusedBlockType(this.browser);
-    chai.assert.strictEqual(blockType, 'controls_if');
+    const blockId = await getCurrentFocusedBlockId(this.browser);
+    chai.assert.strictEqual(blockId, 'if_block');
   });
 
   test('Keyboard nav to different toolbox category should auto-select first block', async function () {
@@ -74,8 +74,8 @@ suite('Toolbox and flyout test', function () {
     await tabNavigateForward(this.browser);
 
     // The top block of the category should be automatically selected.
-    const blockType = await getFocusedBlockType(this.browser);
-    chai.assert.strictEqual(blockType, 'text');
+    const blockId = await getCurrentFocusedBlockId(this.browser);
+    chai.assert.strictEqual(blockId, 'text_block');
   });
 
   test('Keyboard nav to different toolbox category and block should select different block', async function () {
@@ -90,8 +90,8 @@ suite('Toolbox and flyout test', function () {
     await keyDown(this.browser, 2);
 
     // A non-top blockshould be manually selected.
-    const blockType = await getFocusedBlockType(this.browser);
-    chai.assert.strictEqual(blockType, 'text_append');
+    const blockId = await getCurrentFocusedBlockId(this.browser);
+    chai.assert.strictEqual(blockId, 'append_text_block');
   });
 
   test('Tab navigate away from toolbox restores focus to initial element', async function () {
@@ -196,8 +196,8 @@ suite('Toolbox and flyout test', function () {
 
     // The previously selected block should be retained upon returning. See:
     // https://github.com/google/blockly/issues/8965#issuecomment-2900479280.
-    const blockType = await getFocusedBlockType(this.browser);
-    chai.assert.strictEqual(blockType, 'p5_draw');
+    const blockId = await getCurrentFocusedBlockId(this.browser);
+    chai.assert.strictEqual(blockId, 'p5_draw_1');
   });
 
   test('Clicking outside Blockly with focused toolbox closes the flyout', async function () {
