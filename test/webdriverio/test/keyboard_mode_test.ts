@@ -7,7 +7,7 @@
 import * as chai from 'chai';
 import * as Blockly from 'blockly';
 import {
-  setCurrentCursorNodeById,
+  focusOnBlock,
   testSetup,
   testFileLocations,
   PAUSE_TIME,
@@ -51,7 +51,7 @@ suite(
 
     test('M for move mode enables keyboard mode', async function () {
       await focusWorkspace(this.browser);
-      await setCurrentCursorNodeById(this.browser, 'controls_if_2');
+      await focusOnBlock(this.browser, 'controls_if_2');
       await this.browser.pause(PAUSE_TIME);
       await this.browser.keys('m');
 
@@ -69,7 +69,7 @@ suite(
 
     test('X to disconnect enables keyboard mode', async function () {
       await focusWorkspace(this.browser);
-      await setCurrentCursorNodeById(this.browser, 'controls_if_2');
+      await focusOnBlock(this.browser, 'controls_if_2');
       await this.browser.pause(PAUSE_TIME);
       await this.browser.keys('x');
       await this.browser.pause(PAUSE_TIME);
@@ -81,7 +81,7 @@ suite(
       await focusWorkspace(this.browser);
 
       // Make sure we're on a copyable block so that copy occurs
-      await setCurrentCursorNodeById(this.browser, 'controls_if_2');
+      await focusOnBlock(this.browser, 'controls_if_2');
       await this.browser.pause(PAUSE_TIME);
       await this.browser.keys(Key.Ctrl);
       await this.browser.keys('c');
@@ -107,7 +107,7 @@ suite(
       await focusWorkspace(this.browser);
 
       // Make sure we're on a deletable block so that delete occurs
-      await setCurrentCursorNodeById(this.browser, 'controls_if_2');
+      await focusOnBlock(this.browser, 'controls_if_2');
       await this.browser.pause(PAUSE_TIME);
       await this.browser.keys(Key.Backspace);
       await this.browser.pause(PAUSE_TIME);
@@ -119,7 +119,7 @@ suite(
       });
 
       // Focus a different deletable block
-      await setCurrentCursorNodeById(this.browser, 'controls_if_1');
+      await focusOnBlock(this.browser, 'controls_if_1');
       await this.browser.pause(PAUSE_TIME);
       await this.browser.keys(Key.Backspace);
       await this.browser.pause(PAUSE_TIME);
