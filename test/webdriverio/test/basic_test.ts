@@ -17,6 +17,10 @@ import {
   testFileLocations,
   PAUSE_TIME,
   tabNavigateToWorkspace,
+  keyLeft,
+  keyRight,
+  keyUp,
+  keyDown,
 } from './test_setup.js';
 import {Key} from 'webdriverio';
 
@@ -40,10 +44,7 @@ suite('Keyboard navigation on Blocks', function () {
   test('Selected block', async function () {
     await tabNavigateToWorkspace(this.browser);
 
-    for (let i = 0; i < 14; i++) {
-      await this.browser.keys(Key.ArrowDown);
-      await this.browser.pause(PAUSE_TIME);
-    }
+    await keyDown(this.browser, 14);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
@@ -55,8 +56,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await focusOnBlock(this.browser, 'p5_canvas_1');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowDown);
-    await this.browser.pause(PAUSE_TIME);
+    await keyDown(this.browser);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
@@ -68,8 +68,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await focusOnBlock(this.browser, 'simple_circle_1');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowUp);
-    await this.browser.pause(PAUSE_TIME);
+    await keyUp(this.browser);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
@@ -81,8 +80,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await focusOnBlock(this.browser, 'p5_setup_1');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowDown);
-    await this.browser.pause(PAUSE_TIME);
+    await keyDown(this.browser);
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
       .equal('p5_canvas_1');
@@ -93,8 +91,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await focusOnBlock(this.browser, 'p5_canvas_1');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowUp);
-    await this.browser.pause(PAUSE_TIME);
+    await keyUp(this.browser);
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
       .equal('p5_setup_1');
@@ -105,8 +102,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await focusOnBlock(this.browser, 'p5_canvas_1');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowRight);
-    await this.browser.pause(PAUSE_TIME);
+    await keyRight(this.browser);
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
@@ -120,8 +116,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await focusOnBlock(this.browser, 'simple_circle_1');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowRight);
-    await this.browser.pause(PAUSE_TIME);
+    await keyRight(this.browser);
 
     chai.assert.equal(
       await getCurrentFocusedBlockId(this.browser),
@@ -134,8 +129,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await focusOnBlock(this.browser, 'math_number_2');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowUp);
-    await this.browser.pause(PAUSE_TIME);
+    await keyUp(this.browser);
 
     chai.assert.equal(
       await getCurrentFocusedBlockId(this.browser),
@@ -148,8 +142,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await focusOnBlock(this.browser, 'math_number_2');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowLeft);
-    await this.browser.pause(PAUSE_TIME);
+    await keyLeft(this.browser);
 
     chai.assert.equal(
       await getCurrentFocusedBlockId(this.browser),
@@ -162,8 +155,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await focusOnBlock(this.browser, 'math_number_2');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowRight);
-    await this.browser.pause(PAUSE_TIME);
+    await keyRight(this.browser);
 
     chai.assert.equal(
       await getCurrentFocusedBlockId(this.browser),
@@ -176,8 +168,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await focusOnBlock(this.browser, 'math_number_3');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowLeft);
-    await this.browser.pause(PAUSE_TIME);
+    await keyLeft(this.browser);
 
     chai.assert.equal(
       await getCurrentFocusedBlockId(this.browser),
@@ -190,8 +181,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await focusOnBlock(this.browser, 'colour_picker_1');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowRight);
-    await this.browser.pause(PAUSE_TIME);
+    await keyRight(this.browser);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
@@ -203,8 +193,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await focusOnBlock(this.browser, 'colour_picker_1');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowDown);
-    await this.browser.pause(PAUSE_TIME);
+    await keyDown(this.browser);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
@@ -216,8 +205,7 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await focusOnBlock(this.browser, 'logic_boolean_1');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowDown);
-    await this.browser.pause(PAUSE_TIME);
+    await keyDown(this.browser);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
@@ -229,20 +217,17 @@ suite('Keyboard navigation on Blocks', function () {
     await this.browser.pause(PAUSE_TIME);
     await focusOnBlock(this.browser, 'text_print_1');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowRight);
-    await this.browser.pause(PAUSE_TIME);
+    await keyRight(this.browser);
 
     chai.assert.equal(await getCurrentFocusedBlockId(this.browser), 'text_1');
 
-    await this.browser.keys(Key.ArrowRight);
-    await this.browser.pause(PAUSE_TIME);
+    await keyRight(this.browser);
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
       .to.include('text_1_field_');
 
-    await this.browser.keys(Key.ArrowRight);
-    await this.browser.pause(PAUSE_TIME);
+    await keyRight(this.browser);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
@@ -283,8 +268,7 @@ suite('Keyboard navigation on Fields', function () {
       'WIDTH',
     );
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowUp);
-    await this.browser.pause(PAUSE_TIME);
+    await keyUp(this.browser);
 
     chai.assert.equal(
       await getCurrentFocusedBlockId(this.browser),
@@ -301,8 +285,7 @@ suite('Keyboard navigation on Fields', function () {
       'WIDTH',
     );
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowLeft);
-    await this.browser.pause(PAUSE_TIME);
+    await keyLeft(this.browser);
 
     chai.assert.equal(
       await getCurrentFocusedBlockId(this.browser),
@@ -319,8 +302,7 @@ suite('Keyboard navigation on Fields', function () {
       'WIDTH',
     );
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowRight);
-    await this.browser.pause(PAUSE_TIME);
+    await keyRight(this.browser);
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
@@ -338,8 +320,7 @@ suite('Keyboard navigation on Fields', function () {
       'HEIGHT',
     );
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowLeft);
-    await this.browser.pause(PAUSE_TIME);
+    await keyLeft(this.browser);
 
     chai
       .expect(await getCurrentFocusNodeId(this.browser))
@@ -357,8 +338,7 @@ suite('Keyboard navigation on Fields', function () {
       'HEIGHT',
     );
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowRight);
-    await this.browser.pause(PAUSE_TIME);
+    await keyRight(this.browser);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
@@ -374,8 +354,7 @@ suite('Keyboard navigation on Fields', function () {
       'WIDTH',
     );
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowDown);
-    await this.browser.pause(PAUSE_TIME);
+    await keyDown(this.browser);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
@@ -391,8 +370,7 @@ suite('Keyboard navigation on Fields', function () {
       'TIMES',
     );
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.ArrowDown);
-    await this.browser.pause(PAUSE_TIME);
+    await keyDown(this.browser);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))

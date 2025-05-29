@@ -195,9 +195,7 @@ export async function moveToToolboxCategory(
   if (categoryIndex < 0) {
     throw new Error(`No category found: ${category}`);
   }
-  if (categoryIndex > 0) {
-    await browser.keys(webdriverio.Key.ArrowDown.repeat(categoryIndex));
-  }
+  if (categoryIndex > 0) await keyDown(browser, categoryIndex);
 }
 
 /**
@@ -400,6 +398,8 @@ export async function tabNavigateToWorkspace(
   hasToolbox = true,
   hasFlyout = true,
 ) {
+  // Navigate past the initial pre-injection focusable div element.
+  tabNavigateForward(browser);
   if (hasToolbox) tabNavigateForward(browser);
   if (hasFlyout) tabNavigateForward(browser);
   tabNavigateForward(browser); // Tab to the workspace itself.
@@ -413,6 +413,36 @@ export async function tabNavigateToWorkspace(
 export async function tabNavigateForward(browser: WebdriverIO.Browser) {
   await browser.keys(webdriverio.Key.Tab);
   await browser.pause(PAUSE_TIME);
+}
+
+export async function tabNavigateBackward(browser: WebdriverIO.Browser) {
+  await browser.keys([webdriverio.Key.Shift, webdriverio.Key.Tab]);
+  await browser.pause(PAUSE_TIME);
+}
+
+export async function keyLeft(browser: WebdriverIO.Browser, times: number = 1) {
+  await sendKeyAndWait(browser, webdriverio.Key.ArrowLeft, times);
+}
+
+export async function keyRight(
+  browser: WebdriverIO.Browser, times: number = 1) {
+  await sendKeyAndWait(browser, webdriverio.Key.ArrowRight, times);
+}
+
+export async function keyUp(browser: WebdriverIO.Browser, times: number = 1) {
+  await sendKeyAndWait(browser, webdriverio.Key.ArrowUp, times);
+}
+
+export async function keyDown(browser: WebdriverIO.Browser, times: number = 1) {
+  await sendKeyAndWait(browser, webdriverio.Key.ArrowDown, times);
+}
+
+export async function sendKeyAndWait(
+  browser: WebdriverIO.Browser, key: string, times: number) {
+  for (let i = 0; i < times; i++) {
+    await browser.keys(key);
+    await browser.pause(PAUSE_TIME);
+  }
 }
 
 /**

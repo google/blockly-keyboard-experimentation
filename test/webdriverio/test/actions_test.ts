@@ -14,6 +14,7 @@ import {
   tabNavigateToWorkspace,
   testFileLocations,
   testSetup,
+  keyRight,
 } from './test_setup.js';
 
 suite('Menus test', function () {
@@ -46,7 +47,7 @@ suite('Menus test', function () {
     // Navigate to a toolbox category
     await moveToToolboxCategory(this.browser, 'Functions');
     // Move to flyout.
-    await this.browser.keys(Key.ArrowRight);
+    await keyRight(this.browser);
     await this.browser.keys([Key.Ctrl, Key.Return]);
     await this.browser.pause(PAUSE_TIME);
 

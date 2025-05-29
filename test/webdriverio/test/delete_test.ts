@@ -15,6 +15,7 @@ import {
   testFileLocations,
   PAUSE_TIME,
   tabNavigateToWorkspace,
+  keyRight,
 } from './test_setup.js';
 import {Key} from 'webdriverio';
 
@@ -172,8 +173,7 @@ suite('Deleting Blocks', function () {
     await moveToToolboxCategory(this.browser, 'Math');
     await this.browser.pause(PAUSE_TIME);
     // Move to flyout.
-    await this.browser.keys(Key.ArrowRight);
-    await this.browser.pause(PAUSE_TIME);
+    await keyRight(this.browser);
     // Select number block.
     await this.browser.keys(Key.Enter);
     await this.browser.pause(PAUSE_TIME);
@@ -200,8 +200,7 @@ suite('Deleting Blocks', function () {
     await moveToToolboxCategory(this.browser, 'Math');
     await this.browser.pause(PAUSE_TIME);
     // Move to flyout.
-    await this.browser.keys(Key.ArrowRight);
-    await this.browser.pause(PAUSE_TIME);
+    await keyRight(this.browser);
     // Select number block.
     await this.browser.keys(Key.Enter);
     await this.browser.pause(PAUSE_TIME);

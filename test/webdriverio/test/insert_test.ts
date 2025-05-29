@@ -14,6 +14,7 @@ import {
   tabNavigateToWorkspace,
   testFileLocations,
   testSetup,
+  keyRight,
 } from './test_setup.js';
 
 suite('Insert test', function () {
@@ -33,7 +34,7 @@ suite('Insert test', function () {
 
     await moveToToolboxCategory(this.browser, 'Functions');
     // Move to flyout.
-    await this.browser.keys(Key.ArrowRight);
+    await keyRight(this.browser);
     // Select Function block.
     await this.browser.keys(Key.Enter);
     // Confirm move.
