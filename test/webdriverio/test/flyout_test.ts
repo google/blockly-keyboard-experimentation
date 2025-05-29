@@ -16,6 +16,7 @@ import {
   tabNavigateBackward,
   tabNavigateToWorkspace,
   keyRight,
+  getCurrentFocusNodeId,
 } from './test_setup.js';
 
 suite('Toolbox and flyout test', function () {
@@ -226,6 +227,18 @@ suite('Toolbox and flyout test', function () {
     const flyoutIsOpen = await checkIfFlyoutIsOpen(this.browser);
     chai.assert.isFalse(flyoutIsOpen);
   });
+
+  test('Clicking on toolbox category focuses it and opens flyout', async function () {
+    const elemId = await findToolboxCategoryIdByName(this.browser, 'Loops');
+    const elem = this.browser.$(`#${elemId}`);
+    await elem.click();
+
+    // The clicked category should now be focused.
+    const focusedId = await getCurrentFocusNodeId(this.browser);
+    const flyoutIsOpen = await checkIfFlyoutIsOpen(this.browser);
+    chai.assert.strictEqual(focusedId, elemId);
+    chai.assert.isTrue(flyoutIsOpen);
+  });
 });
 
 /**
@@ -245,4 +258,33 @@ async function checkIfFlyoutIsOpen(
     if (!flyout) throw new Error('Workspace has no flyout.');
     return flyout.isVisible();
   });
+}
+
+/**
+ * Finds the element ID of the toolbox category with the specified name.
+ *
+ * This throws an error if the current main workspace has no toolbox or the
+ * toolbox does not have a category with the specified name.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param name The name of the category to find.
+ * @returns A promise with the focusable element ID of the sought category.
+ */
+async function findToolboxCategoryIdByName(
+  browser: WebdriverIO.Browser,
+  name: string,
+): Promise<string> {
+  return await browser.execute((name) => {
+    const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
+    const toolbox = workspaceSvg.getToolbox() as Blockly.Toolbox;
+    if (!toolbox) throw new Error('Workspace has no toolbox.');
+
+    for (const item of toolbox.getToolboxItems()) {
+      if (item instanceof Blockly.ToolboxCategory && item.getName() === name) {
+        return item.getFocusableElement().id;
+      }
+    }
+
+    throw new Error(`No category found with name: ${name}.`);
+  }, name);
 }
