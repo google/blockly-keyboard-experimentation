@@ -95,7 +95,7 @@ export async function driverTeardown() {
 export async function testSetup(
   playgroundUrl: string,
 ): Promise<webdriverio.Browser> {
-if (!driver) {
+  if (!driver) {
     driver = await driverSetup();
   }
   await driver.url(playgroundUrl);
@@ -232,6 +232,8 @@ export async function currentFocusIsMainWorkspace(
 /**
  * Focuses and selects a block with the provided ID.
  *
+ * This throws an error if no block exists for the specified ID.
+ *
  * @param browser The active WebdriverIO Browser object.
  * @param blockId The ID of the block to select.
  */
@@ -249,6 +251,9 @@ export async function focusOnBlock(
 
 /**
  * Focuses and selects the field of a block given a block ID and field name.
+ *
+ * This throws an error if no block exists for the specified ID, or if the block
+ * corresponding to the specified ID has no field with the provided name.
  *
  * @param browser The active WebdriverIO Browser object.
  * @param blockId The ID of the block to select.
@@ -415,30 +420,69 @@ export async function tabNavigateForward(browser: WebdriverIO.Browser) {
   await browser.pause(PAUSE_TIME);
 }
 
+/**
+ * Navigates backward to the test page's previous tab stop.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ */
 export async function tabNavigateBackward(browser: WebdriverIO.Browser) {
   await browser.keys([webdriverio.Key.Shift, webdriverio.Key.Tab]);
   await browser.pause(PAUSE_TIME);
 }
 
-export async function keyLeft(browser: WebdriverIO.Browser, times: number = 1) {
+/**
+ * Sends the keyboard event for arrow key left.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param times The number of times to repeat the key press (default is 1).
+ */
+export async function keyLeft(browser: WebdriverIO.Browser, times = 1) {
   await sendKeyAndWait(browser, webdriverio.Key.ArrowLeft, times);
 }
 
-export async function keyRight(
-  browser: WebdriverIO.Browser, times: number = 1) {
+/**
+ * Sends the keyboard event for arrow key right.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param times The number of times to repeat the key press (default is 1).
+ */
+export async function keyRight(browser: WebdriverIO.Browser, times = 1) {
   await sendKeyAndWait(browser, webdriverio.Key.ArrowRight, times);
 }
 
-export async function keyUp(browser: WebdriverIO.Browser, times: number = 1) {
+/**
+ * Sends the keyboard event for arrow key up.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param times The number of times to repeat the key press (default is 1).
+ */
+export async function keyUp(browser: WebdriverIO.Browser, times = 1) {
   await sendKeyAndWait(browser, webdriverio.Key.ArrowUp, times);
 }
 
-export async function keyDown(browser: WebdriverIO.Browser, times: number = 1) {
+/**
+ * Sends the keyboard event for arrow key down.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param times The number of times to repeat the key press (default is 1).
+ */
+export async function keyDown(browser: WebdriverIO.Browser, times = 1) {
   await sendKeyAndWait(browser, webdriverio.Key.ArrowDown, times);
 }
 
-export async function sendKeyAndWait(
-  browser: WebdriverIO.Browser, key: string, times: number) {
+/**
+ * Sends the specified key for the specified number of times, waiting between
+ * each key press to allow changes to keep up.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param key The WebdriverIO representative key value to press.
+ * @param times The number of times to repeat the key press.
+ */
+async function sendKeyAndWait(
+  browser: WebdriverIO.Browser,
+  key: string,
+  times: number,
+) {
   for (let i = 0; i < times; i++) {
     await browser.keys(key);
     await browser.pause(PAUSE_TIME);

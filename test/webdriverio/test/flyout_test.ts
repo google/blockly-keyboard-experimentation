@@ -103,7 +103,8 @@ suite.only('Toolbox and flyout test', function () {
     // Focus should restore to the initial div element. See:
     // https://github.com/google/blockly-keyboard-experimentation/issues/523.
     const activeElementId = await this.browser.execute(
-      () => document.activeElement?.id);
+      () => document.activeElement?.id,
+    );
     chai.assert.strictEqual(activeElementId, 'focusableDiv');
   });
 
@@ -227,6 +228,14 @@ suite.only('Toolbox and flyout test', function () {
   });
 });
 
+/**
+ * Checks if the flyout is currently open.
+ *
+ * This throws an error if the current main workspace has no flyout.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @returns A promise indicating whether the flyout is currently open.
+ */
 async function checkIfFlyoutIsOpen(
   browser: WebdriverIO.Browser,
 ): Promise<boolean> {

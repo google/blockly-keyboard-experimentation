@@ -262,11 +262,7 @@ suite('Keyboard navigation on Fields', function () {
   test('Up from first field selects block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
-    await focusOnBlockField(
-      this.browser,
-      'p5_canvas_1',
-      'WIDTH',
-    );
+    await focusOnBlockField(this.browser, 'p5_canvas_1', 'WIDTH');
     await this.browser.pause(PAUSE_TIME);
     await keyUp(this.browser);
 
@@ -279,11 +275,7 @@ suite('Keyboard navigation on Fields', function () {
   test('Left from first field selects block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
-    await focusOnBlockField(
-      this.browser,
-      'p5_canvas_1',
-      'WIDTH',
-    );
+    await focusOnBlockField(this.browser, 'p5_canvas_1', 'WIDTH');
     await this.browser.pause(PAUSE_TIME);
     await keyLeft(this.browser);
 
@@ -296,11 +288,7 @@ suite('Keyboard navigation on Fields', function () {
   test('Right from first field selects second field', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
-    await focusOnBlockField(
-      this.browser,
-      'p5_canvas_1',
-      'WIDTH',
-    );
+    await focusOnBlockField(this.browser, 'p5_canvas_1', 'WIDTH');
     await this.browser.pause(PAUSE_TIME);
     await keyRight(this.browser);
 
@@ -314,11 +302,7 @@ suite('Keyboard navigation on Fields', function () {
   test('Left from second field selects first field', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
-    await focusOnBlockField(
-      this.browser,
-      'p5_canvas_1',
-      'HEIGHT',
-    );
+    await focusOnBlockField(this.browser, 'p5_canvas_1', 'HEIGHT');
     await this.browser.pause(PAUSE_TIME);
     await keyLeft(this.browser);
 
@@ -332,11 +316,7 @@ suite('Keyboard navigation on Fields', function () {
   test('Right from second field selects next block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
-    await focusOnBlockField(
-      this.browser,
-      'p5_canvas_1',
-      'HEIGHT',
-    );
+    await focusOnBlockField(this.browser, 'p5_canvas_1', 'HEIGHT');
     await this.browser.pause(PAUSE_TIME);
     await keyRight(this.browser);
 
@@ -348,11 +328,7 @@ suite('Keyboard navigation on Fields', function () {
   test('Down from field selects next block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
-    await focusOnBlockField(
-      this.browser,
-      'p5_canvas_1',
-      'WIDTH',
-    );
+    await focusOnBlockField(this.browser, 'p5_canvas_1', 'WIDTH');
     await this.browser.pause(PAUSE_TIME);
     await keyDown(this.browser);
 
@@ -364,11 +340,7 @@ suite('Keyboard navigation on Fields', function () {
   test("Down from field selects block's child block", async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
-    await focusOnBlockField(
-      this.browser,
-      'controls_repeat_1',
-      'TIMES',
-    );
+    await focusOnBlockField(this.browser, 'controls_repeat_1', 'TIMES');
     await this.browser.pause(PAUSE_TIME);
     await keyDown(this.browser);
 
