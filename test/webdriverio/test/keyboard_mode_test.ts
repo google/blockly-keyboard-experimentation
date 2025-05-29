@@ -129,10 +129,7 @@ suite(
 
       await this.browser.pause(PAUSE_TIME);
       // Right click a block
-      const element = await getBlockElementById(
-        this.browser,
-        'simple_circle_1',
-      );
+      const element = await getBlockElementById(this.browser, 'controls_if_1');
       await element.click({button: 'right'});
       await this.browser.pause(PAUSE_TIME);
 
@@ -146,11 +143,8 @@ suite(
 
       await this.browser.pause(PAUSE_TIME);
       // Drag a block
-      const element = await getBlockElementById(
-        this.browser,
-        'simple_circle_1',
-      );
-      await element.dragAndDrop({x: 100, y: 100});
+      const element = await getBlockElementById(this.browser, 'controls_if_1');
+      await element.dragAndDrop({x: 10, y: 10});
       await this.browser.pause(PAUSE_TIME);
 
       chai.assert.isFalse(await isKeyboardNavigating(this.browser));
