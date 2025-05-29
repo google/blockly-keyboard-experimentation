@@ -827,7 +827,7 @@ export default {
         },
         {
           kind: 'block',
-          type: 'buttons_block'
+          type: 'buttons_block',
         },
       ],
     },
