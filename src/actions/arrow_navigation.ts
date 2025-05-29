@@ -4,7 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ShortcutRegistry, utils as BlocklyUtils, Field} from 'blockly/core';
+import {
+  ShortcutRegistry,
+  utils as BlocklyUtils,
+  Field,
+  keyboardNavigationController,
+} from 'blockly/core';
 
 import type {Toolbox, WorkspaceSvg} from 'blockly/core';
 
@@ -122,6 +127,7 @@ export class ArrowNavigation {
         preconditionFn: (workspace) =>
           this.navigation.canCurrentlyNavigate(workspace),
         callback: (workspace, e, shortcut) => {
+          keyboardNavigationController.setIsActive(true);
           return workspace.RTL
             ? navigateOut(workspace, e, shortcut)
             : navigateIn(workspace, e, shortcut);
@@ -135,6 +141,7 @@ export class ArrowNavigation {
         preconditionFn: (workspace) =>
           this.navigation.canCurrentlyNavigate(workspace),
         callback: (workspace, e, shortcut) => {
+          keyboardNavigationController.setIsActive(true);
           return workspace.RTL
             ? navigateIn(workspace, e, shortcut)
             : navigateOut(workspace, e, shortcut);
@@ -148,6 +155,7 @@ export class ArrowNavigation {
         preconditionFn: (workspace) =>
           this.navigation.canCurrentlyNavigate(workspace),
         callback: (workspace, e, shortcut) => {
+          keyboardNavigationController.setIsActive(true);
           const toolbox = workspace.getToolbox() as Toolbox;
           const flyout = workspace.getFlyout();
           let isHandled = false;
@@ -205,6 +213,7 @@ export class ArrowNavigation {
         preconditionFn: (workspace) =>
           this.navigation.canCurrentlyNavigate(workspace),
         callback: (workspace, e, shortcut) => {
+          keyboardNavigationController.setIsActive(true);
           const flyout = workspace.getFlyout();
           const toolbox = workspace.getToolbox() as Toolbox;
           let isHandled = false;

@@ -7,7 +7,6 @@
 import * as Blockly from 'blockly/core';
 import {NavigationController} from './navigation_controller';
 import {enableBlocksOnDrag} from './disabled_blocks';
-import {InputModeTracker} from './input_mode_tracker';
 
 /** Plugin for keyboard navigation. */
 export class KeyboardNavigation {
@@ -19,11 +18,6 @@ export class KeyboardNavigation {
 
   /** Cursor for the main workspace. */
   private cursor: Blockly.LineCursor;
-
-  /**
-   * Input mode tracking.
-   */
-  private inputModeTracker: InputModeTracker;
 
   /**
    * Focus ring in the workspace.
@@ -54,7 +48,6 @@ export class KeyboardNavigation {
     this.navigationController.init();
     this.navigationController.addWorkspace(workspace);
     this.navigationController.enable(workspace);
-    this.inputModeTracker = new InputModeTracker(workspace);
 
     this.cursor = new Blockly.LineCursor(workspace);
 
@@ -124,7 +117,6 @@ export class KeyboardNavigation {
     // Remove the event listener that enables blocks on drag
     this.workspace.removeChangeListener(enableBlocksOnDrag);
     this.navigationController.dispose();
-    this.inputModeTracker.dispose();
   }
 
   /**

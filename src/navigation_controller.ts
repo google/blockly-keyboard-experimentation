@@ -18,6 +18,7 @@ import {
   Toolbox,
   utils as BlocklyUtils,
   WorkspaceSvg,
+  keyboardNavigationController,
 } from 'blockly/core';
 
 import * as Constants from './constants';
@@ -198,6 +199,7 @@ export class NavigationController {
       preconditionFn: (workspace) =>
         !workspace.isDragging() && this.navigation.canCurrentlyEdit(workspace),
       callback: (workspace) => {
+        keyboardNavigationController.setIsActive(true);
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
             Blockly.getFocusManager().focusTree(

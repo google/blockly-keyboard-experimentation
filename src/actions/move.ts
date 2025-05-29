@@ -11,6 +11,7 @@ import {
   ShortcutRegistry,
   utils,
   WorkspaceSvg,
+  keyboardNavigationController,
 } from 'blockly';
 import {Direction} from '../drag_direction';
 import {Mover} from './mover';
@@ -40,6 +41,7 @@ export class MoveActions {
           return !!startBlock && this.mover.canMove(workspace, startBlock);
         },
         callback: (workspace) => {
+          keyboardNavigationController.setIsActive(true);
           const startBlock = this.getCurrentBlock(workspace);
           return (
             !!startBlock && this.mover.startMove(workspace, startBlock, null)
