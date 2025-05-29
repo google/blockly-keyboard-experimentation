@@ -43,6 +43,7 @@ suite('Keyboard navigation on Blocks', function () {
 
   test('Selected block', async function () {
     await tabNavigateToWorkspace(this.browser);
+    await this.browser.pause(PAUSE_TIME);
 
     await keyDown(this.browser, 14);
 
