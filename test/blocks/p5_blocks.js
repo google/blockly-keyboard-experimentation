@@ -88,6 +88,74 @@ const p5Canvas = {
   },
 };
 
+const buttonsJson = {
+  'type': 'buttons',
+  'message0': 'If %1 %2 Then %3 %4 more %5 %6 %7',
+  'args0': [
+    {
+      'type': 'field_image',
+      'name': 'BUTTON1',
+      'src': 'https://www.gstatic.com/codesite/ph/images/star_on.gif',
+      'width': 30,
+      'height': 30,
+      'alt': '*',
+    },
+    {
+      'type': 'input_value',
+      'name': 'VALUE1',
+      'check': '',
+    },
+    {
+      'type': 'field_image',
+      'name': 'BUTTON2',
+      'src': 'https://www.gstatic.com/codesite/ph/images/star_on.gif',
+      'width': 30,
+      'height': 30,
+      'alt': '*',
+    },
+    {
+      'type': 'input_dummy',
+      'name': 'DUMMY1',
+      'check': '',
+    },
+    {
+      'type': 'input_value',
+      'name': 'VALUE2',
+      'check': '',
+    },
+    {
+      'type': 'input_statement',
+      'name': 'STATEMENT1',
+      'check': 'Number',
+    },
+    {
+      'type': 'field_image',
+      'name': 'BUTTON3',
+      'src': 'https://www.gstatic.com/codesite/ph/images/star_on.gif',
+      'width': 30,
+      'height': 30,
+      'alt': '*',
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 230,
+  'tooltip': '',
+  'helpUrl': '',
+};
+
+const buttonsBlock = {
+  init: function () {
+    this.jsonInit(buttonsJson);
+    const clickHandler = function () {
+      console.log('clicking a button!');
+    };
+    this.getField('BUTTON1').setOnClickHandler(clickHandler);
+    this.getField('BUTTON2').setOnClickHandler(clickHandler);
+    this.getField('BUTTON3').setOnClickHandler(clickHandler);
+  },
+};
+
 const background = {
   'type': 'p5_background_color',
   'message0': 'Set background color to %1',
@@ -285,5 +353,6 @@ export const blocks = {
   'p5_setup': p5Setup,
   'p5_draw': p5Draw,
   'p5_canvas': p5Canvas,
+  'buttons_block': buttonsBlock,
   ...jsonBlocks,
 };
