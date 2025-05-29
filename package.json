@@ -1,6 +1,6 @@
 {
   "name": "@blockly/keyboard-experiment",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "A plugin for keyboard navigation.",
   "scripts": {
     "audit:fix": "blockly-scripts auditFix",
@@ -48,8 +48,8 @@
     "src"
   ],
   "devDependencies": {
-    "@blockly/dev-scripts": "^4.0.1",
-    "@blockly/field-colour": "^5.0.7",
+    "@blockly/dev-scripts": "^4.0.8",
+    "@blockly/field-colour": "^6.0.0",
     "@eslint/eslintrc": "^2.1.2",
     "@eslint/js": "^8.49.0",
     "@types/chai": "^5.2.1",
@@ -57,7 +57,7 @@
     "@types/p5": "^1.7.6",
     "@typescript-eslint/eslint-plugin": "^6.7.2",
     "@typescript-eslint/parser": "^6.7.2",
-    "blockly": "^12.0.0",
+    "blockly": "^12.0.1-beta.1",
     "chai": "^5.2.0",
     "eslint": "^8.49.0",
     "eslint-config-google": "^0.14.0",
@@ -73,11 +73,11 @@
     "webdriverio": "^9.12.1"
   },
   "peerDependencies": {
-    "blockly": "^12.0.0"
+    "blockly": "^12.0.1-beta.1"
   },
   "overrides": {
     "@blockly/field-colour": {
-      "blockly": "^12.0.0"
+      "blockly": "^12.0.1-beta.1"
     }
   },
   "publishConfig": {

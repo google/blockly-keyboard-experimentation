@@ -326,6 +326,6 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   }
 
   override shouldHealStack(e: PointerEvent | undefined): boolean {
-    return true;
+    return Boolean(this.block.previousConnection);
   }
 }

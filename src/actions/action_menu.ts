@@ -45,12 +45,23 @@ export class ActionMenu {
   private registerShortcut() {
     const menuShortcut: ShortcutRegistry.KeyboardShortcut = {
       name: Constants.SHORTCUT_NAMES.MENU,
-      preconditionFn: (workspace) =>
-        this.navigation.canCurrentlyNavigate(workspace),
+      preconditionFn: (workspace) => {
+        return (
+          this.navigation.canCurrentlyNavigate(workspace) &&
+          !workspace.isDragging()
+        );
+      },
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
             return this.openActionMenu(workspace);
+          case Constants.STATE.FLYOUT: {
+            const flyoutWorkspace = workspace.getFlyout()?.getWorkspace();
+            if (flyoutWorkspace) {
+              return this.openActionMenu(flyoutWorkspace);
+            }
+            return false;
+          }
           default:
             return false;
         }
