@@ -152,28 +152,14 @@ export class Mover {
    * @returns True iff move successfully finished.
    */
   finishMove(workspace: WorkspaceSvg) {
-    clearMoveHints(workspace);
-
-    const info = this.moves.get(workspace);
-    if (!info) throw new Error('no move info for workspace');
-
-    // Remove the blur listener before ending the drag
-    info.block
-      .getFocusableElement()
-      .removeEventListener('blur', info.blurListener);
+    const info = this.preDragEndCleanup(workspace);
 
     info.dragger.onDragEnd(
       info.fakePointerEvent('pointerup'),
       new utils.Coordinate(0, 0),
     );
 
-    this.unpatchDragStrategy(info.block);
-    this.moves.delete(workspace);
-    workspace.setKeyboardMoveInProgress(false);
-    // Delay scroll until after block has finished moving.
-    setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0);
-    // If the block gets reattached, ensure it retains focus.
-    getFocusManager().focusNode(info.block);
+    this.postDragEndCleanup(workspace, info);
     return true;
   }
 
@@ -186,10 +172,7 @@ export class Mover {
    * @returns True iff move successfully aborted.
    */
   abortMove(workspace: WorkspaceSvg) {
-    clearMoveHints(workspace);
-
-    const info = this.moves.get(workspace);
-    if (!info) throw new Error('no move info for workspace');
+    const info = this.preDragEndCleanup(workspace);
 
     const dragStrategy = info.block.getDragStrategy() as KeyboardDragStrategy;
     this.patchDragger(
@@ -214,6 +197,37 @@ export class Mover {
       workspace.getCursor()?.setCurNode(target);
     }
 
+    this.postDragEndCleanup(workspace, info);
+    return true;
+  }
+
+  /**
+   * Common clean-up for finish/abort.
+   *
+   * @param workspace The workspace on which we are moving.
+   * @returns The info for the block.
+   */
+  private preDragEndCleanup(workspace: WorkspaceSvg) {
+    clearMoveHints(workspace);
+
+    const info = this.moves.get(workspace);
+    if (!info) throw new Error('no move info for workspace');
+
+    // Remove the blur listener before ending the drag
+    info.block
+      .getFocusableElement()
+      .removeEventListener('blur', info.blurListener);
+
+    return info;
+  }
+
+  /**
+   * Common clean-up for finish/abort.
+   *
+   * @param workspace The workspace on which we are moving.
+   * @param info The info for the block.
+   */
+  private postDragEndCleanup(workspace: WorkspaceSvg, info: MoveInfo) {
     this.unpatchDragStrategy(info.block);
     this.moves.delete(workspace);
     workspace.setKeyboardMoveInProgress(false);
@@ -221,7 +235,6 @@ export class Mover {
     setTimeout(() => this.scrollCurrentBlockIntoView(workspace), 0);
     // If the block gets reattached, ensure it retains focus.
     getFocusManager().focusNode(info.block);
-    return true;
   }
 
   /**
