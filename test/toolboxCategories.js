@@ -828,6 +828,10 @@ export default {
           kind: 'block',
           type: 'colour_random',
         },
+        {
+          kind: 'block',
+          type: 'buttons_block',
+        },
       ],
     },
   ],
