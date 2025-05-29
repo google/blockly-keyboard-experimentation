@@ -18,6 +18,7 @@ import {
   registry,
   utils,
   WorkspaceSvg,
+  ShortcutRegistry,
 } from 'blockly';
 import * as Constants from '../constants';
 import {Direction, getXYFromDirection} from '../drag_direction';
@@ -35,6 +36,11 @@ const UNCONSTRAINED_MOVE_DISTANCE = 20;
  * The amount of additional padding to include during a constrained move.
  */
 const CONSTRAINED_ADDITIONAL_PADDING = 70;
+
+/**
+ * Identifier for a keyboard shortcut that commits the in-progress move.
+ */
+const COMMIT_MOVE_SHORTCUT = 'commitMove';
 
 /**
  * Low-level code for moving blocks with keyboard shortcuts.
@@ -140,6 +146,47 @@ export class Mover {
     // (otherwise dragging will break).
     getFocusManager().focusNode(block);
     block.getFocusableElement().addEventListener('blur', blurListener);
+
+    // Register a keyboard shortcut under the key combos of all existing
+    // keyboard shortcuts that commits the move before allowing the real
+    // shortcut to proceed. This avoids all kinds of fun brokenness when
+    // deleting/copying/otherwise acting on a block in move mode.
+    const shortcutKeys = Object.values(ShortcutRegistry.registry.getRegistry())
+      .flatMap((shortcut) => shortcut.keyCodes)
+      .filter((keyCode) => {
+        return (
+          keyCode &&
+          ![
+            utils.KeyCodes.RIGHT,
+            utils.KeyCodes.LEFT,
+            utils.KeyCodes.UP,
+            utils.KeyCodes.DOWN,
+            utils.KeyCodes.ENTER,
+          ].includes(
+            typeof keyCode === 'number'
+              ? keyCode
+              : parseInt(`${keyCode.split('+').pop()}`),
+          )
+        );
+      })
+      // Convince TS there aren't undefined values.
+      .filter((keyCode): keyCode is string | number => !!keyCode);
+
+    const commitMoveShortcut = {
+      name: COMMIT_MOVE_SHORTCUT,
+      preconditionFn: (workspace: WorkspaceSvg) => {
+        return !!this.moves.get(workspace);
+      },
+      callback: (workspace: WorkspaceSvg) => {
+        this.finishMove(workspace);
+        return false;
+      },
+      keyCodes: shortcutKeys,
+      allowCollision: true,
+    };
+
+    ShortcutRegistry.registry.register(commitMoveShortcut);
+
     return true;
   }
 
@@ -152,6 +199,8 @@ export class Mover {
    * @returns True iff move successfully finished.
    */
   finishMove(workspace: WorkspaceSvg) {
+    ShortcutRegistry.registry.unregister(COMMIT_MOVE_SHORTCUT);
+
     clearMoveHints(workspace);
 
     const info = this.moves.get(workspace);
