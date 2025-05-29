@@ -9,7 +9,7 @@ import * as chai from 'chai';
 import {Browser, Key} from 'webdriverio';
 import {
   PAUSE_TIME,
-  setCurrentCursorNodeById,
+  focusOnBlock,
   tabNavigateToWorkspace,
   testFileLocations,
   testSetup,
@@ -34,7 +34,7 @@ suite('Move tests', function () {
     for (let i = 1; i < 7; i++) {
       // Navigate to statement_<i>.
       await tabNavigateToWorkspace(this.browser);
-      await setCurrentCursorNodeById(this.browser, `statement_${i}`);
+      await focusOnBlock(this.browser, `statement_${i}`);
 
       // Get information about parent connection of selected block,
       // and block connected to selected block's next connection.
@@ -94,7 +94,7 @@ suite('Move tests', function () {
     for (let i = 1; i < 7; i++) {
       // Navigate to statement_<i>.
       await tabNavigateToWorkspace(this.browser);
-      await setCurrentCursorNodeById(this.browser, `value_${i}`);
+      await focusOnBlock(this.browser, `value_${i}`);
 
       // Get information about parent connection of selected block,
       // and block connected to selected block's value input.

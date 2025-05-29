@@ -195,9 +195,7 @@ export async function moveToToolboxCategory(
   if (categoryIndex < 0) {
     throw new Error(`No category found: ${category}`);
   }
-  if (categoryIndex > 0) {
-    await browser.keys(webdriverio.Key.ArrowDown.repeat(categoryIndex));
-  }
+  if (categoryIndex > 0) await keyDown(browser, categoryIndex);
 }
 
 /**
@@ -232,32 +230,36 @@ export async function currentFocusIsMainWorkspace(
 }
 
 /**
- * Select a block with the given id as the current cursor node.
+ * Focuses and selects a block with the provided ID.
+ *
+ * This throws an error if no block exists for the specified ID.
  *
  * @param browser The active WebdriverIO Browser object.
- * @param blockId The id of the block to select.
+ * @param blockId The ID of the block to select.
  */
-export async function setCurrentCursorNodeById(
+export async function focusOnBlock(
   browser: WebdriverIO.Browser,
   blockId: string,
 ) {
   return await browser.execute((blockId) => {
     const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
     const block = workspaceSvg.getBlockById(blockId);
-    if (block) {
-      block.getFocusableElement()?.focus();
-    }
+    if (!block) throw new Error(`No block found with ID: ${blockId}.`);
+    Blockly.getFocusManager().focusNode(block);
   }, blockId);
 }
 
 /**
- * Select a block's field with the given block id and field name.
+ * Focuses and selects the field of a block given a block ID and field name.
+ *
+ * This throws an error if no block exists for the specified ID, or if the block
+ * corresponding to the specified ID has no field with the provided name.
  *
  * @param browser The active WebdriverIO Browser object.
- * @param blockId The id of the block to select.
+ * @param blockId The ID of the block to select.
  * @param fieldName The name of the field on the block to select.
  */
-export async function setCurrentCursorNodeByIdAndFieldName(
+export async function focusOnBlockField(
   browser: WebdriverIO.Browser,
   blockId: string,
   fieldName: string,
@@ -266,14 +268,12 @@ export async function setCurrentCursorNodeByIdAndFieldName(
     (blockId, fieldName) => {
       const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
       const block = workspaceSvg.getBlockById(blockId);
-      const field = block?.getField(fieldName);
-      if (field) {
-        // TODO: Stop referencing getCursor() and use focus() instead.
-        // getCursor().setCurNode() calls Marker.setCurNode(), but focus() does
-        // not accomplish the same goal yet.
-        workspaceSvg.getCursor()?.setCurNode(field);
-        // field.getFocusableElement()?.focus();
+      if (!block) throw new Error(`No block found with ID: ${blockId}.`);
+      const field = block.getField(fieldName);
+      if (!field) {
+        throw new Error(`No field found: ${fieldName} (block ${blockId}).`);
       }
+      Blockly.getFocusManager().focusNode(field);
     },
     blockId,
     fieldName,
@@ -403,6 +403,8 @@ export async function tabNavigateToWorkspace(
   hasToolbox = true,
   hasFlyout = true,
 ) {
+  // Navigate past the initial pre-injection focusable div element.
+  tabNavigateForward(browser);
   if (hasToolbox) tabNavigateForward(browser);
   if (hasFlyout) tabNavigateForward(browser);
   tabNavigateForward(browser); // Tab to the workspace itself.
@@ -416,6 +418,75 @@ export async function tabNavigateToWorkspace(
 export async function tabNavigateForward(browser: WebdriverIO.Browser) {
   await browser.keys(webdriverio.Key.Tab);
   await browser.pause(PAUSE_TIME);
+}
+
+/**
+ * Navigates backward to the test page's previous tab stop.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ */
+export async function tabNavigateBackward(browser: WebdriverIO.Browser) {
+  await browser.keys([webdriverio.Key.Shift, webdriverio.Key.Tab]);
+  await browser.pause(PAUSE_TIME);
+}
+
+/**
+ * Sends the keyboard event for arrow key left.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param times The number of times to repeat the key press (default is 1).
+ */
+export async function keyLeft(browser: WebdriverIO.Browser, times = 1) {
+  await sendKeyAndWait(browser, webdriverio.Key.ArrowLeft, times);
+}
+
+/**
+ * Sends the keyboard event for arrow key right.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param times The number of times to repeat the key press (default is 1).
+ */
+export async function keyRight(browser: WebdriverIO.Browser, times = 1) {
+  await sendKeyAndWait(browser, webdriverio.Key.ArrowRight, times);
+}
+
+/**
+ * Sends the keyboard event for arrow key up.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param times The number of times to repeat the key press (default is 1).
+ */
+export async function keyUp(browser: WebdriverIO.Browser, times = 1) {
+  await sendKeyAndWait(browser, webdriverio.Key.ArrowUp, times);
+}
+
+/**
+ * Sends the keyboard event for arrow key down.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param times The number of times to repeat the key press (default is 1).
+ */
+export async function keyDown(browser: WebdriverIO.Browser, times = 1) {
+  await sendKeyAndWait(browser, webdriverio.Key.ArrowDown, times);
+}
+
+/**
+ * Sends the specified key for the specified number of times, waiting between
+ * each key press to allow changes to keep up.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param key The WebdriverIO representative key value to press.
+ * @param times The number of times to repeat the key press.
+ */
+async function sendKeyAndWait(
+  browser: WebdriverIO.Browser,
+  key: string,
+  times: number,
+) {
+  for (let i = 0; i < times; i++) {
+    await browser.keys(key);
+    await browser.pause(PAUSE_TIME);
+  }
 }
 
 /**

@@ -17,6 +17,7 @@ export default {
         {
           type: 'controls_if',
           kind: 'block',
+          id: 'if_block',
         },
         {
           type: 'logic_compare',
@@ -374,6 +375,7 @@ export default {
           fields: {
             TEXT: '',
           },
+          id: 'text_block',
         },
         {
           type: 'text_join',
@@ -382,6 +384,7 @@ export default {
         {
           type: 'text_append',
           kind: 'block',
+          id: 'append_text_block',
           fields: {
             name: 'item',
           },

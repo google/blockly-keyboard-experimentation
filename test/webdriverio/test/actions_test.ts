@@ -10,10 +10,11 @@ import {
   contextMenuExists,
   moveToToolboxCategory,
   PAUSE_TIME,
-  setCurrentCursorNodeById,
+  focusOnBlock,
   tabNavigateToWorkspace,
   testFileLocations,
   testSetup,
+  keyRight,
 } from './test_setup.js';
 
 suite('Menus test', function () {
@@ -29,7 +30,7 @@ suite('Menus test', function () {
   test('Menu action opens menu', async function () {
     // Navigate to draw_circle_1.
     await tabNavigateToWorkspace(this.browser);
-    await setCurrentCursorNodeById(this.browser, 'draw_circle_1');
+    await focusOnBlock(this.browser, 'draw_circle_1');
     await this.browser.pause(PAUSE_TIME);
     await this.browser.keys([Key.Ctrl, Key.Return]);
     await this.browser.pause(PAUSE_TIME);
@@ -42,11 +43,11 @@ suite('Menus test', function () {
   test('Menu action returns true in the toolbox', async function () {
     // Navigate to draw_circle_1.
     await tabNavigateToWorkspace(this.browser);
-    await setCurrentCursorNodeById(this.browser, 'draw_circle_1');
+    await focusOnBlock(this.browser, 'draw_circle_1');
     // Navigate to a toolbox category
     await moveToToolboxCategory(this.browser, 'Functions');
     // Move to flyout.
-    await this.browser.keys(Key.ArrowRight);
+    await keyRight(this.browser);
     await this.browser.keys([Key.Ctrl, Key.Return]);
     await this.browser.pause(PAUSE_TIME);
 
@@ -59,7 +60,7 @@ suite('Menus test', function () {
   test('Menu action returns false during drag', async function () {
     // Navigate to draw_circle_1.
     await tabNavigateToWorkspace(this.browser);
-    await setCurrentCursorNodeById(this.browser, 'draw_circle_1');
+    await focusOnBlock(this.browser, 'draw_circle_1');
     // Start moving the block
     await this.browser.keys('m');
     await this.browser.keys([Key.Ctrl, Key.Return]);

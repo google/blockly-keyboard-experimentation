@@ -7,7 +7,7 @@
 import * as chai from 'chai';
 import {
   blockIsPresent,
-  setCurrentCursorNodeById,
+  focusOnBlock,
   getCurrentFocusedBlockId,
   getFocusedBlockType,
   moveToToolboxCategory,
@@ -15,6 +15,7 @@ import {
   testFileLocations,
   PAUSE_TIME,
   tabNavigateToWorkspace,
+  keyRight,
 } from './test_setup.js';
 import {Key} from 'webdriverio';
 
@@ -30,7 +31,7 @@ suite('Deleting Blocks', function () {
   test('Deleting block selects parent block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
-    await setCurrentCursorNodeById(this.browser, 'controls_if_2');
+    await focusOnBlock(this.browser, 'controls_if_2');
     await this.browser.pause(PAUSE_TIME);
 
     chai
@@ -52,7 +53,7 @@ suite('Deleting Blocks', function () {
   test('Cutting block selects parent block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
-    await setCurrentCursorNodeById(this.browser, 'controls_if_2');
+    await focusOnBlock(this.browser, 'controls_if_2');
     await this.browser.pause(PAUSE_TIME);
 
     chai
@@ -74,7 +75,7 @@ suite('Deleting Blocks', function () {
   test('Deleting block also deletes children and inputs', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
-    await setCurrentCursorNodeById(this.browser, 'controls_if_2');
+    await focusOnBlock(this.browser, 'controls_if_2');
     await this.browser.pause(PAUSE_TIME);
 
     chai
@@ -96,7 +97,7 @@ suite('Deleting Blocks', function () {
   test('Cutting block also removes children and inputs', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
-    await setCurrentCursorNodeById(this.browser, 'controls_if_2');
+    await focusOnBlock(this.browser, 'controls_if_2');
     await this.browser.pause(PAUSE_TIME);
 
     chai
@@ -118,7 +119,7 @@ suite('Deleting Blocks', function () {
   test('Deleting inline input selects parent block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
-    await setCurrentCursorNodeById(this.browser, 'logic_boolean_1');
+    await focusOnBlock(this.browser, 'logic_boolean_1');
     await this.browser.pause(PAUSE_TIME);
 
     chai
@@ -140,7 +141,7 @@ suite('Deleting Blocks', function () {
   test('Cutting inline input selects parent block', async function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
-    await setCurrentCursorNodeById(this.browser, 'logic_boolean_1');
+    await focusOnBlock(this.browser, 'logic_boolean_1');
     await this.browser.pause(PAUSE_TIME);
 
     chai
@@ -172,8 +173,7 @@ suite('Deleting Blocks', function () {
     await moveToToolboxCategory(this.browser, 'Math');
     await this.browser.pause(PAUSE_TIME);
     // Move to flyout.
-    await this.browser.keys(Key.ArrowRight);
-    await this.browser.pause(PAUSE_TIME);
+    await keyRight(this.browser);
     // Select number block.
     await this.browser.keys(Key.Enter);
     await this.browser.pause(PAUSE_TIME);
@@ -200,8 +200,7 @@ suite('Deleting Blocks', function () {
     await moveToToolboxCategory(this.browser, 'Math');
     await this.browser.pause(PAUSE_TIME);
     // Move to flyout.
-    await this.browser.keys(Key.ArrowRight);
-    await this.browser.pause(PAUSE_TIME);
+    await keyRight(this.browser);
     // Select number block.
     await this.browser.keys(Key.Enter);
     await this.browser.pause(PAUSE_TIME);
