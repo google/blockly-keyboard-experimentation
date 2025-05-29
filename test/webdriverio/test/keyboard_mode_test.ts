@@ -11,8 +11,8 @@ import {
   testSetup,
   testFileLocations,
   PAUSE_TIME,
-  focusWorkspace,
   getBlockElementById,
+  tabNavigateToWorkspace,
 } from './test_setup.js';
 import {Key} from 'webdriverio';
 
@@ -28,20 +28,22 @@ suite(
     // Setting timeout to unlimited as these tests take a longer time to run than most mocha tests
     this.timeout(0);
 
-    // Setup Selenium for all of the tests
-    suiteSetup(async function () {
-      this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
-    });
-
     setup(async function () {
+      // Reload the page between tests
+      this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
+
+      await this.browser.pause(PAUSE_TIME);
+
       // Reset the keyboard navigation state between tests.
       await this.browser.execute(() => {
         Blockly.keyboardNavigationController.setIsActive(false);
       });
+
+      // Start with the workspace focused.
+      await tabNavigateToWorkspace(this.browser);
     });
 
     test('T to open toolbox enables keyboard mode', async function () {
-      await focusWorkspace(this.browser);
       await this.browser.pause(PAUSE_TIME);
       await this.browser.keys('t');
       await this.browser.pause(PAUSE_TIME);
@@ -50,7 +52,6 @@ suite(
     });
 
     test('M for move mode enables keyboard mode', async function () {
-      await focusWorkspace(this.browser);
       await focusOnBlock(this.browser, 'controls_if_2');
       await this.browser.pause(PAUSE_TIME);
       await this.browser.keys('m');
@@ -59,7 +60,6 @@ suite(
     });
 
     test('W for workspace cursor enables keyboard mode', async function () {
-      await focusWorkspace(this.browser);
       await this.browser.pause(PAUSE_TIME);
       await this.browser.keys('w');
       await this.browser.pause(PAUSE_TIME);
@@ -68,7 +68,6 @@ suite(
     });
 
     test('X to disconnect enables keyboard mode', async function () {
-      await focusWorkspace(this.browser);
       await focusOnBlock(this.browser, 'controls_if_2');
       await this.browser.pause(PAUSE_TIME);
       await this.browser.keys('x');
@@ -78,8 +77,6 @@ suite(
     });
 
     test('Copy does not change keyboard mode state', async function () {
-      await focusWorkspace(this.browser);
-
       // Make sure we're on a copyable block so that copy occurs
       await focusOnBlock(this.browser, 'controls_if_2');
       await this.browser.pause(PAUSE_TIME);
@@ -104,8 +101,6 @@ suite(
     });
 
     test('Delete does not change keyboard mode state', async function () {
-      await focusWorkspace(this.browser);
-
       // Make sure we're on a deletable block so that delete occurs
       await focusOnBlock(this.browser, 'controls_if_2');
       await this.browser.pause(PAUSE_TIME);
@@ -128,7 +123,6 @@ suite(
     });
 
     test('Right clicking a block disables keyboard mode', async function () {
-      await focusWorkspace(this.browser);
       await this.browser.execute(() => {
         Blockly.keyboardNavigationController.setIsActive(true);
       });
@@ -146,8 +140,6 @@ suite(
     });
 
     test('Dragging a block with mouse disables keyboard mode', async function () {
-      await focusWorkspace(this.browser);
-
       await this.browser.execute(() => {
         Blockly.keyboardNavigationController.setIsActive(true);
       });
