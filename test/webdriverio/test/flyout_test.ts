@@ -18,7 +18,7 @@ import {
   keyRight,
 } from './test_setup.js';
 
-suite.only('Toolbox and flyout test', function () {
+suite('Toolbox and flyout test', function () {
   // Clear the workspace and load start blocks
   setup(async function () {
     this.browser = await testSetup(testFileLocations.BASE);
