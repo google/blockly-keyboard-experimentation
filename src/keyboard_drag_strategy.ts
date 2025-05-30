@@ -106,11 +106,11 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   private getConstrainedConnectionCandidate(
     draggingBlock: BlockSvg,
   ): ConnectionCandidate | null {
-    if (!draggingBlock.previousConnection && !draggingBlock.outputConnection) {
-      return null;
-    }
     // @ts-expect-error getLocalConnections is private.
     const localConns = this.getLocalConnections(draggingBlock);
+    if (localConns.length == 0) {
+      return null;
+    }
 
     let candidateConnection = this.findTraversalCandidate(
       draggingBlock,
