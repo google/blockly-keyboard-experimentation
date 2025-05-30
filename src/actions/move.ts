@@ -12,6 +12,7 @@ import {
   utils,
   WorkspaceSvg,
   keyboardNavigationController,
+  getFocusManager,
 } from 'blockly';
 import {Direction} from '../drag_direction';
 import {Mover} from './mover';
@@ -43,6 +44,11 @@ export class MoveActions {
         callback: (workspace) => {
           keyboardNavigationController.setIsActive(true);
           const startBlock = this.getCurrentBlock(workspace);
+          // Focus the start block in case one of its fields or a shadow block
+          // was focused when the move was triggered.
+          if (startBlock) {
+            getFocusManager().focusNode(startBlock);
+          }
           return (
             !!startBlock && this.mover.startMove(workspace, startBlock, null)
           );
@@ -168,6 +174,11 @@ export class MoveActions {
           const workspace = scope.block?.workspace as WorkspaceSvg | null;
           if (!workspace) return false;
           const startBlock = this.getCurrentBlock(workspace);
+          // Focus the start block in case one of its fields or a shadow block
+          // was focused when the move was triggered.
+          if (startBlock) {
+            getFocusManager().focusNode(startBlock);
+          }
           return (
             !!startBlock && this.mover.startMove(workspace, startBlock, null)
           );
