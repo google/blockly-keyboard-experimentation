@@ -106,6 +106,9 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   private getConstrainedConnectionCandidate(
     draggingBlock: BlockSvg,
   ): ConnectionCandidate | null {
+    if (!draggingBlock.previousConnection && !draggingBlock.outputConnection) {
+      return null;
+    }
     // @ts-expect-error getLocalConnections is private.
     const localConns = this.getLocalConnections(draggingBlock);
 
@@ -205,6 +208,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
           };
         }
       });
+      if (potential == this.searchNode) break;
     }
     return candidateConnection;
   }
