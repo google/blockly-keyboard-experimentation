@@ -349,4 +349,18 @@ suite('Keyboard navigation on Fields', function () {
       .expect(await getCurrentFocusedBlockId(this.browser))
       .equal('draw_emoji_1');
   });
+
+  test('Do not navigate while field editor is open', async function () {
+    // Open a field editor dropdown
+    await focusOnBlockField(this.browser, 'logic_boolean_1', 'BOOL');
+    await this.browser.pause(PAUSE_TIME);
+    await this.browser.keys(Key.Enter);
+    await this.browser.pause(PAUSE_TIME);
+
+    // Try to navigate to a different block
+    await keyRight(this.browser);
+
+    // The same field should still be focused
+    chai.assert.equal(await getFocusedFieldName(this.browser), 'BOOL');
+  });
 });

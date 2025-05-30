@@ -16,6 +16,7 @@ import {
   PAUSE_TIME,
   tabNavigateToWorkspace,
   keyRight,
+  focusOnBlockField,
 } from './test_setup.js';
 import {Key} from 'webdriverio';
 
@@ -217,5 +218,19 @@ suite('Deleting Blocks', function () {
       await getCurrentFocusedBlockId(this.browser),
       'p5_setup_1',
     );
+  });
+
+  test('Do not delete block while field editor is open', async function () {
+    // Open a field editor
+    await focusOnBlockField(this.browser, 'colour_picker_1', 'COLOUR');
+    await this.browser.pause(PAUSE_TIME);
+    await this.browser.keys(Key.Enter);
+    await this.browser.pause(PAUSE_TIME);
+
+    // Try to delete block while field editor is open
+    await this.browser.keys(Key.Backspace);
+
+    // Block is not deleted
+    chai.assert.isTrue(await blockIsPresent(this.browser, 'colour_picker_1'));
   });
 });
