@@ -1,15 +1,15 @@
-# Blockly Keyboard Experimentation
+# @blockly/keyboard-navigation
 
-This plugin for Blockly enables keyboard navigation. It is intended to
-experiment with different actions that might help visually impaired and motor
+This plugin for Blockly enables keyboard navigation. It includes
+different actions that might help visually impaired and motor
 impaired people navigate a Blockly workspace.
 
 Keyboard navigation and screenreader support are closely coupled. The Blockly
-team intends to add screenreader support incrementally in Q2 and Q3 of 2025,
+team intends to add screenreader support incrementally in Q3 of 2025,
 as we validate the general approach to navigation.
 
-For more planning and timeline information please read the [January 29 timeline post
-on the wiki](https://github.com/google/blockly-keyboard-experimentation/wiki/Jan-29-Timeline).
+For more planning and timeline information please see our
+[accessibility site](https://developers.google.com/blockly/accessibility).
 
 ## End-user instructions
 
@@ -33,8 +33,8 @@ highlighted. Just like the workspace, you can use the arrow keys to move around
 the toolbox and select a block. Pressing `Enter` will place the block at the
 cursor's location on the workspace.
 
-If you don't know which actions are available at your cursor location, you
-can press `Ctrl + Enter` to open the context menu and see a list of actions.
+If you don't know which actions are available, you
+can press `/` to see a list of actions.
 
 ### Giving feedback
 
@@ -43,26 +43,24 @@ on this repository! Include information about how to reproduce the bug, what
 the bad behaviour was, and what you expected it to do. The Blockly team will
 triage the bug and add it to the roadmap.
 
-### Note on @blockly/keyboard-navigation plugin
-
-There is also an [existing keyboard navigation plugin](https://www.npmjs.com/package/@blockly/keyboard-navigation). That plugin may be where
-a finalized version of keyboard navigation eventually lives. But for now, this
-is where experimentation will be done.
-
 ## Testing in your app
 
 ### Installation
 
+Using this plugin requires using at least Blockly v12.1.0. You can find the
+current minimum required version of Blockly in the `peerDependencies`
+section of the `package.json` file for the plugin.
+
 #### Yarn
 
 ```
-yarn add @blockly/keyboard-experiment
+yarn add @blockly/keyboard-navigation
 ```
 
 #### npm
 
 ```
-npm install @blockly/keyboard-experiment --save
+npm install @blockly/keyboard-navigation --save
 ```
 
 ### Usage
