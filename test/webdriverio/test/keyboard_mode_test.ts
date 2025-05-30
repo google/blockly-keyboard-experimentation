@@ -80,9 +80,7 @@ suite(
       // Make sure we're on a copyable block so that copy occurs
       await focusOnBlock(this.browser, 'controls_if_2');
       await this.browser.pause(PAUSE_TIME);
-      await this.browser.keys(Key.Ctrl);
-      await this.browser.keys('c');
-      await this.browser.keys(Key.Ctrl); // release ctrl key
+      await this.browser.keys([Key.Ctrl, 'c']);
       await this.browser.pause(PAUSE_TIME);
 
       chai.assert.isFalse(await isKeyboardNavigating(this.browser));
@@ -92,9 +90,7 @@ suite(
       });
 
       await this.browser.pause(PAUSE_TIME);
-      await this.browser.keys(Key.Ctrl);
-      await this.browser.keys('c');
-      await this.browser.keys(Key.Ctrl); // release ctrl key
+      await this.browser.keys([Key.Ctrl, 'c']);
       await this.browser.pause(PAUSE_TIME);
 
       chai.assert.isTrue(await isKeyboardNavigating(this.browser));

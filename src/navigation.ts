@@ -825,7 +825,8 @@ export class Navigation {
       : workspace.keyboardAccessibilityMode;
     return (
       !!accessibilityMode &&
-      this.getState(workspace) !== Constants.STATE.NOWHERE
+      this.getState(workspace) !== Constants.STATE.NOWHERE &&
+      !Blockly.getFocusManager().ephemeralFocusTaken()
     );
   }
 

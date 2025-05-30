@@ -15,6 +15,8 @@ import {
   ElementWithId,
   tabNavigateToWorkspace,
   focusOnBlock,
+  focusOnBlockField,
+  blockIsPresent,
 } from './test_setup.js';
 import {Key, KeyAction, PointerAction, WheelAction} from 'webdriverio';
 
@@ -109,6 +111,22 @@ suite('Clipboard test', function () {
       initialWsBlocks,
       await serializeWorkspaceBlocks(this.browser),
       'Blocks on the workspace should not have changed',
+    );
+  });
+
+  test('Do not cut block while field editor is open', async function () {
+    // Open a field editor
+    await focusOnBlockField(this.browser, 'draw_circle_1_color', 'COLOUR');
+    await this.browser.pause(PAUSE_TIME);
+    await this.browser.keys(Key.Enter);
+    await this.browser.pause(PAUSE_TIME);
+
+    // Try to cut block while field editor is open
+    await this.browser.keys([Key.Ctrl, 'x']);
+
+    // Block is not deleted
+    chai.assert.isTrue(
+      await blockIsPresent(this.browser, 'draw_circle_1_color'),
     );
   });
 });
