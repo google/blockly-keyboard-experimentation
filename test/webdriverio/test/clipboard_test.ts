@@ -122,9 +122,7 @@ suite('Clipboard test', function () {
     await this.browser.pause(PAUSE_TIME);
 
     // Try to cut block while field editor is open
-    await this.browser.keys(Key.Ctrl);
-    await this.browser.keys('x');
-    await this.browser.keys(Key.Ctrl); // release ctrl key
+    await this.browser.keys([Key.Ctrl, 'x']);
 
     // Block is not deleted
     chai.assert.isTrue(
