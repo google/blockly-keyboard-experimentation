@@ -108,6 +108,9 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   ): ConnectionCandidate | null {
     // @ts-expect-error getLocalConnections is private.
     const localConns = this.getLocalConnections(draggingBlock);
+    if (localConns.length == 0) {
+      return null;
+    }
 
     let candidateConnection = this.findTraversalCandidate(
       draggingBlock,
@@ -205,6 +208,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
           };
         }
       });
+      if (potential == this.searchNode) break;
     }
     return candidateConnection;
   }
