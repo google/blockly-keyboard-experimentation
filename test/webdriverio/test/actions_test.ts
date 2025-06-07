@@ -203,7 +203,7 @@ suite('Menus test', function () {
 
   test('Clicking workspace dismisses menu', async function () {
     await tabNavigateToWorkspace(this.browser);
-    await rightClickOnBlock(this.browser, 'draw_circle_1');
+    await rightClickOnBlock(this.browser, 'create_canvas_1');
     await this.browser.pause(PAUSE_TIME);
     await focusWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
