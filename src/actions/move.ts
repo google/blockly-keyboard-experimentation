@@ -36,7 +36,7 @@ export class MoveActions {
     const shortcuts: ShortcutRegistry.KeyboardShortcut[] = [
       // Begin and end move.
       {
-        name: Msg['START_MOVE'],
+        name: 'start_move',
         preconditionFn: (workspace) => {
           const startBlock = this.getCurrentBlock(workspace);
           return !!startBlock && this.mover.canMove(workspace, startBlock);
@@ -56,14 +56,14 @@ export class MoveActions {
         keyCodes: [KeyCodes.M],
       },
       {
-        name: Msg['FINISH_MOVE'],
+        name: 'finish_move',
         preconditionFn: (workspace) => this.mover.isMoving(workspace),
         callback: (workspace) => this.mover.finishMove(workspace),
         keyCodes: [KeyCodes.ENTER, KeyCodes.SPACE],
         allowCollision: true,
       },
       {
-        name: Msg['ABORT_MOVE'],
+        name: 'abort_move',
         preconditionFn: (workspace) => this.mover.isMoving(workspace),
         callback: (workspace) => this.mover.abortMove(workspace),
         keyCodes: [KeyCodes.ESC],
@@ -72,7 +72,7 @@ export class MoveActions {
 
       // Constrained moves.
       {
-        name: Msg['MOVE_LEFT_CONSTRAINED'],
+        name: 'move_left_constrained',
         preconditionFn: (workspace) => this.mover.isMoving(workspace),
         callback: (workspace) =>
           this.mover.moveConstrained(workspace, Direction.Left),
@@ -80,7 +80,7 @@ export class MoveActions {
         allowCollision: true,
       },
       {
-        name: Msg['MOVE_RIGHT_CONSTRAINED'],
+        name: 'move_right_constrained',
         preconditionFn: (workspace) => this.mover.isMoving(workspace),
         callback: (workspace) =>
           this.mover.moveConstrained(workspace, Direction.Right),
@@ -88,7 +88,7 @@ export class MoveActions {
         allowCollision: true,
       },
       {
-        name: Msg['MOVE_UP_CONSTRAINED'],
+        name: 'move_up_constrained',
         preconditionFn: (workspace) => this.mover.isMoving(workspace),
         callback: (workspace) =>
           this.mover.moveConstrained(workspace, Direction.Up),
@@ -96,7 +96,7 @@ export class MoveActions {
         allowCollision: true,
       },
       {
-        name: Msg['MOVE_DOWN_CONSTRAINED'],
+        name: 'move_down_constrained',
         preconditionFn: (workspace) => this.mover.isMoving(workspace),
         callback: (workspace) =>
           this.mover.moveConstrained(workspace, Direction.Down),
@@ -106,7 +106,7 @@ export class MoveActions {
 
       // Unconstrained moves.
       {
-        name: Msg['MOVE_LEFT_UNCONSTRAINED'],
+        name: 'move_left_unconstrained',
         preconditionFn: (workspace) => this.mover.isMoving(workspace),
         callback: (workspace) =>
           this.mover.moveUnconstrained(workspace, Direction.Left),
@@ -116,7 +116,7 @@ export class MoveActions {
         ],
       },
       {
-        name: Msg['MOVE_RIGHT_UNCONSTRAINED'],
+        name: 'move_right_unconstrained',
         preconditionFn: (workspace) => this.mover.isMoving(workspace),
         callback: (workspace) =>
           this.mover.moveUnconstrained(workspace, Direction.Right),
@@ -126,7 +126,7 @@ export class MoveActions {
         ],
       },
       {
-        name: Msg['MOVE_UP_UNCONSTRAINED'],
+        name: 'move_up_unconstrained',
         preconditionFn: (workspace) => this.mover.isMoving(workspace),
         callback: (workspace) =>
           this.mover.moveUnconstrained(workspace, Direction.Up),
@@ -136,7 +136,7 @@ export class MoveActions {
         ],
       },
       {
-        name: Msg['MOVE_DOWN_UNCONSTRAINED'],
+        name: 'move_down_unconstrained',
         preconditionFn: (workspace) => this.mover.isMoving(workspace),
         callback: (workspace) =>
           this.mover.moveUnconstrained(workspace, Direction.Down),
@@ -158,7 +158,7 @@ export class MoveActions {
       {
         displayText: Msg['MOVE_BLOCK'].replace(
           '%1',
-          getShortActionShortcut(Msg['START_MOVE']),
+          getShortActionShortcut('start_move'),
         ),
         preconditionFn: (scope, menuOpenEvent) => {
           const workspace = scope.block?.workspace as WorkspaceSvg | null;
