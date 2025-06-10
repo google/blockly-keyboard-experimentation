@@ -7,6 +7,7 @@
 import * as Blockly from 'blockly/core';
 import {NavigationController} from './navigation_controller';
 import {enableBlocksOnDrag} from './disabled_blocks';
+import {registerHtmlToast} from './html_toast';
 
 /** Plugin for keyboard navigation. */
 export class KeyboardNavigation {
@@ -82,6 +83,8 @@ export class KeyboardNavigation {
     });
     workspace.getSvgGroup().appendChild(this.workspaceFocusRing);
     this.resizeWorkspaceRings();
+
+    registerHtmlToast();
   }
 
   private resizeWorkspaceRings() {
