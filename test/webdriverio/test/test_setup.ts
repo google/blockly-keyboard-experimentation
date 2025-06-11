@@ -584,8 +584,11 @@ export async function rightClickOnBlock(
   browser: WebdriverIO.Browser,
   blockId: string,
 ) {
-  const elem = await browser.$(`[data-id="${blockId}"]`);
-  await elem.click({button: 'right'});
+  const elem = await browser.$(`.blocklySvg [data-id="${blockId}"]`);
+  // Click 15 pixels in from the top left corner of the block.
+  const x = Math.round(15 - (await elem.getSize('width')) / 2);
+  const y = Math.round(15 - (await elem.getSize('height')) / 2);
+  await elem.click({button: 'right', x: x, y: y});
 }
 
 /**
@@ -600,4 +603,51 @@ export async function rightClickOnFlyoutBlockType(
 ) {
   const elem = await browser.$(`.blocklyFlyout .${blockType}`);
   await elem.click({button: 'right'});
+}
+
+/**
+ * Uses the keyboard to activate an action, assuming the context menu is already open.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param actionLabel Any unique substring of the action's label text.
+ */
+export async function doActionViaKeyboard(
+  browser: WebdriverIO.Browser,
+  actionLabel: string,
+) {
+  const items = await browser.$$(`.blocklyContextMenu .blocklyMenuItem`);
+  let selectedIndex = await items.findIndex(async (e) =>
+    (await e.getAttribute('class')).includes('blocklyMenuItemHighlight'),
+  );
+  const targetIndex = await items.findIndex(async (e) =>
+    (await e.getText()).includes(actionLabel),
+  );
+  while (selectedIndex < targetIndex) {
+    await browser.keys(webdriverio.Key.ArrowDown);
+    selectedIndex++;
+  }
+  while (selectedIndex > targetIndex) {
+    await browser.keys(webdriverio.Key.ArrowUp);
+    selectedIndex--;
+  }
+  await browser.keys(webdriverio.Key.Return);
+}
+
+/**
+ * Clicks on an action item with the given text, assuming the context menu is already open.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param actionLabel Any unique substring of the action's label text.
+ */
+export async function clickOnAction(
+  browser: WebdriverIO.Browser,
+  actionLabel: string,
+) {
+  const items = await browser.$$(`.blocklyContextMenu .blocklyMenuItemContent`);
+  for (const item of items) {
+    if ((await item.getText()).includes(actionLabel)) {
+      await item.click();
+      return;
+    }
+  }
 }
