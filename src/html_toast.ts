@@ -15,6 +15,10 @@ interface HtmlToastOptions extends Blockly.ToastOptions {
 
 /**
  * Custom toast implementation that supports HTML elements in toast messages.
+ *
+ * After registering, call 
+  `Blockly.dialog.toast(workspace, {element: <html element>, message: <text>});`
+ * to display an HTML-based toast.
  */
 class HtmlToast extends Blockly.Toast {
   /**
@@ -26,7 +30,7 @@ class HtmlToast extends Blockly.Toast {
    */
   protected static override createDom(
     workspace: Blockly.WorkspaceSvg,
-    options: Blockly.ToastOptions,
+    options: HtmlToastOptions,
   ) {
     const dom = super.createDom(workspace, options);
     const contents = dom.querySelector('div');
@@ -43,7 +47,8 @@ class HtmlToast extends Blockly.Toast {
 }
 
 /**
- * Registers HtmlToast as the default toast implementation for Blockly. */
+ * Registers HtmlToast as the default toast implementation for Blockly.
+ */
 export function registerHtmlToast() {
   Blockly.dialog.setToast(HtmlToast.show.bind(HtmlToast));
 }
