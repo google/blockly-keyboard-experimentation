@@ -504,7 +504,7 @@ export async function isDragging(
 }
 
 /**
- * Returns the result of the specificied action precondition.
+ * Returns the result of the specified action precondition.
  *
  * @param browser The active WebdriverIO Browser object.
  * @param action The action to check the precondition for.
@@ -554,4 +554,100 @@ export async function contextMenuExists(
 ): Promise<boolean> {
   const item = await browser.$(`div=${itemText}`);
   return await item.waitForExist({timeout: 200, reverse: reverse});
+}
+
+/**
+ * Get a list of the text content of each displayed context menu item.
+ *
+ * Omits any keyboard shortcuts inside parentheses from all item text for
+ * testing consistency across platforms.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @return A list of the text content of each displayed context menu item.
+ */
+export async function getContextMenuItemNames(
+  browser: WebdriverIO.Browser,
+): Promise<string[]> {
+  const items = await browser.$$(`.blocklyContextMenu .blocklyMenuItemContent`);
+  return await items.map(async (e) =>
+    (await e.getText()).replace(/\s*\([^)]+\)/, ''),
+  );
+}
+
+/**
+ * Right-clicks on a block with the provided ID in the main workspace.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param blockId The ID of the block to right click on.
+ */
+export async function rightClickOnBlock(
+  browser: WebdriverIO.Browser,
+  blockId: string,
+) {
+  const elem = await browser.$(`.blocklySvg [data-id="${blockId}"]`);
+  // Click 15 pixels in from the top left corner of the block.
+  const x = Math.round(15 - (await elem.getSize('width')) / 2);
+  const y = Math.round(15 - (await elem.getSize('height')) / 2);
+  await elem.click({button: 'right', x: x, y: y});
+}
+
+/**
+ * Right-clicks on a block with the provided type in the flyout.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param blockType The name of the type block to right click on.
+ */
+export async function rightClickOnFlyoutBlockType(
+  browser: WebdriverIO.Browser,
+  blockType: string,
+) {
+  const elem = await browser.$(`.blocklyFlyout .${blockType}`);
+  await elem.click({button: 'right'});
+}
+
+/**
+ * Uses the keyboard to activate an action, assuming the context menu is already open.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param actionLabel Any unique substring of the action's label text.
+ */
+export async function doActionViaKeyboard(
+  browser: WebdriverIO.Browser,
+  actionLabel: string,
+) {
+  const items = await browser.$$(`.blocklyContextMenu .blocklyMenuItem`);
+  let selectedIndex = await items.findIndex(async (e) =>
+    (await e.getAttribute('class')).includes('blocklyMenuItemHighlight'),
+  );
+  const targetIndex = await items.findIndex(async (e) =>
+    (await e.getText()).includes(actionLabel),
+  );
+  while (selectedIndex < targetIndex) {
+    await browser.keys(webdriverio.Key.ArrowDown);
+    selectedIndex++;
+  }
+  while (selectedIndex > targetIndex) {
+    await browser.keys(webdriverio.Key.ArrowUp);
+    selectedIndex--;
+  }
+  await browser.keys(webdriverio.Key.Return);
+}
+
+/**
+ * Clicks on an action item with the given text, assuming the context menu is already open.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param actionLabel Any unique substring of the action's label text.
+ */
+export async function clickOnAction(
+  browser: WebdriverIO.Browser,
+  actionLabel: string,
+) {
+  const items = await browser.$$(`.blocklyContextMenu .blocklyMenuItemContent`);
+  for (const item of items) {
+    if ((await item.getText()).includes(actionLabel)) {
+      await item.click();
+      return;
+    }
+  }
 }
