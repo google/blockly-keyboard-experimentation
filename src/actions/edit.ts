@@ -11,7 +11,7 @@ import {
   keyboardNavigationController,
 } from 'blockly';
 import {Navigation} from 'src/navigation';
-import {getShortActionShortcut} from '../shortcut_formatting';
+import {getMenuItem} from '../shortcut_formatting';
 import * as Constants from '../constants';
 
 /**
@@ -57,9 +57,9 @@ export class EditAction {
    */
   private registerContextMenuAction() {
     const editAboveItem: ContextMenuRegistry.RegistryItem = {
-      displayText: Msg['EDIT_BLOCK_CONTENTS'].replace(
-        '%1',
-        getShortActionShortcut(Constants.SHORTCUT_NAMES.RIGHT),
+      displayText: getMenuItem(
+        Msg['EDIT_BLOCK_CONTENTS'],
+        Constants.SHORTCUT_NAMES.RIGHT,
       ),
       preconditionFn: (scope: ContextMenuRegistry.Scope, menuOpenEvent) => {
         if (menuOpenEvent instanceof PointerEvent) return 'hidden';

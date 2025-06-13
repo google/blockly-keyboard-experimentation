@@ -5,7 +5,7 @@
  */
 
 import {ContextMenuRegistry, Msg, ShortcutItems} from 'blockly';
-import {getShortActionShortcut} from '../shortcut_formatting';
+import {getMenuItem} from '../shortcut_formatting';
 
 /**
  * Action to delete the block the cursor is currently on.
@@ -58,17 +58,23 @@ export class DeleteAction {
     this.oldDisplayText = this.oldContextMenuItem.displayText;
 
     const displayText = (scope: ContextMenuRegistry.Scope) => {
-      const shortcut = getShortActionShortcut(ShortcutItems.names.DELETE);
-
+      let label: string;
       // Use the original item's text, which is dynamic based on the number
       // of blocks that will be deleted.
       if (typeof this.oldDisplayText === 'function') {
-        return this.oldDisplayText(scope) + ` (${shortcut})`;
+        const result = this.oldDisplayText(scope);
+        if (result instanceof HTMLElement) {
+          label = result.innerText;
+        } else {
+          label = result;
+        }
       } else if (typeof this.oldDisplayText === 'string') {
-        return this.oldDisplayText + ` (${shortcut})`;
+        label = this.oldDisplayText;
+      } else {
+        label = Msg['DELETE_BLOCK'];
       }
 
-      return Msg['DELETE_BLOCK'].replace('%1', shortcut);
+      return getMenuItem(label, ShortcutItems.names.DELETE);
     };
 
     this.oldContextMenuItem.displayText = displayText;

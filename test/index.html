@@ -161,6 +161,35 @@
         .blocklyToolboxCategoryContainer:focus-visible {
         outline: none;
       }
+
+      .blocklyRTL
+        .blocklyKeyboardNavigation
+        .blocklyMenuItemContent
+        .blocklyShortcutContainer {
+        flex-direction: row-reverse;
+      }
+      .blocklyKeyboardNavigation
+        .blocklyMenuItemContent
+        .blocklyShortcutContainer {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+      }
+      .blocklyKeyboardNavigation
+        .blocklyMenuItemContent
+        .blocklyShortcutContainer
+        .blocklyShortcut {
+        color: #ccc;
+        margin-left: 16px;
+      }
+      .blocklyRTL
+        .blocklyKeyboardNavigation
+        .blocklyMenuItemContent
+        .blocklyShortcutContainer
+        .blocklyShortcut {
+        margin-left: 0;
+        margin-right: 16px;
+      }
     </style>
   </head>
 
