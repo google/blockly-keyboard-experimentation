@@ -4,6 +4,31 @@ import {keyNames} from './keynames';
 const isMacPlatform = navigator.platform.startsWith('Mac');
 
 /**
+ * Returns an HTML menu item with a label and grey keyboard shortcut.
+ *
+ * @param labelText The text of the mneu item.
+ * @param action The identifier of an action to use the keyboard shortcut of.
+ * @returns A nicely formatted menu item.
+ */
+export function getMenuItem(labelText: string, action: string): HTMLElement {
+  // TODO: Once core is updated to remove the shortcut placeholders from the
+  // keyboard shortcut messages, remove this.
+  if (labelText.indexOf(')') === labelText.length - 1) {
+    labelText = labelText.split(' (')[0];
+  }
+  const container = document.createElement('div');
+  container.className = 'blocklyShortcutContainer';
+  const label = document.createElement('span');
+  label.textContent = labelText;
+  const shortcut = document.createElement('span');
+  shortcut.className = 'blocklyShortcut';
+  shortcut.textContent = getShortActionShortcut(action);
+  container.appendChild(label);
+  container.appendChild(shortcut);
+  return container;
+}
+
+/**
  * Find the primary shortcut for this platform and return it as single string
  * in a short user facing format.
  *

@@ -16,7 +16,7 @@ import {
 } from 'blockly';
 import {Direction} from '../drag_direction';
 import {Mover} from './mover';
-import {getShortActionShortcut} from '../shortcut_formatting';
+import {getMenuItem} from '../shortcut_formatting';
 
 const KeyCodes = utils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -156,10 +156,7 @@ export class MoveActions {
   private registerMenuItems() {
     const menuItems: ContextMenuRegistry.RegistryItem[] = [
       {
-        displayText: Msg['MOVE_BLOCK'].replace(
-          '%1',
-          getShortActionShortcut('start_move'),
-        ),
+        displayText: getMenuItem(Msg['MOVE_BLOCK'], 'start_move'),
         preconditionFn: (scope, menuOpenEvent) => {
           const workspace = scope.block?.workspace as WorkspaceSvg | null;
           if (!workspace || menuOpenEvent instanceof PointerEvent)

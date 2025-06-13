@@ -14,7 +14,7 @@ import {
 } from 'blockly';
 import * as Constants from '../constants';
 import {Navigation} from '../navigation';
-import {getShortActionShortcut} from '../shortcut_formatting';
+import {getMenuItem} from '../shortcut_formatting';
 import {clearPasteHints, showCopiedHint, showCutHint} from '../hints';
 
 /**
@@ -104,10 +104,7 @@ export class Clipboard {
   private registerCutContextMenuAction() {
     const cutAction: ContextMenuRegistry.RegistryItem = {
       displayText: (scope) =>
-        Msg['CUT_SHORTCUT'].replace(
-          '%1',
-          getShortActionShortcut(Constants.SHORTCUT_NAMES.CUT),
-        ),
+        getMenuItem(Msg['CUT_SHORTCUT'], Constants.SHORTCUT_NAMES.CUT),
       preconditionFn: (scope) => this.cutPrecondition(scope),
       callback: (scope, menuOpenEvent) => {
         if (!isCopyable(scope.focusedNode)) return false;
@@ -250,10 +247,7 @@ export class Clipboard {
   private registerCopyContextMenuAction() {
     const copyAction: ContextMenuRegistry.RegistryItem = {
       displayText: (scope) =>
-        Msg['COPY_SHORTCUT'].replace(
-          '%1',
-          getShortActionShortcut(Constants.SHORTCUT_NAMES.COPY),
-        ),
+        getMenuItem(Msg['COPY_SHORTCUT'], Constants.SHORTCUT_NAMES.COPY),
       preconditionFn: (scope) => this.copyPrecondition(scope),
       callback: (scope, menuOpenEvent) => {
         if (!isCopyable(scope.focusedNode)) return false;
@@ -331,10 +325,7 @@ export class Clipboard {
   private registerPasteContextMenuAction() {
     const pasteAction: ContextMenuRegistry.RegistryItem = {
       displayText: (scope) =>
-        Msg['PASTE_SHORTCUT'].replace(
-          '%1',
-          getShortActionShortcut(Constants.SHORTCUT_NAMES.PASTE),
-        ),
+        getMenuItem(Msg['PASTE_SHORTCUT'], Constants.SHORTCUT_NAMES.PASTE),
       preconditionFn: (scope) => this.pastePrecondition(scope),
       callback: (scope: ContextMenuRegistry.Scope, menuOpenEvent: Event) => {
         const workspace = this.copyWorkspace;
