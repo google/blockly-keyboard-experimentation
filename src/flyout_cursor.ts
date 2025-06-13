@@ -65,7 +65,7 @@ export class FlyoutCursor extends Blockly.LineCursor {
     return newNode;
   }
 
-  override setCurNode(node: Blockly.IFocusableNode | null) {
+  override setCurNode(node: Blockly.IFocusableNode) {
     super.setCurNode(node);
 
     let bounds: Blockly.utils.Rect | undefined;
