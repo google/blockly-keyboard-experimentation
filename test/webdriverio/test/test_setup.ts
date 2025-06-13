@@ -504,7 +504,7 @@ export async function isDragging(
 }
 
 /**
- * Returns the result of the specificied action precondition.
+ * Returns the result of the specified action precondition.
  *
  * @param browser The active WebdriverIO Browser object.
  * @param action The action to check the precondition for.
@@ -554,4 +554,50 @@ export async function contextMenuExists(
 ): Promise<boolean> {
   const item = await browser.$(`div=${itemText}`);
   return await item.waitForExist({timeout: 200, reverse: reverse});
+}
+
+/**
+ * Get a list of the text content of each displayed context menu item.
+ *
+ * Omits any keyboard shortcuts inside parentheses from all item text for
+ * testing consistency across platforms.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @return A list of the text content of each displayed context menu item.
+ */
+export async function getContextMenuItemNames(
+  browser: WebdriverIO.Browser,
+): Promise<string[]> {
+  const items = await browser.$$(`.blocklyContextMenu .blocklyMenuItemContent`);
+  return await items.map(async (e) =>
+    (await e.getText()).replace(/\s*\([^)]+\)/, ''),
+  );
+}
+
+/**
+ * Right-clicks on a block with the provided ID in the main workspace.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param blockId The ID of the block to right click on.
+ */
+export async function rightClickOnBlock(
+  browser: WebdriverIO.Browser,
+  blockId: string,
+) {
+  const elem = await browser.$(`[data-id="${blockId}"]`);
+  await elem.click({button: 'right'});
+}
+
+/**
+ * Right-clicks on a block with the provided type in the flyout.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param blockType The name of the type block to right click on.
+ */
+export async function rightClickOnFlyoutBlockType(
+  browser: WebdriverIO.Browser,
+  blockType: string,
+) {
+  const elem = await browser.$(`.blocklyFlyout .${blockType}`);
+  await elem.click({button: 'right'});
 }
