@@ -197,7 +197,7 @@ export class NavigationController {
     focusToolbox: {
       name: Constants.SHORTCUT_NAMES.TOOLBOX,
       preconditionFn: (workspace) =>
-        !workspace.isDragging() && this.navigation.canCurrentlyEdit(workspace),
+        !workspace.isDragging(),
       callback: (workspace) => {
         keyboardNavigationController.setIsActive(true);
         switch (this.navigation.getState()) {
