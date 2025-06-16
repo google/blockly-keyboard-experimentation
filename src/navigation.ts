@@ -93,10 +93,9 @@ export class Navigation {
    * Note that this assumes a workspace with passive focus (including for its
    * toolbox or flyout) has a state of NOWHERE.
    *
-   * @param workspace The workspace to get the state of.
    * @returns The state of the given workspace.
    */
-  getState(workspace: Blockly.WorkspaceSvg): Constants.STATE {
+  getState(): Constants.STATE {
     const focusedTree = Blockly.getFocusManager().getFocusedTree();
     if (focusedTree instanceof Blockly.WorkspaceSvg) {
       if (focusedTree.isFlyout) {
@@ -105,9 +104,7 @@ export class Navigation {
         return Constants.STATE.WORKSPACE;
       }
     } else if (focusedTree instanceof Blockly.Toolbox) {
-      if (workspace === focusedTree.getWorkspace()) {
-        return Constants.STATE.TOOLBOX;
-      }
+      return Constants.STATE.TOOLBOX;
     } else if (focusedTree instanceof Blockly.Flyout) {
       return Constants.STATE.FLYOUT;
     }
@@ -222,7 +219,7 @@ export class Navigation {
       }
     } else if (
       e.type === Blockly.Events.BLOCK_CREATE &&
-      this.getState(mainWorkspace) === Constants.STATE.FLYOUT
+      this.getState() === Constants.STATE.FLYOUT
     ) {
       // When variables are created, that recreates the flyout contents, leaving the
       // cursor in an invalid state.
@@ -825,7 +822,7 @@ export class Navigation {
       : workspace.keyboardAccessibilityMode;
     return (
       !!accessibilityMode &&
-      this.getState(workspace) !== Constants.STATE.NOWHERE &&
+      this.getState() !== Constants.STATE.NOWHERE &&
       !Blockly.getFocusManager().ephemeralFocusTaken()
     );
   }

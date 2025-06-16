@@ -31,7 +31,7 @@ export class ExitAction {
       preconditionFn: (workspace) =>
         this.navigation.canCurrentlyNavigate(workspace),
       callback: (workspace) => {
-        switch (this.navigation.getState(workspace)) {
+        switch (this.navigation.getState()) {
           case Constants.STATE.FLYOUT:
           case Constants.STATE.TOOLBOX:
             getFocusManager().focusTree(workspace.targetWorkspace ?? workspace);

@@ -200,7 +200,7 @@ export class NavigationController {
         !workspace.isDragging() && this.navigation.canCurrentlyEdit(workspace),
       callback: (workspace) => {
         keyboardNavigationController.setIsActive(true);
-        switch (this.navigation.getState(workspace)) {
+        switch (this.navigation.getState()) {
           case Constants.STATE.WORKSPACE:
             Blockly.getFocusManager().focusTree(
               workspace.getToolbox() ??
