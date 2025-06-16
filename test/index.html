@@ -162,33 +162,17 @@
         outline: none;
       }
 
-      .blocklyRTL
-        .blocklyKeyboardNavigation
-        .blocklyMenuItemContent
-        .blocklyShortcutContainer {
+      .blocklyRTL .blocklyMenuItemContent .blocklyShortcutContainer {
         flex-direction: row-reverse;
       }
-      .blocklyKeyboardNavigation
-        .blocklyMenuItemContent
-        .blocklyShortcutContainer {
+      .blocklyMenuItemContent .blocklyShortcutContainer {
         width: 100%;
         display: flex;
         justify-content: space-between;
+        gap: 16px;
       }
-      .blocklyKeyboardNavigation
-        .blocklyMenuItemContent
-        .blocklyShortcutContainer
-        .blocklyShortcut {
+      .blocklyMenuItemContent .blocklyShortcutContainer .blocklyShortcut {
         color: #ccc;
-        margin-left: 16px;
-      }
-      .blocklyRTL
-        .blocklyKeyboardNavigation
-        .blocklyMenuItemContent
-        .blocklyShortcutContainer
-        .blocklyShortcut {
-        margin-left: 0;
-        margin-right: 16px;
       }
     </style>
   </head>
