@@ -61,7 +61,7 @@ export class ArrowNavigation {
       const toolbox = workspace.getToolbox() as Toolbox;
       const flyout = workspace.getFlyout();
       let isHandled = false;
-      switch (this.navigation.getState(workspace)) {
+      switch (this.navigation.getState()) {
         case Constants.STATE.WORKSPACE:
           isHandled = this.fieldShortcutHandler(workspace, shortcut);
           if (!isHandled && workspace) {
@@ -93,7 +93,7 @@ export class ArrowNavigation {
     ): boolean => {
       const toolbox = workspace.getToolbox() as Toolbox;
       let isHandled = false;
-      switch (this.navigation.getState(workspace)) {
+      switch (this.navigation.getState()) {
         case Constants.STATE.WORKSPACE:
           isHandled = this.fieldShortcutHandler(workspace, shortcut);
           if (!isHandled && workspace) {
@@ -159,7 +159,7 @@ export class ArrowNavigation {
           const toolbox = workspace.getToolbox() as Toolbox;
           const flyout = workspace.getFlyout();
           let isHandled = false;
-          switch (this.navigation.getState(workspace)) {
+          switch (this.navigation.getState()) {
             case Constants.STATE.WORKSPACE:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled && workspace) {
@@ -217,7 +217,7 @@ export class ArrowNavigation {
           const flyout = workspace.getFlyout();
           const toolbox = workspace.getToolbox() as Toolbox;
           let isHandled = false;
-          switch (this.navigation.getState(workspace)) {
+          switch (this.navigation.getState()) {
             case Constants.STATE.WORKSPACE:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled) {

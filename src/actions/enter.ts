@@ -6,7 +6,6 @@
 
 import {
   Events,
-  Msg,
   ShortcutRegistry,
   utils as BlocklyUtils,
   getFocusManager,
@@ -54,19 +53,41 @@ export class EnterAction {
      */
     ShortcutRegistry.registry.register({
       name: Constants.SHORTCUT_NAMES.EDIT_OR_CONFIRM,
-      preconditionFn: (workspace) =>
-        this.navigation.canCurrentlyEdit(workspace),
-      callback: (workspace, event) => {
+      preconditionFn: (workspace): boolean => {
+        switch (this.navigation.getState()) {
+          case Constants.STATE.WORKSPACE:
+            // The main workspace may or may not handle it depending on what's
+            // selected, so always pass it through to the callback.
+            return true;
+          case Constants.STATE.FLYOUT: {
+            // If we're in the flyout the only supported actions are inserting
+            // blocks or clicking buttons, so don't handle this if the
+            // main workspace is read only.
+            const targetWorkspace = workspace.isFlyout
+              ? workspace.targetWorkspace
+              : workspace;
+            return !!targetWorkspace && !targetWorkspace.isReadOnly();
+          }
+          default:
+            return false;
+        }
+      },
+      callback: (workspace, event): boolean => {
         event.preventDefault();
+
+        const targetWorkspace = workspace.isFlyout
+          ? workspace.targetWorkspace
+          : workspace;
+        if (!targetWorkspace) return false;
 
         let flyoutCursor;
         let curNode;
 
-        switch (this.navigation.getState(workspace)) {
+        switch (this.navigation.getState()) {
           case Constants.STATE.WORKSPACE:
-            this.handleEnterForWS(workspace);
-            return true;
+            return this.handleEnterForWS(workspace);
           case Constants.STATE.FLYOUT:
+            if (targetWorkspace.isReadOnly()) return false;
             flyoutCursor = this.navigation.getFlyoutCursor(workspace);
             if (!flyoutCursor) {
               return false;
@@ -91,12 +112,13 @@ export class EnterAction {
    * Handles hitting the enter key on the workspace.
    *
    * @param workspace The workspace.
+   * @returns True if the enter was handled, false otherwise.
    */
-  private handleEnterForWS(workspace: WorkspaceSvg) {
+  private handleEnterForWS(workspace: WorkspaceSvg): boolean {
     const cursor = workspace.getCursor();
-    if (!cursor) return;
+    if (!cursor) return false;
     const curNode = cursor.getCurNode();
-    if (!curNode) return;
+    if (!curNode) return false;
     if (curNode instanceof Field) {
       curNode.showEditor();
     } else if (curNode instanceof BlockSvg) {
@@ -111,6 +133,7 @@ export class EnterAction {
     } else if (curNode instanceof icons.Icon) {
       curNode.onClick();
     }
+    return true;
   }
 
   /**
@@ -275,7 +298,7 @@ export class EnterAction {
     if (block.isSimpleReporter()) {
       for (const input of block.inputList) {
         for (const field of input.fieldRow) {
-          if (field.isClickable() && field.isFullBlockField()) {
+          if (field.isFullBlockField()) {
             field.showEditor();
             return true;
           }

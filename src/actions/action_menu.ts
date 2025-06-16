@@ -52,7 +52,7 @@ export class ActionMenu {
         );
       },
       callback: (workspace) => {
-        switch (this.navigation.getState(workspace)) {
+        switch (this.navigation.getState()) {
           case Constants.STATE.WORKSPACE:
             return this.openActionMenu(workspace);
           case Constants.STATE.FLYOUT: {
