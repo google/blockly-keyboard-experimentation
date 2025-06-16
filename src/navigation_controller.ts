@@ -196,8 +196,7 @@ export class NavigationController {
     /** Move focus to or from the toolbox. */
     focusToolbox: {
       name: Constants.SHORTCUT_NAMES.TOOLBOX,
-      preconditionFn: (workspace) =>
-        !workspace.isDragging(),
+      preconditionFn: (workspace) => !workspace.isDragging(),
       callback: (workspace) => {
         keyboardNavigationController.setIsActive(true);
         switch (this.navigation.getState()) {

@@ -68,11 +68,16 @@ export class WorkspaceMovement {
     /** Move the cursor to the workspace. */
     {
       name: Constants.SHORTCUT_NAMES.CREATE_WS_CURSOR,
-      preconditionFn: (workspace) =>
-        this.navigation.canCurrentlyEdit(workspace),
+      preconditionFn: (workspace) => {
+        return true;
+      },
       callback: (workspace) => {
+        const targetWorkspace = workspace.isFlyout
+          ? workspace.targetWorkspace
+          : workspace;
+        if (!targetWorkspace) return false;
         keyboardNavigationController.setIsActive(true);
-        return this.createWSCursor(workspace);
+        return this.createWSCursor(targetWorkspace);
       },
       keyCodes: [KeyCodes.W],
     },
