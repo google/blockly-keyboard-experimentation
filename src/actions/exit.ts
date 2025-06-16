@@ -34,7 +34,7 @@ export class ExitAction {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.FLYOUT:
           case Constants.STATE.TOOLBOX:
-            getFocusManager().focusTree(workspace);
+            getFocusManager().focusTree(workspace.targetWorkspace ?? workspace);
             if (!Gesture.inProgress()) {
               workspace.hideChaff();
             }
