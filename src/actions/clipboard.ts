@@ -207,9 +207,7 @@ export class Clipboard {
       !!this.oldCutShortcut?.callback &&
       this.oldCutShortcut.callback(workspace, e, shortcut, scope);
     if (didCut) {
-      this.copyWorkspace = workspace.isFlyout
-        ? workspace.targetWorkspace
-        : workspace;
+      this.copyWorkspace = workspace;
       showCutHint(workspace);
     }
     return didCut;

@@ -56,9 +56,7 @@ export class EnterAction {
       preconditionFn: (workspace): boolean => {
         switch (this.navigation.getState()) {
           case Constants.STATE.WORKSPACE:
-            // The main workspace may or may not handle it depending on what's
-            // selected, so always pass it through to the callback.
-            return true;
+            return this.shouldHandleEnterForWS(workspace);
           case Constants.STATE.FLYOUT: {
             // If we're in the flyout the only supported actions are inserting
             // blocks or clicking buttons, so don't handle this if the
@@ -87,7 +85,6 @@ export class EnterAction {
           case Constants.STATE.WORKSPACE:
             return this.handleEnterForWS(workspace);
           case Constants.STATE.FLYOUT:
-            if (targetWorkspace.isReadOnly()) return false;
             flyoutCursor = this.navigation.getFlyoutCursor(targetWorkspace);
             if (!flyoutCursor) {
               return false;
@@ -108,6 +105,21 @@ export class EnterAction {
   }
 
   /**
+   * Checks if the enter key should do anything for this ws.
+   *
+   * @param workspace The workspace to check.
+   * @returns True if the enter action should be handled.
+   */
+  private shouldHandleEnterForWS(workspace: WorkspaceSvg): boolean {
+    const cursor = workspace.getCursor();
+    const curNode = cursor?.getCurNode();
+    if (!curNode) return false;
+    if (curNode instanceof Field && !curNode.isClickable()) return false;
+    // Returning true is sometimes incorrect for icons, but there's no API to check.
+    return true;
+  }
+
+  /**
    * Handles hitting the enter key on the workspace.
    *
    * @param workspace The workspace.
@@ -115,8 +127,7 @@ export class EnterAction {
    */
   private handleEnterForWS(workspace: WorkspaceSvg): boolean {
     const cursor = workspace.getCursor();
-    if (!cursor) return false;
-    const curNode = cursor.getCurNode();
+    const curNode = cursor?.getCurNode();
     if (!curNode) return false;
     if (curNode instanceof Field) {
       curNode.showEditor();
@@ -297,7 +308,7 @@ export class EnterAction {
     if (block.isSimpleReporter()) {
       for (const input of block.inputList) {
         for (const field of input.fieldRow) {
-          if (field.isFullBlockField()) {
+          if (field.isClickable() && field.isFullBlockField()) {
             field.showEditor();
             return true;
           }
