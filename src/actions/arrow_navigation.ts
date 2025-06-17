@@ -188,7 +188,7 @@ export class ArrowNavigation {
                 isHandled = true;
               }
               return isHandled;
-            case Constants.STATE.TOOLBOX:
+            case Constants.STATE.TOOLBOX: {
               const toolbox = workspace.getToolbox() as Toolbox;
               if (toolbox) {
                 if (!toolbox.getSelectedItem()) {
@@ -208,6 +208,7 @@ export class ArrowNavigation {
                 }
               }
               return isHandled;
+            }
             default:
               return false;
           }
@@ -251,7 +252,7 @@ export class ArrowNavigation {
                 isHandled = true;
               }
               return isHandled;
-            case Constants.STATE.TOOLBOX:
+            case Constants.STATE.TOOLBOX: {
               const toolbox = workspace.getToolbox() as Toolbox;
               if (toolbox) {
                 // @ts-expect-error private method
@@ -262,6 +263,7 @@ export class ArrowNavigation {
                 }
               }
               return isHandled;
+            }
             default:
               return false;
           }
