@@ -8,20 +8,14 @@ import * as chai from 'chai';
 import * as Blockly from 'blockly';
 import {
   focusedTreeIsMainWorkspace,
-  isDragging,
   focusOnBlock,
-  focusOnBlockField,
   getCurrentFocusNodeId,
-  getCurrentFocusedBlockId,
   getFocusedBlockType,
-  getFocusedFieldName,
   testSetup,
   testFileLocations,
   PAUSE_TIME,
   tabNavigateToWorkspace,
-  keyLeft,
   keyRight,
-  keyUp,
   keyDown,
 } from './test_setup.js';
 import {Key} from 'webdriverio';
