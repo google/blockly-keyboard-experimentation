@@ -820,9 +820,12 @@ export class Navigation {
    * @returns whether keyboard navigation is currently allowed.
    */
   canCurrentlyNavigate(workspace: Blockly.WorkspaceSvg) {
-    const accessibilityMode = workspace.isFlyout
-      ? workspace.targetWorkspace?.keyboardAccessibilityMode
-      : workspace.keyboardAccessibilityMode;
+    const accessibilityMode = (
+      workspace.getRootWorkspace() ??
+      workspace.targetWorkspace?.getRootWorkspace() ??
+      workspace.targetWorkspace ??
+      workspace
+    ).keyboardAccessibilityMode;
     return (
       !!accessibilityMode &&
       this.getState(workspace) !== Constants.STATE.NOWHERE &&

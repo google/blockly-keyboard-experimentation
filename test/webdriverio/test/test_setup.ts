@@ -230,6 +230,20 @@ export async function currentFocusIsMainWorkspace(
 }
 
 /**
+ * Returns whether the currently focused tree is the main workspace.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ */
+export async function focusedTreeIsMainWorkspace(
+  browser: WebdriverIO.Browser,
+): Promise<boolean> {
+  return await browser.execute(() => {
+    const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
+    return Blockly.getFocusManager().getFocusedTree() === workspaceSvg;
+  });
+}
+
+/**
  * Focuses and selects a block with the provided ID.
  *
  * This throws an error if no block exists for the specified ID.

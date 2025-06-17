@@ -9,6 +9,7 @@ import {
   utils as BlocklyUtils,
   getFocusManager,
   Gesture,
+  icons,
 } from 'blockly/core';
 
 import * as Constants from '../constants';
@@ -39,6 +40,26 @@ export class ExitAction {
               workspace.hideChaff();
             }
             return true;
+          case Constants.STATE.WORKSPACE: {
+            if (workspace.isMutator) {
+              const parent = workspace.options.parentWorkspace
+                ?.getAllBlocks()
+                .map((block) => block.getIcons())
+                .flat()
+                .find(
+                  (icon): icon is icons.MutatorIcon =>
+                    icon instanceof icons.MutatorIcon &&
+                    icon.bubbleIsVisible() &&
+                    icon.getBubble()?.getWorkspace() === workspace,
+                );
+              if (parent) {
+                parent.setBubbleVisible(false);
+                getFocusManager().focusNode(parent);
+                return true;
+              }
+            }
+            return false;
+          }
           default:
             return false;
         }
