@@ -17,6 +17,7 @@ import {
   Field,
   icons,
   FocusableTreeTraverser,
+  renderManagement,
 } from 'blockly/core';
 
 import type {Block} from 'blockly/core';
@@ -113,6 +114,9 @@ export class EnterAction {
       this.navigation.openToolboxOrFlyout(workspace);
     } else if (curNode instanceof icons.Icon) {
       curNode.onClick();
+      renderManagement.finishQueuedRenders().then(() => {
+        cursor.in();
+      });
     }
   }
 
