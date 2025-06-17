@@ -138,6 +138,7 @@ suite('Toolbox and flyout test', function () {
 
   test('Tabbing to the workspace should close the flyout', async function () {
     await tabNavigateToWorkspace(this.browser);
+    await this.browser.pause(PAUSE_TIME);
 
     // The flyout should be closed since it lost focus.
     const flyoutIsOpen = await checkIfFlyoutIsOpen(this.browser);

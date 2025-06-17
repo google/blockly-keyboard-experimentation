@@ -54,14 +54,8 @@ export class ActionMenu {
       callback: (workspace) => {
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
+          case Constants.STATE.FLYOUT:
             return this.openActionMenu(workspace);
-          case Constants.STATE.FLYOUT: {
-            const flyoutWorkspace = workspace.getFlyout()?.getWorkspace();
-            if (flyoutWorkspace) {
-              return this.openActionMenu(flyoutWorkspace);
-            }
-            return false;
-          }
           default:
             return false;
         }

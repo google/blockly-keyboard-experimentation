@@ -67,13 +67,16 @@ export class EnterAction {
             this.handleEnterForWS(workspace);
             return true;
           case Constants.STATE.FLYOUT:
-            flyoutCursor = this.navigation.getFlyoutCursor(workspace);
+            if (!workspace.targetWorkspace) return false;
+            flyoutCursor = this.navigation.getFlyoutCursor(
+              workspace.targetWorkspace,
+            );
             if (!flyoutCursor) {
               return false;
             }
             curNode = flyoutCursor.getCurNode();
             if (curNode instanceof BlockSvg) {
-              this.insertFromFlyout(workspace);
+              this.insertFromFlyout(workspace.targetWorkspace);
             } else if (curNode instanceof FlyoutButton) {
               this.triggerButtonCallback(workspace);
             }

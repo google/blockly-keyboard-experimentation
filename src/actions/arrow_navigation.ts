@@ -59,7 +59,9 @@ export class ArrowNavigation {
       shortcut: ShortcutRegistry.KeyboardShortcut,
     ): boolean => {
       const toolbox = workspace.getToolbox() as Toolbox;
-      const flyout = workspace.getFlyout();
+      const flyout = workspace.isFlyout
+        ? workspace.targetWorkspace?.getFlyout()
+        : workspace.getFlyout();
       let isHandled = false;
       switch (this.navigation.getState(workspace)) {
         case Constants.STATE.WORKSPACE:
@@ -91,7 +93,9 @@ export class ArrowNavigation {
       e: Event,
       shortcut: ShortcutRegistry.KeyboardShortcut,
     ): boolean => {
-      const toolbox = workspace.getToolbox() as Toolbox;
+      const toolbox = workspace.isFlyout
+        ? workspace.targetWorkspace?.getToolbox()
+        : workspace.getToolbox();
       let isHandled = false;
       switch (this.navigation.getState(workspace)) {
         case Constants.STATE.WORKSPACE:
@@ -156,8 +160,6 @@ export class ArrowNavigation {
           this.navigation.canCurrentlyNavigate(workspace),
         callback: (workspace, e, shortcut) => {
           keyboardNavigationController.setIsActive(true);
-          const toolbox = workspace.getToolbox() as Toolbox;
-          const flyout = workspace.getFlyout();
           let isHandled = false;
           switch (this.navigation.getState(workspace)) {
             case Constants.STATE.WORKSPACE:
@@ -175,14 +177,19 @@ export class ArrowNavigation {
               return isHandled;
             case Constants.STATE.FLYOUT:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
-              if (!isHandled && flyout) {
-                if (!this.navigation.defaultFlyoutCursorIfNeeded(workspace)) {
-                  flyout.getWorkspace()?.getCursor()?.next();
+              if (!isHandled && workspace.targetWorkspace) {
+                if (
+                  !this.navigation.defaultFlyoutCursorIfNeeded(
+                    workspace.targetWorkspace,
+                  )
+                ) {
+                  workspace.getCursor()?.next();
                 }
                 isHandled = true;
               }
               return isHandled;
-            case Constants.STATE.TOOLBOX:
+            case Constants.STATE.TOOLBOX: {
+              const toolbox = workspace.getToolbox() as Toolbox;
               if (toolbox) {
                 if (!toolbox.getSelectedItem()) {
                   const firstItem =
@@ -201,6 +208,7 @@ export class ArrowNavigation {
                 }
               }
               return isHandled;
+            }
             default:
               return false;
           }
@@ -214,8 +222,6 @@ export class ArrowNavigation {
           this.navigation.canCurrentlyNavigate(workspace),
         callback: (workspace, e, shortcut) => {
           keyboardNavigationController.setIsActive(true);
-          const flyout = workspace.getFlyout();
-          const toolbox = workspace.getToolbox() as Toolbox;
           let isHandled = false;
           switch (this.navigation.getState(workspace)) {
             case Constants.STATE.WORKSPACE:
@@ -234,19 +240,20 @@ export class ArrowNavigation {
               return isHandled;
             case Constants.STATE.FLYOUT:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
-              if (!isHandled && flyout) {
+              if (!isHandled && workspace.targetWorkspace) {
                 if (
                   !this.navigation.defaultFlyoutCursorIfNeeded(
-                    workspace,
+                    workspace.targetWorkspace,
                     'last',
                   )
                 ) {
-                  flyout.getWorkspace()?.getCursor()?.prev();
+                  workspace.getCursor()?.prev();
                 }
                 isHandled = true;
               }
               return isHandled;
-            case Constants.STATE.TOOLBOX:
+            case Constants.STATE.TOOLBOX: {
+              const toolbox = workspace.getToolbox() as Toolbox;
               if (toolbox) {
                 // @ts-expect-error private method
                 isHandled = toolbox.selectPrevious();
@@ -256,6 +263,7 @@ export class ArrowNavigation {
                 }
               }
               return isHandled;
+            }
             default:
               return false;
           }
