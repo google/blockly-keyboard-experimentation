@@ -555,3 +555,59 @@ export async function contextMenuExists(
   const item = await browser.$(`div=${itemText}`);
   return await item.waitForExist({timeout: 200, reverse: reverse});
 }
+
+/**
+ * Find a clickable element on the block and click it.
+ * We can't always use the block's SVG root because clicking will always happen
+ * in the middle of the block's bounds (including children) by default, which
+ * causes problems if it has holes (e.g. statement inputs). Instead, this tries
+ * to get the first text field on the block. It falls back on the block's SVG root.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param blockId The id of the block to click, as an interactable element.
+ * @param clickOptions The options to pass to webdriverio's element.click function.
+ * @return A Promise that resolves when the actions are completed.
+ */
+export async function clickBlock(
+  browser: WebdriverIO.Browser,
+  blockId: string,
+  clickOptions?: Partial<webdriverio.ClickOptions> | undefined,
+) {
+  const findableId = 'clickTargetElement';
+  // In the browser context, find the element that we want and give it a findable ID.
+  await browser.execute(
+    (blockId, newElemId) => {
+      const ws = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
+      const block = ws.getBlockById(blockId) as Blockly.BlockSvg;
+      // Ensure the block we want to click is within the viewport.
+      ws.scrollBoundsIntoView(block.getBoundingRectangleWithoutChildren(), 10);
+      if (!block.isCollapsed()) {
+        for (const input of block.inputList) {
+          for (const field of input.fieldRow) {
+            if (field instanceof Blockly.FieldLabel) {
+              const svgRoot = field.getSvgRoot();
+              if (svgRoot) {
+                svgRoot.id = newElemId;
+                return;
+              }
+            }
+          }
+        }
+      }
+      // No label field found. Fall back to the block's SVG root.
+      block.getSvgRoot().id = newElemId;
+    },
+    blockId,
+    findableId,
+  );
+
+  // In the test context, get the Webdriverio Element that we've identified.
+  const elem = await browser.$(`#${findableId}`);
+
+  await elem.click(clickOptions);
+
+  // In the browser context, remove the ID.
+  await browser.execute((elemId) => {
+    document.getElementById(elemId)?.removeAttribute('id');
+  }, findableId);
+}

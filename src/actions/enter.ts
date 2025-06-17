@@ -88,9 +88,7 @@ export class EnterAction {
             return this.handleEnterForWS(workspace);
           case Constants.STATE.FLYOUT:
             if (targetWorkspace.isReadOnly()) return false;
-            flyoutCursor = this.navigation.getFlyoutCursor(
-              targetWorkspace,
-            );
+            flyoutCursor = this.navigation.getFlyoutCursor(targetWorkspace);
             if (!flyoutCursor) {
               return false;
             }

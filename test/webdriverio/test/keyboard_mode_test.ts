@@ -13,6 +13,7 @@ import {
   PAUSE_TIME,
   getBlockElementById,
   tabNavigateToWorkspace,
+  clickBlock,
 } from './test_setup.js';
 import {Key} from 'webdriverio';
 
@@ -125,8 +126,7 @@ suite(
 
       await this.browser.pause(PAUSE_TIME);
       // Right click a block
-      const element = await getBlockElementById(this.browser, 'controls_if_1');
-      await element.click({button: 'right'});
+      clickBlock(this.browser, 'controls_if_1', {button: 'right'});
       await this.browser.pause(PAUSE_TIME);
 
       chai.assert.isFalse(await isKeyboardNavigating(this.browser));
@@ -140,6 +140,15 @@ suite(
       await this.browser.pause(PAUSE_TIME);
       // Drag a block
       const element = await getBlockElementById(this.browser, 'controls_if_1');
+
+      await this.browser.execute(() => {
+        const ws = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
+        const block = ws.getBlockById('controls_if_1') as Blockly.BlockSvg;
+        ws.scrollBoundsIntoView(
+          block.getBoundingRectangleWithoutChildren(),
+          10,
+        );
+      });
       await element.dragAndDrop({x: 10, y: 10});
       await this.browser.pause(PAUSE_TIME);
 
