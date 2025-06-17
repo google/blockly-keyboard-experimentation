@@ -20,7 +20,7 @@ import {
 } from './test_setup.js';
 import {Key} from 'webdriverio';
 
-suite.only('Mutator navigation', function () {
+suite('Mutator navigation', function () {
   // Setting timeout to unlimited as these tests take a longer time to run than most mocha test
   this.timeout(0);
 
