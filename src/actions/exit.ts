@@ -58,6 +58,7 @@ export class ExitAction {
                 return true;
               }
             }
+            return false;
           }
           default:
             return false;
