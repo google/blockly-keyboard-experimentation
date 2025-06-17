@@ -95,7 +95,7 @@ export class ArrowNavigation {
     ): boolean => {
       const toolbox = workspace.isFlyout
         ? workspace.targetWorkspace?.getToolbox()
-        : (workspace.getToolbox() as Toolbox);
+        : workspace.getToolbox();
       let isHandled = false;
       switch (this.navigation.getState(workspace)) {
         case Constants.STATE.WORKSPACE:
