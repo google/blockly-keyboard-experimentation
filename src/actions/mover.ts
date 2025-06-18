@@ -85,7 +85,7 @@ export class Mover {
    */
   canMove(workspace: WorkspaceSvg, block: BlockSvg) {
     return !!(
-      this.navigation.getState(workspace) === Constants.STATE.WORKSPACE &&
+      this.navigation.getState() === Constants.STATE.WORKSPACE &&
       this.navigation.canCurrentlyEdit(workspace) &&
       !this.moves.has(workspace) && // No move in progress.
       block?.isMovable()

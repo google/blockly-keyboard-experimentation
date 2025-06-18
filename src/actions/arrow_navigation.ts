@@ -63,7 +63,7 @@ export class ArrowNavigation {
         ? workspace.targetWorkspace?.getFlyout()
         : workspace.getFlyout();
       let isHandled = false;
-      switch (this.navigation.getState(workspace)) {
+      switch (this.navigation.getState()) {
         case Constants.STATE.WORKSPACE:
           isHandled = this.fieldShortcutHandler(workspace, shortcut);
           if (!isHandled && workspace) {
@@ -97,7 +97,7 @@ export class ArrowNavigation {
         ? workspace.targetWorkspace?.getToolbox()
         : workspace.getToolbox();
       let isHandled = false;
-      switch (this.navigation.getState(workspace)) {
+      switch (this.navigation.getState()) {
         case Constants.STATE.WORKSPACE:
           isHandled = this.fieldShortcutHandler(workspace, shortcut);
           if (!isHandled && workspace) {
@@ -161,7 +161,7 @@ export class ArrowNavigation {
         callback: (workspace, e, shortcut) => {
           keyboardNavigationController.setIsActive(true);
           let isHandled = false;
-          switch (this.navigation.getState(workspace)) {
+          switch (this.navigation.getState()) {
             case Constants.STATE.WORKSPACE:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled && workspace) {
@@ -223,7 +223,7 @@ export class ArrowNavigation {
         callback: (workspace, e, shortcut) => {
           keyboardNavigationController.setIsActive(true);
           let isHandled = false;
-          switch (this.navigation.getState(workspace)) {
+          switch (this.navigation.getState()) {
             case Constants.STATE.WORKSPACE:
               isHandled = this.fieldShortcutHandler(workspace, shortcut);
               if (!isHandled) {
