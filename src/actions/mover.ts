@@ -143,8 +143,9 @@ export class Mover {
     dragger.onDragStart(info.fakePointerEvent('pointerdown'));
     info.updateTotalDelta();
     // In case the block is detached, ensure that it still retains focus
-    // (otherwise dragging will break).
-    getFocusManager().focusNode(block);
+    // (otherwise dragging will break). This is also the point a new block's
+    // initial insert position is scrolled into view.
+    workspace.getCursor()?.setCurNode(block);
     block.getFocusableElement().addEventListener('blur', blurListener);
 
     // Register a keyboard shortcut under the key combos of all existing
