@@ -306,8 +306,13 @@ export class Navigation {
 
     const curNode = flyoutCursor.getCurNode();
     const sourceBlock = flyoutCursor.getSourceBlock();
-    if (curNode && !this.isFlyoutItemDisposed(curNode, sourceBlock))
+    if (
+      curNode &&
+      curNode.getFocusableTree() === flyout.getWorkspace() &&
+      !this.isFlyoutItemDisposed(curNode, sourceBlock)
+    ) {
       return false;
+    }
 
     const flyoutContents = flyout.getContents();
     const defaultFlyoutItem =
