@@ -9,8 +9,6 @@ import {
   Events,
   ShortcutRegistry,
   utils as BlocklyUtils,
-  Connection,
-  ConnectionType,
   keyboardNavigationController,
 } from 'blockly';
 import * as Constants from '../constants';

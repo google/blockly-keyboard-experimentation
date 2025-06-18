@@ -8,7 +8,6 @@ import {
   Events,
   ShortcutRegistry,
   utils as BlocklyUtils,
-  getFocusManager,
   BlockSvg,
   FlyoutButton,
   RenderedConnection,
