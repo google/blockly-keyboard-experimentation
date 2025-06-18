@@ -114,7 +114,7 @@ export class EnterAction {
     const cursor = workspace.getCursor();
     const curNode = cursor?.getCurNode();
     if (!curNode) return false;
-    if (curNode instanceof Field && !curNode.isClickable()) return false;
+    if (curNode instanceof Field) return curNode.isClickable();
     if (
       curNode instanceof RenderedConnection ||
       curNode instanceof WorkspaceSvg
@@ -122,7 +122,8 @@ export class EnterAction {
       return !workspace.isReadOnly();
     }
     // Returning true is sometimes incorrect for icons, but there's no API to check.
-    return true;
+    if (curNode instanceof icons.Icon) return true;
+    return false;
   }
 
   /**
