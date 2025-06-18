@@ -306,8 +306,10 @@ export class Navigation {
 
     const curNode = flyoutCursor.getCurNode();
     const sourceBlock = flyoutCursor.getSourceBlock();
+    // If the current node is a child of the flyout, nothing needs to be done.
     if (
       curNode &&
+      curNode !== flyout.getWorkspace() &&
       curNode.getFocusableTree() === flyout.getWorkspace() &&
       !this.isFlyoutItemDisposed(curNode, sourceBlock)
     ) {
