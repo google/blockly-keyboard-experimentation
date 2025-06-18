@@ -8,7 +8,6 @@ import type {
   BlockSvg,
   IDragger,
   IDragStrategy,
-  Gesture,
   RenderedConnection,
 } from 'blockly';
 import {
