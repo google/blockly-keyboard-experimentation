@@ -76,11 +76,17 @@ export class ArrowNavigation {
           }
           return isHandled;
         case Constants.STATE.TOOLBOX:
-          // @ts-expect-error private method
-          isHandled = toolbox && toolbox.selectChild();
-          if (!isHandled && flyout) {
-            Blockly.getFocusManager().focusTree(flyout.getWorkspace());
-            this.navigation.defaultFlyoutCursorIfNeeded(workspace);
+          if (toolbox) {
+            const selectedItem = toolbox.getSelectedItem();
+            // Don't auto-expand collapsible items. 'Enter' should be used.
+            if (selectedItem && !selectedItem.isCollapsible()) {
+              // @ts-expect-error private method
+              isHandled = toolbox.selectChild();
+            }
+            if (!isHandled && flyout) {
+              Blockly.getFocusManager().focusTree(flyout.getWorkspace());
+              this.navigation.defaultFlyoutCursorIfNeeded(workspace);
+            }
           }
           return true;
         default:

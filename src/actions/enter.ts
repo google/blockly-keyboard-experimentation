@@ -19,7 +19,7 @@ import {
   FocusableTreeTraverser,
 } from 'blockly/core';
 
-import type {Block} from 'blockly/core';
+import type {Block, ICollapsibleToolboxItem, Toolbox} from 'blockly/core';
 
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
@@ -62,6 +62,8 @@ export class EnterAction {
         let flyoutCursor;
         let curNode;
 
+        const toolbox = workspace.getToolbox() as Toolbox;
+
         switch (this.navigation.getState(workspace)) {
           case Constants.STATE.WORKSPACE:
             this.handleEnterForWS(workspace);
@@ -80,7 +82,16 @@ export class EnterAction {
             } else if (curNode instanceof FlyoutButton) {
               this.triggerButtonCallback(workspace);
             }
-
+            return true;
+          case Constants.STATE.TOOLBOX:
+            if (toolbox) {
+              const selectedItem = toolbox.getSelectedItem();
+              // Only navigate for collapsible items.
+              if (selectedItem && selectedItem.isCollapsible()) {
+                (selectedItem as ICollapsibleToolboxItem).toggleExpanded();
+                toolbox.refreshSelection();
+              }
+            }
             return true;
           default:
             return false;
