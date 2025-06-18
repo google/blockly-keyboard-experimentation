@@ -416,8 +416,7 @@ export async function tabNavigateToWorkspace(
  * @param browser The active WebdriverIO Browser object.
  */
 export async function tabNavigateForward(browser: WebdriverIO.Browser) {
-  await browser.keys(webdriverio.Key.Tab);
-  await browser.pause(PAUSE_TIME);
+  await sendKeyAndWait(browser, webdriverio.Key.Tab);
 }
 
 /**
@@ -426,8 +425,7 @@ export async function tabNavigateForward(browser: WebdriverIO.Browser) {
  * @param browser The active WebdriverIO Browser object.
  */
 export async function tabNavigateBackward(browser: WebdriverIO.Browser) {
-  await browser.keys([webdriverio.Key.Shift, webdriverio.Key.Tab]);
-  await browser.pause(PAUSE_TIME);
+  await sendKeyAndWait(browser, [webdriverio.Key.Shift, webdriverio.Key.Tab]);
 }
 
 /**
@@ -471,20 +469,20 @@ export async function keyDown(browser: WebdriverIO.Browser, times = 1) {
 }
 
 /**
- * Sends the specified key for the specified number of times, waiting between
- * each key press to allow changes to keep up.
+ * Sends the specified key(s) for the specified number of times,
+ * waiting between each key press to allow changes to keep up.
  *
  * @param browser The active WebdriverIO Browser object.
- * @param key The WebdriverIO representative key value to press.
- * @param times The number of times to repeat the key press.
+ * @param keys The WebdriverIO representative key value(s) to press.
+ * @param times The number of times to repeat the key press (default 1).
  */
-async function sendKeyAndWait(
+export async function sendKeyAndWait(
   browser: WebdriverIO.Browser,
-  key: string,
-  times: number,
+  keys: string | string[],
+  times = 1,
 ) {
   for (let i = 0; i < times; i++) {
-    await browser.keys(key);
+    await browser.keys(keys);
     await browser.pause(PAUSE_TIME);
   }
 }
