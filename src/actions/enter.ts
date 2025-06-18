@@ -93,7 +93,7 @@ export class EnterAction {
             if (curNode instanceof BlockSvg) {
               this.insertFromFlyout(targetWorkspace);
             } else if (curNode instanceof FlyoutButton) {
-              this.triggerButtonCallback(workspace);
+              this.triggerButtonCallback(targetWorkspace);
             }
             return true;
           default:
