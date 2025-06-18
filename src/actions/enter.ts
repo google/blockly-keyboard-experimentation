@@ -146,8 +146,6 @@ export class EnterAction {
 
     workspace.setResizesEnabled(true);
 
-    getFocusManager().focusTree(workspace);
-    workspace.getCursor()?.setCurNode(newBlock);
     this.mover.startMove(workspace, newBlock, insertStartPoint);
 
     const isStartBlock =

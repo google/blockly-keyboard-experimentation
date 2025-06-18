@@ -53,6 +53,7 @@ suite('Scrolling into view', function () {
     await this.browser.keys(Key.Enter);
 
     // Asset new block has been scrolled into the viewport.
+    await this.browser.pause(PAUSE_TIME);
     const inViewport = await this.browser.execute(() => {
       const workspace = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
       const block = workspace.getBlocksByType(
@@ -68,7 +69,6 @@ suite('Scrolling into view', function () {
       );
       return viewport.contains(blockBounds.left, blockBounds.top);
     });
-    // FIXME: actually scrolls the wrong bounds into view
-    chai.assert.isFalse(inViewport);
+    chai.assert.isTrue(inViewport);
   });
 });
