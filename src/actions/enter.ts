@@ -115,6 +115,12 @@ export class EnterAction {
     const curNode = cursor?.getCurNode();
     if (!curNode) return false;
     if (curNode instanceof Field && !curNode.isClickable()) return false;
+    if (
+      curNode instanceof RenderedConnection ||
+      curNode instanceof WorkspaceSvg
+    ) {
+      return !workspace.isReadOnly();
+    }
     // Returning true is sometimes incorrect for icons, but there's no API to check.
     return true;
   }
@@ -131,19 +137,23 @@ export class EnterAction {
     if (!curNode) return false;
     if (curNode instanceof Field) {
       curNode.showEditor();
+      return true;
     } else if (curNode instanceof BlockSvg) {
       if (!this.tryShowFullBlockFieldEditor(curNode)) {
         showHelpHint(workspace);
       }
+      return true;
     } else if (
       curNode instanceof RenderedConnection ||
       curNode instanceof WorkspaceSvg
     ) {
       this.navigation.openToolboxOrFlyout(workspace);
+      return true;
     } else if (curNode instanceof icons.Icon) {
       curNode.onClick();
+      return true;
     }
-    return true;
+    return false;
   }
 
   /**
