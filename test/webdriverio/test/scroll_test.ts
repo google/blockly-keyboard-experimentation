@@ -52,7 +52,7 @@ suite('Scrolling into view', function () {
     await this.browser.keys(Key.Enter);
     await this.browser.keys(Key.Enter);
 
-    // Asset new block has been scrolled into the viewport.
+    // Assert new block has been scrolled into the viewport.
     await this.browser.pause(PAUSE_TIME);
     const inViewport = await this.browser.execute(() => {
       const workspace = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
