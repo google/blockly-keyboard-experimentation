@@ -146,6 +146,9 @@
         .blocklyWorkspace:has(.blocklyActiveFocus)
         .blocklyWorkspaceFocusRing,
       .blocklyKeyboardNavigation
+        .blocklySvg:has(~ .blocklyBlockDragSurface .blocklyActiveFocus)
+        .blocklyWorkspaceFocusRing,
+      .blocklyKeyboardNavigation
         .blocklyWorkspace.blocklyActiveFocus
         .blocklyWorkspaceFocusRing {
         stroke: var(--blockly-active-tree-color);
