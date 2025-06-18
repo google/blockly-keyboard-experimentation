@@ -173,7 +173,7 @@ suite('Move tests', function () {
 
     // Check constrained moves have no effect.
     await keyDown(this.browser, 5);
-    let coordinate = await getCoordinate(this.browser, BLOCK);
+    const coordinate = await getCoordinate(this.browser, BLOCK);
     chai.assert.deepEqual(
       coordinate,
       startCoordinate,
