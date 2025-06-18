@@ -19,11 +19,6 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
 );
 
 /**
- * The distance to move the cursor when the cursor is on the workspace.
- */
-const WS_MOVE_DISTANCE = 40;
-
-/**
  * Logic for free movement of the cursor on the workspace with keyboard
  * shortcuts.
  */
