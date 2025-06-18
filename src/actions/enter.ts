@@ -121,6 +121,7 @@ export class EnterAction {
     ) {
       return !workspace.isReadOnly();
     }
+    if (curNode instanceof BlockSvg) return true;
     // Returning true is sometimes incorrect for icons, but there's no API to check.
     if (curNode instanceof icons.Icon) return true;
     return false;
