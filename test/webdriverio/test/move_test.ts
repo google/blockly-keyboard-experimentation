@@ -15,7 +15,6 @@ import {
   testSetup,
   sendKeyAndWait,
   keyDown,
-  keyRight,
 } from './test_setup.js';
 
 suite('Move tests', function () {
@@ -154,8 +153,8 @@ suite('Move tests', function () {
   //
   // This includes a regression test for issue #446 (fixed in PR #599)
   // where, due to an implementation error in Mover, constrained
-  // movement following unconstrained movement it would result in the
-  // block unexpectedly moving (unless workspace scale was === 1)
+  // movement following unconstrained movement would result in the
+  // block unexpectedly moving (unless workspace scale was === 1).
   test('Constrained move of unattachable top-level block', async function () {
     // Block ID of an unconnectable block.
     const BLOCK = 'p5_setup_1';
@@ -280,7 +279,7 @@ function getConnectedBlockInfo(browser: Browser, id: string, index: number) {
 
 /**
  * Given a block ID, get the coordinates of that block, as returned by
- * .getRelativeTosSurfaceXY().
+ * getRelativeTosSurfaceXY().
  *
  * @param browser The webdriverio browser session.
  * @param id The ID of the block having the connection we wish to examine.
