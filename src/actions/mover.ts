@@ -302,7 +302,7 @@ export class Mover {
 
     info.dragger.onDrag(
       info.fakePointerEvent('pointermove', direction),
-      info.totalDelta,
+      info.totalDelta.clone().scale(workspace.scale),
     );
 
     info.updateTotalDelta();
@@ -327,7 +327,10 @@ export class Mover {
     info.totalDelta.x += x * UNCONSTRAINED_MOVE_DISTANCE * workspace.scale;
     info.totalDelta.y += y * UNCONSTRAINED_MOVE_DISTANCE * workspace.scale;
 
-    info.dragger.onDrag(info.fakePointerEvent('pointermove'), info.totalDelta);
+    info.dragger.onDrag(
+      info.fakePointerEvent('pointermove'),
+      info.totalDelta.clone().scale(workspace.scale),
+    );
     this.scrollCurrentBlockIntoView(workspace);
     return true;
   }
