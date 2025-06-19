@@ -53,7 +53,7 @@ export class MoveIndicatorBubble
       Blockly.utils.Svg.PATH,
       {
         'fill': 'none',
-        'stroke': 'currentColor',
+        'stroke': 'black',
         'stroke-linecap': 'round',
         'stroke-linejoin': 'round',
         'stroke-width': '2',
