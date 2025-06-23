@@ -8,7 +8,6 @@ import type {
   BlockSvg,
   IDragger,
   IDragStrategy,
-  Gesture,
   RenderedConnection,
 } from 'blockly';
 import {
@@ -54,18 +53,6 @@ export class Mover {
    * normal cursor movement until the move is complete.
    */
   protected moves: Map<WorkspaceSvg, MoveInfo> = new Map();
-
-  /**
-   * The stashed isDragging function, which is replaced at the beginning
-   * of a keyboard drag and reset at the end of a keyboard drag.
-   */
-  oldIsDragging: (() => boolean) | null = null;
-
-  /**
-   * The stashed getGesture function, which is replaced at the beginning
-   * of a keyboard drag and reset at the end of a keyboard drag.
-   */
-  oldGetGesture: ((e: PointerEvent) => Gesture | null) | null = null;
 
   /**
    * The block's base drag strategy, which will be overridden during
