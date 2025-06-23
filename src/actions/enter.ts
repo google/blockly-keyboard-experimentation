@@ -154,7 +154,7 @@ export class EnterAction {
     } else if (curNode instanceof icons.Icon) {
       curNode.onClick();
       renderManagement.finishQueuedRenders().then(() => {
-        cursor.in();
+        cursor?.in();
       });
       return true;
     }
