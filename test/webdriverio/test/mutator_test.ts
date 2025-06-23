@@ -72,6 +72,19 @@ suite('Mutator navigation', function () {
     chai.assert.equal(mutatorIconId, focusedNodeId);
   });
 
+  test('Escape in the mutator flyout focuses the mutator workspace', async function () {
+    await this.openMutator();
+    // Focus the flyout
+    await this.browser.keys('t');
+    await this.browser.pause(PAUSE_TIME);
+    // Hit escape to return focus to the mutator workspace
+    await this.browser.keys(Key.Escape);
+    await this.browser.pause(PAUSE_TIME);
+    // The "if" placeholder block in the mutator should be focused
+    const focusedBlockType = await getFocusedBlockType(this.browser);
+    chai.assert.equal(focusedBlockType, 'controls_if_if');
+  });
+
   test('T focuses the mutator flyout', async function () {
     await this.openMutator();
     await this.browser.keys('t');
@@ -97,7 +110,9 @@ suite('Mutator navigation', function () {
 
     const topBlocks = await this.browser.execute(() => {
       const focusedTree = Blockly.getFocusManager().getFocusedTree();
-      if (!(focusedTree instanceof Blockly.WorkspaceSvg)) return [];
+      if (!(focusedTree instanceof Blockly.WorkspaceSvg)) {
+        throw new Error('Focused tree is not a workspace.');
+      }
 
       return focusedTree.getAllBlocks(true).map((block) => block.type);
     });
