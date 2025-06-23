@@ -824,6 +824,13 @@ export class Navigation {
    * @returns whether keyboard navigation is currently allowed.
    */
   canCurrentlyNavigate(workspace: Blockly.WorkspaceSvg) {
+    // Only the main/root workspace has the accessibility mode bit set; for
+    // nested workspaces (mutators or flyouts) we need to walk up the tree.
+    // Default to the root workspace if present. Flyouts don't consider
+    // their workspaces to have a root workspace/be a nested child, so fall
+    // back to checking the target workspace's root (`.targetWorkspace` only
+    // exists on flyout workspaces) and then fall back to the target/main
+    // workspace itself.
     const accessibilityMode = (
       workspace.getRootWorkspace() ??
       workspace.targetWorkspace?.getRootWorkspace() ??
