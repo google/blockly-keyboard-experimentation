@@ -152,6 +152,9 @@ export class EnterAction {
       this.navigation.openToolboxOrFlyout(workspace);
       return true;
     } else if (curNode instanceof icons.Icon) {
+      // Calling the icon's click handler will trigger its action, generally
+      // opening a bubble of some sort. We then need to wait for the bubble to
+      // appear before attempting to navigate into it.
       curNode.onClick();
       renderManagement.finishQueuedRenders().then(() => {
         cursor?.in();
