@@ -23,7 +23,7 @@ import {javascriptGenerator} from 'blockly/javascript';
 import {load} from './loadTestBlocks';
 import {runCode, registerRunCodeShortcut} from './runCode';
 
-(window as any).Blockly = Blockly;
+(window as unknown as {Blockly: typeof Blockly}).Blockly = Blockly;
 
 /**
  * Parse query params for inject and navigation options and update

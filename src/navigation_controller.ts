@@ -196,11 +196,10 @@ export class NavigationController {
     /** Move focus to or from the toolbox. */
     focusToolbox: {
       name: Constants.SHORTCUT_NAMES.TOOLBOX,
-      preconditionFn: (workspace) =>
-        !workspace.isDragging() && this.navigation.canCurrentlyEdit(workspace),
+      preconditionFn: (workspace) => !workspace.isDragging(),
       callback: (workspace) => {
         keyboardNavigationController.setIsActive(true);
-        switch (this.navigation.getState(workspace)) {
+        switch (this.navigation.getState()) {
           case Constants.STATE.WORKSPACE:
             Blockly.getFocusManager().focusTree(
               workspace.getToolbox() ??

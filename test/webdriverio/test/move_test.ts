@@ -13,6 +13,8 @@ import {
   tabNavigateToWorkspace,
   testFileLocations,
   testSetup,
+  sendKeyAndWait,
+  keyDown,
 } from './test_setup.js';
 
 suite('Move tests', function () {
@@ -145,6 +147,62 @@ suite('Move tests', function () {
       await this.browser.keys(Key.Escape);
     }
   });
+
+  // When a top-level block with no previous, next or output
+  // connections is subject to a constrained move, it should not move.
+  //
+  // This includes a regression test for issue #446 (fixed in PR #599)
+  // where, due to an implementation error in Mover, constrained
+  // movement following unconstrained movement would result in the
+  // block unexpectedly moving (unless workspace scale was === 1).
+  test('Constrained move of unattachable top-level block', async function () {
+    // Block ID of an unconnectable block.
+    const BLOCK = 'p5_setup_1';
+
+    // Scale workspace.
+    await this.browser.execute(() => {
+      (Blockly.getMainWorkspace() as Blockly.WorkspaceSvg).setScale(0.9);
+    });
+
+    // Navigate to unconnectable block, get initial coords and start move.
+    await tabNavigateToWorkspace(this.browser);
+    await focusOnBlock(this.browser, BLOCK);
+    const startCoordinate = await getCoordinate(this.browser, BLOCK);
+    await this.browser.keys('m');
+
+    // Check constrained moves have no effect.
+    await keyDown(this.browser, 5);
+    const coordinate = await getCoordinate(this.browser, BLOCK);
+    chai.assert.deepEqual(
+      coordinate,
+      startCoordinate,
+      'constrained move should have no effect',
+    );
+
+    // Unconstrained moves.
+    await sendKeyAndWait(this.browser, [Key.Alt, Key.ArrowDown]);
+    await sendKeyAndWait(this.browser, [Key.Alt, Key.ArrowRight]);
+    const newCoordinate = await getCoordinate(this.browser, BLOCK);
+    chai.assert.notDeepEqual(
+      newCoordinate,
+      startCoordinate,
+      'unconstrained move should have effect',
+    );
+
+    // Try multiple constrained moves, as first might (correctly) do nothing.
+    for (let i = 0; i < 5; i++) {
+      await keyDown(this.browser);
+      const coordinate = await getCoordinate(this.browser, BLOCK);
+      chai.assert.deepEqual(
+        coordinate,
+        newCoordinate,
+        'constrained move after unconstrained move should have no effect',
+      );
+    }
+
+    // Abort move.
+    await this.browser.keys(Key.Escape);
+  });
 });
 
 /**
@@ -217,4 +275,23 @@ function getConnectedBlockInfo(browser: Browser, id: string, index: number) {
     id,
     index,
   );
+}
+
+/**
+ * Given a block ID, get the coordinates of that block, as returned by
+ * getRelativeTosSurfaceXY().
+ *
+ * @param browser The webdriverio browser session.
+ * @param id The ID of the block having the connection we wish to examine.
+ * @returns The coordinates of the block.
+ */
+function getCoordinate(
+  browser: Browser,
+  id: string,
+): Promise<Blockly.utils.Coordinate> {
+  return browser.execute((id: string) => {
+    const block = Blockly.getMainWorkspace().getBlockById(id);
+    if (!block) throw new Error('block not found');
+    return block.getRelativeToSurfaceXY();
+  }, id);
 }

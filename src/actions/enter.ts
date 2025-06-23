@@ -6,10 +6,8 @@
 
 import {
   Events,
-  Msg,
   ShortcutRegistry,
   utils as BlocklyUtils,
-  getFocusManager,
   BlockSvg,
   FlyoutButton,
   RenderedConnection,
@@ -55,33 +53,48 @@ export class EnterAction {
      */
     ShortcutRegistry.registry.register({
       name: Constants.SHORTCUT_NAMES.EDIT_OR_CONFIRM,
-      preconditionFn: (workspace) =>
-        this.navigation.canCurrentlyEdit(workspace),
-      callback: (workspace, event) => {
+      preconditionFn: (workspace): boolean => {
+        switch (this.navigation.getState()) {
+          case Constants.STATE.WORKSPACE:
+            return this.shouldHandleEnterForWS(workspace);
+          case Constants.STATE.FLYOUT: {
+            // If we're in the flyout the only supported actions are inserting
+            // blocks or clicking buttons, so don't handle this if the
+            // main workspace is read only.
+            const targetWorkspace = workspace.isFlyout
+              ? workspace.targetWorkspace
+              : workspace;
+            return !!targetWorkspace && !targetWorkspace.isReadOnly();
+          }
+          default:
+            return false;
+        }
+      },
+      callback: (workspace, event): boolean => {
         event.preventDefault();
+
+        const targetWorkspace = workspace.isFlyout
+          ? workspace.targetWorkspace
+          : workspace;
+        if (!targetWorkspace) return false;
 
         let flyoutCursor;
         let curNode;
 
-        switch (this.navigation.getState(workspace)) {
+        switch (this.navigation.getState()) {
           case Constants.STATE.WORKSPACE:
-            this.handleEnterForWS(workspace);
-            return true;
+            return this.handleEnterForWS(workspace);
           case Constants.STATE.FLYOUT:
-            if (!workspace.targetWorkspace) return false;
-            flyoutCursor = this.navigation.getFlyoutCursor(
-              workspace.targetWorkspace,
-            );
+            flyoutCursor = this.navigation.getFlyoutCursor(targetWorkspace);
             if (!flyoutCursor) {
               return false;
             }
             curNode = flyoutCursor.getCurNode();
             if (curNode instanceof BlockSvg) {
-              this.insertFromFlyout(workspace.targetWorkspace);
+              this.insertFromFlyout(targetWorkspace);
             } else if (curNode instanceof FlyoutButton) {
-              this.triggerButtonCallback(workspace);
+              this.triggerButtonCallback(targetWorkspace);
             }
-
             return true;
           default:
             return false;
@@ -92,32 +105,60 @@ export class EnterAction {
   }
 
   /**
+   * Checks if the enter key should do anything for this ws.
+   *
+   * @param workspace The workspace to check.
+   * @returns True if the enter action should be handled.
+   */
+  private shouldHandleEnterForWS(workspace: WorkspaceSvg): boolean {
+    const cursor = workspace.getCursor();
+    const curNode = cursor?.getCurNode();
+    if (!curNode) return false;
+    if (curNode instanceof Field) return curNode.isClickable();
+    if (
+      curNode instanceof RenderedConnection ||
+      curNode instanceof WorkspaceSvg
+    ) {
+      return !workspace.isReadOnly();
+    }
+    if (curNode instanceof BlockSvg) return true;
+    // Returning true is sometimes incorrect for icons, but there's no API to check.
+    if (curNode instanceof icons.Icon) return true;
+    return false;
+  }
+
+  /**
    * Handles hitting the enter key on the workspace.
    *
    * @param workspace The workspace.
+   * @returns True if the enter was handled, false otherwise.
    */
-  private handleEnterForWS(workspace: WorkspaceSvg) {
+  private handleEnterForWS(workspace: WorkspaceSvg): boolean {
     const cursor = workspace.getCursor();
-    if (!cursor) return;
-    const curNode = cursor.getCurNode();
-    if (!curNode) return;
+    const curNode = cursor?.getCurNode();
+    if (!curNode) return false;
     if (curNode instanceof Field) {
       curNode.showEditor();
+      return true;
     } else if (curNode instanceof BlockSvg) {
       if (!this.tryShowFullBlockFieldEditor(curNode)) {
         showHelpHint(workspace);
       }
+      return true;
     } else if (
       curNode instanceof RenderedConnection ||
       curNode instanceof WorkspaceSvg
     ) {
       this.navigation.openToolboxOrFlyout(workspace);
+      return true;
     } else if (curNode instanceof icons.Icon) {
       curNode.onClick();
       renderManagement.finishQueuedRenders().then(() => {
         cursor.in();
       });
+      return true;
     }
+    return false;
   }
 
   /**
@@ -150,8 +191,6 @@ export class EnterAction {
 
     workspace.setResizesEnabled(true);
 
-    getFocusManager().focusTree(workspace);
-    workspace.getCursor()?.setCurNode(newBlock);
     this.mover.startMove(workspace, newBlock, insertStartPoint);
 
     const isStartBlock =

@@ -9,8 +9,6 @@ import {
   Events,
   ShortcutRegistry,
   utils as BlocklyUtils,
-  Connection,
-  ConnectionType,
   keyboardNavigationController,
 } from 'blockly';
 import * as Constants from '../constants';
@@ -58,7 +56,7 @@ export class DisconnectAction {
         this.navigation.canCurrentlyEdit(workspace),
       callback: (workspace) => {
         keyboardNavigationController.setIsActive(true);
-        switch (this.navigation.getState(workspace)) {
+        switch (this.navigation.getState()) {
           case Constants.STATE.WORKSPACE:
             this.disconnectBlocks(workspace);
             return true;

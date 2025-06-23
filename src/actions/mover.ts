@@ -85,7 +85,7 @@ export class Mover {
    */
   canMove(workspace: WorkspaceSvg, block: BlockSvg) {
     return !!(
-      this.navigation.getState(workspace) === Constants.STATE.WORKSPACE &&
+      this.navigation.getState() === Constants.STATE.WORKSPACE &&
       this.navigation.canCurrentlyEdit(workspace) &&
       !this.moves.has(workspace) && // No move in progress.
       block?.isMovable()
@@ -143,8 +143,9 @@ export class Mover {
     dragger.onDragStart(info.fakePointerEvent('pointerdown'));
     info.updateTotalDelta();
     // In case the block is detached, ensure that it still retains focus
-    // (otherwise dragging will break).
-    getFocusManager().focusNode(block);
+    // (otherwise dragging will break). This is also the point a new block's
+    // initial insert position is scrolled into view.
+    workspace.getCursor()?.setCurNode(block);
     block.getFocusableElement().addEventListener('blur', blurListener);
 
     // Register a keyboard shortcut under the key combos of all existing
@@ -301,7 +302,7 @@ export class Mover {
 
     info.dragger.onDrag(
       info.fakePointerEvent('pointermove', direction),
-      info.totalDelta,
+      info.totalDelta.clone().scale(workspace.scale),
     );
 
     info.updateTotalDelta();
@@ -326,7 +327,10 @@ export class Mover {
     info.totalDelta.x += x * UNCONSTRAINED_MOVE_DISTANCE * workspace.scale;
     info.totalDelta.y += y * UNCONSTRAINED_MOVE_DISTANCE * workspace.scale;
 
-    info.dragger.onDrag(info.fakePointerEvent('pointermove'), info.totalDelta);
+    info.dragger.onDrag(
+      info.fakePointerEvent('pointermove'),
+      info.totalDelta.clone().scale(workspace.scale),
+    );
     this.scrollCurrentBlockIntoView(workspace);
     return true;
   }
