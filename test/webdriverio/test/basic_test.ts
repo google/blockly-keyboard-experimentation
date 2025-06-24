@@ -363,4 +363,27 @@ suite('Keyboard navigation on Fields', function () {
     // The same field should still be focused
     chai.assert.equal(await getFocusedFieldName(this.browser), 'BOOL');
   });
+
+  test('Do not reopen field editor when handling enter to make a choice inside the editor', async function () {
+    // Open colour picker
+    await focusOnBlockField(this.browser, 'colour_picker_1', 'COLOUR');
+    await this.browser.pause(PAUSE_TIME);
+    await this.browser.keys(Key.Enter);
+    await this.browser.pause(PAUSE_TIME);
+
+    // Move right to pick a new colour.
+    await keyRight(this.browser);
+    // Enter to choose.
+    await this.browser.keys(Key.Enter);
+    await this.browser.pause(1000);
+
+    // Check that browser focus is back on the colour block, not e.g. a widget
+    // or dropdown div. Not sufficient to check with the focus manager.
+    // TODO: fix and flip.
+    chai.assert.isFalse(
+      await this.browser.execute(() =>
+        document.activeElement?.classList.contains('blocklyActiveFocus'),
+      ),
+    );
+  });
 });
