@@ -64,7 +64,8 @@ export class EnterAction {
             const targetWorkspace = workspace.isFlyout
               ? workspace.targetWorkspace
               : workspace;
-            return !!targetWorkspace && !targetWorkspace.isReadOnly();
+            if (!targetWorkspace) return false;
+            return this.navigation.canCurrentlyEdit(targetWorkspace);
           }
           default:
             return false;
@@ -111,6 +112,8 @@ export class EnterAction {
    * @returns True if the enter action should be handled.
    */
   private shouldHandleEnterForWS(workspace: WorkspaceSvg): boolean {
+    if (!this.navigation.canCurrentlyNavigate(workspace)) return false;
+
     const cursor = workspace.getCursor();
     const curNode = cursor?.getCurNode();
     if (!curNode) return false;

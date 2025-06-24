@@ -96,7 +96,12 @@ export class Navigation {
    * @returns The state of the given workspace.
    */
   getState(): Constants.STATE {
-    const focusedTree = Blockly.getFocusManager().getFocusedTree();
+    const focusManager = Blockly.getFocusManager();
+    if (focusManager.ephemeralFocusTaken()) {
+      return Constants.STATE.NOWHERE;
+    }
+
+    const focusedTree = focusManager.getFocusedTree();
     if (focusedTree instanceof Blockly.WorkspaceSvg) {
       if (focusedTree.isFlyout) {
         return Constants.STATE.FLYOUT;
@@ -837,11 +842,7 @@ export class Navigation {
       workspace.targetWorkspace ??
       workspace
     ).keyboardAccessibilityMode;
-    return (
-      !!accessibilityMode &&
-      this.getState() !== Constants.STATE.NOWHERE &&
-      !Blockly.getFocusManager().ephemeralFocusTaken()
-    );
+    return !!accessibilityMode && this.getState() !== Constants.STATE.NOWHERE;
   }
 
   /**
@@ -854,7 +855,7 @@ export class Navigation {
    * @returns whether keyboard navigation and editing is currently allowed.
    */
   canCurrentlyEdit(workspace: Blockly.WorkspaceSvg) {
-    return this.canCurrentlyNavigate(workspace) && !workspace.options.readOnly;
+    return this.canCurrentlyNavigate(workspace) && !workspace.isReadOnly();
   }
 
   /**

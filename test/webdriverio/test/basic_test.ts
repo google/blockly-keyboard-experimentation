@@ -375,15 +375,14 @@ suite('Keyboard navigation on Fields', function () {
     await keyRight(this.browser);
     // Enter to choose.
     await this.browser.keys(Key.Enter);
-    await this.browser.pause(1000);
 
-    // Check that browser focus is back on the colour block, not e.g. a widget
-    // or dropdown div. Not sufficient to check with the focus manager.
-    // TODO: fix and flip.
-    chai.assert.isFalse(
-      await this.browser.execute(() =>
-        document.activeElement?.classList.contains('blocklyActiveFocus'),
-      ),
+    // Focus seems to take longer than a single pause to settle.
+    await this.browser.waitUntil(
+      () =>
+        this.browser.execute(() =>
+          document.activeElement?.classList.contains('blocklyActiveFocus'),
+        ),
+      {timeout: 1000},
     );
   });
 });
