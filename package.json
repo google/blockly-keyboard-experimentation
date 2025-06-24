@@ -49,7 +49,7 @@
   ],
   "devDependencies": {
     "@blockly/dev-scripts": "^4.0.8",
-    "@blockly/field-colour": "^6.0.0",
+    "@blockly/field-colour": "^6.0.2",
     "@eslint/eslintrc": "^2.1.2",
     "@eslint/js": "^8.49.0",
     "@types/chai": "^5.2.1",
