@@ -16,6 +16,8 @@ import {
   icons,
   FocusableTreeTraverser,
   renderManagement,
+  comments,
+  getFocusManager,
 } from 'blockly/core';
 
 import type {Block} from 'blockly/core';
@@ -124,9 +126,15 @@ export class EnterAction {
     ) {
       return !workspace.isReadOnly();
     }
-    if (curNode instanceof BlockSvg) return true;
     // Returning true is sometimes incorrect for icons, but there's no API to check.
-    if (curNode instanceof icons.Icon) return true;
+    if (
+      curNode instanceof BlockSvg ||
+      curNode instanceof icons.Icon ||
+      curNode instanceof comments.CommentIcon ||
+      curNode instanceof comments.RenderedWorkspaceComment
+    ) {
+      return true;
+    }
     return false;
   }
 
@@ -162,6 +170,14 @@ export class EnterAction {
       renderManagement.finishQueuedRenders().then(() => {
         cursor?.in();
       });
+      return true;
+    } else if (curNode instanceof comments.CommentIcon) {
+      curNode.performAction();
+      return true;
+    } else if (curNode instanceof comments.RenderedWorkspaceComment) {
+      curNode.setEditable(true);
+      curNode.setCollapsed(false);
+      getFocusManager().focusNode(curNode.getEditorFocusableNode());
       return true;
     }
     return false;
