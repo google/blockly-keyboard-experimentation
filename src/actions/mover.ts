@@ -42,6 +42,20 @@ const CONSTRAINED_ADDITIONAL_PADDING = 70;
 const COMMIT_MOVE_SHORTCUT = 'commitMove';
 
 /**
+ * Whether this is an insert or a move.
+ */
+export enum MoveType {
+  /**
+   * An insert will remove the block if the move is aborted.
+   */
+  Insert,
+  /**
+   * A regular move of a pre-existing block.
+   */
+  Move,
+}
+
+/**
  * Low-level code for moving blocks with keyboard shortcuts.
  */
 export class Mover {
@@ -100,16 +114,18 @@ export class Mover {
    *
    * @param workspace The workspace we might be moving on.
    * @param block The block to start dragging.
-   * @param insertStartPoint Where to insert the block, or null if the block
-   *     already existed.
+   * @param moveType Whether this is an insert or a move.
+   * @param startPoint Where to start the move, or null to use the current
+   *     location if any.
    * @returns True iff a move has successfully begun.
    */
   startMove(
     workspace: WorkspaceSvg,
     block: BlockSvg,
-    insertStartPoint: RenderedConnection | null,
+    moveType: MoveType,
+    startPoint: RenderedConnection | null,
   ) {
-    this.patchDragStrategy(block, insertStartPoint);
+    this.patchDragStrategy(block, moveType, startPoint);
     // Begin dragging block.
     const DraggerClass = registry.getClassFromOptions(
       registry.Type.BLOCK_DRAGGER,
@@ -211,10 +227,7 @@ export class Mover {
     const info = this.preDragEndCleanup(workspace);
 
     const dragStrategy = info.block.getDragStrategy() as KeyboardDragStrategy;
-    this.patchDragger(
-      info.dragger as dragging.Dragger,
-      dragStrategy.isNewBlock,
-    );
+    this.patchDragger(info.dragger as dragging.Dragger, dragStrategy.moveType);
 
     // Save the position so we can put the cursor in a reasonable spot.
     // @ts-expect-error Access to private property connectionCandidate.
@@ -229,7 +242,7 @@ export class Mover {
       info.startLocation,
     );
 
-    if (dragStrategy.isNewBlock && target) {
+    if (dragStrategy.moveType === MoveType.Insert && target) {
       workspace.getCursor()?.setCurNode(target);
     }
 
@@ -326,16 +339,20 @@ export class Mover {
    * Monkeypatch: replace the block's drag strategy and cache the old value.
    *
    * @param block The block to patch.
-   * @param insertStartPoint Where to insert the block, or null if the block
-   *     already existed.
+   * @param moveType Whether this is an insert or a move.
+   * @param startPoint Where to start the move, or null to use the current
+   *     location if any.
    */
   private patchDragStrategy(
     block: BlockSvg,
-    insertStartPoint: RenderedConnection | null,
+    moveType: MoveType,
+    startPoint: RenderedConnection | null,
   ) {
     // @ts-expect-error block.dragStrategy is private.
     this.oldDragStrategy = block.dragStrategy;
-    block.setDragStrategy(new KeyboardDragStrategy(block, insertStartPoint));
+    block.setDragStrategy(
+      new KeyboardDragStrategy(block, moveType, startPoint),
+    );
   }
 
   /**
@@ -375,10 +392,10 @@ export class Mover {
    * an existing block.
    *
    * @param dragger The dragger to patch.
-   * @param isNewBlock Whether the moving block was created for this action.
+   * @param moveType Whether this is an insert or a move.
    */
-  private patchDragger(dragger: dragging.Dragger, isNewBlock: boolean) {
-    if (isNewBlock) {
+  private patchDragger(dragger: dragging.Dragger, moveType: MoveType) {
+    if (moveType === MoveType.Insert) {
       // Monkey patch dragger to trigger delete.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (dragger as any).wouldDeleteDraggable = () => true;

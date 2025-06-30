@@ -62,8 +62,7 @@ suite('Insert test', function () {
     // Cancel
     await this.browser.keys(Key.Escape);
 
-    // TODO: fix and invert
-    chai.assert.isTrue(await blockIsPresent(this.browser, ifId));
+    chai.assert.isFalse(await blockIsPresent(this.browser, ifId));
   });
 
   test('Insert C-shaped block with statement block selected', async function () {

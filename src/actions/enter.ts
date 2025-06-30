@@ -22,7 +22,7 @@ import type {Block} from 'blockly/core';
 
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
-import {Mover} from './mover';
+import {Mover, MoveType} from './mover';
 import {
   showConstrainedMovementHint,
   showHelpHint,
@@ -191,13 +191,19 @@ export class EnterAction {
     const insertStartPoint = stationaryNode
       ? this.navigation.findInsertStartPoint(stationaryNode, newBlock)
       : null;
+
     if (workspace.getTopBlocks().includes(newBlock)) {
       this.positionNewTopLevelBlock(workspace, newBlock);
     }
 
     workspace.setResizesEnabled(true);
 
-    this.mover.startMove(workspace, newBlock, insertStartPoint);
+    this.mover.startMove(
+      workspace,
+      newBlock,
+      MoveType.Insert,
+      insertStartPoint,
+    );
 
     const isStartBlock =
       !newBlock.outputConnection &&

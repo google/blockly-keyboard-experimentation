@@ -15,7 +15,7 @@ import {
   getFocusManager,
 } from 'blockly';
 import {Direction} from '../drag_direction';
-import {Mover} from './mover';
+import {Mover, MoveType} from './mover';
 import {getMenuItem} from '../shortcut_formatting';
 
 const KeyCodes = utils.KeyCodes;
@@ -50,7 +50,8 @@ export class MoveActions {
             getFocusManager().focusNode(startBlock);
           }
           return (
-            !!startBlock && this.mover.startMove(workspace, startBlock, null)
+            !!startBlock &&
+            this.mover.startMove(workspace, startBlock, MoveType.Move, null)
           );
         },
         keyCodes: [KeyCodes.M],
@@ -177,7 +178,8 @@ export class MoveActions {
             getFocusManager().focusNode(startBlock);
           }
           return (
-            !!startBlock && this.mover.startMove(workspace, startBlock, null)
+            !!startBlock &&
+            this.mover.startMove(workspace, startBlock, MoveType.Move, null)
           );
         },
         scopeType: ContextMenuRegistry.ScopeType.BLOCK,
