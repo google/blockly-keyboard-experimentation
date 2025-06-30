@@ -33,6 +33,8 @@ export enum SHORTCUT_NAMES {
   DOWN = 'down',
   RIGHT = 'right',
   LEFT = 'left',
+  NEXT_STACK = 'next_stack',
+  PREVIOUS_STACK = 'previous_stack',
   INSERT = 'insert',
   EDIT_OR_CONFIRM = 'edit_or_confirm',
   DISCONNECT = 'disconnect',
@@ -100,4 +102,6 @@ SHORTCUT_CATEGORIES[Msg['SHORTCUTS_CODE_NAVIGATION']] = [
   SHORTCUT_NAMES.DOWN,
   SHORTCUT_NAMES.RIGHT,
   SHORTCUT_NAMES.LEFT,
+  SHORTCUT_NAMES.NEXT_STACK,
+  SHORTCUT_NAMES.PREVIOUS_STACK,
 ];
