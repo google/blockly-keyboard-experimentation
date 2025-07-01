@@ -130,7 +130,7 @@ export class EnterAction {
     if (
       curNode instanceof BlockSvg ||
       curNode instanceof icons.Icon ||
-      curNode instanceof comments.CommentIcon ||
+      curNode instanceof comments.CommentBarButton ||
       curNode instanceof comments.RenderedWorkspaceComment
     ) {
       return true;
@@ -171,11 +171,10 @@ export class EnterAction {
         cursor?.in();
       });
       return true;
-    } else if (curNode instanceof comments.CommentIcon) {
+    } else if (curNode instanceof comments.CommentBarButton) {
       curNode.performAction();
       return true;
     } else if (curNode instanceof comments.RenderedWorkspaceComment) {
-      curNode.setEditable(true);
       curNode.setCollapsed(false);
       getFocusManager().focusNode(curNode.getEditorFocusableNode());
       return true;
