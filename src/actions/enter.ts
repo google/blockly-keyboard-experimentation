@@ -127,15 +127,10 @@ export class EnterAction {
       return !workspace.isReadOnly();
     }
     // Returning true is sometimes incorrect for icons, but there's no API to check.
-    if (
-      curNode instanceof BlockSvg ||
+    return curNode instanceof BlockSvg ||
       curNode instanceof icons.Icon ||
       curNode instanceof comments.CommentBarButton ||
-      curNode instanceof comments.RenderedWorkspaceComment
-    ) {
-      return true;
-    }
-    return false;
+      curNode instanceof comments.RenderedWorkspaceComment;
   }
 
   /**
