@@ -86,7 +86,7 @@ suite(
 
       chai.assert.isFalse(await isKeyboardNavigating(this.browser));
 
-      this.browser.execute(() => {
+      await this.browser.execute(() => {
         Blockly.keyboardNavigationController.setIsActive(true);
       });
 
@@ -106,7 +106,7 @@ suite(
 
       chai.assert.isFalse(await isKeyboardNavigating(this.browser));
 
-      this.browser.execute(() => {
+      await this.browser.execute(() => {
         Blockly.keyboardNavigationController.setIsActive(true);
       });
 
@@ -126,7 +126,7 @@ suite(
 
       await this.browser.pause(PAUSE_TIME);
       // Right click a block
-      clickBlock(this.browser, 'controls_if_1', {button: 'right'});
+      await clickBlock(this.browser, 'controls_if_1', {button: 'right'});
       await this.browser.pause(PAUSE_TIME);
 
       chai.assert.isFalse(await isKeyboardNavigating(this.browser));
