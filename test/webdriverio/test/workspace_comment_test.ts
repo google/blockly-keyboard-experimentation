@@ -51,6 +51,18 @@ suite('Workspace comment navigation', function () {
 
       return [comment1.id, comment2.id];
     });
+
+    this.getCommentLocation = async (commentId: string) => {
+      return this.browser.execute((commentId: string) => {
+        const comment = Blockly.getMainWorkspace().getCommentById(commentId);
+        if (!comment) return null;
+        const bounds = (
+          comment as Blockly.comments.RenderedWorkspaceComment
+        ).getBoundingRectangle();
+
+        return [bounds.left, bounds.top];
+      }, commentId);
+    };
   });
 
   test('Navigate forward from block to workspace comment', async function () {
@@ -176,5 +188,29 @@ suite('Workspace comment navigation', function () {
       await contextMenuExists(this.browser, 'Remove Comment'),
       'The menu should be openable on a workspace comment',
     );
+    chai.assert.isTrue(
+      await contextMenuExists(this.browser, 'Move CommentM'),
+      'The menu should be openable on a workspace comment',
+    );
+  });
+
+  test('Workspace comments can be moved', async function () {
+    await focusOnWorkspaceComment(this.browser, this.comment1);
+
+    const initialPosition = await this.getCommentLocation(this.comment1);
+    chai.assert.deepEqual(initialPosition, [200, 200]);
+
+    await this.browser.keys('m');
+    await this.browser.pause(PAUSE_TIME);
+    await this.browser.keys([Key.Alt, Key.ArrowDown]);
+    await this.browser.pause(PAUSE_TIME);
+    await this.browser.keys([Key.Alt, Key.ArrowDown]);
+    await this.browser.pause(PAUSE_TIME);
+    await this.browser.keys([Key.Alt, Key.ArrowRight]);
+    await this.browser.pause(PAUSE_TIME);
+    await this.browser.keys(Key.Enter);
+
+    const newPosition = await this.getCommentLocation(this.comment1);
+    chai.assert.deepEqual(newPosition, [220, 240]);
   });
 });
