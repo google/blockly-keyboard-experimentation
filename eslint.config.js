@@ -144,6 +144,8 @@ module.exports = [
         ecmaVersion: 6,
         sourceType: 'module',
         warnOnUnsupportedTypeScriptVersion: true,
+        project: true,
+        tsconfigRootDir: __dirname,
       },
     },
     settings: {
@@ -239,6 +241,7 @@ module.exports = [
 
       '@typescript-eslint/no-empty-interface': 'error',
       '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-inferrable-types': 'error',
       '@typescript-eslint/no-misused-new': 'error',
       '@typescript-eslint/no-namespace': 'error',

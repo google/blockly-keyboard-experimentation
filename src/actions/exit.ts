@@ -53,7 +53,7 @@ export class ExitAction {
                     icon.getBubble()?.getWorkspace() === workspace,
                 );
               if (parent) {
-                parent.setBubbleVisible(false);
+                void parent.setBubbleVisible(false);
                 getFocusManager().focusNode(parent);
                 return true;
               }
