@@ -425,6 +425,19 @@ export async function tabNavigateToWorkspace(
 }
 
 /**
+ * Uses tabs to navigate to the toolbox on the test page (i.e. by going
+ * through top-level tab stops). Assumes initial load tab position.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ */
+export async function tabNavigateToToolbox(browser: WebdriverIO.Browser) {
+  // Initial pre-injection focusable div element.
+  await tabNavigateForward(browser);
+  // Toolbox.
+  await tabNavigateForward(browser);
+}
+
+/**
  * Navigates forward to the test page's next tab stop.
  *
  * @param browser The active WebdriverIO Browser object.
