@@ -129,3 +129,16 @@ export class KeyboardNavigation {
     this.navigationController.shortcutDialog.toggle(this.workspace);
   }
 }
+
+// Register CSS used by the plugin.
+//
+// This is broken up into sections by purpose, with some notes about
+// where it should eventually live.
+
+// Enable the delete icon for comments.
+Blockly.Css.register(`
+  .blocklyDeleteIcon {
+    display: block;
+  }
+`);
+
