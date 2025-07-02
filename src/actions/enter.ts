@@ -185,7 +185,10 @@ export class EnterAction {
       Events.setGroup(true);
     }
 
-    const stationaryNode = FocusableTreeTraverser.findFocusedNode(workspace);
+    // If the workspace has never had focus default the stationary node.
+    const stationaryNode =
+      FocusableTreeTraverser.findFocusedNode(workspace) ??
+      workspace.getRestoredFocusableNode(null);
     const newBlock = this.createNewBlock(workspace);
     if (!newBlock) return;
     const insertStartPoint = stationaryNode

@@ -15,6 +15,8 @@ import {
   testFileLocations,
   testSetup,
   keyRight,
+  keyUp,
+  tabNavigateToToolbox,
 } from './test_setup.js';
 
 suite('Insert test', function () {
@@ -42,6 +44,25 @@ suite('Insert test', function () {
 
     chai.assert.equal(
       'procedures_defnoreturn',
+      await getFocusedBlockType(this.browser),
+    );
+  });
+
+  test('Insert without having focused the workspace', async function () {
+    await tabNavigateToToolbox(this.browser);
+
+    // Insert 'if' block
+    await keyRight(this.browser);
+    // Choose.
+    await this.browser.keys(Key.Enter);
+    // Confirm position.
+    await this.browser.keys(Key.Enter);
+
+    // Assert inserted inside first block p5_setup not at top-level.
+    chai.assert.equal('controls_if', await getFocusedBlockType(this.browser));
+    await keyUp(this.browser);
+    chai.assert.equal(
+      'p5_background_color',
       await getFocusedBlockType(this.browser),
     );
   });
