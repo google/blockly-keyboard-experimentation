@@ -142,3 +142,17 @@ Blockly.Css.register(`
   }
 `);
 
+// Set variables that will be used to control the appearance of the
+// focus indicators.  Attach them to the injectionDiv since they will
+// apply to things contained therein.
+//
+// This should be moved to core, either to core/css.ts
+// or to core/renderers/.
+Blockly.Css.register(`
+  .injectionDiv {
+    --blockly-active-node-color: #fff200;
+    --blockly-active-tree-color: #60a5fa;
+    --blockly-selection-width: 3px;
+  }
+`);
+
