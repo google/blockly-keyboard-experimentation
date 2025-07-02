@@ -243,6 +243,7 @@ module.exports = [
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-inferrable-types': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
       '@typescript-eslint/no-misused-new': 'error',
       '@typescript-eslint/no-namespace': 'error',
       '@typescript-eslint/no-non-null-assertion': 'warn',
