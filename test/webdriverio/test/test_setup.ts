@@ -264,6 +264,27 @@ export async function focusOnBlock(
 }
 
 /**
+ * Focuses and selects a workspace comment with the provided ID.
+ *
+ * This throws an error if no workspace comment exists for the specified ID.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param commentId The ID of the workspace comment to select.
+ */
+export async function focusOnWorkspaceComment(
+  browser: WebdriverIO.Browser,
+  commentId: string,
+) {
+  return await browser.execute((commentId) => {
+    const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
+    const comment = workspaceSvg.getCommentById(commentId);
+    if (!comment)
+      throw new Error(`No workspace comment found with ID: ${commentId}.`);
+    Blockly.getFocusManager().focusNode(comment);
+  }, commentId);
+}
+
+/**
  * Focuses and selects the field of a block given a block ID and field name.
  *
  * This throws an error if no block exists for the specified ID, or if the block
