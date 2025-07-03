@@ -156,3 +156,84 @@ Blockly.Css.register(`
   }
 `);
 
+// Styling focusing blocks, connections and fields.
+//
+// This should be moved to core, being integrated into the
+// existing styling of renderers in core/renderers/*/constants.ts.
+Blockly.Css.register(`
+  /* Blocks, connections and fields. */
+  .blocklyKeyboardNavigation
+    .blocklyActiveFocus:is(.blocklyPath, .blocklyHighlightedConnectionPath),
+  .blocklyKeyboardNavigation
+    .blocklyActiveFocus.blocklyField
+    > .blocklyFieldRect,
+  .blocklyKeyboardNavigation
+    .blocklyActiveFocus.blocklyIconGroup
+    > .blocklyIconShape:first-child {
+    stroke: var(--blockly-active-node-color);
+    stroke-width: var(--blockly-selection-width);
+  }
+  .blocklyKeyboardNavigation
+    .blocklyPassiveFocus:is(
+      .blocklyPath:not(.blocklyFlyout .blocklyPath),
+      .blocklyHighlightedConnectionPath
+    ),
+  .blocklyKeyboardNavigation
+    .blocklyPassiveFocus.blocklyField
+    > .blocklyFieldRect,
+  .blocklyKeyboardNavigation
+    .blocklyPassiveFocus.blocklyIconGroup
+    > .blocklyIconShape:first-child {
+    stroke: var(--blockly-active-node-color);
+    stroke-dasharray: 5px 3px;
+    stroke-width: var(--blockly-selection-width);
+  }
+  .blocklyKeyboardNavigation
+    .blocklyPassiveFocus.blocklyHighlightedConnectionPath {
+    /* The connection path is being unexpectedly hidden in core */
+    display: unset !important;
+  }
+`);
+
+// Styling for focusing the toolbox and flyout.
+//
+// This should be moved to core, to core/css.ts if not to somewhere
+// more specific in core/toolbox/.
+Blockly.Css.register(`
+  .blocklyKeyboardNavigation .blocklyFlyout:has(.blocklyActiveFocus),
+  .blocklyKeyboardNavigation .blocklyToolbox:has(.blocklyActiveFocus),
+  .blocklyKeyboardNavigation
+    .blocklyActiveFocus:is(.blocklyFlyout, .blocklyToolbox) {
+    outline-offset: calc(var(--blockly-selection-width) * -1);
+    outline: var(--blockly-selection-width) solid
+      var(--blockly-active-tree-color);
+  }
+  .blocklyKeyboardNavigation
+    .blocklyToolboxCategoryContainer:focus-visible {
+    outline: none;
+  }
+`);
+
+// Styling for focusing the Workspace.
+//
+// This should be move to core, probably to core/css.ts.
+Blockly.Css.register(`
+  .blocklyKeyboardNavigation
+    .blocklyWorkspace:has(.blocklyActiveFocus)
+    .blocklyWorkspaceFocusRing,
+  .blocklyKeyboardNavigation
+    .blocklySvg:has(~ .blocklyBlockDragSurface .blocklyActiveFocus)
+    .blocklyWorkspaceFocusRing,
+  .blocklyKeyboardNavigation
+    .blocklyWorkspace.blocklyActiveFocus
+    .blocklyWorkspaceFocusRing {
+    stroke: var(--blockly-active-tree-color);
+    stroke-width: calc(var(--blockly-selection-width) * 2);
+  }
+  .blocklyKeyboardNavigation
+    .blocklyWorkspace.blocklyActiveFocus
+    .blocklyWorkspaceSelectionRing {
+    stroke: var(--blockly-active-node-color);
+    stroke-width: var(--blockly-selection-width);
+  }
+`);
