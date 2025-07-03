@@ -136,6 +136,9 @@ export class KeyboardNavigation {
 // where it should eventually live.
 
 // Enable the delete icon for comments.
+//
+// This should remain in the plugin for the time being because we do
+// not want to display the delete icon by default.
 Blockly.Css.register(`
   .blocklyDeleteIcon {
     display: block;
