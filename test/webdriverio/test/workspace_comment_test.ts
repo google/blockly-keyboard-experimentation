@@ -29,7 +29,7 @@ suite('Workspace comment navigation', function () {
   // Setup Selenium for all of the tests
   setup(async function () {
     this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
-    [this.comment1, this.comment2] = await this.browser.execute(() => {
+    [this.commentId1, this.commentId2] = await this.browser.execute(() => {
       const workspace = Blockly.getMainWorkspace();
       const comment1 = Blockly.serialization.workspaceComments.append(
         {
@@ -69,11 +69,11 @@ suite('Workspace comment navigation', function () {
     await focusOnBlock(this.browser, 'p5_canvas_1');
     await keyDown(this.browser);
     const focusedNodeId = await getCurrentFocusNodeId(this.browser);
-    chai.assert.equal(focusedNodeId, this.comment1);
+    chai.assert.equal(focusedNodeId, this.commentId1);
   });
 
   test('Navigate forward from workspace comment to block', async function () {
-    await focusOnWorkspaceComment(this.browser, this.comment2);
+    await focusOnWorkspaceComment(this.browser, this.commentId2);
     await keyDown(this.browser);
     const focusedBlock = await getFocusedBlockType(this.browser);
     chai.assert.equal(focusedBlock, 'p5_draw');
@@ -83,64 +83,64 @@ suite('Workspace comment navigation', function () {
     await focusOnBlock(this.browser, 'p5_draw_1');
     await keyUp(this.browser);
     const focusedNodeId = await getCurrentFocusNodeId(this.browser);
-    chai.assert.equal(focusedNodeId, this.comment2);
+    chai.assert.equal(focusedNodeId, this.commentId2);
   });
 
   test('Navigate backward from workspace comment to block', async function () {
-    await focusOnWorkspaceComment(this.browser, this.comment1);
+    await focusOnWorkspaceComment(this.browser, this.commentId1);
     await keyUp(this.browser);
     const focusedBlock = await getFocusedBlockType(this.browser);
     chai.assert.equal(focusedBlock, 'p5_canvas');
   });
 
   test('Navigate forward from workspace comment to workspace comment', async function () {
-    await focusOnWorkspaceComment(this.browser, this.comment1);
+    await focusOnWorkspaceComment(this.browser, this.commentId1);
     await keyDown(this.browser);
     const focusedNodeId = await getCurrentFocusNodeId(this.browser);
-    chai.assert.equal(focusedNodeId, this.comment2);
+    chai.assert.equal(focusedNodeId, this.commentId2);
   });
 
   test('Navigate backward from workspace comment to workspace comment', async function () {
-    await focusOnWorkspaceComment(this.browser, this.comment2);
+    await focusOnWorkspaceComment(this.browser, this.commentId2);
     await keyUp(this.browser);
     const focusedNodeId = await getCurrentFocusNodeId(this.browser);
-    chai.assert.equal(focusedNodeId, this.comment1);
+    chai.assert.equal(focusedNodeId, this.commentId1);
   });
 
   test('Navigate forward from workspace comment to workspace comment button', async function () {
-    await focusOnWorkspaceComment(this.browser, this.comment1);
+    await focusOnWorkspaceComment(this.browser, this.commentId1);
     await keyRight(this.browser);
     const focusedNodeId = await getCurrentFocusNodeId(this.browser);
-    chai.assert.equal(focusedNodeId, `${this.comment1}_collapse_bar_button`);
+    chai.assert.equal(focusedNodeId, `${this.commentId1}_collapse_bar_button`);
   });
 
   test('Navigate backward from workspace comment button to workspace comment', async function () {
-    await focusOnWorkspaceComment(this.browser, this.comment1);
+    await focusOnWorkspaceComment(this.browser, this.commentId1);
     await keyRight(this.browser);
     await keyLeft(this.browser);
     const focusedNodeId = await getCurrentFocusNodeId(this.browser);
-    chai.assert.equal(focusedNodeId, this.comment1);
+    chai.assert.equal(focusedNodeId, this.commentId1);
   });
 
   test('Navigate forward from workspace comment button to workspace comment button', async function () {
-    await focusOnWorkspaceComment(this.browser, this.comment1);
+    await focusOnWorkspaceComment(this.browser, this.commentId1);
     await keyRight(this.browser);
     await keyRight(this.browser);
     const focusedNodeId = await getCurrentFocusNodeId(this.browser);
-    chai.assert.equal(focusedNodeId, `${this.comment1}_delete_bar_button`);
+    chai.assert.equal(focusedNodeId, `${this.commentId1}_delete_bar_button`);
   });
 
   test('Navigate backward from workspace comment button to workspace comment button', async function () {
-    await focusOnWorkspaceComment(this.browser, this.comment1);
+    await focusOnWorkspaceComment(this.browser, this.commentId1);
     await keyRight(this.browser);
     await keyRight(this.browser);
     await keyLeft(this.browser);
     const focusedNodeId = await getCurrentFocusNodeId(this.browser);
-    chai.assert.equal(focusedNodeId, `${this.comment1}_collapse_bar_button`);
+    chai.assert.equal(focusedNodeId, `${this.commentId1}_collapse_bar_button`);
   });
 
   test('Activate workspace comment button', async function () {
-    await focusOnWorkspaceComment(this.browser, this.comment1);
+    await focusOnWorkspaceComment(this.browser, this.commentId1);
     await keyRight(this.browser);
     await this.browser.keys(Key.Enter);
     await this.browser.pause(PAUSE_TIME);
@@ -148,36 +148,36 @@ suite('Workspace comment navigation', function () {
       return Blockly.getMainWorkspace()
         .getCommentById(commentId)
         ?.isCollapsed();
-    }, this.comment1);
+    }, this.commentId1);
     chai.assert.isTrue(collapsed);
   });
 
   test('Activating workspace comment focuses its editor', async function () {
-    await focusOnWorkspaceComment(this.browser, this.comment1);
+    await focusOnWorkspaceComment(this.browser, this.commentId1);
     await this.browser.keys(Key.Enter);
     await this.browser.pause(PAUSE_TIME);
     const focusedNodeId = await getCurrentFocusNodeId(this.browser);
-    chai.assert.equal(focusedNodeId, `${this.comment1}_comment_textarea_`);
+    chai.assert.equal(focusedNodeId, `${this.commentId1}_comment_textarea_`);
   });
 
   test('Terminating editing commits edits and focuses root workspace comment', async function () {
-    await focusOnWorkspaceComment(this.browser, this.comment1);
+    await focusOnWorkspaceComment(this.browser, this.commentId1);
     await this.browser.keys(Key.Enter);
     await this.browser.pause(PAUSE_TIME);
     await this.browser.keys('Hello world');
     await this.browser.pause(PAUSE_TIME);
     await this.browser.keys(Key.Escape);
     const focusedNodeId = await getCurrentFocusNodeId(this.browser);
-    chai.assert.equal(focusedNodeId, `${this.comment1}`);
+    chai.assert.equal(focusedNodeId, `${this.commentId1}`);
 
     const commentText = await this.browser.execute((commentId) => {
       return Blockly.getMainWorkspace().getCommentById(commentId)?.getText();
-    }, this.comment1);
+    }, this.commentId1);
     chai.assert.equal(commentText, 'Comment oneHello world');
   });
 
   test('Action menu can be displayed for a workspace comment', async function () {
-    await focusOnWorkspaceComment(this.browser, this.comment1);
+    await focusOnWorkspaceComment(this.browser, this.commentId1);
     await this.browser.keys([Key.Ctrl, Key.Return]);
     await this.browser.pause(PAUSE_TIME);
     chai.assert.isTrue(
@@ -195,9 +195,9 @@ suite('Workspace comment navigation', function () {
   });
 
   test('Workspace comments can be moved', async function () {
-    await focusOnWorkspaceComment(this.browser, this.comment1);
+    await focusOnWorkspaceComment(this.browser, this.commentId1);
 
-    const initialPosition = await this.getCommentLocation(this.comment1);
+    const initialPosition = await this.getCommentLocation(this.commentId1);
     chai.assert.deepEqual(initialPosition, [200, 200]);
 
     await this.browser.keys('m');
@@ -210,7 +210,7 @@ suite('Workspace comment navigation', function () {
     await this.browser.pause(PAUSE_TIME);
     await this.browser.keys(Key.Enter);
 
-    const newPosition = await this.getCommentLocation(this.comment1);
+    const newPosition = await this.getCommentLocation(this.commentId1);
     chai.assert.deepEqual(newPosition, [220, 240]);
   });
 });
