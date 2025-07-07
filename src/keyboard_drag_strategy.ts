@@ -14,6 +14,7 @@ import {
 import {Direction, getDirectionFromXY} from './drag_direction';
 import {showUnconstrainedMoveHint} from './hints';
 import {MoveIcon} from './move_icon';
+import {MoveType} from './actions/mover';
 
 // Copied in from core because it is not exported.
 interface ConnectionCandidate {
@@ -35,14 +36,12 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   /** Where a constrained movement should start when traversing the tree. */
   private searchNode: RenderedConnection | null = null;
 
-  isNewBlock: boolean;
-
   constructor(
     private block: BlockSvg,
-    private insertStartPoint: RenderedConnection | null,
+    public moveType: MoveType,
+    private startPoint: RenderedConnection | null,
   ) {
     super(block);
-    this.isNewBlock = !!this.insertStartPoint;
   }
 
   override startDrag(e?: PointerEvent) {
@@ -300,7 +299,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
    */
   private createInitialCandidate(): ConnectionCandidate | null {
     // @ts-expect-error startParentConn is private.
-    const neighbour = this.insertStartPoint ?? this.startParentConn;
+    const neighbour = this.startPoint ?? this.startParentConn;
     if (neighbour) {
       this.searchNode = neighbour;
       switch (neighbour.type) {

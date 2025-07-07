@@ -264,6 +264,28 @@ export async function focusOnBlock(
 }
 
 /**
+ * Focuses and selects a workspace comment with the provided ID.
+ *
+ * This throws an error if no workspace comment exists for the specified ID.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param commentId The ID of the workspace comment to select.
+ */
+export async function focusOnWorkspaceComment(
+  browser: WebdriverIO.Browser,
+  commentId: string,
+) {
+  return await browser.execute((commentId) => {
+    const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
+    const comment = workspaceSvg.getCommentById(commentId);
+    if (!comment) {
+      throw new Error(`No workspace comment found with ID: ${commentId}.`);
+    }
+    Blockly.getFocusManager().focusNode(comment);
+  }, commentId);
+}
+
+/**
  * Focuses and selects the field of a block given a block ID and field name.
  *
  * This throws an error if no block exists for the specified ID, or if the block
@@ -422,6 +444,19 @@ export async function tabNavigateToWorkspace(
   if (hasToolbox) await tabNavigateForward(browser);
   if (hasFlyout) await tabNavigateForward(browser);
   await tabNavigateForward(browser); // Tab to the workspace itself.
+}
+
+/**
+ * Uses tabs to navigate to the toolbox on the test page (i.e. by going
+ * through top-level tab stops). Assumes initial load tab position.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ */
+export async function tabNavigateToToolbox(browser: WebdriverIO.Browser) {
+  // Initial pre-injection focusable div element.
+  await tabNavigateForward(browser);
+  // Toolbox.
+  await tabNavigateForward(browser);
 }
 
 /**
