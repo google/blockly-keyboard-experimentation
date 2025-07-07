@@ -318,6 +318,10 @@ export class Mover {
     const info = this.moves.get(workspace);
     if (!info) throw new Error('no move info for workspace');
 
+    if (info.draggable instanceof comments.RenderedWorkspaceComment) {
+      return this.moveUnconstrained(workspace, direction);
+    }
+
     info.dragger.onDrag(
       info.fakePointerEvent('pointermove', direction),
       info.totalDelta.clone().scale(workspace.scale),
