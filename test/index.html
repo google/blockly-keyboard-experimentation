@@ -115,15 +115,30 @@
         stroke: var(--blockly-active-node-color);
         stroke-width: var(--blockly-selection-width);
       }
-      .blocklyKeyboardNavigation
+      .blocklyKeyboardNavigation:not(
+          :has(
+              .blocklyDropDownDiv > .blocklyDropDownContent > *,
+              .blocklyWidgetDiv > *
+            )
+        )
         .blocklyPassiveFocus:is(
           .blocklyPath:not(.blocklyFlyout .blocklyPath),
           .blocklyHighlightedConnectionPath
         ),
-      .blocklyKeyboardNavigation
+      .blocklyKeyboardNavigation:not(
+          :has(
+              .blocklyDropDownDiv > .blocklyDropDownContent > *,
+              .blocklyWidgetDiv > *
+            )
+        )
         .blocklyPassiveFocus.blocklyField
         > .blocklyFieldRect,
-      .blocklyKeyboardNavigation
+      .blocklyKeyboardNavigation:not(
+          :has(
+              .blocklyDropDownDiv > .blocklyDropDownContent > *,
+              .blocklyWidgetDiv > *
+            )
+        )
         .blocklyPassiveFocus.blocklyIconGroup
         > .blocklyIconShape:first-child {
         stroke: var(--blockly-active-node-color);
@@ -154,6 +169,17 @@
         .blocklyWorkspaceFocusRing,
       .blocklyKeyboardNavigation
         .blocklyWorkspace.blocklyActiveFocus
+        .blocklyWorkspaceFocusRing,
+      .blocklyKeyboardNavigation
+        .blocklyWorkspace.blocklyActiveFocus
+        .blocklyWorkspaceFocusRing,
+      .blocklyKeyboardNavigation:has(
+          .blocklyDropDownDiv > .blocklyDropDownContent > *
+        ):focus-within
+        .blocklyWorkspace
+        .blocklyWorkspaceFocusRing,
+      .blocklyKeyboardNavigation:has(.blocklyWidgetDiv > *):focus-within
+        .blocklyWorkspace
         .blocklyWorkspaceFocusRing {
         stroke: var(--blockly-active-tree-color);
         stroke-width: calc(var(--blockly-selection-width) * 2);
