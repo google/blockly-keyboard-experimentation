@@ -29,13 +29,16 @@ export class MoveIndicatorBubble
    * @param sourceBlock The block this bubble should be associated with.
    */
   /* eslint-disable @typescript-eslint/naming-convention */
-  constructor(private sourceBlock: Blockly.BlockSvg) {
+  constructor(
+    private sourceElement: Blockly.ISelectable & Blockly.IBoundedElement,
+  ) {
+    const workspace = sourceElement.workspace as Blockly.WorkspaceSvg;
     this.svgRoot = Blockly.utils.dom.createSvgElement(
       Blockly.utils.Svg.G,
       {},
-      this.sourceBlock.workspace.getBubbleCanvas(),
+      workspace.getBubbleCanvas(),
     );
-    const rtl = this.sourceBlock.workspace.RTL;
+    const rtl = workspace.RTL;
     Blockly.utils.dom.createSvgElement(
       Blockly.utils.Svg.CIRCLE,
       {
@@ -88,13 +91,18 @@ export class MoveIndicatorBubble
    * Recalculates this bubble's location, keeping it adjacent to its block.
    */
   updateLocation() {
-    const bounds = this.sourceBlock.getBoundingRectangleWithoutChildren();
-    const x = this.sourceBlock.workspace.RTL
+    const bounds =
+      this.sourceElement instanceof Blockly.BlockSvg
+        ? this.sourceElement.getBoundingRectangleWithoutChildren()
+        : this.sourceElement.getBoundingRectangle();
+    const x = this.sourceElement.workspace.RTL
       ? bounds.left + 20
       : bounds.right - 20;
     const y = bounds.top - 20;
     this.moveTo(x, y);
-    this.sourceBlock.workspace.getLayerManager()?.moveToDragLayer(this);
+    (this.sourceElement.workspace as Blockly.WorkspaceSvg)
+      .getLayerManager()
+      ?.moveToDragLayer(this);
   }
 
   /**
