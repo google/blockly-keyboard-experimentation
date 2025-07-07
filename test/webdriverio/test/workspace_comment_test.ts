@@ -189,7 +189,7 @@ suite('Workspace comment navigation', function () {
     );
   });
 
-  test('Workspace comments can be moved', async function () {
+  test('Workspace comments can be moved in unconstrained mode', async function () {
     await focusOnWorkspaceComment(this.browser, this.commentId1);
 
     const initialPosition = await this.getCommentLocation(this.commentId1);
@@ -202,5 +202,20 @@ suite('Workspace comment navigation', function () {
 
     const newPosition = await this.getCommentLocation(this.commentId1);
     chai.assert.deepEqual(newPosition, [220, 240]);
+  });
+
+  test('Workspace comments can be moved in constrained mode', async function () {
+    await focusOnWorkspaceComment(this.browser, this.commentId1);
+
+    const initialPosition = await this.getCommentLocation(this.commentId1);
+    chai.assert.deepEqual(initialPosition, [200, 200]);
+
+    await sendKeyAndWait(this.browser, 'm');
+    await sendKeyAndWait(this.browser, Key.ArrowUp, 2);
+    await sendKeyAndWait(this.browser, Key.ArrowLeft);
+    await sendKeyAndWait(this.browser, Key.Enter);
+
+    const newPosition = await this.getCommentLocation(this.commentId1);
+    chai.assert.deepEqual(newPosition, [180, 160]);
   });
 });
