@@ -91,8 +91,8 @@ export class DuplicateAction {
         return false;
       },
       callback(workspace, e, shortcut, scope) {
-        const copiable = scope.focusedNode as ICopyable<ICopyData>;
-        const data = copiable.toCopyData();
+        const copyable = scope.focusedNode as ICopyable<ICopyData>;
+        const data = copyable.toCopyData();
         if (!data) return false;
         return !!clipboard.paste(data, workspace);
       },
