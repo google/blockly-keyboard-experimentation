@@ -5,7 +5,6 @@
  */
 
 import {
-  BlockSvg,
   ContextMenuRegistry,
   Msg,
   ShortcutRegistry,
@@ -13,6 +12,11 @@ import {
   WorkspaceSvg,
   keyboardNavigationController,
   getFocusManager,
+  comments,
+  IDraggable,
+  IFocusableNode,
+  IBoundedElement,
+  ISelectable,
 } from 'blockly';
 import {Direction} from '../drag_direction';
 import {Mover} from './mover';
@@ -24,7 +28,7 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
 );
 
 /**
- * Actions for moving blocks with keyboard shortcuts.
+ * Actions for moving workspace elements with keyboard shortcuts.
  */
 export class MoveActions {
   constructor(private mover: Mover) {}
@@ -38,19 +42,22 @@ export class MoveActions {
       {
         name: 'start_move',
         preconditionFn: (workspace) => {
-          const startBlock = this.getCurrentBlock(workspace);
-          return !!startBlock && this.mover.canMove(workspace, startBlock);
+          const startDraggable = this.getCurrentDraggable(workspace);
+          return (
+            !!startDraggable && this.mover.canMove(workspace, startDraggable)
+          );
         },
         callback: (workspace) => {
           keyboardNavigationController.setIsActive(true);
-          const startBlock = this.getCurrentBlock(workspace);
-          // Focus the start block in case one of its fields or a shadow block
+          const startDraggable = this.getCurrentDraggable(workspace);
+          // Focus the root draggable in case one of its children
           // was focused when the move was triggered.
-          if (startBlock) {
-            getFocusManager().focusNode(startBlock);
+          if (startDraggable) {
+            getFocusManager().focusNode(startDraggable);
           }
           return (
-            !!startBlock && this.mover.startMove(workspace, startBlock, null)
+            !!startDraggable &&
+            this.mover.startMove(workspace, startDraggable, null)
           );
         },
         keyCodes: [KeyCodes.M],
@@ -162,26 +169,50 @@ export class MoveActions {
           if (!workspace || menuOpenEvent instanceof PointerEvent)
             return 'hidden';
 
-          const startBlock = this.getCurrentBlock(workspace);
-          return !!startBlock && this.mover.canMove(workspace, startBlock)
+          const startDraggable = this.getCurrentDraggable(workspace);
+          return !!startDraggable &&
+            this.mover.canMove(workspace, startDraggable)
             ? 'enabled'
             : 'disabled';
         },
         callback: (scope) => {
           const workspace = scope.block?.workspace as WorkspaceSvg | null;
           if (!workspace) return false;
-          const startBlock = this.getCurrentBlock(workspace);
+          const startDraggable = this.getCurrentDraggable(workspace);
           // Focus the start block in case one of its fields or a shadow block
           // was focused when the move was triggered.
-          if (startBlock) {
-            getFocusManager().focusNode(startBlock);
+          if (startDraggable) {
+            getFocusManager().focusNode(startDraggable);
           }
           return (
-            !!startBlock && this.mover.startMove(workspace, startBlock, null)
+            !!startDraggable &&
+            this.mover.startMove(workspace, startDraggable, null)
           );
         },
         scopeType: ContextMenuRegistry.ScopeType.BLOCK,
         id: 'move',
+        weight: 8.5,
+      },
+      {
+        displayText: getMenuItem(
+          Msg['MOVE_COMMENT'] ?? 'Move Comment',
+          'start_move',
+        ),
+        preconditionFn: (scope, menuOpenEvent) => {
+          const comment = scope.comment;
+          if (!comment) return 'hidden';
+
+          return this.mover.canMove(comment.workspace, comment)
+            ? 'enabled'
+            : 'disabled';
+        },
+        callback: (scope) => {
+          const comment = scope.comment;
+          if (!comment) return false;
+          this.mover.startMove(comment.workspace, comment, null);
+        },
+        scopeType: ContextMenuRegistry.ScopeType.COMMENT,
+        id: 'move_comment',
         weight: 8.5,
       },
     ];
@@ -214,16 +245,21 @@ export class MoveActions {
   }
 
   /**
-   * Get the source block for the cursor location, or undefined if no
-   * source block can be found.
+   * Get the source draggable for the cursor location, or undefined if no
+   * source draggable can be found.
    * If the cursor is on a shadow block, walks up the tree until it finds
    * a non-shadow block to drag.
    *
    * @param workspace The workspace to inspect for a cursor.
-   * @returns The source block, or undefined if no appropriate block
+   * @returns The source draggable, or undefined if no appropriate draggable
    *     could be found.
    */
-  getCurrentBlock(workspace: WorkspaceSvg): BlockSvg | undefined {
+  getCurrentDraggable(
+    workspace: WorkspaceSvg,
+  ): (IDraggable & IFocusableNode & IBoundedElement & ISelectable) | undefined {
+    const node = getFocusManager().getFocusedNode();
+    if (node instanceof comments.RenderedWorkspaceComment) return node;
+
     let block = workspace?.getCursor()?.getSourceBlock();
     if (!block) return undefined;
     while (block.isShadow()) {
