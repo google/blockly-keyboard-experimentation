@@ -278,8 +278,9 @@ export async function focusOnWorkspaceComment(
   return await browser.execute((commentId) => {
     const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
     const comment = workspaceSvg.getCommentById(commentId);
-    if (!comment)
+    if (!comment) {
       throw new Error(`No workspace comment found with ID: ${commentId}.`);
+    }
     Blockly.getFocusManager().focusNode(comment);
   }, commentId);
 }
