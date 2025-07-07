@@ -64,7 +64,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload build folder
-          path: './blockly-keyboard-experimentation/dist'
+          path: './blockly-keyboard-experimentation/build'
 
   deploy:
     environment:
