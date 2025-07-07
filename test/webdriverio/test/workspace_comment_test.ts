@@ -13,8 +13,8 @@ import {
   getFocusedBlockType,
   testSetup,
   focusOnWorkspaceComment,
+  sendKeyAndWait,
   testFileLocations,
-  PAUSE_TIME,
   keyLeft,
   keyRight,
   keyDown,
@@ -142,8 +142,7 @@ suite('Workspace comment navigation', function () {
   test('Activate workspace comment button', async function () {
     await focusOnWorkspaceComment(this.browser, this.commentId1);
     await keyRight(this.browser);
-    await this.browser.keys(Key.Enter);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Enter);
     const collapsed = await this.browser.execute((commentId) => {
       return Blockly.getMainWorkspace()
         .getCommentById(commentId)
@@ -154,19 +153,16 @@ suite('Workspace comment navigation', function () {
 
   test('Activating workspace comment focuses its editor', async function () {
     await focusOnWorkspaceComment(this.browser, this.commentId1);
-    await this.browser.keys(Key.Enter);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Enter);
     const focusedNodeId = await getCurrentFocusNodeId(this.browser);
     chai.assert.equal(focusedNodeId, `${this.commentId1}_comment_textarea_`);
   });
 
   test('Terminating editing commits edits and focuses root workspace comment', async function () {
     await focusOnWorkspaceComment(this.browser, this.commentId1);
-    await this.browser.keys(Key.Enter);
-    await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys('Hello world');
-    await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.Escape);
+    await sendKeyAndWait(this.browser, Key.Enter);
+    await sendKeyAndWait(this.browser, 'Hello world');
+    await sendKeyAndWait(this.browser, Key.Escape);
     const focusedNodeId = await getCurrentFocusNodeId(this.browser);
     chai.assert.equal(focusedNodeId, `${this.commentId1}`);
 
@@ -178,8 +174,7 @@ suite('Workspace comment navigation', function () {
 
   test('Action menu can be displayed for a workspace comment', async function () {
     await focusOnWorkspaceComment(this.browser, this.commentId1);
-    await this.browser.keys([Key.Ctrl, Key.Return]);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
     chai.assert.isTrue(
       await contextMenuExists(this.browser, 'Duplicate Comment'),
       'The menu should be openable on a workspace comment',
@@ -200,15 +195,10 @@ suite('Workspace comment navigation', function () {
     const initialPosition = await this.getCommentLocation(this.commentId1);
     chai.assert.deepEqual(initialPosition, [200, 200]);
 
-    await this.browser.keys('m');
-    await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys([Key.Alt, Key.ArrowDown]);
-    await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys([Key.Alt, Key.ArrowDown]);
-    await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys([Key.Alt, Key.ArrowRight]);
-    await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.Enter);
+    await sendKeyAndWait(this.browser, 'm');
+    await sendKeyAndWait(this.browser, [Key.Alt, Key.ArrowDown], 2);
+    await sendKeyAndWait(this.browser, [Key.Alt, Key.ArrowRight]);
+    await sendKeyAndWait(this.browser, Key.Enter);
 
     const newPosition = await this.getCommentLocation(this.commentId1);
     chai.assert.deepEqual(newPosition, [220, 240]);
