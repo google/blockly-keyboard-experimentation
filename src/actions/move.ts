@@ -19,7 +19,7 @@ import {
   ISelectable,
 } from 'blockly';
 import {Direction} from '../drag_direction';
-import {Mover} from './mover';
+import {Mover, MoveType} from './mover';
 import {getMenuItem} from '../shortcut_formatting';
 
 const KeyCodes = utils.KeyCodes;
@@ -57,7 +57,7 @@ export class MoveActions {
           }
           return (
             !!startDraggable &&
-            this.mover.startMove(workspace, startDraggable, null)
+            this.mover.startMove(workspace, startDraggable, MoveType.Move, null)
           );
         },
         keyCodes: [KeyCodes.M],
@@ -186,7 +186,7 @@ export class MoveActions {
           }
           return (
             !!startDraggable &&
-            this.mover.startMove(workspace, startDraggable, null)
+            this.mover.startMove(workspace, startDraggable, MoveType.Move, null)
           );
         },
         scopeType: ContextMenuRegistry.ScopeType.BLOCK,
@@ -209,7 +209,7 @@ export class MoveActions {
         callback: (scope) => {
           const comment = scope.comment;
           if (!comment) return false;
-          this.mover.startMove(comment.workspace, comment, null);
+          this.mover.startMove(comment.workspace, comment, MoveType.Move, null);
         },
         scopeType: ContextMenuRegistry.ScopeType.COMMENT,
         id: 'move_comment',
