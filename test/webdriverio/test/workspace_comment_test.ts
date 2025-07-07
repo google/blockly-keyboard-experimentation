@@ -211,8 +211,8 @@ suite('Workspace comment navigation', function () {
     chai.assert.deepEqual(initialPosition, [200, 200]);
 
     await sendKeyAndWait(this.browser, 'm');
-    await sendKeyAndWait(this.browser, Key.ArrowUp, 2);
-    await sendKeyAndWait(this.browser, Key.ArrowLeft);
+    await keyUp(this.browser, 2);
+    await keyLeft(this.browser);
     await sendKeyAndWait(this.browser, Key.Enter);
 
     const newPosition = await this.getCommentLocation(this.commentId1);
