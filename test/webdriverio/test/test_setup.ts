@@ -551,6 +551,19 @@ export async function isDragging(
 }
 
 /**
+ * Returns whether Blockly's FocusManager currently holds ephemeral focus.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ */
+export async function isEphemeralFocusActive(
+  browser: WebdriverIO.Browser,
+): Promise<boolean> {
+  return await browser.execute(() =>
+    Blockly.getFocusManager().ephemeralFocusTaken(),
+  );
+}
+
+/**
  * Returns the result of the specificied action precondition.
  *
  * @param browser The active WebdriverIO Browser object.

@@ -21,6 +21,8 @@ import {
   keyRight,
   keyUp,
   keyDown,
+  sendKeyAndWait,
+  isEphemeralFocusActive,
 } from './test_setup.js';
 import {Key} from 'webdriverio';
 
@@ -239,13 +241,11 @@ suite('Keyboard navigation on Blocks', function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await focusOnBlock(this.browser, 'text_print_1');
-    await this.browser.keys('m');
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, 'm');
 
     chai.assert.isTrue(await isDragging(this.browser));
 
-    await this.browser.keys(Key.Tab);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Tab);
 
     chai.assert.isFalse(await isDragging(this.browser));
   });
@@ -354,8 +354,7 @@ suite('Keyboard navigation on Fields', function () {
     // Open a field editor dropdown
     await focusOnBlockField(this.browser, 'logic_boolean_1', 'BOOL');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.Enter);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Enter);
 
     // Try to navigate to a different block
     await keyRight(this.browser);
@@ -368,13 +367,12 @@ suite('Keyboard navigation on Fields', function () {
     // Open colour picker
     await focusOnBlockField(this.browser, 'colour_picker_1', 'COLOUR');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.Enter);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Enter);
 
     // Move right to pick a new colour.
     await keyRight(this.browser);
     // Enter to choose.
-    await this.browser.keys(Key.Enter);
+    await sendKeyAndWait(this.browser, Key.Enter);
 
     // Focus seems to take longer than a single pause to settle.
     await this.browser.waitUntil(
@@ -384,5 +382,37 @@ suite('Keyboard navigation on Fields', function () {
         ),
       {timeout: 1000},
     );
+  });
+
+  test('Exiting inline field editor should restore focus to field', async function () {
+    // Select a block with an inline-editable field.
+    await focusOnBlock(this.browser, 'p5_canvas_1');
+    // Select the field.
+    await keyRight(this.browser);
+    // Open the field's editor.
+    await sendKeyAndWait(this.browser, Key.Enter);
+
+    // Exit the editor.
+    await sendKeyAndWait(this.browser, Key.Escape);
+
+    // The field should be focused without ephemeral focus.
+    chai.assert.equal(await getFocusedFieldName(this.browser), 'WIDTH');
+    chai.assert.isFalse(await isEphemeralFocusActive(this.browser));
+  });
+
+  test('Exiting drop-down field editor should restore focus to field', async function () {
+    // Select a block with a drop-down editable field.
+    await focusOnBlock(this.browser, 'logic_boolean_1');
+    // Select the field.
+    await keyRight(this.browser);
+    // Open the field's editor.
+    await sendKeyAndWait(this.browser, Key.Enter);
+
+    // Exit the editor.
+    await sendKeyAndWait(this.browser, Key.Escape);
+
+    // The field should be focused without ephemeral focus.
+    chai.assert.equal(await getFocusedFieldName(this.browser), 'BOOL');
+    chai.assert.isFalse(await isEphemeralFocusActive(this.browser));
   });
 });
