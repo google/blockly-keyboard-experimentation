@@ -89,7 +89,7 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   if (!blocklyDiv) {
     throw new Error('Missing blocklyDiv');
   }
-  
+
   // Must be called before injection.
   KeyboardNavigation.registerKeyboardNavigationStyles();
   const workspace = Blockly.inject(blocklyDiv, injectOptions);
