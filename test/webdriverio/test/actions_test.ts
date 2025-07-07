@@ -35,7 +35,7 @@ suite('Menus test', function () {
     await focusOnBlock(this.browser, 'draw_circle_1');
     await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
     chai.assert.isTrue(
-      await contextMenuExists(this.browser, 'Duplicate'),
+      await contextMenuExists(this.browser, 'Collapse Block'),
       'The menu should be openable on a block',
     );
   });
@@ -64,7 +64,7 @@ suite('Menus test', function () {
     await sendKeyAndWait(this.browser, 'm');
     await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
     chai.assert.isTrue(
-      await contextMenuExists(this.browser, 'Duplicate', true),
+      await contextMenuExists(this.browser, 'Collapse Block', true),
       'The menu should not be openable during a move',
     );
   });
