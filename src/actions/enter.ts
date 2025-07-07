@@ -159,9 +159,13 @@ export class EnterAction {
       // opening a bubble of some sort. We then need to wait for the bubble to
       // appear before attempting to navigate into it.
       curNode.onClick();
-      renderManagement.finishQueuedRenders().then(() => {
-        cursor?.in();
-      });
+      // This currently only works for MutatorIcons.
+      // See icon_navigation_policy.
+      if (curNode instanceof icons.MutatorIcon) {
+        renderManagement.finishQueuedRenders().then(() => {
+          cursor?.in();
+        });
+      }
       return true;
     }
     return false;
