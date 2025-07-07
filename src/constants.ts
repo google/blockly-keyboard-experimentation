@@ -42,6 +42,7 @@ export enum SHORTCUT_NAMES {
   COPY = 'keyboard_nav_copy',
   CUT = 'keyboard_nav_cut',
   PASTE = 'keyboard_nav_paste',
+  DUPLICATE = 'duplicate',
   MOVE_WS_CURSOR_UP = 'workspace_up',
   MOVE_WS_CURSOR_DOWN = 'workspace_down',
   MOVE_WS_CURSOR_LEFT = 'workspace_left',
@@ -89,6 +90,7 @@ SHORTCUT_CATEGORIES[Msg['SHORTCUTS_EDITING']] = [
   'cut',
   'copy',
   'paste',
+  SHORTCUT_NAMES.DUPLICATE,
   'undo',
   'redo',
 ];

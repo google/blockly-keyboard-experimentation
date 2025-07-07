@@ -79,6 +79,7 @@ function createWorkspace(): Blockly.WorkspaceSvg {
     throw new Error('Missing blocklyDiv');
   }
   const workspace = Blockly.inject(blocklyDiv, injectOptions);
+  Blockly.ContextMenuItems.registerCommentOptions();
 
   new KeyboardNavigation(workspace);
 

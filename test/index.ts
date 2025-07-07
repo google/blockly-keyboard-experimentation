@@ -91,8 +91,8 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   }
   const workspace = Blockly.inject(blocklyDiv, injectOptions);
 
-  new KeyboardNavigation(workspace);
   Blockly.ContextMenuItems.registerCommentOptions();
+  new KeyboardNavigation(workspace);
   registerRunCodeShortcut();
 
   // Disable blocks that aren't inside the setup or draw loops.
