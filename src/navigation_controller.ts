@@ -35,6 +35,7 @@ import {DisconnectAction} from './actions/disconnect';
 import {ActionMenu} from './actions/action_menu';
 import {MoveActions} from './actions/move';
 import {Mover} from './actions/mover';
+import {DuplicateAction} from './actions/duplicate';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 
@@ -58,6 +59,8 @@ export class NavigationController {
   disconnectAction: DisconnectAction = new DisconnectAction(this.navigation);
 
   clipboard: Clipboard = new Clipboard(this.navigation);
+
+  duplicateAction = new DuplicateAction();
 
   workspaceMovement: WorkspaceMovement = new WorkspaceMovement(this.navigation);
 
@@ -244,6 +247,7 @@ export class NavigationController {
     this.actionMenu.install();
 
     this.clipboard.install();
+    this.duplicateAction.install();
     this.moveActions.install();
     this.shortcutDialog.install();
 
@@ -262,6 +266,7 @@ export class NavigationController {
     this.editAction.uninstall();
     this.disconnectAction.uninstall();
     this.clipboard.uninstall();
+    this.duplicateAction.uninstall();
     this.workspaceMovement.uninstall();
     this.arrowNavigation.uninstall();
     this.exitAction.uninstall();

@@ -35,7 +35,7 @@ suite('Menus test', function () {
     await this.browser.keys([Key.Ctrl, Key.Return]);
     await this.browser.pause(PAUSE_TIME);
     chai.assert.isTrue(
-      await contextMenuExists(this.browser, 'Duplicate'),
+      await contextMenuExists(this.browser, 'Collapse Block'),
       'The menu should be openable on a block',
     );
   });
@@ -66,7 +66,7 @@ suite('Menus test', function () {
     await this.browser.keys([Key.Ctrl, Key.Return]);
     await this.browser.pause(PAUSE_TIME);
     chai.assert.isTrue(
-      await contextMenuExists(this.browser, 'Duplicate', true),
+      await contextMenuExists(this.browser, 'Collapse Block', true),
       'The menu should not be openable during a move',
     );
   });
