@@ -128,30 +128,31 @@ export class KeyboardNavigation {
   toggleShortcutDialog(): void {
     this.navigationController.shortcutDialog.toggle(this.workspace);
   }
-}
 
-// Register CSS used by the plugin.
-//
-// This is broken up into sections by purpose, with some notes about
-// where it should eventually live.
-
-// Enable the delete icon for comments.
-//
-// This should remain in the plugin for the time being because we do
-// not want to display the delete icon by default.
-Blockly.Css.register(`
+  /**
+   * Register CSS used by the plugin.
+   * This is broken up into sections by purpose, with some notes about
+   * where it should eventually live.
+   * Must be called before `Blockly.inject`.
+   */
+  static registerKeyboardNavigationStyles() {
+    // Enable the delete icon for comments.
+    //
+    // This should remain in the plugin for the time being because we do
+    // not want to display the delete icon by default.
+    Blockly.Css.register(`
   .blocklyDeleteIcon {
     display: block;
   }
 `);
 
-// Set variables that will be used to control the appearance of the
-// focus indicators.  Attach them to the injectionDiv since they will
-// apply to things contained therein.
-//
-// This should be moved to core, either to core/css.ts
-// or to core/renderers/.
-Blockly.Css.register(`
+    // Set variables that will be used to control the appearance of the
+    // focus indicators.  Attach them to the injectionDiv since they will
+    // apply to things contained therein.
+    //
+    // This should be moved to core, either to core/css.ts
+    // or to core/renderers/.
+    Blockly.Css.register(`
   .injectionDiv {
     --blockly-active-node-color: #fff200;
     --blockly-active-tree-color: #60a5fa;
@@ -159,11 +160,11 @@ Blockly.Css.register(`
   }
 `);
 
-// Styling focusing blocks, connections and fields.
-//
-// This should be moved to core, being integrated into the
-// existing styling of renderers in core/renderers/*/constants.ts.
-Blockly.Css.register(`
+    // Styling focusing blocks, connections and fields.
+    //
+    // This should be moved to core, being integrated into the
+    // existing styling of renderers in core/renderers/*/constants.ts.
+    Blockly.Css.register(`
   /* Blocks, connections and fields. */
   .blocklyKeyboardNavigation
     .blocklyActiveFocus:is(.blocklyPath, .blocklyHighlightedConnectionPath),
@@ -198,11 +199,11 @@ Blockly.Css.register(`
   }
 `);
 
-// Styling for focusing the toolbox and flyout.
-//
-// This should be moved to core, to core/css.ts if not to somewhere
-// more specific in core/toolbox/.
-Blockly.Css.register(`
+    // Styling for focusing the toolbox and flyout.
+    //
+    // This should be moved to core, to core/css.ts if not to somewhere
+    // more specific in core/toolbox/.
+    Blockly.Css.register(`
   .blocklyKeyboardNavigation .blocklyFlyout:has(.blocklyActiveFocus),
   .blocklyKeyboardNavigation .blocklyToolbox:has(.blocklyActiveFocus),
   .blocklyKeyboardNavigation
@@ -217,10 +218,10 @@ Blockly.Css.register(`
   }
 `);
 
-// Styling for focusing the Workspace.
-//
-// This should be move to core, probably to core/css.ts.
-Blockly.Css.register(`
+    // Styling for focusing the Workspace.
+    //
+    // This should be move to core, probably to core/css.ts.
+    Blockly.Css.register(`
   .blocklyKeyboardNavigation
     .blocklyWorkspace:has(.blocklyActiveFocus)
     .blocklyWorkspaceFocusRing,
@@ -241,11 +242,11 @@ Blockly.Css.register(`
   }
 `);
 
-// Keyboard-nav-specific styling for the context menu.
-//
-// This should remain in the plugin for the time being because the
-// classes selected are currently only defined in the plugin.
-Blockly.Css.register(`
+    // Keyboard-nav-specific styling for the context menu.
+    //
+    // This should remain in the plugin for the time being because the
+    // classes selected are currently only defined in the plugin.
+    Blockly.Css.register(`
   .blocklyRTL .blocklyMenuItemContent .blocklyShortcutContainer {
     flex-direction: row-reverse;
   }
@@ -259,3 +260,5 @@ Blockly.Css.register(`
     color: #ccc;
   }
 `);
+  }
+}
