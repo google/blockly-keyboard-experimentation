@@ -167,7 +167,7 @@ export class EnterAction {
       // This currently only works for MutatorIcons.
       // See icon_navigation_policy.
       if (curNode instanceof icons.MutatorIcon) {
-        renderManagement.finishQueuedRenders().then(() => {
+        void renderManagement.finishQueuedRenders().then(() => {
           cursor?.in();
         });
       }
