@@ -398,8 +398,9 @@ export async function getFocusedFieldName(
   browser: WebdriverIO.Browser,
 ): Promise<string | undefined> {
   return await browser.execute(() => {
-    const field = Blockly.getFocusManager().getFocusedNode() as Blockly.Field;
-    return field.name;
+    const field =
+      Blockly.getFocusManager().getFocusedNode() as Blockly.Field | null;
+    return field?.name;
   });
 }
 

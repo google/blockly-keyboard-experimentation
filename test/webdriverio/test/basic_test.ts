@@ -405,8 +405,10 @@ suite('Keyboard navigation on Fields', function () {
     await focusOnBlock(this.browser, 'logic_boolean_1');
     // Select the field.
     await keyRight(this.browser);
-    // Open the field's editor.
+    // Open the field's editor and select the first option to give a child of
+    // the editor focus.
     await sendKeyAndWait(this.browser, Key.Enter);
+    await keyDown(this.browser);
 
     // Exit the editor.
     await sendKeyAndWait(this.browser, Key.Escape);
