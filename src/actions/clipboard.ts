@@ -11,6 +11,8 @@ import {
   Msg,
   ShortcutItems,
   WorkspaceSvg,
+  clipboard,
+  isSelectable,
 } from 'blockly';
 import * as Constants from '../constants';
 import {Navigation} from '../navigation';
@@ -31,14 +33,16 @@ const BASE_WEIGHT = 12;
  * In the long term, this will likely merge with the clipboard code in core.
  */
 export class Clipboard {
-  /** The workspace a copy or cut keyboard shortcut happened in. */
-  private copyWorkspace: WorkspaceSvg | null = null;
-
   private oldCutShortcut: ShortcutRegistry.KeyboardShortcut | undefined;
   private oldCopyShortcut: ShortcutRegistry.KeyboardShortcut | undefined;
   private oldPasteShortcut: ShortcutRegistry.KeyboardShortcut | undefined;
 
-  constructor(private navigation: Navigation) {}
+  constructor(
+    private navigation: Navigation,
+    private options: {allowCrossWorkspacePaste: boolean} = {
+      allowCrossWorkspacePaste: false,
+    },
+  ) {}
 
   /**
    * Install these actions as both keyboard shortcuts and context menu items.
@@ -84,8 +88,6 @@ export class Clipboard {
       name: Constants.SHORTCUT_NAMES.CUT,
       preconditionFn: this.oldCutShortcut.preconditionFn,
       callback: this.cutCallback.bind(this),
-      // The registry gives back keycodes as an object instead of an array
-      // See https://github.com/google/blockly/issues/9008
       keyCodes: this.oldCutShortcut.keyCodes,
       allowCollision: false,
     };
@@ -144,48 +146,6 @@ export class Clipboard {
   }
 
   /**
-   * Precondition function for the copy context menu. This wraps the core copy
-   * precondition to support context menus.
-   *
-   * @param scope scope of the shortcut or context menu item
-   * @returns 'enabled' if the node can be copied, 'disabled' otherwise.
-   */
-  private copyPrecondition(scope: ContextMenuRegistry.Scope): string {
-    const focused = scope.focusedNode;
-    if (!focused || !isCopyable(focused)) return 'hidden';
-
-    const workspace = focused.workspace;
-    if (!(workspace instanceof WorkspaceSvg)) return 'hidden';
-
-    if (
-      this.oldCopyShortcut?.preconditionFn &&
-      this.oldCopyShortcut.preconditionFn(workspace, scope)
-    ) {
-      return 'enabled';
-    }
-    return 'disabled';
-  }
-
-  /**
-   * Precondition function for the paste context menu. This wraps the core
-   * paste precondition to support context menus.
-   *
-   * @param scope scope of the shortcut or context menu item
-   * @returns 'enabled' if the node can be pasted, 'disabled' otherwise.
-   */
-  private pastePrecondition(scope: ContextMenuRegistry.Scope): string {
-    if (!this.copyWorkspace) return 'disabled';
-
-    if (
-      this.oldPasteShortcut?.preconditionFn &&
-      this.oldPasteShortcut.preconditionFn(this.copyWorkspace, scope)
-    ) {
-      return 'enabled';
-    }
-    return 'disabled';
-  }
-
-  /**
    * The callback for the cut action. Uses the registered version of the cut callback
    * to perform the cut logic, then pops a toast if cut happened.
    *
@@ -207,7 +167,6 @@ export class Clipboard {
       !!this.oldCutShortcut?.callback &&
       this.oldCutShortcut.callback(workspace, e, shortcut, scope);
     if (didCut) {
-      this.copyWorkspace = workspace;
       showCutHint(workspace);
     }
     return didCut;
@@ -227,8 +186,6 @@ export class Clipboard {
       name: Constants.SHORTCUT_NAMES.COPY,
       preconditionFn: this.oldCopyShortcut.preconditionFn,
       callback: this.copyCallback.bind(this),
-      // The registry gives back keycodes as an object instead of an array
-      // See https://github.com/google/blockly/issues/9008
       keyCodes: this.oldCopyShortcut.keyCodes,
       allowCollision: false,
     };
@@ -264,6 +221,29 @@ export class Clipboard {
   }
 
   /**
+   * Precondition function for the copy context menu. This wraps the core copy
+   * precondition to support context menus.
+   *
+   * @param scope scope of the shortcut or context menu item
+   * @returns 'enabled' if the node can be copied, 'disabled' otherwise.
+   */
+  private copyPrecondition(scope: ContextMenuRegistry.Scope): string {
+    const focused = scope.focusedNode;
+    if (!focused || !isCopyable(focused)) return 'hidden';
+
+    const workspace = focused.workspace;
+    if (!(workspace instanceof WorkspaceSvg)) return 'hidden';
+
+    if (
+      this.oldCopyShortcut?.preconditionFn &&
+      this.oldCopyShortcut.preconditionFn(workspace, scope)
+    ) {
+      return 'enabled';
+    }
+    return 'disabled';
+  }
+
+  /**
    * The callback for the copy action. Uses the registered version of the copy callback
    * to perform the copy logic, then pops a toast if copy happened.
    *
@@ -285,9 +265,6 @@ export class Clipboard {
       !!this.oldCopyShortcut?.callback &&
       this.oldCopyShortcut.callback(workspace, e, shortcut, scope);
     if (didCopy) {
-      this.copyWorkspace = workspace.isFlyout
-        ? workspace.targetWorkspace
-        : workspace;
       showCopiedHint(workspace);
     }
     return didCopy;
@@ -307,8 +284,6 @@ export class Clipboard {
       name: Constants.SHORTCUT_NAMES.PASTE,
       preconditionFn: this.oldPasteShortcut.preconditionFn,
       callback: this.pasteCallback.bind(this),
-      // The registry gives back keycodes as an object instead of an array
-      // See https://github.com/google/blockly/issues/9008
       keyCodes: this.oldPasteShortcut.keyCodes,
       allowCollision: false,
     };
@@ -330,8 +305,8 @@ export class Clipboard {
         getMenuItem(Msg['PASTE_SHORTCUT'], Constants.SHORTCUT_NAMES.PASTE),
       preconditionFn: (scope) => this.pastePrecondition(scope),
       callback: (scope: ContextMenuRegistry.Scope, menuOpenEvent: Event) => {
-        const workspace = this.copyWorkspace;
-        if (!workspace) return;
+        const workspace = this.getPasteWorkspace(scope);
+        if (!workspace) return false;
         return this.pasteCallback(workspace, menuOpenEvent, undefined, scope);
       },
       id: 'blockPasteFromContextMenu',
@@ -339,6 +314,59 @@ export class Clipboard {
     };
 
     ContextMenuRegistry.registry.register(pasteAction);
+  }
+
+  /**
+   * Get the workspace to paste into based on which type of thing the menu was opened on.
+   *
+   * @param scope scope of shortcut or context menu item
+   * @returns WorkspaceSvg to paste into or undefined
+   */
+  private getPasteWorkspace(
+    scope: ContextMenuRegistry.Scope,
+  ): WorkspaceSvg | undefined {
+    let workspace;
+    if (scope.focusedNode instanceof WorkspaceSvg) {
+      workspace = scope.focusedNode;
+    } else if (isSelectable(scope.focusedNode)) {
+      workspace = scope.focusedNode.workspace;
+    }
+
+    if (!workspace || !(workspace instanceof WorkspaceSvg)) return undefined;
+    return workspace;
+  }
+
+  /**
+   * Precondition function for the paste context menu. This wraps the core
+   * paste precondition to support context menus.
+   *
+   * @param scope scope of the shortcut or context menu item
+   * @returns 'enabled' if the node can be pasted, 'disabled' otherwise.
+   */
+  private pastePrecondition(scope: ContextMenuRegistry.Scope): string {
+    const workspace = this.getPasteWorkspace(scope);
+    // If we can't identify what workspace to paste into, hide.
+    if (!workspace) return 'hidden';
+
+    // Don't paste into flyouts.
+    if (workspace.isFlyout) return 'hidden';
+
+    if (!this.options.allowCrossWorkspacePaste) {
+      // Only paste into the same workspace that was copied from
+      // or the parent workspace of a flyout that was copied from.
+      let copiedWorkspace = clipboard.getLastCopiedWorkspace();
+      if (copiedWorkspace?.isFlyout)
+        copiedWorkspace = copiedWorkspace.targetWorkspace;
+      if (copiedWorkspace !== workspace) return 'disabled';
+    }
+
+    if (
+      this.oldPasteShortcut?.preconditionFn &&
+      this.oldPasteShortcut.preconditionFn(workspace, scope)
+    ) {
+      return 'enabled';
+    }
+    return 'disabled';
   }
 
   /**
