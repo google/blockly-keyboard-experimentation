@@ -141,6 +141,7 @@ export const testFileLocations = {
   MOVE_TEST_BLOCKS: createTestUrl(
     new URLSearchParams({scenario: 'moveTestBlocks'}),
   ),
+  COMMENTS: createTestUrl(new URLSearchParams({scenario: 'comments'})),
   // eslint-disable-next-line @typescript-eslint/naming-convention
   BASE_RTL: createTestUrl(new URLSearchParams({rtl: 'true'})),
   GERAS: createTestUrl(new URLSearchParams({renderer: 'geras'})),
@@ -589,8 +590,10 @@ export async function checkActionPrecondition(
 /**
  * Wait for the specified context menu item to exist.
  *
+ * Does not check the shortcut.
+ *
  * @param browser The active WebdriverIO Browser object.
- * @param itemText The display text of the context menu item to click.
+ * @param itemText The display text of the context menu item without shortcut.
  * @param reverse Whether to check for non-existence instead.
  * @return A Promise that resolves when the actions are completed.
  */
@@ -599,8 +602,36 @@ export async function contextMenuExists(
   itemText: string,
   reverse = false,
 ): Promise<boolean> {
-  const item = await browser.$(`div=${itemText}`);
+  // XPath so as not to care if there's a shortcut which adds DOM structure.
+  const item = await browser.$(
+    `//div[contains(@class, "blocklyMenuItem")]//*[text()="${itemText}"]`,
+  );
   return await item.waitForExist({timeout: 200, reverse: reverse});
+}
+
+/**
+ * Wait for the context menu and return a representation of its contents.
+ *
+ * The text field includes the shortcut if present.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @returns The context menu items.
+ */
+export async function contextMenuItems(browser: WebdriverIO.Browser): Promise<
+  Array<{
+    text: string;
+    disabled?: true;
+  }>
+> {
+  await browser.$('.blocklyContextMenu').waitForExist();
+  const items = await browser
+    .$$('.blocklyContextMenu .blocklyMenuItem')
+    .map(async (item) => {
+      const text = await item.getComputedLabel();
+      const disabled = (await item.getAttribute('aria-disabled')) === 'true';
+      return disabled ? {text, disabled} : {text};
+    });
+  return items;
 }
 
 /**

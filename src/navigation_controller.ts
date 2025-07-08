@@ -36,6 +36,7 @@ import {ActionMenu} from './actions/action_menu';
 import {MoveActions} from './actions/move';
 import {Mover} from './actions/mover';
 import {DuplicateAction} from './actions/duplicate';
+import {StackNavigationAction} from './actions/stack_navigation';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 
@@ -74,6 +75,8 @@ export class NavigationController {
   actionMenu: ActionMenu = new ActionMenu(this.navigation);
 
   moveActions = new MoveActions(this.mover);
+  
+  stackNavigationAction: StackNavigationAction = new StackNavigationAction();
 
   constructor(
     private options: {allowCrossWorkspacePaste: boolean} = {
@@ -258,6 +261,7 @@ export class NavigationController {
     this.duplicateAction.install();
     this.moveActions.install();
     this.shortcutDialog.install();
+    this.stackNavigationAction.install();
 
     // Initialize the shortcut modal with available shortcuts.  Needs
     // to be done separately rather at construction, as many shortcuts
@@ -281,6 +285,7 @@ export class NavigationController {
     this.enterAction.uninstall();
     this.actionMenu.uninstall();
     this.shortcutDialog.uninstall();
+    this.stackNavigationAction.uninstall();
 
     for (const shortcut of Object.values(this.shortcuts)) {
       ShortcutRegistry.registry.unregister(shortcut.name);

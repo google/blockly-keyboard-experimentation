@@ -22,7 +22,7 @@ export function getMenuItem(labelText: string, action: string): HTMLElement {
   label.textContent = labelText;
   const shortcut = document.createElement('span');
   shortcut.className = 'blocklyShortcut';
-  shortcut.textContent = getShortActionShortcut(action);
+  shortcut.textContent = ` ${getShortActionShortcut(action)}`;
   container.appendChild(label);
   container.appendChild(shortcut);
   return container;

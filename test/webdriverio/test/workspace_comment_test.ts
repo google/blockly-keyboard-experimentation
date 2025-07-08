@@ -19,6 +19,7 @@ import {
   keyRight,
   keyDown,
   keyUp,
+  contextMenuItems,
 } from './test_setup.js';
 import {Key} from 'webdriverio';
 
@@ -175,17 +176,25 @@ suite('Workspace comment navigation', function () {
   test('Action menu can be displayed for a workspace comment', async function () {
     await focusOnWorkspaceComment(this.browser, this.commentId1);
     await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
-    chai.assert.isTrue(
-      await contextMenuExists(this.browser, 'Duplicate Comment'),
-      'The menu should be openable on a workspace comment',
-    );
-    chai.assert.isTrue(
-      await contextMenuExists(this.browser, 'Remove Comment'),
-      'The menu should be openable on a workspace comment',
-    );
-    chai.assert.isTrue(
-      await contextMenuExists(this.browser, 'Move CommentM'),
-      'The menu should be openable on a workspace comment',
+    chai.assert.deepEqual(
+      process.platform === 'darwin'
+        ? [
+            {'text': 'Duplicate Comment D'},
+            {'text': 'Remove Comment'},
+            {'text': 'Move Comment M'},
+            {'text': 'Cut ⌘ X'},
+            {'text': 'Copy ⌘ C'},
+            {'disabled': true, 'text': 'Paste ⌘ V'},
+          ]
+        : [
+            {'text': 'Duplicate Comment D'},
+            {'text': 'Remove Comment'},
+            {'text': 'Move Comment M'},
+            {'text': 'Cut Ctrl + X'},
+            {'text': 'Copy Ctrl + C'},
+            {'disabled': true, 'text': 'Paste Ctrl + V'},
+          ],
+      await contextMenuItems(this.browser),
     );
   });
 
