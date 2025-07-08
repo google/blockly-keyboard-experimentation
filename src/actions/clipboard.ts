@@ -11,6 +11,7 @@ import {
   Msg,
   ShortcutItems,
   WorkspaceSvg,
+  clipboard,
 } from 'blockly';
 import * as Constants from '../constants';
 import {Navigation} from '../navigation';
@@ -31,9 +32,6 @@ const BASE_WEIGHT = 12;
  * In the long term, this will likely merge with the clipboard code in core.
  */
 export class Clipboard {
-  /** The workspace a copy or cut keyboard shortcut happened in. */
-  private copyWorkspace: WorkspaceSvg | null = null;
-
   private oldCutShortcut: ShortcutRegistry.KeyboardShortcut | undefined;
   private oldCopyShortcut: ShortcutRegistry.KeyboardShortcut | undefined;
   private oldPasteShortcut: ShortcutRegistry.KeyboardShortcut | undefined;
@@ -174,11 +172,23 @@ export class Clipboard {
    * @returns 'enabled' if the node can be pasted, 'disabled' otherwise.
    */
   private pastePrecondition(scope: ContextMenuRegistry.Scope): string {
-    if (!this.copyWorkspace) return 'disabled';
+    // Only show the paste option on the context menu for a workspace.
+    if (!(scope.focusedNode instanceof WorkspaceSvg)) return 'hidden';
+    const workspace = scope.focusedNode;
+
+    // Don't paste into flyouts.
+    if (workspace.isFlyout) return 'hidden';
+
+    // Only paste into the same workspace that was copied from
+    // or the parent workspace of a flyout that was copied from.
+    let copiedWorkspace = clipboard.getLastCopiedWorkspace();
+    if (copiedWorkspace?.isFlyout)
+      copiedWorkspace = copiedWorkspace.targetWorkspace;
+    if (copiedWorkspace !== workspace) return 'disabled';
 
     if (
       this.oldPasteShortcut?.preconditionFn &&
-      this.oldPasteShortcut.preconditionFn(this.copyWorkspace, scope)
+      this.oldPasteShortcut.preconditionFn(workspace, scope)
     ) {
       return 'enabled';
     }
@@ -207,7 +217,6 @@ export class Clipboard {
       !!this.oldCutShortcut?.callback &&
       this.oldCutShortcut.callback(workspace, e, shortcut, scope);
     if (didCut) {
-      this.copyWorkspace = workspace;
       showCutHint(workspace);
     }
     return didCut;
@@ -285,9 +294,6 @@ export class Clipboard {
       !!this.oldCopyShortcut?.callback &&
       this.oldCopyShortcut.callback(workspace, e, shortcut, scope);
     if (didCopy) {
-      this.copyWorkspace = workspace.isFlyout
-        ? workspace.targetWorkspace
-        : workspace;
       showCopiedHint(workspace);
     }
     return didCopy;
@@ -307,8 +313,6 @@ export class Clipboard {
       name: Constants.SHORTCUT_NAMES.PASTE,
       preconditionFn: this.oldPasteShortcut.preconditionFn,
       callback: this.pasteCallback.bind(this),
-      // The registry gives back keycodes as an object instead of an array
-      // See https://github.com/google/blockly/issues/9008
       keyCodes: this.oldPasteShortcut.keyCodes,
       allowCollision: false,
     };
@@ -330,8 +334,8 @@ export class Clipboard {
         getMenuItem(Msg['PASTE_SHORTCUT'], Constants.SHORTCUT_NAMES.PASTE),
       preconditionFn: (scope) => this.pastePrecondition(scope),
       callback: (scope: ContextMenuRegistry.Scope, menuOpenEvent: Event) => {
-        const workspace = this.copyWorkspace;
-        if (!workspace) return;
+        const workspace = scope.focusedNode;
+        if (!(workspace instanceof WorkspaceSvg)) return false;
         return this.pasteCallback(workspace, menuOpenEvent, undefined, scope);
       },
       id: 'blockPasteFromContextMenu',
