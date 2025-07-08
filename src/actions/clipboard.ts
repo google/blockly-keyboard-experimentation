@@ -146,76 +146,6 @@ export class Clipboard {
   }
 
   /**
-   * Precondition function for the copy context menu. This wraps the core copy
-   * precondition to support context menus.
-   *
-   * @param scope scope of the shortcut or context menu item
-   * @returns 'enabled' if the node can be copied, 'disabled' otherwise.
-   */
-  private copyPrecondition(scope: ContextMenuRegistry.Scope): string {
-    const focused = scope.focusedNode;
-    if (!focused || !isCopyable(focused)) return 'hidden';
-
-    const workspace = focused.workspace;
-    if (!(workspace instanceof WorkspaceSvg)) return 'hidden';
-
-    if (
-      this.oldCopyShortcut?.preconditionFn &&
-      this.oldCopyShortcut.preconditionFn(workspace, scope)
-    ) {
-      return 'enabled';
-    }
-    return 'disabled';
-  }
-
-  private getPasteWorkspace(
-    scope: ContextMenuRegistry.Scope,
-  ): WorkspaceSvg | undefined {
-    let workspace;
-    if (scope.focusedNode instanceof WorkspaceSvg) {
-      workspace = scope.focusedNode;
-    } else if (isSelectable(scope.focusedNode)) {
-      workspace = scope.focusedNode.workspace;
-    }
-
-    if (!workspace || !(workspace instanceof WorkspaceSvg)) return undefined;
-    return workspace;
-  }
-
-  /**
-   * Precondition function for the paste context menu. This wraps the core
-   * paste precondition to support context menus.
-   *
-   * @param scope scope of the shortcut or context menu item
-   * @returns 'enabled' if the node can be pasted, 'disabled' otherwise.
-   */
-  private pastePrecondition(scope: ContextMenuRegistry.Scope): string {
-    const workspace = this.getPasteWorkspace(scope);
-    // If we can't identify what workspace to paste into, hide.
-    if (!workspace) return 'hidden';
-
-    // Don't paste into flyouts.
-    if (workspace.isFlyout) return 'hidden';
-
-    if (!this.options.allowCrossWorkspacePaste) {
-      // Only paste into the same workspace that was copied from
-      // or the parent workspace of a flyout that was copied from.
-      let copiedWorkspace = clipboard.getLastCopiedWorkspace();
-      if (copiedWorkspace?.isFlyout)
-        copiedWorkspace = copiedWorkspace.targetWorkspace;
-      if (copiedWorkspace !== workspace) return 'disabled';
-    }
-
-    if (
-      this.oldPasteShortcut?.preconditionFn &&
-      this.oldPasteShortcut.preconditionFn(workspace, scope)
-    ) {
-      return 'enabled';
-    }
-    return 'disabled';
-  }
-
-  /**
    * The callback for the cut action. Uses the registered version of the cut callback
    * to perform the cut logic, then pops a toast if cut happened.
    *
@@ -291,6 +221,29 @@ export class Clipboard {
   }
 
   /**
+   * Precondition function for the copy context menu. This wraps the core copy
+   * precondition to support context menus.
+   *
+   * @param scope scope of the shortcut or context menu item
+   * @returns 'enabled' if the node can be copied, 'disabled' otherwise.
+   */
+  private copyPrecondition(scope: ContextMenuRegistry.Scope): string {
+    const focused = scope.focusedNode;
+    if (!focused || !isCopyable(focused)) return 'hidden';
+
+    const workspace = focused.workspace;
+    if (!(workspace instanceof WorkspaceSvg)) return 'hidden';
+
+    if (
+      this.oldCopyShortcut?.preconditionFn &&
+      this.oldCopyShortcut.preconditionFn(workspace, scope)
+    ) {
+      return 'enabled';
+    }
+    return 'disabled';
+  }
+
+  /**
    * The callback for the copy action. Uses the registered version of the copy callback
    * to perform the copy logic, then pops a toast if copy happened.
    *
@@ -361,6 +314,58 @@ export class Clipboard {
     };
 
     ContextMenuRegistry.registry.register(pasteAction);
+  }
+
+  /**
+   * Get the workspace to paste into based on which type of thing the menu was opened on.
+   *
+   * @returns WorkspaceSvg to paste into or undefined
+   */
+  private getPasteWorkspace(
+    scope: ContextMenuRegistry.Scope,
+  ): WorkspaceSvg | undefined {
+    let workspace;
+    if (scope.focusedNode instanceof WorkspaceSvg) {
+      workspace = scope.focusedNode;
+    } else if (isSelectable(scope.focusedNode)) {
+      workspace = scope.focusedNode.workspace;
+    }
+
+    if (!workspace || !(workspace instanceof WorkspaceSvg)) return undefined;
+    return workspace;
+  }
+
+  /**
+   * Precondition function for the paste context menu. This wraps the core
+   * paste precondition to support context menus.
+   *
+   * @param scope scope of the shortcut or context menu item
+   * @returns 'enabled' if the node can be pasted, 'disabled' otherwise.
+   */
+  private pastePrecondition(scope: ContextMenuRegistry.Scope): string {
+    const workspace = this.getPasteWorkspace(scope);
+    // If we can't identify what workspace to paste into, hide.
+    if (!workspace) return 'hidden';
+
+    // Don't paste into flyouts.
+    if (workspace.isFlyout) return 'hidden';
+
+    if (!this.options.allowCrossWorkspacePaste) {
+      // Only paste into the same workspace that was copied from
+      // or the parent workspace of a flyout that was copied from.
+      let copiedWorkspace = clipboard.getLastCopiedWorkspace();
+      if (copiedWorkspace?.isFlyout)
+        copiedWorkspace = copiedWorkspace.targetWorkspace;
+      if (copiedWorkspace !== workspace) return 'disabled';
+    }
+
+    if (
+      this.oldPasteShortcut?.preconditionFn &&
+      this.oldPasteShortcut.preconditionFn(workspace, scope)
+    ) {
+      return 'enabled';
+    }
+    return 'disabled';
   }
 
   /**
