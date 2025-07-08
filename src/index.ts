@@ -268,11 +268,7 @@ export class KeyboardNavigation {
   .blocklyKeyboardNavigation
     .blocklyWorkspace.blocklyActiveFocus
     .blocklyWorkspaceFocusRing,
-  /* Focus in dropdown div considered to be in workspace. */
-  .blocklyKeyboardNavigation:has(.blocklyDropDownDiv:focus-within)
-    .blocklyWorkspace
-    .blocklyWorkspaceFocusRing,
-  /* Focus in widget div considered to be in workspace. */
+  /* Focus in widget/dropdown div considered to be in workspace. */
   .blocklyKeyboardNavigation:has(
     .blocklyWidgetDiv:focus-within,
     .blocklyDropDownDiv:focus-within
