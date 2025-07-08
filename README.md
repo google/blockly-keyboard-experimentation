@@ -47,7 +47,7 @@ triage the bug and add it to the roadmap.
 
 ### Installation
 
-Using this plugin requires using at least Blockly v12.1.0. You can find the
+Using this plugin requires using at least Blockly v12.2.0. You can find the
 current minimum required version of Blockly in the `peerDependencies`
 section of the `package.json` file for the plugin.
 
@@ -68,6 +68,11 @@ npm install @blockly/keyboard-navigation --save
 ```js
 import * as Blockly from 'blockly';
 import {KeyboardNavigation} from '@blockly/keyboard-navigation';
+
+// Register styles. Only do this once per page-load.
+// Must be done before calling Blockly.inject.
+KeyboardNavigation.registerKeyboardNavigationStyles();
+
 // Inject Blockly.
 const workspace = Blockly.inject('blocklyDiv', {
   toolbox: toolboxCategories,
@@ -84,6 +89,10 @@ This plugin adds context menu items for copying & pasting. It also adds feedback
 import * as Blockly from 'blockly';
 import {KeyboardNavigation} from '@blockly/keyboard-navigation';
 import {CrossTabCopyPaste} from '@blockly/plugin-cross-tab-copy-paste';
+
+// Register styles. Only do this once per page-load.
+// Must be done before calling Blockly.inject.
+KeyboardNavigation.registerKeyboardNavigationStyles();
 
 // Inject Blockly.
 const workspace = Blockly.inject('blocklyDiv', {
