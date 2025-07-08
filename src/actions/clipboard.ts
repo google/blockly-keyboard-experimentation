@@ -82,8 +82,6 @@ export class Clipboard {
       name: Constants.SHORTCUT_NAMES.CUT,
       preconditionFn: this.oldCutShortcut.preconditionFn,
       callback: this.cutCallback.bind(this),
-      // The registry gives back keycodes as an object instead of an array
-      // See https://github.com/google/blockly/issues/9008
       keyCodes: this.oldCutShortcut.keyCodes,
       allowCollision: false,
     };
@@ -236,8 +234,6 @@ export class Clipboard {
       name: Constants.SHORTCUT_NAMES.COPY,
       preconditionFn: this.oldCopyShortcut.preconditionFn,
       callback: this.copyCallback.bind(this),
-      // The registry gives back keycodes as an object instead of an array
-      // See https://github.com/google/blockly/issues/9008
       keyCodes: this.oldCopyShortcut.keyCodes,
       allowCollision: false,
     };
