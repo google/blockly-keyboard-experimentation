@@ -399,8 +399,9 @@ export async function getFocusedFieldName(
   browser: WebdriverIO.Browser,
 ): Promise<string | undefined> {
   return await browser.execute(() => {
-    const field = Blockly.getFocusManager().getFocusedNode() as Blockly.Field;
-    return field.name;
+    const field =
+      Blockly.getFocusManager().getFocusedNode() as Blockly.Field | null;
+    return field?.name;
   });
 }
 
@@ -549,6 +550,19 @@ export async function isDragging(
     const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
     return workspaceSvg.isDragging();
   });
+}
+
+/**
+ * Returns whether Blockly's FocusManager currently holds ephemeral focus.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ */
+export async function isEphemeralFocusActive(
+  browser: WebdriverIO.Browser,
+): Promise<boolean> {
+  return await browser.execute(() =>
+    Blockly.getFocusManager().ephemeralFocusTaken(),
+  );
 }
 
 /**

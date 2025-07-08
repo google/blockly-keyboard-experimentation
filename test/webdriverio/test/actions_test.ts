@@ -15,6 +15,8 @@ import {
   testFileLocations,
   testSetup,
   keyRight,
+  sendKeyAndWait,
+  getCurrentFocusedBlockId,
 } from './test_setup.js';
 
 suite('Menus test', function () {
@@ -31,9 +33,7 @@ suite('Menus test', function () {
     // Navigate to draw_circle_1.
     await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
-    await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys([Key.Ctrl, Key.Return]);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
     chai.assert.isTrue(
       await contextMenuExists(this.browser, 'Collapse Block'),
       'The menu should be openable on a block',
@@ -48,8 +48,7 @@ suite('Menus test', function () {
     await moveToToolboxCategory(this.browser, 'Functions');
     // Move to flyout.
     await keyRight(this.browser);
-    await this.browser.keys([Key.Ctrl, Key.Return]);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
 
     chai.assert.isTrue(
       await contextMenuExists(this.browser, 'Help'),
@@ -62,12 +61,28 @@ suite('Menus test', function () {
     await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
     // Start moving the block
-    await this.browser.keys('m');
-    await this.browser.keys([Key.Ctrl, Key.Return]);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, 'm');
+    await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
     chai.assert.isTrue(
       await contextMenuExists(this.browser, 'Collapse Block', true),
       'The menu should not be openable during a move',
+    );
+  });
+
+  test('Closing menu restores focus to starting node', async function () {
+    // Navigate to draw_circle_1.
+    await tabNavigateToWorkspace(this.browser);
+    await focusOnBlock(this.browser, 'draw_circle_1');
+    // Open the context menu.
+    await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
+
+    // Close the context menu.
+    await sendKeyAndWait(this.browser, Key.Escape);
+
+    // The previously focused now should now again be focused.
+    chai.assert.strictEqual(
+      await getCurrentFocusedBlockId(this.browser),
+      'draw_circle_1',
     );
   });
 });
