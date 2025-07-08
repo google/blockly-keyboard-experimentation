@@ -43,7 +43,7 @@ on this repository! Include information about how to reproduce the bug, what
 the bad behaviour was, and what you expected it to do. The Blockly team will
 triage the bug and add it to the roadmap.
 
-## Testing in your app
+## Using in your app
 
 ### Installation
 
@@ -67,13 +67,48 @@ npm install @blockly/keyboard-navigation --save
 
 ```js
 import * as Blockly from 'blockly';
-import {KeyboardNavigation} from '@blockly/keyboard-experiment';
+import {KeyboardNavigation} from '@blockly/keyboard-navigation';
 // Inject Blockly.
 const workspace = Blockly.inject('blocklyDiv', {
   toolbox: toolboxCategories,
 });
 // Initialize plugin.
 const keyboardNav = new KeyboardNavigation(workspace);
+```
+
+### Usage with cross-tab-copy-paste plugin
+
+This plugin adds context menu items for copying & pasting. It also adds feedback to copying & pasting as toasts that are shown to the user upon successful copy or cut. It is compatible with the `@blockly/plugin-cross-tab-copy-paste` by following these steps:
+
+```js
+import * as Blockly from 'blockly';
+import {KeyboardNavigation} from '@blockly/keyboard-navigation';
+import {CrossTabCopyPaste} from '@blockly/plugin-cross-tab-copy-paste';
+
+// Inject Blockly.
+const workspace = Blockly.inject('blocklyDiv', {
+  toolbox: toolboxCategories,
+});
+
+// Initialize cross-tab-copy-paste
+// Must be done before keyboard-navigation
+const crossTabOptions = {
+  // Don't use the context menu options from the ctcp plugin,
+  // because the keyboard-navigation plugin provides its own.
+  contextMenu: false,
+  shortcut: true,
+};
+const plugin = new CrossTabCopyPaste();
+plugin.init(crossTabOptions, () => {
+  console.log('Use this error callback to handle TypeError while pasting');
+});
+
+// Initialize keyboard-navigation.
+// You must pass the `allowCrossWorkspacePaste` option in order for paste
+// to appear correctly enabled/disabled in the context menu.
+const keyboardNav = new KeyboardNavigation(workspace, {
+  allowCrossWorkspacePaste: true,
+});
 ```
 
 ## Contributing
