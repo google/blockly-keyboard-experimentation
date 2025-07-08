@@ -86,14 +86,12 @@ suite('Menus test', function () {
             {'disabled': true, 'text': 'Move Block M'},
             {'disabled': true, 'text': 'Cut ⌘ X'},
             {'text': 'Copy ⌘ C'},
-            {'disabled': true, 'text': 'Paste ⌘ V'},
           ]
         : [
             {'text': 'Help'},
             {'disabled': true, 'text': 'Move Block M'},
             {'disabled': true, 'text': 'Cut Ctrl + X'},
             {'text': 'Copy Ctrl + C'},
-            {'disabled': true, 'text': 'Paste Ctrl + V'},
           ],
       await contextMenuItems(this.browser),
     );
