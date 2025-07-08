@@ -188,8 +188,8 @@ export class KeyboardNavigation {
   /* Blocks with passive focus except when widget/dropdown div in use. */
   .blocklyKeyboardNavigation:not(
           :has(
-              .blocklyDropDownDiv > .blocklyDropDownContent > *,
-              .blocklyWidgetDiv > *
+              .blocklyDropDownDiv:focus-within,
+              .blocklyWidgetDiv:focus-within
             )
         )
     .blocklyPassiveFocus:is(
@@ -199,8 +199,8 @@ export class KeyboardNavigation {
   /* Fields with passive focus except when widget/dropdown div in use. */
   .blocklyKeyboardNavigation:not(
           :has(
-              .blocklyDropDownDiv > .blocklyDropDownContent > *,
-              .blocklyWidgetDiv > *
+              .blocklyDropDownDiv:focus-within,
+              .blocklyWidgetDiv:focus-within
             )
         )
     .blocklyPassiveFocus.blocklyField
@@ -208,8 +208,8 @@ export class KeyboardNavigation {
   /* Icons with passive focus except when widget/dropdown div in use. */
   .blocklyKeyboardNavigation:not(
           :has(
-              .blocklyDropDownDiv > .blocklyDropDownContent > *,
-              .blocklyWidgetDiv > *
+              .blocklyDropDownDiv:focus-within,
+              .blocklyWidgetDiv:focus-within
             )
         )
     .blocklyPassiveFocus.blocklyIconGroup
@@ -273,7 +273,10 @@ export class KeyboardNavigation {
     .blocklyWorkspace
     .blocklyWorkspaceFocusRing,
   /* Focus in widget div considered to be in workspace. */
-  .blocklyKeyboardNavigation:has(.blocklyWidgetDiv:focus-within)
+  .blocklyKeyboardNavigation:has(
+    .blocklyWidgetDiv:focus-within,
+    .blocklyDropDownDiv:focus-within
+  )
     .blocklyWorkspace
     .blocklyWorkspaceFocusRing {
     stroke: var(--blockly-active-tree-color);
