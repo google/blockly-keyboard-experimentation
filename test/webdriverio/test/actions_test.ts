@@ -15,6 +15,7 @@ import {
   testFileLocations,
   testSetup,
   keyRight,
+  contextMenuItems,
 } from './test_setup.js';
 
 suite('Menus test', function () {
@@ -27,20 +28,47 @@ suite('Menus test', function () {
     await this.browser.pause(PAUSE_TIME);
   });
 
-  test('Menu action opens menu', async function () {
+  test('Menu on block', async function () {
     // Navigate to draw_circle_1.
     await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
     await this.browser.pause(PAUSE_TIME);
     await this.browser.keys([Key.Ctrl, Key.Return]);
     await this.browser.pause(PAUSE_TIME);
-    chai.assert.isTrue(
-      await contextMenuExists(this.browser, 'Collapse Block'),
-      'The menu should be openable on a block',
+
+    chai.assert.deepEqual(
+      process.platform === 'darwin'
+        ? [
+            {'text': 'Duplicate D'},
+            {'text': 'Add Comment'},
+            {'text': 'External Inputs'},
+            {'text': 'Collapse Block'},
+            {'text': 'Disable Block'},
+            {'text': 'Delete 2 Blocks Delete'},
+            {'text': 'Move Block M'},
+            {'text': 'Edit Block contents Right'},
+            {'text': 'Cut ⌘ X'},
+            {'text': 'Copy ⌘ C'},
+            {'disabled': true, 'text': 'Paste ⌘ V'},
+          ]
+        : [
+            {'text': 'Duplicate D'},
+            {'text': 'Add Comment'},
+            {'text': 'External Inputs'},
+            {'text': 'Collapse Block'},
+            {'text': 'Disable Block'},
+            {'text': 'Delete 2 Blocks Delete'},
+            {'text': 'Move Block M'},
+            {'text': 'Edit Block contents Right'},
+            {'text': 'Cut Ctrl+X'},
+            {'text': 'Copy Ctrl+C'},
+            {'disabled': true, 'text': 'Paste Ctrl+V'},
+          ],
+      await contextMenuItems(this.browser),
     );
   });
 
-  test('Menu action returns true in the toolbox', async function () {
+  test('Menu on block in the toolbox', async function () {
     // Navigate to draw_circle_1.
     await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
@@ -51,13 +79,60 @@ suite('Menus test', function () {
     await this.browser.keys([Key.Ctrl, Key.Return]);
     await this.browser.pause(PAUSE_TIME);
 
-    chai.assert.isTrue(
-      await contextMenuExists(this.browser, 'Help'),
-      'The menu should be openable on a block in the toolbox',
+    chai.assert.deepEqual(
+      process.platform === 'darwin'
+        ? [
+            {'text': 'Help'},
+            {'disabled': true, 'text': 'Move Block M'},
+            {'disabled': true, 'text': 'Cut ⌘ X'},
+            {'text': 'Copy ⌘ C'},
+            {'disabled': true, 'text': 'Paste ⌘ V'},
+          ]
+        : [
+            {'text': 'Help'},
+            {'disabled': true, 'text': 'Move Block M'},
+            {'disabled': true, 'text': 'Cut Ctrl+X'},
+            {'text': 'Copy Ctrl+C'},
+            {'disabled': true, 'text': 'Paste Ctrl+V'},
+          ],
+      await contextMenuItems(this.browser),
     );
   });
 
-  test('Menu action returns false during drag', async function () {
+  test('Menu on workspace', async function () {
+    // Navigate to draw_circle_1.
+    await tabNavigateToWorkspace(this.browser);
+    await this.browser.keys('w');
+    await this.browser.keys([Key.Ctrl, Key.Return]);
+    await this.browser.pause(PAUSE_TIME);
+
+    chai.assert.deepEqual(
+      process.platform === 'darwin'
+        ? [
+            {'disabled': true, 'text': 'Undo'},
+            {'disabled': true, 'text': 'Redo'},
+            {'text': 'Clean up Blocks'},
+            {'text': 'Collapse Blocks'},
+            {'disabled': true, 'text': 'Expand Blocks'},
+            {'text': 'Delete 4 Blocks'},
+            {'text': 'Add Comment'},
+            {'disabled': true, 'text': 'Paste ⌘ V'},
+          ]
+        : [
+            {'disabled': true, 'text': 'Undo'},
+            {'disabled': true, 'text': 'Redo'},
+            {'text': 'Clean up Blocks'},
+            {'text': 'Collapse Blocks'},
+            {'disabled': true, 'text': 'Expand Blocks'},
+            {'text': 'Delete 4 Blocks'},
+            {'text': 'Add Comment'},
+            {'disabled': true, 'text': 'Paste Ctrl+V'},
+          ],
+      await contextMenuItems(this.browser),
+    );
+  });
+
+  test('Menu on block during drag is not shown', async function () {
     // Navigate to draw_circle_1.
     await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');

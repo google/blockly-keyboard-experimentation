@@ -82,8 +82,8 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   KeyboardNavigation.registerKeyboardNavigationStyles();
   const workspace = Blockly.inject(blocklyDiv, injectOptions);
 
-  new KeyboardNavigation(workspace);
   Blockly.ContextMenuItems.registerCommentOptions();
+  new KeyboardNavigation(workspace);
 
   // Disable blocks that aren't inside the setup or draw loops.
   workspace.addChangeListener(Blockly.Events.disableOrphans);
