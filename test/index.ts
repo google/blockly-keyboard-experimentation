@@ -89,10 +89,13 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   if (!blocklyDiv) {
     throw new Error('Missing blocklyDiv');
   }
+
+  // Must be called before injection.
+  KeyboardNavigation.registerKeyboardNavigationStyles();
   const workspace = Blockly.inject(blocklyDiv, injectOptions);
 
-  new KeyboardNavigation(workspace);
   Blockly.ContextMenuItems.registerCommentOptions();
+  new KeyboardNavigation(workspace);
   registerRunCodeShortcut();
 
   // Disable blocks that aren't inside the setup or draw loops.

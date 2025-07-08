@@ -16,13 +16,15 @@ import {
   icons,
   FocusableTreeTraverser,
   renderManagement,
+  comments,
+  getFocusManager,
 } from 'blockly/core';
 
 import type {Block} from 'blockly/core';
 
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
-import {Mover} from './mover';
+import {Mover, MoveType} from './mover';
 import {
   showConstrainedMovementHint,
   showHelpHint,
@@ -124,10 +126,13 @@ export class EnterAction {
     ) {
       return !workspace.isReadOnly();
     }
-    if (curNode instanceof BlockSvg) return true;
     // Returning true is sometimes incorrect for icons, but there's no API to check.
-    if (curNode instanceof icons.Icon) return true;
-    return false;
+    return (
+      curNode instanceof BlockSvg ||
+      curNode instanceof icons.Icon ||
+      curNode instanceof comments.CommentBarButton ||
+      curNode instanceof comments.RenderedWorkspaceComment
+    );
   }
 
   /**
@@ -159,9 +164,20 @@ export class EnterAction {
       // opening a bubble of some sort. We then need to wait for the bubble to
       // appear before attempting to navigate into it.
       curNode.onClick();
-      renderManagement.finishQueuedRenders().then(() => {
-        cursor?.in();
-      });
+      // This currently only works for MutatorIcons.
+      // See icon_navigation_policy.
+      if (curNode instanceof icons.MutatorIcon) {
+        renderManagement.finishQueuedRenders().then(() => {
+          cursor?.in();
+        });
+      }
+      return true;
+    } else if (curNode instanceof comments.CommentBarButton) {
+      curNode.performAction();
+      return true;
+    } else if (curNode instanceof comments.RenderedWorkspaceComment) {
+      curNode.setCollapsed(false);
+      getFocusManager().focusNode(curNode.getEditorFocusableNode());
       return true;
     }
     return false;
@@ -194,13 +210,19 @@ export class EnterAction {
     const insertStartPoint = stationaryNode
       ? this.navigation.findInsertStartPoint(stationaryNode, newBlock)
       : null;
+
     if (workspace.getTopBlocks().includes(newBlock)) {
       this.positionNewTopLevelBlock(workspace, newBlock);
     }
 
     workspace.setResizesEnabled(true);
 
-    this.mover.startMove(workspace, newBlock, insertStartPoint);
+    this.mover.startMove(
+      workspace,
+      newBlock,
+      MoveType.Insert,
+      insertStartPoint,
+    );
 
     const isStartBlock =
       !newBlock.outputConnection &&

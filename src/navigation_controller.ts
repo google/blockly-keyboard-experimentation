@@ -35,7 +35,7 @@ import {DisconnectAction} from './actions/disconnect';
 import {ActionMenu} from './actions/action_menu';
 import {MoveActions} from './actions/move';
 import {Mover} from './actions/mover';
-import {UndoRedoAction} from './actions/undo_redo';
+import {DuplicateAction} from './actions/duplicate';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 
@@ -60,6 +60,8 @@ export class NavigationController {
 
   clipboard: Clipboard = new Clipboard(this.navigation);
 
+  duplicateAction = new DuplicateAction();
+
   workspaceMovement: WorkspaceMovement = new WorkspaceMovement(this.navigation);
 
   /** Keyboard navigation actions for the arrow keys. */
@@ -68,8 +70,6 @@ export class NavigationController {
   exitAction: ExitAction = new ExitAction(this.navigation);
 
   enterAction: EnterAction = new EnterAction(this.mover, this.navigation);
-
-  undoRedoAction: UndoRedoAction = new UndoRedoAction();
 
   actionMenu: ActionMenu = new ActionMenu(this.navigation);
 
@@ -244,10 +244,10 @@ export class NavigationController {
     this.exitAction.install();
     this.enterAction.install();
     this.disconnectAction.install();
-    this.undoRedoAction.install();
     this.actionMenu.install();
 
     this.clipboard.install();
+    this.duplicateAction.install();
     this.moveActions.install();
     this.shortcutDialog.install();
 
@@ -266,11 +266,11 @@ export class NavigationController {
     this.editAction.uninstall();
     this.disconnectAction.uninstall();
     this.clipboard.uninstall();
+    this.duplicateAction.uninstall();
     this.workspaceMovement.uninstall();
     this.arrowNavigation.uninstall();
     this.exitAction.uninstall();
     this.enterAction.uninstall();
-    this.undoRedoAction.uninstall();
     this.actionMenu.uninstall();
     this.shortcutDialog.uninstall();
 

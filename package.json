@@ -5,12 +5,12 @@
   "scripts": {
     "audit:fix": "blockly-scripts auditFix",
     "build": "blockly-scripts build",
-    "ghpages": "webpack",
     "clean": "blockly-scripts clean",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "ghpages": "node scripts/deploy.js",
     "predeploy": "blockly-scripts predeploy",
     "prepublishOnly": "npm login --registry https://wombat-dressing-room.appspot.com",
     "start": "blockly-scripts start",
