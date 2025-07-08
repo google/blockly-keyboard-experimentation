@@ -164,19 +164,28 @@ export class KeyboardNavigation {
     //
     // This should be moved to core, being integrated into the
     // existing styling of renderers in core/renderers/*/constants.ts.
+    //
+    // Many selectors include .blocklyKeyboardNavigation to ensure keyboard
+    // nav is on (via the heuristic). This class is added/removed from body.
     Blockly.Css.register(`
-  /* Blocks, connections and fields. */
+  /* Active focus cases: */
+  /* Blocks with active focus. */
   .blocklyKeyboardNavigation
     .blocklyActiveFocus:is(.blocklyPath, .blocklyHighlightedConnectionPath),
+  /* Fields with active focus, */
   .blocklyKeyboardNavigation
     .blocklyActiveFocus.blocklyField
     > .blocklyFieldRect,
+  /* Icons with active focus. */
   .blocklyKeyboardNavigation
     .blocklyActiveFocus.blocklyIconGroup
     > .blocklyIconShape:first-child {
     stroke: var(--blockly-active-node-color);
     stroke-width: var(--blockly-selection-width);
   }
+
+  /* Passive focus cases: */
+  /* Blocks with passive focus except when widget/dropdown div in use. */
   .blocklyKeyboardNavigation:not(
           :has(
               .blocklyDropDownDiv > .blocklyDropDownContent > *,
@@ -187,6 +196,7 @@ export class KeyboardNavigation {
       .blocklyPath:not(.blocklyFlyout .blocklyPath),
       .blocklyHighlightedConnectionPath
     ),
+  /* Fields with passive focus except when widget/dropdown div in use. */
   .blocklyKeyboardNavigation:not(
           :has(
               .blocklyDropDownDiv > .blocklyDropDownContent > *,
@@ -195,6 +205,7 @@ export class KeyboardNavigation {
         )
     .blocklyPassiveFocus.blocklyField
     > .blocklyFieldRect,
+  /* Icons with passive focus except when widget/dropdown div in use. */
   .blocklyKeyboardNavigation:not(
           :has(
               .blocklyDropDownDiv > .blocklyDropDownContent > *,
@@ -207,9 +218,10 @@ export class KeyboardNavigation {
     stroke-dasharray: 5px 3px;
     stroke-width: var(--blockly-selection-width);
   }
+
+  /* Workaround for unexpectedly hidden connection path due to core style. */
   .blocklyKeyboardNavigation
     .blocklyPassiveFocus.blocklyHighlightedConnectionPath {
-    /* The connection path is being unexpectedly hidden in core */
     display: unset !important;
   }
 `);
@@ -219,14 +231,20 @@ export class KeyboardNavigation {
     // This should be moved to core, to core/css.ts if not to somewhere
     // more specific in core/toolbox/.
     Blockly.Css.register(`
+  /* Different ways for toolbox/flyout to be the active tree: */
+  /* Active focus in the flyout. */
   .blocklyKeyboardNavigation .blocklyFlyout:has(.blocklyActiveFocus),
+  /* Active focus in the toolbox. */
   .blocklyKeyboardNavigation .blocklyToolbox:has(.blocklyActiveFocus),
+  /* Active focus on the toolbox/flyout. */
   .blocklyKeyboardNavigation
     .blocklyActiveFocus:is(.blocklyFlyout, .blocklyToolbox) {
     outline-offset: calc(var(--blockly-selection-width) * -1);
     outline: var(--blockly-selection-width) solid
       var(--blockly-active-tree-color);
   }
+
+  /* Suppress default outline. */
   .blocklyKeyboardNavigation
     .blocklyToolboxCategoryContainer:focus-visible {
     outline: none;
@@ -237,29 +255,34 @@ export class KeyboardNavigation {
     //
     // This should be move to core, probably to core/css.ts.
     Blockly.Css.register(`
+  /* Different ways for the workspace to be the active tree: */
+  /* Active focus within workspace. */
   .blocklyKeyboardNavigation
     .blocklyWorkspace:has(.blocklyActiveFocus)
     .blocklyWorkspaceFocusRing,
+  /* Active focus within drag layer. */
   .blocklyKeyboardNavigation
     .blocklySvg:has(~ .blocklyBlockDragSurface .blocklyActiveFocus)
     .blocklyWorkspaceFocusRing,
+  /* Active focus on workspace. */
   .blocklyKeyboardNavigation
     .blocklyWorkspace.blocklyActiveFocus
     .blocklyWorkspaceFocusRing,
-  .blocklyKeyboardNavigation
-    .blocklyWorkspace.blocklyActiveFocus
-    .blocklyWorkspaceFocusRing,
+  /* Focus in dropdown div considered to be in workspace. */
   .blocklyKeyboardNavigation:has(
       .blocklyDropDownDiv > .blocklyDropDownContent > *
     ):focus-within
     .blocklyWorkspace
     .blocklyWorkspaceFocusRing,
+  /* Focus in widget div considered to be in workspace. */
   .blocklyKeyboardNavigation:has(.blocklyWidgetDiv > *):focus-within
     .blocklyWorkspace
     .blocklyWorkspaceFocusRing {
     stroke: var(--blockly-active-tree-color);
     stroke-width: calc(var(--blockly-selection-width) * 2);
   }
+
+  /* The workspace itself is the active node. */
   .blocklyKeyboardNavigation
     .blocklyWorkspace.blocklyActiveFocus
     .blocklyWorkspaceSelectionRing {
