@@ -21,6 +21,7 @@
     "wdio:clean": "cd test/webdriverio/test && rm -rf dist",
     "wdio:run": "npm run wdio:build && cd test/webdriverio/test && npx mocha dist"
   },
+  "type": "module",
   "main": "./dist/index.js",
   "module": "./src/index.js",
   "unpkg": "./dist/index.js",
