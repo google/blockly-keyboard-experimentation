@@ -60,9 +60,9 @@ suite('Menus test', function () {
             {'text': 'Delete 2 Blocks Delete'},
             {'text': 'Move Block M'},
             {'text': 'Edit Block contents Right'},
-            {'text': 'Cut Ctrl+X'},
-            {'text': 'Copy Ctrl+C'},
-            {'disabled': true, 'text': 'Paste Ctrl+V'},
+            {'text': 'Cut Ctrl + X'},
+            {'text': 'Copy Ctrl + C'},
+            {'disabled': true, 'text': 'Paste Ctrl + V'},
           ],
       await contextMenuItems(this.browser),
     );
@@ -91,9 +91,9 @@ suite('Menus test', function () {
         : [
             {'text': 'Help'},
             {'disabled': true, 'text': 'Move Block M'},
-            {'disabled': true, 'text': 'Cut Ctrl+X'},
-            {'text': 'Copy Ctrl+C'},
-            {'disabled': true, 'text': 'Paste Ctrl+V'},
+            {'disabled': true, 'text': 'Cut Ctrl + X'},
+            {'text': 'Copy Ctrl + C'},
+            {'disabled': true, 'text': 'Paste Ctrl + V'},
           ],
       await contextMenuItems(this.browser),
     );
@@ -126,7 +126,7 @@ suite('Menus test', function () {
             {'disabled': true, 'text': 'Expand Blocks'},
             {'text': 'Delete 4 Blocks'},
             {'text': 'Add Comment'},
-            {'disabled': true, 'text': 'Paste Ctrl+V'},
+            {'disabled': true, 'text': 'Paste Ctrl + V'},
           ],
       await contextMenuItems(this.browser),
     );

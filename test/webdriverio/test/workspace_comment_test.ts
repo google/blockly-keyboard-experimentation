@@ -190,9 +190,9 @@ suite('Workspace comment navigation', function () {
             {'text': 'Duplicate Comment D'},
             {'text': 'Remove Comment'},
             {'text': 'Move Comment M'},
-            {'text': 'Cut Ctrl+X'},
-            {'text': 'Copy Ctrl+C'},
-            {'disabled': true, 'text': 'Paste Ctrl+V'},
+            {'text': 'Cut Ctrl + X'},
+            {'text': 'Copy Ctrl + C'},
+            {'disabled': true, 'text': 'Paste Ctrl + V'},
           ],
       await contextMenuItems(this.browser),
     );
