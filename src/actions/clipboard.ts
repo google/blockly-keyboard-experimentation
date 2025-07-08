@@ -319,6 +319,7 @@ export class Clipboard {
   /**
    * Get the workspace to paste into based on which type of thing the menu was opened on.
    *
+   * @param scope scope of shortcut or context menu item
    * @returns WorkspaceSvg to paste into or undefined
    */
   private getPasteWorkspace(

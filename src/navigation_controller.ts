@@ -75,7 +75,7 @@ export class NavigationController {
   actionMenu: ActionMenu = new ActionMenu(this.navigation);
 
   moveActions = new MoveActions(this.mover);
-  
+
   stackNavigationAction: StackNavigationAction = new StackNavigationAction();
 
   constructor(
