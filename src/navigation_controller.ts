@@ -59,7 +59,7 @@ export class NavigationController {
   /** Keyboard shortcut for disconnection. */
   disconnectAction: DisconnectAction = new DisconnectAction(this.navigation);
 
-  clipboard: Clipboard = new Clipboard(this.navigation);
+  clipboard: Clipboard;
 
   duplicateAction = new DuplicateAction();
 
@@ -77,6 +77,14 @@ export class NavigationController {
   moveActions = new MoveActions(this.mover);
 
   stackNavigationAction: StackNavigationAction = new StackNavigationAction();
+
+  constructor(
+    private options: {allowCrossWorkspacePaste: boolean} = {
+      allowCrossWorkspacePaste: false,
+    },
+  ) {
+    this.clipboard = new Clipboard(this.navigation, options);
+  }
 
   /**
    * Original Toolbox.prototype.onShortcut method, saved by

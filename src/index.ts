@@ -41,11 +41,21 @@ export class KeyboardNavigation {
    * Constructs the keyboard navigation.
    *
    * @param workspace The workspace that the plugin will be added to.
+   * @param options Options for plugin
+   * @param options.allowCrossWorkspacePaste If true, will allow paste
+   * option to appear enabled when pasting in a different workspace
+   * than was copied from. Defaults to false. Set to true if using
+   * cross-tab-copy-paste plugin or similar.
    */
-  constructor(workspace: Blockly.WorkspaceSvg) {
+  constructor(
+    workspace: Blockly.WorkspaceSvg,
+    options: {allowCrossWorkspacePaste: boolean} = {
+      allowCrossWorkspacePaste: false,
+    },
+  ) {
     this.workspace = workspace;
 
-    this.navigationController = new NavigationController();
+    this.navigationController = new NavigationController(options);
     this.navigationController.init();
     this.navigationController.addWorkspace(workspace);
     this.navigationController.enable(workspace);
