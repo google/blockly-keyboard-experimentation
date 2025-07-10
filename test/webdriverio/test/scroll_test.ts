@@ -22,14 +22,17 @@ suite('Scrolling into view', function () {
   suiteSetup(async function () {
     this.browser = await testSetup(testFileLocations.BASE);
     // Predictable small window size for scrolling.
-    this.windowSize = await this.browser.getWindowSize()
+    this.windowSize = await this.browser.getWindowSize();
     this.browser.setWindowSize(800, 600);
     await this.browser.pause(PAUSE_TIME);
   });
 
-  suiteTeardown(async function() {
+  suiteTeardown(async function () {
     // Restore original window size
-    await this.browser.setWindowSize(this.windowSize.width, this.windowSize.height);
+    await this.browser.setWindowSize(
+      this.windowSize.width,
+      this.windowSize.height,
+    );
   });
 
   test('Insert scrolls new block into view', async function () {
