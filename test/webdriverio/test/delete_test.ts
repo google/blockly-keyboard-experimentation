@@ -21,9 +21,6 @@ import {
 import {Key} from 'webdriverio';
 
 suite('Deleting Blocks', function () {
-  // Setting timeout to unlimited as these tests take a longer time to run than most mocha test
-  this.timeout(0);
-
   setup(async function () {
     this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
     await this.browser.pause(PAUSE_TIME);

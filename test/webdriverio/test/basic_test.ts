@@ -25,9 +25,6 @@ import {
 import {Key} from 'webdriverio';
 
 suite('Keyboard navigation on Blocks', function () {
-  // Setting timeout to unlimited as these tests take a longer time to run than most mocha test
-  this.timeout(0);
-
   // Clear the workspace and load start blocks.
   suiteSetup(async function () {
     this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
@@ -252,9 +249,6 @@ suite('Keyboard navigation on Blocks', function () {
 });
 
 suite('Keyboard navigation on Fields', function () {
-  // Setting timeout to unlimited as these tests take a longer time to run than most mocha test
-  this.timeout(0);
-
   // Clear the workspace and load start blocks.
   suiteSetup(async function () {
     this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);

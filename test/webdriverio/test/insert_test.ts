@@ -22,9 +22,6 @@ import {
 } from './test_setup.js';
 
 suite('Insert test', function () {
-  // Setting timeout to unlimited as these tests take longer time to run
-  this.timeout(0);
-
   // Clear the workspace and load start blocks
   setup(async function () {
     this.browser = await testSetup(testFileLocations.BASE);
