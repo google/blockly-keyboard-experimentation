@@ -18,6 +18,7 @@ import {
   focusOnBlockField,
   blockIsPresent,
   getFocusedBlockType,
+  sendKeyAndWait,
 } from './test_setup.js';
 import {Key, KeyAction, PointerAction, WheelAction} from 'webdriverio';
 
@@ -37,9 +38,8 @@ suite('Clipboard test', function () {
     await focusOnBlock(this.browser, 'draw_circle_1');
 
     // Copy and paste
-    await this.browser.keys([Key.Ctrl, 'c']);
-    await this.browser.keys([Key.Ctrl, 'v']);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, 'c']);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, 'v']);
 
     const block = await getBlockElementById(this.browser, 'draw_circle_1');
     const blocks = await getSameBlocks(this.browser, block);
@@ -59,10 +59,9 @@ suite('Clipboard test', function () {
     const block = await getBlockElementById(this.browser, 'draw_circle_1');
 
     // Cut and paste
-    await this.browser.keys([Key.Ctrl, 'x']);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, 'x']);
     await block.waitForExist({reverse: true});
-    await this.browser.keys([Key.Ctrl, 'v']);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, 'v']);
 
     const focusedType = await getFocusedBlockType(this.browser);
 
@@ -117,11 +116,10 @@ suite('Clipboard test', function () {
     // Open a field editor
     await focusOnBlockField(this.browser, 'draw_circle_1_color', 'COLOUR');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.Enter);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Enter);
 
     // Try to cut block while field editor is open
-    await this.browser.keys([Key.Ctrl, 'x']);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, 'x']);
 
     // Block is not deleted
     chai.assert.isTrue(

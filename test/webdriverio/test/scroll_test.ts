@@ -8,6 +8,7 @@ import * as Blockly from 'blockly';
 import * as chai from 'chai';
 import {Key} from 'webdriverio';
 import {
+  sendKeyAndWait,
   keyDown,
   keyRight,
   PAUSE_TIME,
@@ -48,9 +49,9 @@ suite('Scrolling into view', function () {
 
     // Separate the two top-level blocks by moving p5_draw_1 further down.
     await keyDown(this.browser, 3);
-    await this.browser.keys('m');
-    await this.browser.keys([Key.Alt, ...new Array(25).fill(Key.ArrowDown)]);
-    await this.browser.keys(Key.Enter);
+    await sendKeyAndWait(this.browser, 'm');
+    await sendKeyAndWait(this.browser, [Key.Alt, Key.ArrowDown], 25);
+    await sendKeyAndWait(this.browser, Key.Enter);
     // Scroll back up, leaving cursor on the draw block out of the viewport.
     await this.browser.execute(() => {
       const workspace = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
@@ -62,10 +63,9 @@ suite('Scrolling into view', function () {
     });
 
     // Insert and confirm the test block which should be scrolled into view.
-    await this.browser.keys('t');
+    await sendKeyAndWait(this.browser, 't');
     await keyRight(this.browser);
-    await this.browser.keys(Key.Enter);
-    await this.browser.keys(Key.Enter);
+    await sendKeyAndWait(this.browser, Key.Enter, 2);
 
     // Assert new block has been scrolled into the viewport.
     await this.browser.pause(PAUSE_TIME);

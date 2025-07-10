@@ -16,6 +16,7 @@ import {
   testSetup,
   testFileLocations,
   PAUSE_TIME,
+  sendKeyAndWait,
   tabNavigateToWorkspace,
   keyLeft,
   keyRight,
@@ -239,13 +240,11 @@ suite('Keyboard navigation on Blocks', function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
     await focusOnBlock(this.browser, 'text_print_1');
-    await this.browser.keys('m');
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, 'm');
 
     chai.assert.isTrue(await isDragging(this.browser));
 
-    await this.browser.keys(Key.Tab);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Tab);
 
     chai.assert.isFalse(await isDragging(this.browser));
   });
@@ -354,8 +353,7 @@ suite('Keyboard navigation on Fields', function () {
     // Open a field editor dropdown
     await focusOnBlockField(this.browser, 'logic_boolean_1', 'BOOL');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.Enter);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Enter);
 
     // Try to navigate to a different block
     await keyRight(this.browser);
@@ -368,13 +366,12 @@ suite('Keyboard navigation on Fields', function () {
     // Open colour picker
     await focusOnBlockField(this.browser, 'colour_picker_1', 'COLOUR');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.Enter);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Enter);
 
     // Move right to pick a new colour.
     await keyRight(this.browser);
     // Enter to choose.
-    await this.browser.keys(Key.Enter);
+    await sendKeyAndWait(this.browser, Key.Enter);
 
     // Focus seems to take longer than a single pause to settle.
     await this.browser.waitUntil(
