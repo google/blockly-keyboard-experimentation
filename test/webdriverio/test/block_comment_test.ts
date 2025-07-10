@@ -20,7 +20,7 @@ suite('Block comment navigation', function () {
   // Setting timeout to unlimited as these tests take a longer time to run than most mocha test
   this.timeout(0);
 
-  // Setup Selenium for all of the tests
+  // Clear the workspace and load start blocks.
   setup(async function () {
     this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
     await this.browser.execute(() => {

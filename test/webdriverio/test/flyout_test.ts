@@ -20,7 +20,7 @@ import {
 } from './test_setup.js';
 
 suite('Toolbox and flyout test', function () {
-  // Clear the workspace and load start blocks
+  // Clear the workspace and load start blocks.
   setup(async function () {
     this.browser = await testSetup(testFileLocations.BASE);
     await this.browser.pause(PAUSE_TIME);

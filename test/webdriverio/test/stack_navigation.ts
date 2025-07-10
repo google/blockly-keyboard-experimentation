@@ -18,7 +18,7 @@ suite('Stack navigation', function () {
   // Setting timeout to unlimited as these tests take longer time to run
   this.timeout(0);
 
-  // Clear the workspace and load start blocks
+  // Clear the workspace and load start blocks.
   setup(async function () {
     this.browser = await testSetup(testFileLocations.COMMENTS);
     await this.browser.pause(PAUSE_TIME);

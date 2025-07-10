@@ -9,6 +9,7 @@ import * as Blockly from 'blockly/core';
 import {PAUSE_TIME, testFileLocations, testSetup} from './test_setup.js';
 
 suite('HTML toasts', function () {
+  // Clear the workspace and load start blocks.
   setup(async function () {
     this.browser = await testSetup(testFileLocations.BASE);
     await this.browser.pause(PAUSE_TIME);
