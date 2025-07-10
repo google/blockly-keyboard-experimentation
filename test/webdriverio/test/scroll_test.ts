@@ -20,12 +20,27 @@ suite('Scrolling into view', function () {
   // Setting timeout to unlimited as these tests take longer time to run
   this.timeout(0);
 
-  // Clear the workspace and load start blocks
-  setup(async function () {
+  // Resize browser to provide predictable small window size for scrolling.
+  //
+  // N.B. that this is called only one per suite, not once per test.
+  suiteSetup(async function () {
     this.browser = await testSetup(testFileLocations.BASE);
-    // Predictable small window size for scrolling.
+    this.windowSize = await this.browser.getWindowSize();
     await this.browser.setWindowSize(800, 600);
     await this.browser.pause(PAUSE_TIME);
+  });
+
+  // Restore original browser window size.
+  suiteTeardown(async function () {
+    await this.browser.setWindowSize(
+      this.windowSize.width,
+      this.windowSize.height,
+    );
+  });
+
+  // Clear the workspace and load start blocks.
+  setup(async function () {
+    await testSetup(testFileLocations.BASE);
   });
 
   test('Insert scrolls new block into view', async function () {
