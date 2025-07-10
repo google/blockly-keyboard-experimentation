@@ -12,6 +12,7 @@ import {
   tabNavigateToWorkspace,
   testFileLocations,
   testSetup,
+  sendKeyAndWait,
 } from './test_setup.js';
 
 suite('Stack navigation', function () {
@@ -27,17 +28,17 @@ suite('Stack navigation', function () {
       'p5_setup_1',
       await getCurrentFocusedBlockId(this.browser),
     );
-    await this.browser.keys('n');
+    await sendKeyAndWait(this.browser, 'n');
     chai.assert.equal(
       'p5_draw_1',
       await getCurrentFocusedBlockId(this.browser),
     );
-    await this.browser.keys('n');
+    await sendKeyAndWait(this.browser, 'n');
     chai.assert.equal(
       'workspace_comment_1',
       await getCurrentFocusNodeId(this.browser),
     );
-    await this.browser.keys('n');
+    await sendKeyAndWait(this.browser, 'n');
     // Looped around.
     chai.assert.equal(
       'p5_setup_1',
@@ -51,18 +52,18 @@ suite('Stack navigation', function () {
       'p5_setup_1',
       await getCurrentFocusedBlockId(this.browser),
     );
-    await this.browser.keys('b');
+    await sendKeyAndWait(this.browser, 'b');
     // Looped to bottom.
     chai.assert.equal(
       'workspace_comment_1',
       await getCurrentFocusNodeId(this.browser),
     );
-    await this.browser.keys('b');
+    await sendKeyAndWait(this.browser, 'b');
     chai.assert.equal(
       'p5_draw_1',
       await getCurrentFocusedBlockId(this.browser),
     );
-    await this.browser.keys('b');
+    await sendKeyAndWait(this.browser, 'b');
     chai.assert.equal(
       'p5_setup_1',
       await getCurrentFocusedBlockId(this.browser),

@@ -8,6 +8,7 @@ import * as Blockly from 'blockly';
 import * as chai from 'chai';
 import {Key} from 'webdriverio';
 import {
+  sendKeyAndWait,
   keyDown,
   keyRight,
   PAUSE_TIME,
@@ -18,7 +19,7 @@ import {
 
 suite('Scrolling into view', function () {
   // Clear the workspace and load start blocks.
-  setup(async function () {
+  suiteSetup(async function () {
     this.browser = await testSetup(testFileLocations.BASE);
     // Predictable small window size for scrolling.
     this.windowSize = await this.browser.getWindowSize()
@@ -26,7 +27,8 @@ suite('Scrolling into view', function () {
     await this.browser.pause(PAUSE_TIME);
   });
 
-  teardown(async function() {
+  suiteTeardown(async function() {
+    // Restore original window size
     await this.browser.setWindowSize(this.windowSize.width, this.windowSize.height);
   });
 
@@ -35,9 +37,9 @@ suite('Scrolling into view', function () {
 
     // Separate the two top-level blocks by moving p5_draw_1 further down.
     await keyDown(this.browser, 3);
-    await this.browser.keys('m');
+    await sendKeyAndWait(this.browser, 'm');
     await this.browser.keys([Key.Alt, ...new Array(25).fill(Key.ArrowDown)]);
-    await this.browser.keys(Key.Enter);
+    await sendKeyAndWait(this.browser, Key.Enter);
     // Scroll back up, leaving cursor on the draw block out of the viewport.
     await this.browser.execute(() => {
       const workspace = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
@@ -49,10 +51,9 @@ suite('Scrolling into view', function () {
     });
 
     // Insert and confirm the test block which should be scrolled into view.
-    await this.browser.keys('t');
+    await sendKeyAndWait(this.browser, 't');
     await keyRight(this.browser);
-    await this.browser.keys(Key.Enter);
-    await this.browser.keys(Key.Enter);
+    await sendKeyAndWait(this.browser, Key.Enter, 2);
 
     // Assert new block has been scrolled into the viewport.
     await this.browser.pause(PAUSE_TIME);

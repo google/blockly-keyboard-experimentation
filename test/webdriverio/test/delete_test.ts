@@ -15,6 +15,7 @@ import {
   testFileLocations,
   PAUSE_TIME,
   tabNavigateToWorkspace,
+  sendKeyAndWait,
   keyRight,
   focusOnBlockField,
 } from './test_setup.js';
@@ -36,8 +37,7 @@ suite('Deleting Blocks', function () {
       .expect(await blockIsPresent(this.browser, 'controls_if_2'))
       .equal(true);
 
-    await this.browser.keys(Key.Backspace);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Backspace);
 
     chai
       .expect(await blockIsPresent(this.browser, 'controls_if_2'))
@@ -58,8 +58,7 @@ suite('Deleting Blocks', function () {
       .expect(await blockIsPresent(this.browser, 'controls_if_2'))
       .equal(true);
 
-    await this.browser.keys([Key.Ctrl, 'x']);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, 'x']);
 
     chai
       .expect(await blockIsPresent(this.browser, 'controls_if_2'))
@@ -81,8 +80,7 @@ suite('Deleting Blocks', function () {
       .equal(true);
     chai.expect(await blockIsPresent(this.browser, 'text_print_1')).equal(true);
 
-    await this.browser.keys(Key.Backspace);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Backspace);
 
     chai
       .expect(await blockIsPresent(this.browser, 'logic_boolean_1'))
@@ -103,8 +101,7 @@ suite('Deleting Blocks', function () {
       .equal(true);
     chai.expect(await blockIsPresent(this.browser, 'text_print_1')).equal(true);
 
-    await this.browser.keys([Key.Ctrl, 'x']);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, 'x']);
 
     chai
       .expect(await blockIsPresent(this.browser, 'logic_boolean_1'))
@@ -124,8 +121,7 @@ suite('Deleting Blocks', function () {
       .expect(await blockIsPresent(this.browser, 'logic_boolean_1'))
       .equal(true);
 
-    await this.browser.keys(Key.Backspace);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Backspace);
 
     chai
       .expect(await blockIsPresent(this.browser, 'logic_boolean_1'))
@@ -146,8 +142,7 @@ suite('Deleting Blocks', function () {
       .expect(await blockIsPresent(this.browser, 'logic_boolean_1'))
       .equal(true);
 
-    await this.browser.keys([Key.Ctrl, 'x']);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, 'x']);
 
     chai
       .expect(await blockIsPresent(this.browser, 'logic_boolean_1'))
@@ -173,16 +168,13 @@ suite('Deleting Blocks', function () {
     // Move to flyout.
     await keyRight(this.browser);
     // Select number block.
-    await this.browser.keys(Key.Enter);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Enter);
     // Confirm move.
-    await this.browser.keys(Key.Enter);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Enter);
 
     chai.assert.equal('math_number', await getFocusedBlockType(this.browser));
 
-    await this.browser.keys(Key.Backspace);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Backspace);
 
     chai.assert.equal(
       await getCurrentFocusedBlockId(this.browser),
@@ -200,16 +192,13 @@ suite('Deleting Blocks', function () {
     // Move to flyout.
     await keyRight(this.browser);
     // Select number block.
-    await this.browser.keys(Key.Enter);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Enter);
     // Confirm move.
-    await this.browser.keys(Key.Enter);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Enter);
 
     chai.assert.equal('math_number', await getFocusedBlockType(this.browser));
 
-    await this.browser.keys([Key.Ctrl, 'x']);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, 'x']);
 
     chai.assert.equal(
       await getCurrentFocusedBlockId(this.browser),
@@ -221,11 +210,10 @@ suite('Deleting Blocks', function () {
     // Open a field editor
     await focusOnBlockField(this.browser, 'colour_picker_1', 'COLOUR');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.Enter);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Enter);
 
     // Try to delete block while field editor is open
-    await this.browser.keys(Key.Backspace);
+    await sendKeyAndWait(this.browser, Key.Backspace);
 
     // Block is not deleted
     chai.assert.isTrue(await blockIsPresent(this.browser, 'colour_picker_1'));

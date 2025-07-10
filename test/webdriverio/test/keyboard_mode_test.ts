@@ -15,6 +15,7 @@ import {
   tabNavigateToWorkspace,
   clickBlock,
   contextMenuItems,
+  sendKeyAndWait,
 } from './test_setup.js';
 import {Key} from 'webdriverio';
 
@@ -44,8 +45,7 @@ suite(
 
     test('T to open toolbox enables keyboard mode', async function () {
       await this.browser.pause(PAUSE_TIME);
-      await this.browser.keys('t');
-      await this.browser.pause(PAUSE_TIME);
+      await sendKeyAndWait(this.browser, 't');
 
       chai.assert.isTrue(await isKeyboardNavigating(this.browser));
     });
@@ -53,15 +53,14 @@ suite(
     test('M for move mode enables keyboard mode', async function () {
       await focusOnBlock(this.browser, 'controls_if_2');
       await this.browser.pause(PAUSE_TIME);
-      await this.browser.keys('m');
+      await sendKeyAndWait(this.browser, 'm');
 
       chai.assert.isTrue(await isKeyboardNavigating(this.browser));
     });
 
     test('W for workspace cursor enables keyboard mode', async function () {
       await this.browser.pause(PAUSE_TIME);
-      await this.browser.keys('w');
-      await this.browser.pause(PAUSE_TIME);
+      await sendKeyAndWait(this.browser, 'w');
 
       chai.assert.isTrue(await isKeyboardNavigating(this.browser));
     });
@@ -69,8 +68,7 @@ suite(
     test('X to disconnect enables keyboard mode', async function () {
       await focusOnBlock(this.browser, 'controls_if_2');
       await this.browser.pause(PAUSE_TIME);
-      await this.browser.keys('x');
-      await this.browser.pause(PAUSE_TIME);
+      await sendKeyAndWait(this.browser, 'x');
 
       chai.assert.isTrue(await isKeyboardNavigating(this.browser));
     });
@@ -79,8 +77,7 @@ suite(
       // Make sure we're on a copyable block so that copy occurs
       await focusOnBlock(this.browser, 'controls_if_2');
       await this.browser.pause(PAUSE_TIME);
-      await this.browser.keys([Key.Ctrl, 'c']);
-      await this.browser.pause(PAUSE_TIME);
+      await sendKeyAndWait(this.browser, [Key.Ctrl, 'c']);
 
       chai.assert.isFalse(await isKeyboardNavigating(this.browser));
 
@@ -89,8 +86,7 @@ suite(
       });
 
       await this.browser.pause(PAUSE_TIME);
-      await this.browser.keys([Key.Ctrl, 'c']);
-      await this.browser.pause(PAUSE_TIME);
+      await sendKeyAndWait(this.browser, [Key.Ctrl, 'c']);
 
       chai.assert.isTrue(await isKeyboardNavigating(this.browser));
     });
@@ -99,8 +95,7 @@ suite(
       // Make sure we're on a deletable block so that delete occurs
       await focusOnBlock(this.browser, 'controls_if_2');
       await this.browser.pause(PAUSE_TIME);
-      await this.browser.keys(Key.Backspace);
-      await this.browser.pause(PAUSE_TIME);
+      await sendKeyAndWait(this.browser, Key.Backspace);
 
       chai.assert.isFalse(await isKeyboardNavigating(this.browser));
 
@@ -111,8 +106,7 @@ suite(
       // Focus a different deletable block
       await focusOnBlock(this.browser, 'controls_if_1');
       await this.browser.pause(PAUSE_TIME);
-      await this.browser.keys(Key.Backspace);
-      await this.browser.pause(PAUSE_TIME);
+      await sendKeyAndWait(this.browser, Key.Backspace);
 
       chai.assert.isTrue(await isKeyboardNavigating(this.browser));
     });
