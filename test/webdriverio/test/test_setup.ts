@@ -27,10 +27,22 @@ import {fileURLToPath} from 'url';
 let driver: webdriverio.Browser | null = null;
 
 /**
- * The default amount of time to wait during a test. Increase this to make
- * tests easier to watch; decrease it to make tests run faster.
+ * The default amount of time to wait during a test, in ms.  Increase
+ * this to make tests easier to watch; decrease it to make tests run
+ * faster.
+ *
+ * The _test.js files in this directory are set up to disable timeouts
+ * automatically when PAUSE_TIME is set to a nonzero value via
+ *
+ *     if (PAUSE_TIME) this.timeout(0);
+ *
+ * at the top of each suite.
+ *
+ * Tests should pass reliably even with this set to zero; use one of
+ * the browser.wait* functions if you need your test to wait for
+ * something to happen after sending input.
  */
-export const PAUSE_TIME = 50;
+export const PAUSE_TIME = 0;
 
 /**
  * Start up WebdriverIO and load the test page. This should only be
