@@ -14,6 +14,7 @@ import {
   getBlockElementById,
   tabNavigateToWorkspace,
   clickBlock,
+  contextMenuItems,
 } from './test_setup.js';
 import {Key} from 'webdriverio';
 
@@ -124,7 +125,8 @@ suite(
       await this.browser.pause(PAUSE_TIME);
       // Right click a block
       clickBlock(this.browser, 'controls_if_1', {button: 'right'});
-      await this.browser.pause(PAUSE_TIME);
+      // Wait for context menu to appear.
+      await contextMenuItems(this.browser);
 
       chai.assert.isFalse(await isKeyboardNavigating(this.browser));
     });
