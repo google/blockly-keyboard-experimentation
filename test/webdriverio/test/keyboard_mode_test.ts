@@ -26,8 +26,8 @@ const isKeyboardNavigating = function (browser: WebdriverIO.Browser) {
 suite(
   'Keyboard navigation mode set on mouse or keyboard interaction',
   function () {
-    // Setting timeout to unlimited as these tests take a longer time to run than most mocha tests
-    this.timeout(0);
+    // Disable timeouts when non-zero PAUSE_TIME is used to watch tests run.
+    if (PAUSE_TIME) this.timeout(0);
 
     setup(async function () {
       // Reload the page between tests

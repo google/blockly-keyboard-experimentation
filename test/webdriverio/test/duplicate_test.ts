@@ -17,8 +17,8 @@ import {
 } from './test_setup.js';
 
 suite('Duplicate test', function () {
-  // Setting timeout to unlimited as these tests take longer time to run
-  this.timeout(0);
+  // Disable timeouts when non-zero PAUSE_TIME is used to watch tests run.
+  if (PAUSE_TIME) this.timeout(0);
 
   // Clear the workspace and load start blocks.
   setup(async function () {

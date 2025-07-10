@@ -17,8 +17,8 @@ import {
 } from './test_setup.js';
 
 suite('Scrolling into view', function () {
-  // Setting timeout to unlimited as these tests take longer time to run
-  this.timeout(0);
+  // Disable timeouts when non-zero PAUSE_TIME is used to watch tests run.
+  if (PAUSE_TIME) this.timeout(0);
 
   // Resize browser to provide predictable small window size for scrolling.
   //
