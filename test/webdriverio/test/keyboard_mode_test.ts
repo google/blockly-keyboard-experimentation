@@ -126,7 +126,7 @@ suite(
 
       await this.browser.pause(PAUSE_TIME);
       // Right click a block
-      clickBlock(this.browser, 'controls_if_1', {button: 'right'});
+      await clickBlock(this.browser, 'controls_if_1', {button: 'right'});
       await this.browser.pause(PAUSE_TIME);
 
       chai.assert.isFalse(await isKeyboardNavigating(this.browser));
