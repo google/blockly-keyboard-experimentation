@@ -7,10 +7,13 @@
 import * as chai from 'chai';
 import {Key} from 'webdriverio';
 import {
+  clickBlock,
   contextMenuExists,
   moveToToolboxCategory,
   PAUSE_TIME,
   focusOnBlock,
+  focusWorkspace,
+  rightClickOnFlyoutBlockType,
   tabNavigateToWorkspace,
   testFileLocations,
   testSetup,
@@ -34,13 +37,14 @@ suite('Menus test', function () {
     await this.browser.pause(PAUSE_TIME);
   });
 
-  test('Menu on block', async function () {
+  test('Menu action via keyboard on block opens menu', async function () {
     // Navigate to draw_circle_1.
     await focusOnBlock(this.browser, 'draw_circle_1');
     await this.browser.pause(PAUSE_TIME);
     await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
 
     chai.assert.deepEqual(
+      await contextMenuItems(this.browser),
       process.platform === 'darwin'
         ? [
             {'text': 'Duplicate D'},
@@ -68,13 +72,75 @@ suite('Menus test', function () {
             {'text': 'Copy Ctrl + C'},
             {'disabled': true, 'text': 'Paste Ctrl + V'},
           ],
-      await contextMenuItems(this.browser),
     );
   });
 
-  test('Menu on block in the toolbox', async function () {
-    // Navigate to draw_circle_1.
-    await focusOnBlock(this.browser, 'draw_circle_1');
+  test('Block menu via mouse displays expected items', async function () {
+    await tabNavigateToWorkspace(this.browser);
+    await clickBlock(this.browser, 'draw_circle_1', {button: 'right'});
+
+    chai.assert.deepEqual(
+      await contextMenuItems(this.browser),
+      process.platform === 'darwin'
+        ? [
+            {'text': 'Duplicate D'},
+            {'text': 'Add Comment'},
+            {'text': 'External Inputs'},
+            {'text': 'Collapse Block'},
+            {'text': 'Disable Block'},
+            {'text': 'Delete 2 Blocks Delete'},
+            {'text': 'Cut ⌘ X'},
+            {'text': 'Copy ⌘ C'},
+            {'disabled': true, 'text': 'Paste ⌘ V'},
+          ]
+        : [
+            {'text': 'Duplicate D'},
+            {'text': 'Add Comment'},
+            {'text': 'External Inputs'},
+            {'text': 'Collapse Block'},
+            {'text': 'Disable Block'},
+            {'text': 'Delete 2 Blocks Delete'},
+            {'text': 'Cut Ctrl + X'},
+            {'text': 'Copy Ctrl + C'},
+            {'disabled': true, 'text': 'Paste Ctrl + V'},
+          ],
+    );
+  });
+
+  test('Shadow block menu via keyboard displays expected items', async function () {
+    await tabNavigateToWorkspace(this.browser);
+    await focusOnBlock(this.browser, 'draw_circle_1_color');
+    await this.browser.keys([Key.Ctrl, Key.Return]);
+    await this.browser.pause(PAUSE_TIME);
+
+    chai.assert.deepEqual(
+      await contextMenuItems(this.browser),
+      process.platform === 'darwin'
+        ? [
+            {'text': 'Add Comment'},
+            {'text': 'Collapse Block'},
+            {'text': 'Disable Block'},
+            {'text': 'Help'},
+            {'text': 'Move Block M'},
+            {'disabled': true, 'text': 'Cut ⌘ X'},
+            {'text': 'Copy ⌘ C'},
+            {'disabled': true, 'text': 'Paste ⌘ V'},
+          ]
+        : [
+            {'text': 'Add Comment'},
+            {'text': 'Collapse Block'},
+            {'text': 'Disable Block'},
+            {'text': 'Help'},
+            {'text': 'Move Block M'},
+            {'disabled': true, 'text': 'Cut Ctrl + X'},
+            {'text': 'Copy Ctrl + C'},
+            {'disabled': true, 'text': 'Paste Ctrl + V'},
+          ],
+    );
+  });
+
+  test('Menu action on block in the toolbox', async function () {
+    await tabNavigateToWorkspace(this.browser);
     // Navigate to a toolbox category
     await moveToToolboxCategory(this.browser, 'Functions');
     // Move to flyout.
@@ -92,6 +158,32 @@ suite('Menus test', function () {
         : [
             {'text': 'Help'},
             {'disabled': true, 'text': 'Move Block M'},
+            {'disabled': true, 'text': 'Cut Ctrl + X'},
+            {'text': 'Copy Ctrl + C'},
+          ],
+      await contextMenuItems(this.browser),
+    );
+  });
+
+  test('Flyout block menu via mouse displays expected items', async function () {
+    await tabNavigateToWorkspace(this.browser);
+    // Navigate to a toolbox category
+    await moveToToolboxCategory(this.browser, 'Math');
+    // Move to flyout.
+    await keyRight(this.browser);
+    await this.browser.pause(PAUSE_TIME);
+    await rightClickOnFlyoutBlockType(this.browser, 'math_number');
+    await this.browser.pause(PAUSE_TIME);
+
+    chai.assert.deepEqual(
+      process.platform === 'darwin'
+        ? [
+            {'text': 'Help'},
+            {'disabled': true, 'text': 'Cut ⌘ X'},
+            {'text': 'Copy ⌘ C'},
+          ]
+        : [
+            {'text': 'Help'},
             {'disabled': true, 'text': 'Cut Ctrl + X'},
             {'text': 'Copy Ctrl + C'},
           ],
@@ -141,6 +233,34 @@ suite('Menus test', function () {
     chai.assert.isTrue(
       await contextMenuExists(this.browser, 'Collapse Block', true),
       'The menu should not be openable during a move',
+    );
+  });
+
+  test('Escape key dismisses menu', async function () {
+    await tabNavigateToWorkspace(this.browser);
+    await focusOnBlock(this.browser, 'draw_circle_1');
+    await this.browser.pause(PAUSE_TIME);
+    await this.browser.keys([Key.Ctrl, Key.Return]);
+    await this.browser.pause(PAUSE_TIME);
+    await this.browser.keys(Key.Escape);
+    await this.browser.pause(PAUSE_TIME);
+
+    chai.assert.isTrue(
+      await contextMenuExists(this.browser, 'Duplicate', /* reverse= */ true),
+      'The menu should be closed',
+    );
+  });
+
+  test('Clicking workspace dismisses menu', async function () {
+    await tabNavigateToWorkspace(this.browser);
+    await clickBlock(this.browser, 'draw_circle_1', {button: 'right'});
+    await this.browser.pause(PAUSE_TIME);
+    await focusWorkspace(this.browser);
+    await this.browser.pause(PAUSE_TIME);
+
+    chai.assert.isTrue(
+      await contextMenuExists(this.browser, 'Duplicate', /* reverse= */ true),
+      'The menu should be closed',
     );
   });
 });
