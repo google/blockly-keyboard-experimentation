@@ -188,7 +188,7 @@ export async function focusWorkspace(browser: WebdriverIO.Browser) {
   const workspaceElement = await browser.$(
     '#blocklyDiv > div > svg.blocklySvg > g',
   );
-  await workspaceElement.click();
+  await workspaceElement.click({x: 100});
 }
 
 /**
