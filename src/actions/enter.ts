@@ -18,6 +18,7 @@ import {
   renderManagement,
   comments,
   getFocusManager,
+  hasBubble,
 } from 'blockly/core';
 
 import type {Block} from 'blockly/core';
@@ -164,9 +165,7 @@ export class EnterAction {
       // opening a bubble of some sort. We then need to wait for the bubble to
       // appear before attempting to navigate into it.
       curNode.onClick();
-      // This currently only works for MutatorIcons.
-      // See icon_navigation_policy.
-      if (curNode instanceof icons.MutatorIcon) {
+      if (hasBubble(curNode)) {
         renderManagement.finishQueuedRenders().then(() => {
           cursor?.in();
         });
