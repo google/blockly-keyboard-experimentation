@@ -67,7 +67,7 @@ export class EditAction {
         if (!workspace || !this.navigation.canCurrentlyNavigate(workspace)) {
           return 'disabled';
         }
-        const cursor = workspace.getCursor() as LineCursor | null;
+        const cursor = workspace.getCursor();
         if (!cursor) return 'disabled';
         return cursor.atEndOfLine() ? 'hidden' : 'enabled';
       },
