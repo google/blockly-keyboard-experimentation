@@ -165,7 +165,7 @@ export class EnterAction {
       // opening a bubble of some sort. We then need to wait for the bubble to
       // appear before attempting to navigate into it.
       curNode.onClick();
-      if (hasBubble(curNode)) {
+      if (hasBubble(curNode) && curNode.bubbleIsVisible()) {
         renderManagement.finishQueuedRenders().then(() => {
           cursor?.in();
         });
