@@ -7,7 +7,6 @@
 import * as chai from 'chai';
 import * as Blockly from 'blockly';
 import {
-  contextMenuExists,
   focusOnBlock,
   getCurrentFocusNodeId,
   getFocusedBlockType,
