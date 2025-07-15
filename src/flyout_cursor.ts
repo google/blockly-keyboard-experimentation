@@ -89,8 +89,18 @@ export class FlyoutCursor extends Blockly.LineCursor {
 export const registrationType = Blockly.registry.Type.CURSOR;
 export const registrationName = 'FlyoutCursor';
 
-Blockly.registry.register(registrationType, registrationName, FlyoutCursor);
-
 export const pluginInfo = {
   [registrationType.toString()]: registrationName,
 };
+
+/**
+ * Registers the FlyoutCursor with Blockly's registry.
+ */
+export function registerFlyoutCursor() {
+  Blockly.registry.register(
+    registrationType,
+    registrationName,
+    FlyoutCursor,
+    true,
+  );
+}

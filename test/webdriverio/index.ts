@@ -9,6 +9,7 @@ import * as Blockly from 'blockly';
 import 'blockly/blocks';
 import {installAllBlocks as installColourBlocks} from '@blockly/field-colour';
 import {KeyboardNavigation} from '../../src/index';
+import {registerFlyoutCursor} from '../../src/flyout_cursor';
 // @ts-expect-error No types in js file
 import {blocks} from './../blocks/p5_blocks';
 // @ts-expect-error No types in js file
@@ -80,6 +81,7 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   }
   // Must be called before injection.
   KeyboardNavigation.registerKeyboardNavigationStyles();
+  registerFlyoutCursor();
   const workspace = Blockly.inject(blocklyDiv, injectOptions);
 
   Blockly.ContextMenuItems.registerCommentOptions();
