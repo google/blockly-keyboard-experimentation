@@ -160,7 +160,7 @@ export class Mover {
     // In case a block is detached, ensure that it still retains focus
     // (otherwise dragging will break). This is also the point a new block's
     // initial insert position is scrolled into view.
-    workspace.getCursor()?.setCurNode(draggable);
+    workspace.getCursor().setCurNode(draggable);
     draggable.getFocusableElement().addEventListener('blur', blurListener);
 
     // Register a keyboard shortcut under the key combos of all existing
@@ -257,7 +257,7 @@ export class Mover {
     );
 
     if (dragStrategy.moveType === MoveType.Insert && target) {
-      workspace.getCursor()?.setCurNode(target);
+      workspace.getCursor().setCurNode(target);
     }
 
     this.postDragEndCleanup(workspace, info);

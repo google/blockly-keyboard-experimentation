@@ -260,7 +260,7 @@ export class MoveActions {
     const node = getFocusManager().getFocusedNode();
     if (node instanceof comments.RenderedWorkspaceComment) return node;
 
-    let block = workspace?.getCursor()?.getSourceBlock();
+    let block = workspace.getCursor().getSourceBlock();
     if (!block) return undefined;
     while (block.isShadow()) {
       block = block.getParent();

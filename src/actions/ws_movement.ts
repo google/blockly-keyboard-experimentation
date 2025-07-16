@@ -119,11 +119,7 @@ export class WorkspaceMovement {
    * @param workspace The workspace the cursor is on.
    */
   createWSCursor(workspace: WorkspaceSvg) {
-    const cursor = workspace.getCursor();
-
-    if (!cursor) return false;
-
-    cursor.setCurNode(workspace);
+    workspace.getCursor().setCurNode(workspace);
     return true;
   }
 }

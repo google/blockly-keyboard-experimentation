@@ -86,9 +86,7 @@ export class ActionMenu {
     // TODO(#362): Pass this through the precondition and callback instead of making it up.
     const menuOpenEvent = new KeyboardEvent('keydown');
 
-    const cursor = workspace.getCursor();
-    if (!cursor) throw new Error('workspace has no cursor');
-    const node = cursor.getCurNode();
+    const node = workspace.getCursor().getCurNode();
     if (!node) return false;
     // TODO(google/blockly#8847): Add typeguard for IContextMenu in core when this moves over
     if (
