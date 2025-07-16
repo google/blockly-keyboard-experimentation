@@ -11,9 +11,9 @@
  * This file is to be used in the suiteSetup for any automated fuctional test.
  *
  * Note: In this file many functions return browser elements that can
- * be clicked or otherwise interacted with through Selenium WebDriver. These
+ * be clicked or otherwise interacted with through WebdriverIO. These
  * elements are not the raw HTML and SVG elements on the page; they are
- * identifiers that Selenium can use to find those elements.
+ * identifiers that WebdriverIO can use to find those elements.
  */
 
 import * as Blockly from 'blockly';
@@ -27,16 +27,33 @@ import {fileURLToPath} from 'url';
 let driver: webdriverio.Browser | null = null;
 
 /**
- * The default amount of time to wait during a test. Increase this to make
- * tests easier to watch; decrease it to make tests run faster.
+ * The default amount of time to wait during a test, in ms.  Increase
+ * this to make tests easier to watch; decrease it to make tests run
+ * faster.
+ *
+ * Tests should pass reliably even with this set to zero; use one of
+ * the browser.wait* functions if you need your test to wait for
+ * something to happen after sending input.
+ *
+ * Setting this to values greater than about 50ms is likely to cause
+ * tests to time out; increase the timeout for the test or suite you
+ * are working on with:
+ *
+ *     this.timeout(new_value_great_than_2000ms);
+ *
+ * or disable timeouts completely with:
+ *
+ *     this.timeout(0);
  */
-export const PAUSE_TIME = 50;
+export const PAUSE_TIME = 0;
 
 /**
- * Start up the test page. This should only be done once, to avoid
- * constantly popping browser windows open and closed.
+ * Start up WebdriverIO and load the test page. This should only be
+ * done once, to avoid constantly popping browser windows open and
+ * closed.
  *
- * @returns A Promise that resolves to a webdriverIO browser that tests can manipulate.
+ * @returns A Promise that resolves to a WebdriverIO browser that
+ *     tests can manipulate.
  */
 export async function driverSetup(): Promise<webdriverio.Browser> {
   const options = {
@@ -68,14 +85,14 @@ export async function driverSetup(): Promise<webdriverio.Browser> {
     // https://github.com/google/blockly/issues/5345 for details.
     options.capabilities['goog:chromeOptions'].args.push('--disable-gpu');
   }
-  // Use Selenium to bring up the page
+  // Use webdriver to bring up the page
   console.log('Starting webdriverio...');
   driver = await webdriverio.remote(options);
   return driver;
 }
 
 /**
- * End the webdriverIO session.
+ * End the WebdriverIO session.
  *
  * @return A Promise that resolves after the actions have been completed.
  */
@@ -90,7 +107,8 @@ export async function driverTeardown() {
  *
  * @param playgroundUrl The URL to open for the test, which should be
  *     a Blockly playground with a workspace.
- * @returns A Promise that resolves to a webdriverIO browser that tests can manipulate.
+ * @returns A Promise that resolves to a WebdriverIO browser that
+ *     tests can manipulate.
  */
 export async function testSetup(
   playgroundUrl: string,
@@ -679,7 +697,7 @@ export async function clickBlock(
     findableId,
   );
 
-  // In the test context, get the Webdriverio Element that we've identified.
+  // In the test context, get the WebdriverIO Element that we've identified.
   const elem = await browser.$(`#${findableId}`);
 
   await elem.click(clickOptions);
