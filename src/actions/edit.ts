@@ -6,7 +6,6 @@
 
 import {
   ContextMenuRegistry,
-  LineCursor,
   Msg,
   keyboardNavigationController,
 } from 'blockly';
