@@ -4,11 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {
-  ContextMenuRegistry,
-  Msg,
-  keyboardNavigationController,
-} from 'blockly';
+import {ContextMenuRegistry, Msg, keyboardNavigationController} from 'blockly';
 import {Navigation} from 'src/navigation';
 import {getMenuItem} from '../shortcut_formatting';
 import * as Constants from '../constants';
