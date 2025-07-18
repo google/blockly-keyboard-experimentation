@@ -38,11 +38,7 @@ export class ArrowNavigation {
     workspace: WorkspaceSvg,
     shortcut: ShortcutRegistry.KeyboardShortcut,
   ): boolean {
-    const cursor = workspace.getCursor();
-    if (!cursor || !cursor.getCurNode()) {
-      return false;
-    }
-    const curNode = cursor.getCurNode();
+    const curNode = workspace.getCursor().getCurNode();
     if (curNode instanceof Field) {
       return curNode.onShortcut(shortcut);
     }
@@ -70,7 +66,7 @@ export class ArrowNavigation {
             if (
               !this.navigation.defaultWorkspaceCursorPositionIfNeeded(workspace)
             ) {
-              workspace.getCursor()?.in();
+              workspace.getCursor().in();
             }
             isHandled = true;
           }
@@ -103,7 +99,7 @@ export class ArrowNavigation {
             if (
               !this.navigation.defaultWorkspaceCursorPositionIfNeeded(workspace)
             ) {
-              workspace.getCursor()?.out();
+              workspace.getCursor().out();
             }
             isHandled = true;
           }
@@ -169,7 +165,7 @@ export class ArrowNavigation {
                     workspace,
                   )
                 ) {
-                  workspace.getCursor()?.next();
+                  workspace.getCursor().next();
                 }
                 isHandled = true;
               }
@@ -182,7 +178,7 @@ export class ArrowNavigation {
                     workspace.targetWorkspace,
                   )
                 ) {
-                  workspace.getCursor()?.next();
+                  workspace.getCursor().next();
                 }
                 isHandled = true;
               }
@@ -232,7 +228,7 @@ export class ArrowNavigation {
                     'last',
                   )
                 ) {
-                  workspace.getCursor()?.prev();
+                  workspace.getCursor().prev();
                 }
                 isHandled = true;
               }
@@ -246,7 +242,7 @@ export class ArrowNavigation {
                     'last',
                   )
                 ) {
-                  workspace.getCursor()?.prev();
+                  workspace.getCursor().prev();
                 }
                 isHandled = true;
               }

@@ -117,8 +117,7 @@ export class EnterAction {
   private shouldHandleEnterForWS(workspace: WorkspaceSvg): boolean {
     if (!this.navigation.canCurrentlyNavigate(workspace)) return false;
 
-    const cursor = workspace.getCursor();
-    const curNode = cursor?.getCurNode();
+    const curNode = workspace.getCursor().getCurNode();
     if (!curNode) return false;
     if (curNode instanceof Field) return curNode.isClickable();
     if (
@@ -144,7 +143,7 @@ export class EnterAction {
    */
   private handleEnterForWS(workspace: WorkspaceSvg): boolean {
     const cursor = workspace.getCursor();
-    const curNode = cursor?.getCurNode();
+    const curNode = cursor.getCurNode();
     if (!curNode) return false;
     if (curNode instanceof Field) {
       curNode.showEditor();
@@ -167,7 +166,7 @@ export class EnterAction {
       curNode.onClick();
       renderManagement.finishQueuedRenders().then(() => {
         if (hasBubble(curNode) && curNode.bubbleIsVisible()) {
-          cursor?.in();
+          cursor.in();
         }
       });
       return true;

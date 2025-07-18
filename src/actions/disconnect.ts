@@ -78,7 +78,6 @@ export class DisconnectAction {
    */
   disconnectBlocks(workspace: WorkspaceSvg) {
     const cursor = workspace.getCursor();
-    if (!cursor) return;
     const curNode = cursor.getCurNode();
     if (!(curNode instanceof BlockSvg)) return;
 

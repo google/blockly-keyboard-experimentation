@@ -10,8 +10,6 @@
  * @author aschmiedt@google.com (Abby Schmiedt)
  */
 
-import './toolbox_monkey_patch';
-
 import * as Blockly from 'blockly/core';
 import {
   ShortcutRegistry,
