@@ -14,6 +14,7 @@ import {
   keyDown,
   tabNavigateBackward,
   tabNavigateToWorkspace,
+  sendKeyAndWait,
   keyRight,
   getCurrentFocusNodeId,
   getCurrentFocusedBlockId,
@@ -164,7 +165,7 @@ suite('Toolbox and flyout test', function () {
   test('Tabbing to the workspace after selecting flyout block via workspace toolbox shortcut should close the flyout', async function () {
     await tabNavigateToWorkspace(this.browser);
 
-    await this.browser.keys('t');
+    await sendKeyAndWait(this.browser, 't');
     await keyRight(this.browser);
     await tabNavigateForward(this.browser);
 

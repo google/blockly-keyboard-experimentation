@@ -14,14 +14,12 @@ import {
   tabNavigateToWorkspace,
   testFileLocations,
   testSetup,
+  sendKeyAndWait,
   keyRight,
   contextMenuItems,
 } from './test_setup.js';
 
 suite('Menus test', function () {
-  // Setting timeout to unlimited as these tests take longer time to run
-  this.timeout(0);
-
   // Clear the workspace and load start blocks
   setup(async function () {
     this.browser = await testSetup(testFileLocations.BASE);
@@ -33,8 +31,7 @@ suite('Menus test', function () {
     await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys([Key.Ctrl, Key.Return]);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
 
     chai.assert.deepEqual(
       process.platform === 'darwin'
@@ -76,8 +73,7 @@ suite('Menus test', function () {
     await moveToToolboxCategory(this.browser, 'Functions');
     // Move to flyout.
     await keyRight(this.browser);
-    await this.browser.keys([Key.Ctrl, Key.Return]);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
 
     chai.assert.deepEqual(
       process.platform === 'darwin'
@@ -100,9 +96,8 @@ suite('Menus test', function () {
   test('Menu on workspace', async function () {
     // Navigate to draw_circle_1.
     await tabNavigateToWorkspace(this.browser);
-    await this.browser.keys('w');
-    await this.browser.keys([Key.Ctrl, Key.Return]);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, 'w');
+    await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
 
     chai.assert.deepEqual(
       process.platform === 'darwin'
@@ -135,9 +130,9 @@ suite('Menus test', function () {
     await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
     // Start moving the block
-    await this.browser.keys('m');
-    await this.browser.keys([Key.Ctrl, Key.Return]);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, 'm');
+    await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
+
     chai.assert.isTrue(
       await contextMenuExists(this.browser, 'Collapse Block', true),
       'The menu should not be openable during a move',
