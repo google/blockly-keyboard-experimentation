@@ -172,4 +172,14 @@ export class MoveIndicatorBubble
   canBeFocused(): boolean {
     return false;
   }
+
+  /** See IFocusableNode.getAriaRole. */
+  getAriaRole(): Blockly.utils.aria.Role | null {
+    throw new Error('This node is not focusable.');
+  }
+
+  /** See IFocusableNode.getAriaLabel. */
+  getAriaLabel(): string {
+    throw new Error('This node is not focusable.');
+  }
 }

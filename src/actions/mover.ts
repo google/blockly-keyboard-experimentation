@@ -154,6 +154,7 @@ export class Mover {
     workspace.setKeyboardMoveInProgress(true);
     const info = new MoveInfo(workspace, draggable, dragger, blurListener);
     this.moves.set(workspace, info);
+    workspace.setMovingBlock(draggable);
     // Begin drag.
     dragger.onDragStart(info.fakePointerEvent('pointerdown'));
     info.updateTotalDelta();
@@ -217,6 +218,7 @@ export class Mover {
    */
   finishMove(workspace: WorkspaceSvg) {
     const info = this.preDragEndCleanup(workspace);
+    workspace.setMovingBlock(null);
 
     info.dragger.onDragEnd(
       info.fakePointerEvent('pointerup'),
@@ -244,12 +246,11 @@ export class Mover {
     this.patchDragger(info.dragger as dragging.Dragger, dragStrategy.moveType);
 
     // Save the position so we can put the cursor in a reasonable spot.
-    // @ts-expect-error Access to private property connectionCandidate.
     const target = dragStrategy.connectionCandidate?.neighbour;
 
     // Prevent the strategy connecting the block so we just delete one block.
-    // @ts-expect-error Access to private property connectionCandidate.
     dragStrategy.connectionCandidate = null;
+    workspace.setMovingBlock(null);
 
     info.dragger.onDragEnd(
       info.fakePointerEvent('pointerup'),
