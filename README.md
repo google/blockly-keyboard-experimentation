@@ -81,6 +81,18 @@ const workspace = Blockly.inject('blocklyDiv', {
 const keyboardNav = new KeyboardNavigation(workspace);
 ```
 
+## Add shortcuts to page
+
+In order to see the keyboard help popup when the user presses /, you need to add an empty div element to the hosting page that has the Blockly div element with the id "shortcuts". The plugin will take care of layout and formatting.
+
+```html
+...
+<div id="shortcuts"></div>
+...
+<div id="blockly"></div>
+...
+```
+
 ### Usage with cross-tab-copy-paste plugin
 
 This plugin adds context menu items for copying & pasting. It also adds feedback to copying & pasting as toasts that are shown to the user upon successful copy or cut. It is compatible with the `@blockly/plugin-cross-tab-copy-paste` by following these steps:

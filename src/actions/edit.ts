@@ -4,12 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {
-  ContextMenuRegistry,
-  LineCursor,
-  Msg,
-  keyboardNavigationController,
-} from 'blockly';
+import {ContextMenuRegistry, Msg, keyboardNavigationController} from 'blockly';
 import {Navigation} from 'src/navigation';
 import {getMenuItem} from '../shortcut_formatting';
 import * as Constants from '../constants';
@@ -67,7 +62,7 @@ export class EditAction {
         if (!workspace || !this.navigation.canCurrentlyNavigate(workspace)) {
           return 'disabled';
         }
-        const cursor = workspace.getCursor() as LineCursor | null;
+        const cursor = workspace.getCursor();
         if (!cursor) return 'disabled';
         return cursor.atEndOfLine() ? 'hidden' : 'enabled';
       },

@@ -72,10 +72,7 @@ export class Navigation {
   removeWorkspace(workspace: Blockly.WorkspaceSvg) {
     const workspaceIdx = this.workspaces.indexOf(workspace);
     const flyout = workspace.getFlyout();
-
-    if (workspace.getCursor()) {
-      this.disableKeyboardAccessibility(workspace);
-    }
+    this.disableKeyboardAccessibility(workspace);
 
     if (workspaceIdx > -1) {
       this.workspaces.splice(workspaceIdx, 1);
@@ -259,9 +256,9 @@ export class Navigation {
   ) {
     const mutatedBlockId = e.blockId;
     const cursor = workspace.getCursor();
-    const block = cursor?.getSourceBlock();
+    const block = cursor.getSourceBlock();
     if (block && block.id === mutatedBlockId) {
-      cursor?.setCurNode(block);
+      cursor.setCurNode(block);
     }
   }
 
@@ -346,9 +343,6 @@ export class Navigation {
   ) {
     const topBlocks = workspace.getTopBlocks(true);
     const cursor = workspace.getCursor();
-    if (!cursor) {
-      return;
-    }
     const disposed = cursor.getSourceBlock()?.disposed;
     if (cursor.getCurNode() && !disposed) {
       // Retain the cursor's previous position since it's set, but only if not
@@ -800,7 +794,7 @@ export class Navigation {
    */
   paste(copyData: Blockly.ICopyData, workspace: Blockly.WorkspaceSvg): boolean {
     // Do this before clipoard.paste due to cursor/focus workaround in getCurNode.
-    const targetNode = workspace.getCursor()?.getCurNode();
+    const targetNode = workspace.getCursor().getCurNode();
 
     Blockly.Events.setGroup(true);
     const block = Blockly.clipboard.paste(

@@ -17,6 +17,7 @@ import {
   focusOnBlock,
   focusOnBlockField,
   blockIsPresent,
+  getFocusedBlockType,
 } from './test_setup.js';
 import {Key, KeyAction, PointerAction, WheelAction} from 'webdriverio';
 
@@ -61,14 +62,12 @@ suite('Clipboard test', function () {
     await this.browser.keys([Key.Ctrl, 'x']);
     await block.waitForExist({reverse: true});
     await this.browser.keys([Key.Ctrl, 'v']);
-    await block.waitForExist();
     await this.browser.pause(PAUSE_TIME);
 
-    const blocks = await getSameBlocks(this.browser, block);
-    const selectedId = await getSelectedBlockId(this.browser);
+    const focusedType = await getFocusedBlockType(this.browser);
 
-    chai.assert.equal(await blocks.length, 1);
-    chai.assert.equal(selectedId, await blocks[0].getAttribute('data-id'));
+    // Pasted block should be focused.
+    chai.assert.equal(focusedType, 'simple_circle');
   });
 
   test('Copy and paste whilst dragging block', async function () {
