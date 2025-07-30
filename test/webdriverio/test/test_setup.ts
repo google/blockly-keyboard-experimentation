@@ -441,10 +441,10 @@ export async function tabNavigateToWorkspace(
   hasFlyout = true,
 ) {
   // Navigate past the initial pre-injection focusable div element.
-  tabNavigateForward(browser);
-  if (hasToolbox) tabNavigateForward(browser);
-  if (hasFlyout) tabNavigateForward(browser);
-  tabNavigateForward(browser); // Tab to the workspace itself.
+  await tabNavigateForward(browser);
+  if (hasToolbox) await tabNavigateForward(browser);
+  if (hasFlyout) await tabNavigateForward(browser);
+  await tabNavigateForward(browser); // Tab to the workspace itself.
 }
 
 /**
