@@ -24,6 +24,7 @@ import {javascriptGenerator} from 'blockly/javascript';
 // @ts-expect-error No types in js file
 import {load} from './loadTestBlocks';
 import {runCode, registerRunCodeShortcut} from './runCode';
+import * as aria from '../src/aria';
 
 (window as unknown as {Blockly: typeof Blockly}).Blockly = Blockly;
 
@@ -97,6 +98,16 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   registerFlyoutCursor();
   registerNavigationDeferringToolbox();
   const workspace = Blockly.inject(blocklyDiv, injectOptions);
+
+  const injectionDiv = document.querySelector('.injectionDiv');
+  if (!injectionDiv) {
+    throw new Error('Expected injection div to exist after injection.');
+  }
+  // See: https://stackoverflow.com/a/48590836 for a reference.
+  const ariaAnnouncementSpan = document.createElement('span');
+  ariaAnnouncementSpan.id = 'blocklyAriaAnnounce';
+  aria.setState(ariaAnnouncementSpan, aria.State.LIVE, 'polite');
+  injectionDiv.appendChild(ariaAnnouncementSpan);
 
   Blockly.ContextMenuItems.registerCommentOptions();
   new KeyboardNavigation(workspace);
