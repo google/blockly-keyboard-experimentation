@@ -56,7 +56,7 @@ export enum State {
   OWNS = 'owns',
 }
 
-var isMutatingAriaProperty: boolean = false;
+let isMutatingAriaProperty = false;
 
 export function setRole(element: Element, roleName: Role | null) {
   isMutatingAriaProperty = true;

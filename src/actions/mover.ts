@@ -82,7 +82,9 @@ export class Mover {
 
   private moveIndicator?: MoveIndicatorBubble;
 
-  private movingBlock: (IDraggable & IFocusableNode & IBoundedElement & ISelectable) | null = null;
+  private movingBlock:
+    | (IDraggable & IFocusableNode & IBoundedElement & ISelectable)
+    | null = null;
 
   constructor(protected navigation: Navigation) {}
 
