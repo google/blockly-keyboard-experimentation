@@ -182,10 +182,8 @@ export class MoveActions {
       weight: 8.5,
     },
     {
-      displayText: () => getMenuItem(
-        Msg['MOVE_COMMENT'] ?? 'Move Comment',
-        'start_move',
-      ),
+      displayText: () =>
+        getMenuItem(Msg['MOVE_COMMENT'] ?? 'Move Comment', 'start_move'),
       preconditionFn: (scope, menuOpenEvent) => {
         const comment = scope.comment;
         if (!comment) return 'hidden';
