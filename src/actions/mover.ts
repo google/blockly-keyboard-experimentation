@@ -82,10 +82,6 @@ export class Mover {
 
   private moveIndicator?: MoveIndicatorBubble;
 
-  private movingBlock:
-    | (IDraggable & IFocusableNode & IBoundedElement & ISelectable)
-    | null = null;
-
   constructor(protected navigation: Navigation) {}
 
   /**
@@ -158,7 +154,6 @@ export class Mover {
     workspace.setKeyboardMoveInProgress(true);
     const info = new MoveInfo(workspace, draggable, dragger, blurListener);
     this.moves.set(workspace, info);
-    this.movingBlock = draggable;
     // Begin drag.
     dragger.onDragStart(info.fakePointerEvent('pointerdown'));
     info.updateTotalDelta();
@@ -222,7 +217,6 @@ export class Mover {
    */
   finishMove(workspace: WorkspaceSvg) {
     const info = this.preDragEndCleanup(workspace);
-    this.movingBlock = null;
 
     info.dragger.onDragEnd(
       info.fakePointerEvent('pointerup'),
@@ -256,7 +250,6 @@ export class Mover {
     // Prevent the strategy connecting the block so we just delete one block.
     // @ts-expect-error Access to private property connectionCandidate.
     dragStrategy.connectionCandidate = null;
-    this.movingBlock = null;
 
     info.dragger.onDragEnd(
       info.fakePointerEvent('pointerup'),
