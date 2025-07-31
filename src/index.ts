@@ -66,16 +66,16 @@ export class KeyboardNavigation {
     workspace.addChangeListener(enableBlocksOnDrag);
 
     // Move the flyout for logical tab order.
-    // const flyout = workspace.getFlyout();
-    // if (flyout != null && flyout instanceof Blockly.Flyout) {
-    //   // This relies on internals.
-    //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    //   const flyoutElement = ((flyout as any).svgGroup_ as SVGElement) ?? null;
-    //   flyoutElement?.parentElement?.insertBefore(
-    //     flyoutElement,
-    //     workspace.getParentSvg(),
-    //   );
-    // }
+    const flyout = workspace.getFlyout();
+    if (flyout != null && flyout instanceof Blockly.Flyout) {
+      // This relies on internals.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const flyoutElement = ((flyout as any).svgGroup_ as SVGElement) ?? null;
+      flyoutElement?.parentElement?.insertBefore(
+        flyoutElement,
+        workspace.getParentSvg(),
+      );
+    }
 
     this.oldWorkspaceResize = workspace.resize;
     workspace.resize = () => {
@@ -296,7 +296,7 @@ export class KeyboardNavigation {
     stroke: var(--blockly-active-node-color);
     stroke-width: var(--blockly-selection-width);
   }
-  
+
   /* The workspace itself is the active node. */
   .blocklyKeyboardNavigation
     .blocklyBubble.blocklyActiveFocus

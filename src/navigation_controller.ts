@@ -36,7 +36,6 @@ import {Mover} from './actions/mover';
 import {DuplicateAction} from './actions/duplicate';
 import {StackNavigationAction} from './actions/stack_navigation';
 
-// TODO: Implement unregistration.
 import './aria_monkey_patches';
 
 const KeyCodes = BlocklyUtils.KeyCodes;

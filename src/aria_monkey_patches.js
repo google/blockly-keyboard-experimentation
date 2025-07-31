@@ -27,14 +27,20 @@ document.createElementNS = function (namepspaceURI, qualifiedName) {
 };
 
 const oldElementSetAttribute = Element.prototype.setAttribute;
+// TODO: Replace these cases with property augmentation here so that all aria
+// behavior is defined within this file.
+const ariaAttributeAllowlist = ['aria-disabled', 'aria-selected'];
 
 Element.prototype.setAttribute = function (name, value) {
   // This is a hacky way to disable all aria changes in core Blockly since it's
   // easier to just undefine everything globally and then conditionally reenable
   // things with the correct definitions.
+  // TODO: Add an exemption for role here once all roles are properly defined
+  // within this file (see failing tests when role changes are ignored here).
   if (
     aria.isCurrentlyMutatingAriaProperty() ||
-    (name !== 'role' && !name.startsWith('aria-'))
+    ariaAttributeAllowlist.includes(name) ||
+    !name.startsWith('aria-')
   ) {
     oldElementSetAttribute.call(this, name, value);
   }
