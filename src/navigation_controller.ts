@@ -36,9 +36,14 @@ import {Mover} from './actions/mover';
 import {DuplicateAction} from './actions/duplicate';
 import {StackNavigationAction} from './actions/stack_navigation';
 
-import './aria_monkey_patches';
+import './screenreader/aria_monkey_patcher';
+import {FunctionStubber} from './screenreader/function_stubber_registry';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
+
+// Note that prototype stubs must happen early in the page lifecycle in order to
+// take effect before Blockly loading.
+FunctionStubber.getInstance().stubPrototypes();
 
 /**
  * Class for registering shortcuts for keyboard navigation.
@@ -292,5 +297,7 @@ export class NavigationController {
     }
     this.removeShortcutHandlers();
     this.navigation.dispose();
+
+    FunctionStubber.getInstance().unstubPrototypes();
   }
 }
