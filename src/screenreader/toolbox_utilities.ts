@@ -19,4 +19,4 @@ export function recomputeAriaOwnersInToolbox(toolbox: Blockly.Toolbox) {
   focusableChildElems.forEach((elem, index) =>
     aria.setState(elem, aria.State.POSINSET, index + 1),
   );
-};
+}

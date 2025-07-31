@@ -4,16 +4,24 @@ import * as aria from '../aria';
 
 // Note: These can be consolidated to FieldInput, but that's not exported so it
 // has to be overwritten on a per-field basis.
-FunctionStubber.getInstance().registerInitializationStub((fieldNumber) => {
-  initializeFieldInput(fieldNumber);
-}, 'init', Blockly.FieldNumber.prototype);
+FunctionStubber.getInstance().registerInitializationStub(
+  (fieldNumber) => {
+    initializeFieldInput(fieldNumber);
+  },
+  'init',
+  Blockly.FieldNumber.prototype,
+);
 
-FunctionStubber.getInstance().registerInitializationStub((fieldTextInput) => {
-  initializeFieldInput(fieldTextInput);
-}, 'init', Blockly.FieldTextInput.prototype);
+FunctionStubber.getInstance().registerInitializationStub(
+  (fieldTextInput) => {
+    initializeFieldInput(fieldTextInput);
+  },
+  'init',
+  Blockly.FieldTextInput.prototype,
+);
 
 function initializeFieldInput(
-  fieldInput: Blockly.FieldNumber | Blockly.FieldTextInput
+  fieldInput: Blockly.FieldNumber | Blockly.FieldTextInput,
 ): void {
   const element = fieldInput.getFocusableElement();
   aria.setRole(element, aria.Role.TEXTBOX);

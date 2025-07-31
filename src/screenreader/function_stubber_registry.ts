@@ -7,29 +7,37 @@ class Registration<T> {
     readonly callback: StubCallback<T>,
     readonly methodNameToOverride: string,
     readonly classPrototype: T,
-    readonly ensureOneCall: boolean
+    readonly ensureOneCall: boolean,
   ) {}
 
   stubPrototype(): void {
     // TODO: Figure out how to make this work with minification.
     if (this.oldMethod) {
-      throw new Error(`Function is already stubbed: ${this.methodNameToOverride}.`);
+      throw new Error(
+        `Function is already stubbed: ${this.methodNameToOverride}.`,
+      );
     }
     const genericPrototype = this.classPrototype as any;
-    const oldMethod =
-      genericPrototype[this.methodNameToOverride] as (...args: any) => any;
+    const oldMethod = genericPrototype[this.methodNameToOverride] as (
+      ...args: any
+    ) => any;
     this.oldMethod = oldMethod;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const registration = this;
     genericPrototype[this.methodNameToOverride] = function (...args: any): any {
-      let stubsCalled =
-        this._internalStubsCalled as {[key: string]: boolean} | undefined;
+      let stubsCalled = this._internalStubsCalled as
+        | {[key: string]: boolean}
+        | undefined;
       if (!stubsCalled) {
         stubsCalled = {};
         this._internalStubsCalled = stubsCalled;
       }
 
       const result = oldMethod.call(this, ...args);
-      if (!registration.ensureOneCall || !stubsCalled[registration.methodNameToOverride]) {
+      if (
+        !registration.ensureOneCall ||
+        !stubsCalled[registration.methodNameToOverride]
+      ) {
         registration.callback(this as unknown as T, ...args);
         stubsCalled[registration.methodNameToOverride] = true;
       }
@@ -39,7 +47,9 @@ class Registration<T> {
 
   unstubPrototype(): void {
     if (this.oldMethod) {
-      throw new Error(`Function is not currently stubbed: ${this.methodNameToOverride}.`);
+      throw new Error(
+        `Function is not currently stubbed: ${this.methodNameToOverride}.`,
+      );
     }
     const genericPrototype = this.classPrototype as any;
     genericPrototype[this.methodNameToOverride] = this.oldMethod;
@@ -48,40 +58,56 @@ class Registration<T> {
 }
 
 export class FunctionStubber {
-  private registrations: Registration<any>[] = [];
-  private isFinalized: boolean = false;
+  private registrations: Array<Registration<any>> = [];
+  private isFinalized = false;
 
-  public registerInitializationStub<T>(
+  registerInitializationStub<T>(
     callback: StubCallback<T>,
     methodNameToOverride: string,
-    classPrototype: T
+    classPrototype: T,
   ) {
     if (this.isFinalized) {
-      throw new Error('Cannot register a stub after initialization has been completed.');
+      throw new Error(
+        'Cannot register a stub after initialization has been completed.',
+      );
     }
-    const registration = new Registration(callback, methodNameToOverride, classPrototype, true);
+    const registration = new Registration(
+      callback,
+      methodNameToOverride,
+      classPrototype,
+      true,
+    );
     this.registrations.push(registration);
   }
 
-  public registerMethodStub<T>(
+  registerMethodStub<T>(
     callback: StubCallback<T>,
     methodNameToOverride: string,
-    classPrototype: T
+    classPrototype: T,
   ) {
     if (this.isFinalized) {
-      throw new Error('Cannot register a stub after initialization has been completed.');
+      throw new Error(
+        'Cannot register a stub after initialization has been completed.',
+      );
     }
-    const registration = new Registration(callback, methodNameToOverride, classPrototype, false);
+    const registration = new Registration(
+      callback,
+      methodNameToOverride,
+      classPrototype,
+      false,
+    );
     this.registrations.push(registration);
   }
 
-  public stubPrototypes() {
+  stubPrototypes() {
     this.isFinalized = true;
     this.registrations.forEach((registration) => registration.stubPrototype());
   }
 
-  public unstubPrototypes() {
-    this.registrations.forEach((registration) => registration.unstubPrototype());
+  unstubPrototypes() {
+    this.registrations.forEach((registration) =>
+      registration.unstubPrototype(),
+    );
     this.isFinalized = false;
   }
 

@@ -10,25 +10,25 @@
  */
 
 import * as aria from './aria';
-import './stuboverrides/override_block_svg'
-import './stuboverrides/override_collapsible_toolbox_category'
-import './stuboverrides/override_comment_icon'
-import './stuboverrides/override_field_checkbox'
-import './stuboverrides/override_field_dropdown'
-import './stuboverrides/override_field_image'
-import './stuboverrides/override_field_input'
-import './stuboverrides/override_field_label'
-import './stuboverrides/override_field'
-import './stuboverrides/override_flyout_button'
-import './stuboverrides/override_icon'
-import './stuboverrides/override_mutator_icon'
-import './stuboverrides/override_rendered_connection'
-import './stuboverrides/override_rendered_workspace_comment'
-import './stuboverrides/override_toolbox_category'
-import './stuboverrides/override_toolbox_separator'
-import './stuboverrides/override_toolbox'
-import './stuboverrides/override_warning_icon'
-import './stuboverrides/override_workspace_svg'
+import './stuboverrides/override_block_svg';
+import './stuboverrides/override_collapsible_toolbox_category';
+import './stuboverrides/override_comment_icon';
+import './stuboverrides/override_field_checkbox';
+import './stuboverrides/override_field_dropdown';
+import './stuboverrides/override_field_image';
+import './stuboverrides/override_field_input';
+import './stuboverrides/override_field_label';
+import './stuboverrides/override_field';
+import './stuboverrides/override_flyout_button';
+import './stuboverrides/override_icon';
+import './stuboverrides/override_mutator_icon';
+import './stuboverrides/override_rendered_connection';
+import './stuboverrides/override_rendered_workspace_comment';
+import './stuboverrides/override_toolbox_category';
+import './stuboverrides/override_toolbox_separator';
+import './stuboverrides/override_toolbox';
+import './stuboverrides/override_warning_icon';
+import './stuboverrides/override_workspace_svg';
 
 const oldCreateElementNS = document.createElementNS;
 

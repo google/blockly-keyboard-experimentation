@@ -8,7 +8,9 @@ export function computeBlockAriaLabel(block: Blockly.BlockSvg): string {
     // Shadow blocks are best represented directly by their field since they
     // effectively operate like a field does for keyboard navigation purposes.
     const field = Array.from(block.getFields())[0];
-    return aria.getState(field.getFocusableElement(), aria.State.LABEL) ?? 'Unknown?';
+    return (
+      aria.getState(field.getFocusableElement(), aria.State.LABEL) ?? 'Unknown?'
+    );
   }
 
   const fieldLabels = [];
@@ -18,9 +20,12 @@ export function computeBlockAriaLabel(block: Blockly.BlockSvg): string {
     }
   }
   return fieldLabels.join(' ');
-};
+}
 
-function collectSiblingBlocks(block: Blockly.BlockSvg, surroundParent: Blockly.BlockSvg | null): Blockly.BlockSvg[] {
+function collectSiblingBlocks(
+  block: Blockly.BlockSvg,
+  surroundParent: Blockly.BlockSvg | null,
+): Blockly.BlockSvg[] {
   // NOTE TO DEVELOPERS: it's very important that these are NOT sorted. The
   // returned list needs to be relatively stable for consistency block indexes
   // read out to users via screen readers.
@@ -29,7 +34,7 @@ function collectSiblingBlocks(block: Blockly.BlockSvg, surroundParent: Blockly.B
     const firstSibling: Blockly.BlockSvg = surroundParent.getChildren(false)[0];
     const siblings: Blockly.BlockSvg[] = [firstSibling];
     let nextSibling: Blockly.BlockSvg | null = firstSibling;
-    while (nextSibling = nextSibling.getNextBlock()) {
+    while ((nextSibling = nextSibling.getNextBlock())) {
       siblings.push(nextSibling);
     }
     return siblings;
@@ -42,10 +47,12 @@ function collectSiblingBlocks(block: Blockly.BlockSvg, surroundParent: Blockly.B
 function computeLevelInWorkspace(block: Blockly.BlockSvg): number {
   const surroundParent = block.getSurroundParent();
   return surroundParent ? computeLevelInWorkspace(surroundParent) + 1 : 0;
-};
+}
 
 // TODO: Do this efficiently (probably centrally).
-export function recomputeAriaTreeItemDetailsRecursively(block: Blockly.BlockSvg) {
+export function recomputeAriaTreeItemDetailsRecursively(
+  block: Blockly.BlockSvg,
+) {
   const elem = block.getFocusableElement();
   const connection = (block as any).currentConnectionCandidate;
   let childPosition: number;
@@ -69,7 +76,9 @@ export function recomputeAriaTreeItemDetailsRecursively(block: Blockly.BlockSvg)
       childPosition = siblingBlocks.indexOf(connection.sourceBlock_) + 2;
     }
     parentsChildCount = siblingBlocks.length + 1;
-    hierarchyDepth = surroundParent ? computeLevelInWorkspace(surroundParent) + 1 : 1;
+    hierarchyDepth = surroundParent
+      ? computeLevelInWorkspace(surroundParent) + 1
+      : 1;
   } else {
     const surroundParent = block.getSurroundParent();
     const siblingBlocks = collectSiblingBlocks(block, surroundParent);
@@ -80,10 +89,17 @@ export function recomputeAriaTreeItemDetailsRecursively(block: Blockly.BlockSvg)
   aria.setState(elem, aria.State.POSINSET, childPosition);
   aria.setState(elem, aria.State.SETSIZE, parentsChildCount);
   aria.setState(elem, aria.State.LEVEL, hierarchyDepth);
-  block.getChildren(false).forEach((child) => recomputeAriaTreeItemDetailsRecursively(child));
+  block
+    .getChildren(false)
+    .forEach((child) => recomputeAriaTreeItemDetailsRecursively(child));
 }
 
-export function announceDynamicAriaStateForBlock(block: Blockly.BlockSvg, isMoving: boolean, isCanceled: boolean, newLoc?: Blockly.utils.Coordinate) {
+export function announceDynamicAriaStateForBlock(
+  block: Blockly.BlockSvg,
+  isMoving: boolean,
+  isCanceled: boolean,
+  newLoc?: Blockly.utils.Coordinate,
+) {
   const connection = (block as any).currentConnectionCandidate;
   if (isCanceled) {
     aria.announceDynamicAriaState('Canceled movement');
@@ -93,7 +109,7 @@ export function announceDynamicAriaStateForBlock(block: Blockly.BlockSvg, isMovi
   if (connection) {
     // TODO: Figure out general detachment.
     // TODO: Figure out how to deal with output connections.
-    let surroundParent: Blockly.BlockSvg | null = connection.sourceBlock_;
+    const surroundParent: Blockly.BlockSvg | null = connection.sourceBlock_;
     const announcementContext = [];
     announcementContext.push('Moving'); // TODO: Specialize for inserting?
     // NB: Old code here doesn't seem to handle parents correctly.
@@ -111,6 +127,8 @@ export function announceDynamicAriaStateForBlock(block: Blockly.BlockSvg, isMovi
     aria.announceDynamicAriaState(announcementContext.join(' '));
   } else if (newLoc) {
     // The block is being freely dragged.
-    aria.announceDynamicAriaState(`Moving unconstrained to coordinate x ${Math.round(newLoc.x)} and y ${Math.round(newLoc.y)}.`);
+    aria.announceDynamicAriaState(
+      `Moving unconstrained to coordinate x ${Math.round(newLoc.x)} and y ${Math.round(newLoc.y)}.`,
+    );
   }
 }
