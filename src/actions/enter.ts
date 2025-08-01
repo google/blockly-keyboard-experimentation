@@ -105,6 +105,7 @@ export class EnterAction {
         }
       },
       keyCodes: [KeyCodes.ENTER, KeyCodes.SPACE],
+      allowCollision: true,
     });
   }
 
@@ -116,6 +117,7 @@ export class EnterAction {
    */
   private shouldHandleEnterForWS(workspace: WorkspaceSvg): boolean {
     if (!this.navigation.canCurrentlyNavigate(workspace)) return false;
+    if (workspace.isDragging()) return false;
 
     const curNode = workspace.getCursor().getCurNode();
     if (!curNode) return false;

@@ -5,7 +5,7 @@
  */
 
 import {ContextMenuRegistry, Msg, keyboardNavigationController} from 'blockly';
-import {Navigation} from 'src/navigation';
+import {Navigation} from '../navigation';
 import {getMenuItem} from '../shortcut_formatting';
 import * as Constants from '../constants';
 
