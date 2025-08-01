@@ -33,33 +33,33 @@ suite('NavigationController', function () {
     this.jsdomCleanup();
   });
 
-  test('Dispose and reinitialize the navigation controller', async function () {
+  test('Dispose and reinitialize the navigation controller without crashing', async function () {
     const kb = new KeyboardNavigation(this.workspace);
     kb.navigationController.dispose();
     kb.navigationController.init();
     kb.navigationController.dispose();
   });
 
-  test('Dispose plugin and reinitialize the navigation controller', async function () {
+  test('Dispose plugin and reinitialize the navigation controller without crashing', async function () {
     const kb = new KeyboardNavigation(this.workspace);
     kb.dispose();
     kb.navigationController.init();
     kb.navigationController.dispose();
   });
 
-  test('Dispose controller and create a new KeyboardNavigation instance', async function () {
+  test('Dispose controller and create a new KeyboardNavigation instance without crashing', async function () {
     const kb = new KeyboardNavigation(this.workspace);
     kb.navigationController.dispose();
     new KeyboardNavigation(this.workspace);
   });
 
-  test('Dispose and create a new KeyboardNavigation instance', async function () {
+  test('Dispose and create a new KeyboardNavigation instance without crashing', async function () {
     const kb = new KeyboardNavigation(this.workspace);
     kb.dispose();
     new KeyboardNavigation(this.workspace);
   });
 
-  test('Add a workspace to existing instance', async function () {
+  test('Add a workspace to existing instance without crashing', async function () {
     const kb = new KeyboardNavigation(this.workspace);
     const workspace2 = Blockly.inject('blocklyDiv');
     kb.navigationController.addWorkspace(workspace2);
