@@ -14,6 +14,7 @@ FunctionStubber.getInstance().registerInitializationStub(
     aria.setRole(element, aria.Role.BUTTON);
     aria.setState(element, aria.State.LABEL, 'Button');
   },
-  'updateTransform',
+  // @ts-expect-error Access to private property updateTransform.
+  Blockly.FlyoutButton.prototype.updateTransform,
   Blockly.FlyoutButton.prototype,
 );

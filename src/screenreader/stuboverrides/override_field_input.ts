@@ -14,7 +14,7 @@ FunctionStubber.getInstance().registerInitializationStub(
   (fieldNumber) => {
     initializeFieldInput(fieldNumber);
   },
-  'init',
+  Blockly.FieldNumber.prototype.init,
   Blockly.FieldNumber.prototype,
 );
 
@@ -22,7 +22,7 @@ FunctionStubber.getInstance().registerInitializationStub(
   (fieldTextInput) => {
     initializeFieldInput(fieldTextInput);
   },
-  'init',
+  Blockly.FieldTextInput.prototype.init,
   Blockly.FieldTextInput.prototype,
 );
 

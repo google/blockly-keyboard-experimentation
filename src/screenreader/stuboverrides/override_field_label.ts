@@ -18,6 +18,6 @@ FunctionStubber.getInstance().registerInitializationStub(
       fieldLabel.getText(),
     );
   },
-  'initView',
+  Blockly.FieldLabel.prototype.initView,
   Blockly.FieldLabel.prototype,
 );

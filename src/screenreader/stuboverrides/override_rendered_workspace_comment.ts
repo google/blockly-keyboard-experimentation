@@ -14,6 +14,7 @@ FunctionStubber.getInstance().registerInitializationStub(
     aria.setRole(element, aria.Role.TEXTBOX);
     aria.setState(element, aria.State.LABEL, 'DoNotOverride?');
   },
-  'addModelUpdateBindings',
+  // @ts-expect-error Access to private property addModelUpdateBindings.
+  Blockly.comments.RenderedWorkspaceComment.prototype.addModelUpdateBindings,
   Blockly.comments.RenderedWorkspaceComment.prototype,
 );

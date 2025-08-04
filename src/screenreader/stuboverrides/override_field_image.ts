@@ -18,6 +18,6 @@ FunctionStubber.getInstance().registerInitializationStub(
       fieldImage.name ? `Image ${fieldImage.name}` : 'Image',
     );
   },
-  'initView',
+  Blockly.FieldImage.prototype.initView,
   Blockly.FieldImage.prototype,
 );

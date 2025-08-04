@@ -25,6 +25,6 @@ FunctionStubber.getInstance().registerInitializationStub(
     }
     aria.setState(element, aria.State.LABEL, ariaLabel);
   },
-  'createDom',
+  Blockly.WorkspaceSvg.prototype.createDom,
   Blockly.WorkspaceSvg.prototype,
 );

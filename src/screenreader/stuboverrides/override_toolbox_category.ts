@@ -17,6 +17,6 @@ FunctionStubber.getInstance().registerInitializationStub(
       category.getFocusableTree() as Blockly.Toolbox,
     );
   },
-  'init',
+  Blockly.ToolboxCategory.prototype.init,
   Blockly.ToolboxCategory.prototype,
 );

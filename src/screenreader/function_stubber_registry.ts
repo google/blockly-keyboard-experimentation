@@ -11,36 +11,34 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type StubCallback<T> = (instance: T, ...args: any) => void;
 
+/** The type representation of a generic function that can be stubbed. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type GenericFunction = (...args: any) => any;
+
 class Registration<T> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private oldMethod: ((...args: any) => any) | null = null;
+  private oldMethod: GenericFunction | null = null;
 
   constructor(
     readonly callback: StubCallback<T>,
-    readonly methodNameToOverride: string,
+    readonly methodToOverride: GenericFunction,
     readonly classPrototype: T,
     readonly ensureOneCall: boolean,
   ) {}
 
   stubPrototype(): void {
-    // TODO: Figure out how to make this work with minification.
     if (this.oldMethod) {
       throw new Error(
-        `Function is already stubbed: ${this.methodNameToOverride}.`,
+        `Function is already stubbed: ${this.methodToOverride.name}.`,
       );
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const genericPrototype = this.classPrototype as any;
-    const oldMethod = genericPrototype[this.methodNameToOverride] as (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...args: any
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ) => any;
-    this.oldMethod = oldMethod;
+    this.oldMethod = this.methodToOverride;
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const registration = this;
+    const methodNameToOverride = this.methodToOverride.name;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    genericPrototype[this.methodNameToOverride] = function (...args: any): any {
+    genericPrototype[methodNameToOverride] = function (...args: any): any {
       let stubsCalled = this._internalStubsCalled as
         | {[key: string]: boolean}
         | undefined;
@@ -49,13 +47,13 @@ class Registration<T> {
         this._internalStubsCalled = stubsCalled;
       }
 
-      const result = oldMethod.call(this, ...args);
+      const result = registration.methodToOverride.call(this, ...args);
       if (
         !registration.ensureOneCall ||
-        !stubsCalled[registration.methodNameToOverride]
+        !stubsCalled[registration.methodToOverride.name]
       ) {
         registration.callback(this as unknown as T, ...args);
-        stubsCalled[registration.methodNameToOverride] = true;
+        stubsCalled[registration.methodToOverride.name] = true;
       }
       return result;
     };
@@ -96,12 +94,12 @@ export class FunctionStubber {
    *
    * @param callback The function to run when the stubbed method executes for
    *     the first time.
-   * @param methodNameToOverride The name of the method to override.
+   * @param methodToOverride The method within the prototype to override.
    * @param classPrototype The prototype of the class being stubbed.
    */
   registerInitializationStub<T>(
     callback: StubCallback<T>,
-    methodNameToOverride: string,
+    methodToOverride: GenericFunction,
     classPrototype: T,
   ) {
     if (this.isFinalized) {
@@ -111,7 +109,7 @@ export class FunctionStubber {
     }
     const registration = new Registration(
       callback,
-      methodNameToOverride,
+      methodToOverride,
       classPrototype,
       true,
     );
@@ -127,12 +125,12 @@ export class FunctionStubber {
    * This will throw an error if called after stubPrototypes() has been called.
    *
    * @param callback The function to run when the stubbed method executes.
-   * @param methodNameToOverride The name of the method to override.
+   * @param methodToOverride The method within the prototype to override.
    * @param classPrototype The prototype of the class being stubbed.
    */
   registerMethodStub<T>(
     callback: StubCallback<T>,
-    methodNameToOverride: string,
+    methodToOverride: GenericFunction,
     classPrototype: T,
   ) {
     if (this.isFinalized) {
@@ -142,7 +140,7 @@ export class FunctionStubber {
     }
     const registration = new Registration(
       callback,
-      methodNameToOverride,
+      methodToOverride,
       classPrototype,
       false,
     );

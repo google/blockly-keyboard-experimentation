@@ -18,6 +18,6 @@ FunctionStubber.getInstance().registerInitializationStub(
       fieldCheckbox.name ? `Checkbox ${fieldCheckbox.name}` : 'Checkbox',
     );
   },
-  'initView',
+  Blockly.FieldCheckbox.prototype.initView,
   Blockly.FieldCheckbox.prototype,
 );

@@ -22,13 +22,14 @@ FunctionStubber.getInstance().registerInitializationStub(
     svgPath.tabIndex = -1;
     blockSvgUtils.setCurrentConnectionCandidate(block, null);
   },
-  'doInit_',
+  // @ts-expect-error Access to protected property doInit_.
+  Blockly.BlockSvg.prototype.doInit_,
   Blockly.BlockSvg.prototype,
 );
 
 FunctionStubber.getInstance().registerMethodStub(
   (block) => blockSvgUtils.recomputeAllWorkspaceAriaTrees(block.workspace),
-  'setParent',
+  Blockly.BlockSvg.prototype.setParent,
   Blockly.BlockSvg.prototype,
 );
 
@@ -39,7 +40,7 @@ FunctionStubber.getInstance().registerMethodStub(
     blockSvgUtils.setCurrentConnectionCandidate(block, candidate);
     blockSvgUtils.announceDynamicAriaStateForBlock(block, true, false);
   },
-  'startDrag',
+  Blockly.BlockSvg.prototype.startDrag,
   Blockly.BlockSvg.prototype,
 );
 
@@ -50,7 +51,7 @@ FunctionStubber.getInstance().registerMethodStub(
     blockSvgUtils.setCurrentConnectionCandidate(block, candidate);
     blockSvgUtils.announceDynamicAriaStateForBlock(block, true, false, newLoc);
   },
-  'drag',
+  Blockly.BlockSvg.prototype.drag,
   Blockly.BlockSvg.prototype,
 );
 
@@ -59,7 +60,7 @@ FunctionStubber.getInstance().registerMethodStub(
     blockSvgUtils.setCurrentConnectionCandidate(block, null);
     blockSvgUtils.announceDynamicAriaStateForBlock(block, false, false);
   },
-  'endDrag',
+  Blockly.BlockSvg.prototype.endDrag,
   Blockly.BlockSvg.prototype,
 );
 
@@ -67,7 +68,7 @@ FunctionStubber.getInstance().registerMethodStub(
   (block) => {
     blockSvgUtils.announceDynamicAriaStateForBlock(block, false, true);
   },
-  'revertDrag',
+  Blockly.BlockSvg.prototype.revertDrag,
   Blockly.BlockSvg.prototype,
 );
 
@@ -75,7 +76,7 @@ FunctionStubber.getInstance().registerMethodStub(
   (block) => {
     aria.setState(block.getFocusableElement(), aria.State.SELECTED, true);
   },
-  'onNodeFocus',
+  Blockly.BlockSvg.prototype.onNodeFocus,
   Blockly.BlockSvg.prototype,
 );
 
@@ -83,6 +84,6 @@ FunctionStubber.getInstance().registerMethodStub(
   (block) => {
     aria.setState(block.getFocusableElement(), aria.State.SELECTED, false);
   },
-  'onNodeBlur',
+  Blockly.BlockSvg.prototype.onNodeBlur,
   Blockly.BlockSvg.prototype,
 );

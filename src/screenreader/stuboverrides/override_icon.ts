@@ -14,6 +14,6 @@ FunctionStubber.getInstance().registerInitializationStub(
     aria.setRole(element, aria.Role.FIGURE);
     aria.setState(element, aria.State.LABEL, 'Icon');
   },
-  'initView',
+  Blockly.icons.Icon.prototype.initView,
   Blockly.icons.Icon.prototype,
 );

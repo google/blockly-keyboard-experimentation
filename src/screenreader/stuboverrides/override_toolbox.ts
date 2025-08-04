@@ -12,6 +12,6 @@ FunctionStubber.getInstance().registerInitializationStub(
   (toolbox) => {
     aria.setRole(toolbox.getFocusableElement(), aria.Role.TREE);
   },
-  'init',
+  Blockly.Toolbox.prototype.init,
   Blockly.Toolbox.prototype,
 );

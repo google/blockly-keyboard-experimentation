@@ -18,6 +18,6 @@ FunctionStubber.getInstance().registerInitializationStub(
       fieldDropdown.name ? `Item ${fieldDropdown.name}` : 'Item',
     );
   },
-  'initView',
+  Blockly.FieldDropdown.prototype.initView,
   Blockly.FieldDropdown.prototype,
 );

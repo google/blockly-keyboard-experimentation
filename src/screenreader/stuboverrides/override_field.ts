@@ -15,6 +15,7 @@ FunctionStubber.getInstance().registerInitializationStub(
     // @ts-expect-error Access to private property getTextElement.
     aria.setState(field.getTextElement(), aria.State.HIDDEN, true);
   },
-  'createTextElement_',
+  // @ts-expect-error Access to protected property createTextElement_.
+  Blockly.Field.prototype.createTextElement_,
   Blockly.Field.prototype,
 );

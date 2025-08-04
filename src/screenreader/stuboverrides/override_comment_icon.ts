@@ -17,6 +17,6 @@ FunctionStubber.getInstance().registerInitializationStub(
       icon.bubbleIsVisible() ? 'Close Comment' : 'Open Comment',
     );
   },
-  'initView',
+  Blockly.icons.CommentIcon.prototype.initView,
   Blockly.icons.CommentIcon.prototype,
 );

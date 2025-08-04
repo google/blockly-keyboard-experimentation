@@ -17,6 +17,6 @@ FunctionStubber.getInstance().registerInitializationStub(
       icon.bubbleIsVisible() ? 'Close Warning' : 'Open Warning',
     );
   },
-  'initView',
+  Blockly.icons.WarningIcon.prototype.initView,
   Blockly.icons.WarningIcon.prototype,
 );

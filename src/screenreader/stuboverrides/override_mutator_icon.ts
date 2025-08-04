@@ -17,6 +17,6 @@ FunctionStubber.getInstance().registerInitializationStub(
       icon.bubbleIsVisible() ? 'Close Mutator' : 'Open Mutator',
     );
   },
-  'initView',
+  Blockly.icons.MutatorIcon.prototype.initView,
   Blockly.icons.MutatorIcon.prototype,
 );

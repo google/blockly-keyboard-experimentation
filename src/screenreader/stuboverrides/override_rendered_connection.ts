@@ -18,6 +18,6 @@ FunctionStubber.getInstance().registerInitializationStub(
     aria.setRole(element, aria.Role.FIGURE);
     aria.setState(element, aria.State.LABEL, 'Open connection');
   },
-  'highlight',
+  Blockly.RenderedConnection.prototype.highlight,
   Blockly.RenderedConnection.prototype,
 );
