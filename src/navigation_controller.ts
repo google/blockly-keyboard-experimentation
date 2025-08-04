@@ -32,7 +32,7 @@ import {EnterAction} from './actions/enter';
 import {DisconnectAction} from './actions/disconnect';
 import {ActionMenu} from './actions/action_menu';
 import {MoveActions} from './actions/move';
-import {Mover} from './actions/mover';
+import {COMMIT_MOVE_SHORTCUT, Mover} from './actions/mover';
 import {DuplicateAction} from './actions/duplicate';
 import {StackNavigationAction} from './actions/stack_navigation';
 
@@ -291,6 +291,12 @@ export class NavigationController {
     this.actionMenu.uninstall();
     this.shortcutDialog.uninstall();
     this.stackNavigationAction.uninstall();
+
+    // This should get unregistered when a move finishes,
+    // but it's possible the controller is disposed mid-move.
+    if (ShortcutRegistry.registry.getRegistry()[COMMIT_MOVE_SHORTCUT]) {
+      ShortcutRegistry.registry.unregister(COMMIT_MOVE_SHORTCUT);
+    }
 
     for (const shortcut of Object.values(this.shortcuts)) {
       ShortcutRegistry.registry.unregister(shortcut.name);

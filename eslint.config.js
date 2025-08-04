@@ -259,4 +259,17 @@ module.exports = [
       '@typescript-eslint/no-require-imports': 'error',
     },
   },
+  {
+    files: ['test/webdriverio/test/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: true,
+        tsconfigRootDir: __dirname,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+    },
+  },
 ];
