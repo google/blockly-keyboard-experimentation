@@ -44,17 +44,6 @@ class Registration<T> {
       return result;
     };
   }
-
-  unstubPrototype(): void {
-    if (this.oldMethod) {
-      throw new Error(
-        `Function is not currently stubbed: ${this.methodNameToOverride}.`,
-      );
-    }
-    const genericPrototype = this.classPrototype as any;
-    genericPrototype[this.methodNameToOverride] = this.oldMethod;
-    this.oldMethod = null;
-  }
 }
 
 export class FunctionStubber {
@@ -102,13 +91,6 @@ export class FunctionStubber {
   stubPrototypes() {
     this.isFinalized = true;
     this.registrations.forEach((registration) => registration.stubPrototype());
-  }
-
-  unstubPrototypes() {
-    this.registrations.forEach((registration) =>
-      registration.unstubPrototype(),
-    );
-    this.isFinalized = false;
   }
 
   private static instance: FunctionStubber | null = null;

@@ -303,7 +303,5 @@ export class NavigationController {
     }
     this.removeShortcutHandlers();
     this.navigation.dispose();
-
-    FunctionStubber.getInstance().unstubPrototypes();
   }
 }
