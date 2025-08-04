@@ -1,6 +1,18 @@
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import * as Blockly from 'blockly/core';
 import * as aria from './aria';
 
+/**
+ * Computes the human-readable ARIA label for the specified block.
+ *
+ * @param block The block whose label should be computed.
+ * @returns A human-readable ARIA label/representation for the block.
+ */
 export function computeBlockAriaLabel(block: Blockly.BlockSvg): string {
   // Guess the block's aria label based on its field labels.
   if (block.isShadow()) {
@@ -49,12 +61,27 @@ function computeLevelInWorkspace(block: Blockly.BlockSvg): number {
   return surroundParent ? computeLevelInWorkspace(surroundParent) + 1 : 0;
 }
 
-// TODO: Do this efficiently (probably centrally).
-export function recomputeAriaTreeItemDetailsRecursively(
-  block: Blockly.BlockSvg,
+/**
+ * Recomputes all BlockSvg ARIA tree structures in the workspace.
+ *
+ * This is a fairly expensive operation and should ideally only be performed
+ * when a block structure or relationship change has been made.
+ *
+ * @param workspace The workspace whose top-level blocks may need a tree
+ *     structure recomputation.
+ */
+export function recomputeAllWorkspaceAriaTrees(
+  workspace: Blockly.WorkspaceSvg,
 ) {
+  // TODO: Do this efficiently (probably increementally).
+  workspace
+    .getTopBlocks(false)
+    .forEach((block) => recomputeAriaTreeItemDetailsRecursively(block));
+}
+
+function recomputeAriaTreeItemDetailsRecursively(block: Blockly.BlockSvg) {
   const elem = block.getFocusableElement();
-  const connection = (block as any).currentConnectionCandidate;
+  const connection = getCurrentConnectionCandidate(block);
   let childPosition: number;
   let parentsChildCount: number;
   let hierarchyDepth: number;
@@ -94,13 +121,26 @@ export function recomputeAriaTreeItemDetailsRecursively(
     .forEach((child) => recomputeAriaTreeItemDetailsRecursively(child));
 }
 
+/**
+ * Announces the current dynamic state of the specified block, if any.
+ *
+ * An example of dynamic state is whether the block is currently being moved,
+ * and in what way. These states aren't represented through ARIA directly, so
+ * they need to be determined and announced using an ARIA live region
+ * (see aria.announceDynamicAriaState).
+ *
+ * @param block The block whose dynamic state should maybe be announced.
+ * @param isMoving Whether the specified block is currently being moved.
+ * @param isCanceled Whether the previous movement operation has been canceled.
+ * @param newLoc The new location the block is moving to (if unconstrained).
+ */
 export function announceDynamicAriaStateForBlock(
   block: Blockly.BlockSvg,
   isMoving: boolean,
   isCanceled: boolean,
   newLoc?: Blockly.utils.Coordinate,
 ) {
-  const connection = (block as any).currentConnectionCandidate;
+  const connection = getCurrentConnectionCandidate(block);
   if (isCanceled) {
     aria.announceDynamicAriaState('Canceled movement');
     return;
@@ -131,4 +171,34 @@ export function announceDynamicAriaStateForBlock(
       `Moving unconstrained to coordinate x ${Math.round(newLoc.x)} and y ${Math.round(newLoc.y)}.`,
     );
   }
+}
+
+interface ConnectionCandidateHolder {
+  currentConnectionCandidate: Blockly.RenderedConnection | null;
+}
+
+function getCurrentConnectionCandidate(
+  block: Blockly.BlockSvg,
+): Blockly.RenderedConnection | null {
+  const connectionHolder = block as unknown as ConnectionCandidateHolder;
+  return connectionHolder.currentConnectionCandidate;
+}
+
+/**
+ * Updates the current connection candidate for the specified block (that is,
+ * the connection the block is being connected to).
+ *
+ * This corresponds to a temporary property used when determining specifics of
+ * a block's location when being moved.
+ *
+ * @param block The block which may have a new connection candidate.
+ * @param connection The latest connection candidate for the block, or null if
+ *     none.
+ */
+export function setCurrentConnectionCandidate(
+  block: Blockly.BlockSvg,
+  connection: Blockly.RenderedConnection | null,
+) {
+  const connectionHolder = block as unknown as ConnectionCandidateHolder;
+  connectionHolder.currentConnectionCandidate = connection;
 }

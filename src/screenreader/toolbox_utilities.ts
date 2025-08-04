@@ -1,6 +1,20 @@
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import * as Blockly from 'blockly/core';
 import * as aria from './aria';
 
+/**
+ * Recomputes ARIA tree ownership relationships for all of the specified
+ * Toolbox's categories and items.
+ *
+ * This should only be done when the Toolbox's contents have changed.
+ *
+ * @param toolbox The toolbox whose ARIA tree should be recomputed.
+ */
 export function recomputeAriaOwnersInToolbox(toolbox: Blockly.Toolbox) {
   const focusable = toolbox.getFocusableElement();
   const selectableChildren =

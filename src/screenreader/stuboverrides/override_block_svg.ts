@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import {FunctionStubber} from '../function_stubber_registry';
 import * as Blockly from 'blockly/core';
 import * as aria from '../aria';
@@ -14,29 +20,23 @@ FunctionStubber.getInstance().registerInitializationStub(
       blockSvgUtils.computeBlockAriaLabel(block),
     );
     svgPath.tabIndex = -1;
-    (block as any).currentConnectionCandidate = null;
+    blockSvgUtils.setCurrentConnectionCandidate(block, null);
   },
   'doInit_',
   Blockly.BlockSvg.prototype,
 );
 
 FunctionStubber.getInstance().registerMethodStub(
-  (block) => {
-    block.workspace
-      .getTopBlocks(false)
-      .forEach((block) =>
-        blockSvgUtils.recomputeAriaTreeItemDetailsRecursively(block),
-      );
-  },
+  (block) => blockSvgUtils.recomputeAllWorkspaceAriaTrees(block.workspace),
   'setParent',
   Blockly.BlockSvg.prototype,
 );
 
 FunctionStubber.getInstance().registerMethodStub(
   (block) => {
-    (block as any).currentConnectionCandidate =
-      // @ts-expect-error Access to private property dragStrategy.
-      block.dragStrategy.connectionCandidate?.neighbour ?? null;
+    // @ts-expect-error Access to private property dragStrategy.
+    const candidate = block.dragStrategy.connectionCandidate?.neighbour ?? null;
+    blockSvgUtils.setCurrentConnectionCandidate(block, candidate);
     blockSvgUtils.announceDynamicAriaStateForBlock(block, true, false);
   },
   'startDrag',
@@ -45,9 +45,9 @@ FunctionStubber.getInstance().registerMethodStub(
 
 FunctionStubber.getInstance().registerMethodStub(
   (block, newLoc: Blockly.utils.Coordinate) => {
-    (block as any).currentConnectionCandidate =
-      // @ts-expect-error Access to private property dragStrategy.
-      block.dragStrategy.connectionCandidate?.neighbour ?? null;
+    // @ts-expect-error Access to private property dragStrategy.
+    const candidate = block.dragStrategy.connectionCandidate?.neighbour ?? null;
+    blockSvgUtils.setCurrentConnectionCandidate(block, candidate);
     blockSvgUtils.announceDynamicAriaStateForBlock(block, true, false, newLoc);
   },
   'drag',
@@ -56,7 +56,7 @@ FunctionStubber.getInstance().registerMethodStub(
 
 FunctionStubber.getInstance().registerMethodStub(
   (block) => {
-    (block as any).currentConnectionCandidate = null;
+    blockSvgUtils.setCurrentConnectionCandidate(block, null);
     blockSvgUtils.announceDynamicAriaStateForBlock(block, false, false);
   },
   'endDrag',
