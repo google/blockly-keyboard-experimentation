@@ -95,7 +95,30 @@ export class ShortcutDialog {
    * List all currently registered shortcuts as a table.
    */
   createModalContent() {
-    let modalContents = `<div class="modal-container">
+    let shortcutTables = ``;
+
+    // Display shortcuts by their categories.
+    for (const [key, categoryShortcuts] of Object.entries(
+      Constants.SHORTCUT_CATEGORIES,
+    )) {
+      let shortcutTableRows = ``;
+      for (const keyboardShortcut of categoryShortcuts) {
+        shortcutTableRows += `
+              <tr>
+                <td>${this.getReadableShortcutName(keyboardShortcut)}</td>
+                <td>${this.actionShortcutsToHTML(keyboardShortcut)}</td>
+              </tr>`;
+      }
+      shortcutTables += `
+        <table class="shortcut-table">
+          <tbody>
+            <tr class="category"><th colspan="3"><h2>${key}</h2></th></tr>
+            ${shortcutTableRows}
+          </tbody>
+        </table>`;
+    }
+
+    const modalContents = `<div class="modal-container">
       <dialog class="shortcut-modal">
         <div class="shortcut-container" tabindex="0">
           <div class="header">
@@ -104,33 +127,13 @@ export class ShortcutDialog {
             </button>
             <h1>Keyboard shortcuts – <span class="platform">Windows</span></h1>
           </div>
-          <div class="shortcut-tables">`;
-
-    // Display shortcuts by their categories.
-    for (const [key, categoryShortcuts] of Object.entries(
-      Constants.SHORTCUT_CATEGORIES,
-    )) {
-      modalContents += `
-        <table class="shortcut-table">
-          <tbody>
-          <tr class="category"><th colspan="3"><h2>${key}</h2></th></tr>
-          <tr>
-          `;
-
-      for (const keyboardShortcut of categoryShortcuts) {
-        modalContents += `
-              <td>${this.getReadableShortcutName(keyboardShortcut)}</td>
-              <td>${this.actionShortcutsToHTML(keyboardShortcut)}</td>
-              </tr>`;
-      }
-      modalContents += '</tr></tbody></table>';
-    }
+          <div class="shortcut-tables">
+          ${shortcutTables}
+          </div>
+        </dialog>
+      </div>`;
     if (this.outputDiv) {
-      this.outputDiv.innerHTML =
-        modalContents +
-        `</div>
-      </dialog>
-    </div>`;
+      this.outputDiv.innerHTML = modalContents;
       this.modalContainer = this.outputDiv.querySelector('.modal-container');
       this.shortcutDialog = this.outputDiv.querySelector('.shortcut-modal');
       this.closeButton = this.outputDiv.querySelector('.close-modal');
