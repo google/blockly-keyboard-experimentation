@@ -73,7 +73,7 @@ function computeLevelInWorkspace(block: Blockly.BlockSvg): number {
 export function recomputeAllWorkspaceAriaTrees(
   workspace: Blockly.WorkspaceSvg,
 ) {
-  // TODO: Do this efficiently (probably increementally).
+  // TODO: Do this efficiently (probably incrementally).
   workspace
     .getTopBlocks(false)
     .forEach((block) => recomputeAriaTreeItemDetailsRecursively(block));

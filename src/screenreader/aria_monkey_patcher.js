@@ -44,7 +44,7 @@ document.createElementNS = function (namepspaceURI, qualifiedName) {
 
 const oldElementSetAttribute = Element.prototype.setAttribute;
 // TODO: Replace these cases with property augmentation here so that all aria
-// behavior is defined within this file.
+// behavior is defined within the plugin.
 const ariaAttributeAllowlist = ['aria-disabled', 'aria-selected'];
 
 Element.prototype.setAttribute = function (name, value) {
@@ -56,7 +56,7 @@ Element.prototype.setAttribute = function (name, value) {
   if (
     aria.isCurrentlyMutatingAriaProperty() ||
     ariaAttributeAllowlist.includes(name) ||
-    !name.startsWith('aria-')
+    (!name.startsWith('aria-') && name !== 'role')
   ) {
     oldElementSetAttribute.call(this, name, value);
   }
