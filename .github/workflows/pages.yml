@@ -51,6 +51,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: blockly-keyboard-experimentation-add-screen-reader-support-experimental
+          ref: add-screen-reader-support-experimental
 
       - name: Setup Node
         uses: actions/setup-node@v4
