@@ -9,7 +9,6 @@ import * as Blockly from 'blockly';
 import 'blockly/blocks';
 import {installAllBlocks as installColourBlocks} from '@blockly/field-colour';
 import {KeyboardNavigation} from '../../src/index';
-import * as aria from '../../src/screenreader/aria';
 import {registerFlyoutCursor} from '../../src/flyout_cursor';
 import {registerNavigationDeferringToolbox} from '../../src/navigation_deferring_toolbox';
 // @ts-expect-error No types in js file
@@ -86,15 +85,6 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   registerFlyoutCursor();
   registerNavigationDeferringToolbox();
   const workspace = Blockly.inject(blocklyDiv, injectOptions);
-
-  const injectionDiv = document.querySelector('.injectionDiv');
-  if (!injectionDiv) {
-    throw new Error('Expected injection div to exist after injection.');
-  }
-  const ariaAnnouncementSpan = document.createElement('span');
-  ariaAnnouncementSpan.id = 'blocklyAriaAnnounce';
-  aria.setState(ariaAnnouncementSpan, aria.State.LIVE, 'polite');
-  injectionDiv.appendChild(ariaAnnouncementSpan);
 
   Blockly.ContextMenuItems.registerCommentOptions();
   new KeyboardNavigation(workspace);
