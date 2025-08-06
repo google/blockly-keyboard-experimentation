@@ -88,6 +88,9 @@ export class ShortcutDialog {
    * @returns A title case version of the name.
    */
   getReadableShortcutName(shortcutName: string) {
+    if (Constants.SHORTCUT_NAMES_TO_DISPLAY_TEXT[shortcutName]) {
+      return Constants.SHORTCUT_NAMES_TO_DISPLAY_TEXT[shortcutName];
+    }
     return upperCaseFirst(shortcutName.replace(/_/gi, ' '));
   }
 
