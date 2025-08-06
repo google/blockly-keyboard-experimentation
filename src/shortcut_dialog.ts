@@ -151,7 +151,7 @@ export class ShortcutDialog {
 
   private keysToHTML(keys: string[]) {
     const separator = navigator.platform.startsWith('Mac') ? '' : ' + ';
-    if (!keys || !keys.length) return [];
+    if (!keys || !keys.length) return '';
     return [
       `<span class="shortcut-combo">`,
       ...keys.map((key, index) => {
