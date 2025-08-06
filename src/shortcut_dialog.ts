@@ -52,19 +52,6 @@ export class ShortcutDialog {
     }
   }
 
-  /**
-   * Update the modifier key to the user's specific platform.
-   */
-  updatePlatformName() {
-    const platform = this.getPlatform();
-    const platformEl = this.outputDiv
-      ? this.outputDiv.querySelector('.platform')
-      : null;
-    if (platformEl) {
-      platformEl.textContent = platform;
-    }
-  }
-
   toggle(workspace: Blockly.WorkspaceSvg) {
     clearHelpHint(workspace);
     this.toggleInternal();
@@ -126,7 +113,7 @@ export class ShortcutDialog {
             <button class="close-modal">
               <span class="material-symbols-outlined">close</span>
             </button>
-            <h1>Keyboard shortcuts – <span class="platform">Windows</span></h1>
+            <h1>${Msg['SHORTCUTS_HELP_HEADER'] || 'Keyboard shortcuts'} – <span class="platform">${this.getPlatform()}</span></h1>
           </div>
           <div class="shortcut-tables">
           ${shortcutTables}
@@ -138,8 +125,6 @@ export class ShortcutDialog {
       this.modalContainer = this.outputDiv.querySelector('.modal-container');
       this.shortcutDialog = this.outputDiv.querySelector('.shortcut-modal');
       this.closeButton = this.outputDiv.querySelector('.close-modal');
-      this.updatePlatformName();
-      // Can we also intercept the Esc key to dismiss.
       if (this.closeButton) {
         this.closeButton.addEventListener('click', (e) => {
           this.toggleInternal();
