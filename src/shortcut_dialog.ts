@@ -103,11 +103,9 @@ export class ShortcutDialog {
     )) {
       let shortcutTableRows = ``;
       for (const keyboardShortcut of categoryShortcuts) {
-        shortcutTableRows += `
-              <tr>
-                <td>${this.getReadableShortcutName(keyboardShortcut)}</td>
-                <td>${this.actionShortcutsToHTML(keyboardShortcut)}</td>
-              </tr>`;
+        shortcutTableRows += this.getTableRowForShortcut(
+          keyboardShortcut as string,
+        );
       }
       shortcutTables += `
         <table class="shortcut-table">
@@ -147,13 +145,25 @@ export class ShortcutDialog {
     }
   }
 
-  private actionShortcutsToHTML(action: string) {
-    const shortcuts = getLongActionShortcutsAsKeys(action);
-    return shortcuts.map((keys) => this.actionShortcutToHTML(keys)).join(' / ');
+  private getTableRowForShortcut(keyboardShortcut: string) {
+    const name = this.getReadableShortcutName(keyboardShortcut);
+    const keys = this.actionShortcutsToHTML(keyboardShortcut);
+    if (!name || !keys) return '';
+    return `
+              <tr>
+                <td>${name}</td>
+                <td>${keys}</td>
+              </tr>`;
   }
 
-  private actionShortcutToHTML(keys: string[]) {
+  private actionShortcutsToHTML(action: string) {
+    const shortcuts = getLongActionShortcutsAsKeys(action);
+    return shortcuts.map((keys) => this.keysToHTML(keys)).join(' / ');
+  }
+
+  private keysToHTML(keys: string[]) {
     const separator = navigator.platform.startsWith('Mac') ? '' : ' + ';
+    if (!keys || !keys.length) return [];
     return [
       `<span class="shortcut-combo">`,
       ...keys.map((key, index) => {
