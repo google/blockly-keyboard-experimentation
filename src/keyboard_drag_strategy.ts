@@ -50,7 +50,6 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     // to the top left of the workspace.
     // @ts-expect-error block and startLoc are private.
     this.block.moveDuringDrag(this.startLoc);
-    // @ts-expect-error connectionCandidate is private.
     this.connectionCandidate = this.createInitialCandidate();
     this.forceShowPreview();
     this.block.addIcon(new MoveIcon(this.block));
@@ -62,9 +61,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     super.drag(newLoc);
 
     // Handle the case when an unconstrained drag found a connection candidate.
-    // @ts-expect-error connectionCandidate is private.
     if (this.connectionCandidate) {
-      // @ts-expect-error connectionCandidate is private.
       const neighbour = (this.connectionCandidate as ConnectionCandidate)
         .neighbour;
       // The next constrained move will resume the search from the current
@@ -253,7 +250,6 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   private forceShowPreview() {
     // @ts-expect-error connectionPreviewer is private
     const previewer = this.connectionPreviewer;
-    // @ts-expect-error connectionCandidate is private
     const candidate = this.connectionCandidate as ConnectionCandidate;
     if (!candidate || !previewer) return;
     const block = this.block;

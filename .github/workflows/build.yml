@@ -6,14 +6,14 @@ on:
   pull_request:
   push:
     branches:
-      - main
+      - add-screen-reader-support-experimental
 
 permissions:
   contents: read
 
 jobs:
   build_tip_of_tree_v12:
-    name: Build test (against tip-of-tree core develop)
+    name: Build test (against add-screen-reader-support-experimental core develop)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout experimentation plugin
@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: 'google/blockly'
-          ref: 'develop'
+          ref: 'add-screen-reader-support-experimental'
           path: core-blockly
 
       - name: Use Node.js 20.x
@@ -42,7 +42,7 @@ jobs:
           npm install
           cd ..
 
-      - name: Link latest Blockly develop
+      - name: Link latest Blockly add-screen-reader-support-experimental
         run: |
           cd core-blockly
           npm run package
@@ -56,26 +56,6 @@ jobs:
         run: |
           cd main
           npm run build
-
-  build:
-    name: Build test (against pinned v12)
-    # Don't run pinned version checks for PRs.
-    if: ${{ !github.base_ref }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout experimentation plugin
-        uses: actions/checkout@v4
-
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-
-      - name: NPM install
-        run: npm install
-
-      - name: Verify build
-        run: npm run build
 
   lint:
     name: Eslint check
