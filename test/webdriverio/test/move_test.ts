@@ -18,8 +18,9 @@ import {
 } from './test_setup.js';
 
 suite('Move tests', function () {
-  // Disable timeouts when non-zero PAUSE_TIME is used to watch tests run.
-  if (PAUSE_TIME) this.timeout(0);
+  // Increase timeout to 10s for this longer test (but disable
+  // timeouts if when non-zero PAUSE_TIME is used to watch tests) run.
+  this.timeout(PAUSE_TIME ? 0 : 10000);
 
   // Clear the workspace and load start blocks.
   setup(async function () {

@@ -25,6 +25,11 @@ suite('Menus test', function () {
 
   // Clear the workspace and load start blocks.
   setup(async function () {
+    // This is the first test suite, which must wait for Chrome +
+    // chromedriver to start up, which can be slow—perhaps a few
+    // seconds.  Allow 30s just in case.
+    this.timeout(30000);
+
     this.browser = await testSetup(testFileLocations.BASE);
     await this.browser.pause(PAUSE_TIME);
   });
