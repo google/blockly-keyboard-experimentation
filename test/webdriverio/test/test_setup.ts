@@ -455,8 +455,14 @@ export async function tabNavigateToWorkspace(
   hasToolbox = true,
   hasFlyout = true,
 ) {
-  // Navigate past the initial pre-injection focusable div element.
-  await tabNavigateForward(browser);
+  // Move focus to initial pre-injection focusable div element.
+  //
+  // Ideally we'd just rest focus state to the state it is in when the
+  // document initially loads (and then send one tab), but alas
+  // there's no straightforward way to do that; see
+  // https://stackoverflow.com/q/51518855/4969945
+  await browser.execute(() => document.getElementById('focusableDiv')?.focus());
+  // Navigate to workspace.
   if (hasToolbox) await tabNavigateForward(browser);
   if (hasFlyout) await tabNavigateForward(browser);
   await tabNavigateForward(browser); // Tab to the workspace itself.
