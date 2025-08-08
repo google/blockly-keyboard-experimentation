@@ -31,7 +31,6 @@ suite('Menus test', function () {
 
   test('Menu on block', async function () {
     // Navigate to draw_circle_1.
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
     await this.browser.pause(PAUSE_TIME);
     await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
@@ -70,7 +69,6 @@ suite('Menus test', function () {
 
   test('Menu on block in the toolbox', async function () {
     // Navigate to draw_circle_1.
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
     // Navigate to a toolbox category
     await moveToToolboxCategory(this.browser, 'Functions');
@@ -130,7 +128,6 @@ suite('Menus test', function () {
 
   test('Menu on block during drag is not shown', async function () {
     // Navigate to draw_circle_1.
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
     // Start moving the block
     await sendKeyAndWait(this.browser, 'm');

@@ -34,7 +34,6 @@ suite('Clipboard test', function () {
 
   test('Copy and paste while block selected', async function () {
     // Navigate to draw_circle_1.
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
 
     // Copy and paste
@@ -54,7 +53,6 @@ suite('Clipboard test', function () {
 
   test('Cut and paste while block selected', async function () {
     // Navigate to draw_circle_1.
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
     const block = await getBlockElementById(this.browser, 'draw_circle_1');
 
