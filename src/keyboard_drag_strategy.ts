@@ -36,6 +36,9 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   /** Where a constrained movement should start when traversing the tree. */
   private searchNode: RenderedConnection | null = null;
 
+  /** List of all connections available on the workspace. */
+  private allConnections: RenderedConnection[] = [];
+
   constructor(
     private block: BlockSvg,
     public moveType: MoveType,
@@ -46,6 +49,22 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
 
   override startDrag(e?: PointerEvent) {
     super.startDrag(e);
+
+    for (const topBlock of this.block.workspace.getTopBlocks(true)) {
+      this.allConnections.push(
+        ...topBlock
+          .getDescendants(true)
+          .flatMap((block: BlockSvg) => block.getConnections_(false))
+          .sort((a: RenderedConnection, b: RenderedConnection) => {
+            let delta = a.y - b.y;
+            if (delta === 0) {
+              delta = a.x - b.x;
+            }
+            return delta;
+          }),
+      );
+    }
+
     // Set position of the dragging block, so that it doesn't pop
     // to the top left of the workspace.
     // @ts-expect-error block and startLoc are private.
@@ -91,6 +110,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
 
   override endDrag(e?: PointerEvent) {
     super.endDrag(e);
+    this.allConnections = [];
     this.block.removeIcon(MoveIcon.type);
   }
 
@@ -168,31 +188,17 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     const connectionChecker = draggingBlock.workspace.connectionChecker;
     let candidateConnection: ConnectionCandidate | null = null;
     let potential: RenderedConnection | null = this.searchNode;
-    const allConnections: RenderedConnection[] = [];
-    for (const topBlock of draggingBlock.workspace.getTopBlocks(true)) {
-      allConnections.push(
-        ...topBlock
-          .getDescendants(true)
-          .flatMap((block: BlockSvg) => block.getConnections_(false))
-          .sort((a: RenderedConnection, b: RenderedConnection) => {
-            let delta = a.y - b.y;
-            if (delta === 0) {
-              delta = a.x - b.x;
-            }
-            return delta;
-          }),
-      );
-    }
 
     const dir = this.currentDragDirection;
     while (potential && !candidateConnection) {
-      const potentialIndex = allConnections.indexOf(potential);
+      const potentialIndex = this.allConnections.indexOf(potential);
       if (dir === Direction.Up || dir === Direction.Left) {
         potential =
-          allConnections[potentialIndex - 1] ??
-          allConnections[allConnections.length - 1];
+          this.allConnections[potentialIndex - 1] ??
+          this.allConnections[this.allConnections.length - 1];
       } else if (dir === Direction.Down || dir === Direction.Right) {
-        potential = allConnections[potentialIndex + 1] ?? allConnections[0];
+        potential =
+          this.allConnections[potentialIndex + 1] ?? this.allConnections[0];
       }
 
       localConns.forEach((conn: RenderedConnection) => {
