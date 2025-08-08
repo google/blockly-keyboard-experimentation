@@ -15,16 +15,17 @@ import {
   testFileLocations,
   PAUSE_TIME,
   tabNavigateToWorkspace,
+  sendKeyAndWait,
   keyRight,
   keyDown,
 } from './test_setup.js';
 import {Key} from 'webdriverio';
 
 suite('Mutator navigation', function () {
-  // Setting timeout to unlimited as these tests take a longer time to run than most mocha test
-  this.timeout(0);
+  // Disable timeouts when non-zero PAUSE_TIME is used to watch tests run.
+  if (PAUSE_TIME) this.timeout(0);
 
-  // Setup Selenium for all of the tests
+  // Clear the workspace and load start blocks.
   setup(async function () {
     this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
     this.openMutator = async () => {
@@ -35,8 +36,7 @@ suite('Mutator navigation', function () {
       // Navigate to the mutator icon
       await keyRight(this.browser);
       // Activate the icon
-      await this.browser.keys(Key.Enter);
-      await this.browser.pause(PAUSE_TIME);
+      await sendKeyAndWait(this.browser, Key.Enter);
     };
   });
 
@@ -54,8 +54,7 @@ suite('Mutator navigation', function () {
 
   test('Escape dismisses mutator', async function () {
     await this.openMutator();
-    await this.browser.keys(Key.Escape);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Escape);
 
     // Main workspace should be the focused tree (since mutator workspace is gone)
     const mainWorkspaceFocused = await focusedTreeIsMainWorkspace(this.browser);
@@ -75,11 +74,9 @@ suite('Mutator navigation', function () {
   test('Escape in the mutator flyout focuses the mutator workspace', async function () {
     await this.openMutator();
     // Focus the flyout
-    await this.browser.keys('t');
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, 't');
     // Hit escape to return focus to the mutator workspace
-    await this.browser.keys(Key.Escape);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Escape);
     // The "if" placeholder block in the mutator should be focused
     const focusedBlockType = await getFocusedBlockType(this.browser);
     chai.assert.equal(focusedBlockType, 'controls_if_if');
@@ -87,8 +84,7 @@ suite('Mutator navigation', function () {
 
   test('T focuses the mutator flyout', async function () {
     await this.openMutator();
-    await this.browser.keys('t');
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, 't');
 
     // The "else if" block in the mutator flyout should be focused
     const focusedBlockType = await getFocusedBlockType(this.browser);
@@ -97,16 +93,14 @@ suite('Mutator navigation', function () {
 
   test('Blocks can be inserted from the mutator flyout', async function () {
     await this.openMutator();
-    await this.browser.keys('t');
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, 't');
     // Navigate down to the second block in the flyout
     await keyDown(this.browser);
     await this.browser.pause(PAUSE_TIME);
     // Hit enter to enter insert mode
-    await this.browser.keys(Key.Enter);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Enter);
     // Hit enter again to lock it into place on the connection
-    await this.browser.keys(Key.Enter);
+    await sendKeyAndWait(this.browser, Key.Enter);
 
     const topBlocks = await this.browser.execute(() => {
       const focusedTree = Blockly.getFocusManager().getFocusedTree();
