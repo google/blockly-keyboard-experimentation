@@ -244,11 +244,9 @@ export class Mover {
     this.patchDragger(info.dragger as dragging.Dragger, dragStrategy.moveType);
 
     // Save the position so we can put the cursor in a reasonable spot.
-    // @ts-expect-error Access to private property connectionCandidate.
     const target = dragStrategy.connectionCandidate?.neighbour;
 
     // Prevent the strategy connecting the block so we just delete one block.
-    // @ts-expect-error Access to private property connectionCandidate.
     dragStrategy.connectionCandidate = null;
 
     info.dragger.onDragEnd(
