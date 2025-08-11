@@ -52,19 +52,6 @@ export class ShortcutDialog {
     }
   }
 
-  /**
-   * Update the modifier key to the user's specific platform.
-   */
-  updatePlatformName() {
-    const platform = this.getPlatform();
-    const platformEl = this.outputDiv
-      ? this.outputDiv.querySelector('.platform')
-      : null;
-    if (platformEl) {
-      platformEl.textContent = platform;
-    }
-  }
-
   toggle(workspace: Blockly.WorkspaceSvg) {
     clearHelpHint(workspace);
     this.toggleInternal();
@@ -88,6 +75,9 @@ export class ShortcutDialog {
    * @returns A title case version of the name.
    */
   getReadableShortcutName(shortcutName: string) {
+    if (Constants.SHORTCUT_NAMES_TO_DISPLAY_TEXT[shortcutName]) {
+      return Constants.SHORTCUT_NAMES_TO_DISPLAY_TEXT[shortcutName];
+    }
     return upperCaseFirst(shortcutName.replace(/_/gi, ' '));
   }
 
@@ -95,47 +85,46 @@ export class ShortcutDialog {
    * List all currently registered shortcuts as a table.
    */
   createModalContent() {
-    let modalContents = `<div class="modal-container">
+    let shortcutTables = ``;
+
+    // Display shortcuts by their categories.
+    for (const [key, categoryShortcuts] of Object.entries(
+      Constants.SHORTCUT_CATEGORIES,
+    )) {
+      let shortcutTableRows = ``;
+      for (const keyboardShortcut of categoryShortcuts) {
+        shortcutTableRows += this.getTableRowForShortcut(
+          keyboardShortcut as string,
+        );
+      }
+      shortcutTables += `
+        <table class="shortcut-table">
+          <tbody>
+            <tr class="category"><th colspan="3"><h2>${key}</h2></th></tr>
+            ${shortcutTableRows}
+          </tbody>
+        </table>`;
+    }
+
+    const modalContents = `<div class="modal-container">
       <dialog class="shortcut-modal">
         <div class="shortcut-container" tabindex="0">
           <div class="header">
             <button class="close-modal">
               <span class="material-symbols-outlined">close</span>
             </button>
-            <h1>Keyboard shortcuts – <span class="platform">Windows</span></h1>
+            <h1>${Msg['SHORTCUTS_HELP_HEADER'] || 'Keyboard shortcuts'} – <span class="platform">${this.getPlatform()}</span></h1>
           </div>
-          <div class="shortcut-tables">`;
-
-    // Display shortcuts by their categories.
-    for (const [key, categoryShortcuts] of Object.entries(
-      Constants.SHORTCUT_CATEGORIES,
-    )) {
-      modalContents += `
-        <table class="shortcut-table">
-          <tbody>
-          <tr class="category"><th colspan="3"><h2>${key}</h2></th></tr>
-          <tr>
-          `;
-
-      for (const keyboardShortcut of categoryShortcuts) {
-        modalContents += `
-              <td>${this.getReadableShortcutName(keyboardShortcut)}</td>
-              <td>${this.actionShortcutsToHTML(keyboardShortcut)}</td>
-              </tr>`;
-      }
-      modalContents += '</tr></tbody></table>';
-    }
+          <div class="shortcut-tables">
+          ${shortcutTables}
+          </div>
+        </dialog>
+      </div>`;
     if (this.outputDiv) {
-      this.outputDiv.innerHTML =
-        modalContents +
-        `</div>
-      </dialog>
-    </div>`;
+      this.outputDiv.innerHTML = modalContents;
       this.modalContainer = this.outputDiv.querySelector('.modal-container');
       this.shortcutDialog = this.outputDiv.querySelector('.shortcut-modal');
       this.closeButton = this.outputDiv.querySelector('.close-modal');
-      this.updatePlatformName();
-      // Can we also intercept the Esc key to dismiss.
       if (this.closeButton) {
         this.closeButton.addEventListener('click', (e) => {
           this.toggleInternal();
@@ -144,13 +133,25 @@ export class ShortcutDialog {
     }
   }
 
-  private actionShortcutsToHTML(action: string) {
-    const shortcuts = getLongActionShortcutsAsKeys(action);
-    return shortcuts.map((keys) => this.actionShortcutToHTML(keys)).join(' / ');
+  private getTableRowForShortcut(keyboardShortcut: string) {
+    const name = this.getReadableShortcutName(keyboardShortcut);
+    const keys = this.actionShortcutsToHTML(keyboardShortcut);
+    if (!name || !keys) return '';
+    return `
+              <tr>
+                <td>${name}</td>
+                <td>${keys}</td>
+              </tr>`;
   }
 
-  private actionShortcutToHTML(keys: string[]) {
+  private actionShortcutsToHTML(action: string) {
+    const shortcuts = getLongActionShortcutsAsKeys(action);
+    return shortcuts.map((keys) => this.keysToHTML(keys)).join(' / ');
+  }
+
+  private keysToHTML(keys: string[]) {
     const separator = navigator.platform.startsWith('Mac') ? '' : ' + ';
+    if (!keys || !keys.length) return '';
     return [
       `<span class="shortcut-combo">`,
       ...keys.map((key, index) => {
