@@ -65,7 +65,6 @@ jobs:
           npm run package
           cd dist
           npm link
-          cd ../..
 
       - name: Build tip-of-tree blockly-keyboard-experimentation
         run: |
@@ -75,7 +74,6 @@ jobs:
           npm run ghpages
           mkdir ../ghpages
           cp -r build/* ../ghpages/
-          cd ..
 
       - name: Build add-screen-reader-support-experimental core Blockly
         run: |
@@ -86,7 +84,6 @@ jobs:
           npm run package
           cd dist
           npm link
-          cd ../..
 
       - name: Build add-screen-reader-support-experimental blockly-keyboard-experimentation
         run: |
@@ -96,7 +93,6 @@ jobs:
           npm run ghpages
           mkdir ../ghpages/screenreader
           cp -r build/* ../ghpages/screenreader/
-          cd ..
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
