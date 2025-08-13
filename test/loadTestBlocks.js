@@ -570,7 +570,15 @@ const navigationTestBlocks = {
   },
 };
 
-const moveTestBlocks = {
+// The draw block contains a stack of statement blocks, each of which
+// has a value input to which is connected a value expression block
+// which itself has one or two inputs which have (non-shadow) simple
+// value blocks connected.  Each statement block will be selected in
+// turn and then a move initiated (and then aborted).  This is then
+// repeated with the first level value blocks (those that are attached
+// to the statement blocks).  The second level value blocks are
+// present to verify correct (lack of) heal behaviour.
+const moveStartTestBlocks = {
   'blocks': {
     'languageVersion': 0,
     'blocks': [
@@ -985,17 +993,15 @@ const comments = {
 export const load = function (workspace, scenarioString) {
   const scenarioMap = {
     'blank': blankCanvas,
-    'comments': comments,
-    'moreBlocks': moreBlocks,
-    'moveTestBlocks': moveTestBlocks,
-    'navigationTestBlocks': navigationTestBlocks,
-    'simpleCircle': simpleCircle,
+    comments,
+    moreBlocks,
+    moveStartTestBlocks,
+    navigationTestBlocks,
+    simpleCircle,
     'sun': sunnyDay,
   };
-
-  const data = JSON.stringify(scenarioMap[scenarioString]);
   // Don't emit events during loading.
   Blockly.Events.disable();
-  Blockly.serialization.workspaces.load(JSON.parse(data), workspace, false);
+  Blockly.serialization.workspaces.load(scenarioMap[scenarioString], workspace, false);
   Blockly.Events.enable();
 };

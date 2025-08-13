@@ -17,14 +17,14 @@ import {
   contextMenuItems,
 } from './test_setup.js';
 
-suite('Move tests', function () {
+suite('Move start tests', function () {
   // Increase timeout to 10s for this longer test (but disable
   // timeouts if when non-zero PAUSE_TIME is used to watch tests) run.
   this.timeout(PAUSE_TIME ? 0 : 10000);
 
   // Clear the workspace and load start blocks.
   setup(async function () {
-    this.browser = await testSetup(testFileLocations.MOVE_TEST_BLOCKS);
+    this.browser = await testSetup(testFileLocations.MOVE_START_TEST_BLOCKS);
     await this.browser.pause(PAUSE_TIME);
   });
 
