@@ -35,6 +35,7 @@ export enum SHORTCUT_NAMES {
   LEFT = 'left',
   NEXT_STACK = 'next_stack',
   PREVIOUS_STACK = 'previous_stack',
+  // Unused.
   INSERT = 'insert',
   EDIT_OR_CONFIRM = 'edit_or_confirm',
   DISCONNECT = 'disconnect',
@@ -52,7 +53,15 @@ export enum SHORTCUT_NAMES {
   CREATE_WS_CURSOR = 'to_workspace',
   LIST_SHORTCUTS = 'list_shortcuts',
   CLEAN_UP = 'clean_up_workspace',
+  START_MOVE = 'start_move',
 }
+
+export const SHORTCUT_NAMES_TO_DISPLAY_TEXT: Record<string, string> = {
+  'keyboard_nav_copy': Msg['Copy'] || 'Copy',
+  'keyboard_nav_cut': Msg['Cut'] || 'Cut',
+  'keyboard_nav_paste': Msg['Paste'] || 'Paste',
+  'start_move': Msg['MOVE_BLOCK'] || 'Move',
+};
 
 /**
  * Types of possible messages passed into the loggingCallback in the Navigation
@@ -73,7 +82,7 @@ export const SHORTCUT_CATEGORIES: Record<
   // Also allow undo/redo. Document the non-keyboard-nav versions of others for
   // better text because temporarily the name in the table is derived from
   // these id-like names.
-  Array<SHORTCUT_NAMES | 'undo' | 'redo' | 'cut' | 'copy' | 'paste' | 'delete'>
+  Array<SHORTCUT_NAMES | 'undo' | 'redo' | 'delete'>
 > = {};
 
 SHORTCUT_CATEGORIES[Msg['SHORTCUTS_GENERAL']] = [
@@ -86,12 +95,12 @@ SHORTCUT_CATEGORIES[Msg['SHORTCUTS_GENERAL']] = [
 ];
 
 SHORTCUT_CATEGORIES[Msg['SHORTCUTS_EDITING']] = [
-  SHORTCUT_NAMES.INSERT,
   'delete',
   SHORTCUT_NAMES.DISCONNECT,
-  'cut',
-  'copy',
-  'paste',
+  SHORTCUT_NAMES.START_MOVE,
+  SHORTCUT_NAMES.CUT,
+  SHORTCUT_NAMES.COPY,
+  SHORTCUT_NAMES.PASTE,
   SHORTCUT_NAMES.DUPLICATE,
   'undo',
   'redo',
@@ -104,4 +113,5 @@ SHORTCUT_CATEGORIES[Msg['SHORTCUTS_CODE_NAVIGATION']] = [
   SHORTCUT_NAMES.LEFT,
   SHORTCUT_NAMES.NEXT_STACK,
   SHORTCUT_NAMES.PREVIOUS_STACK,
+  SHORTCUT_NAMES.CREATE_WS_CURSOR,
 ];

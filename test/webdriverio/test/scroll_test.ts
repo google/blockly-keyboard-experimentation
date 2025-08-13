@@ -24,7 +24,7 @@ suite('Scrolling into view', function () {
   setup(async function () {
     this.browser = await testSetup(testFileLocations.BASE);
     // Predictable small window size for scrolling.
-    this.browser.setWindowSize(800, 600);
+    await this.browser.setWindowSize(800, 600);
     await this.browser.pause(PAUSE_TIME);
   });
 

@@ -60,9 +60,7 @@ export class Clipboard {
 
   /**
    * Uninstall this action as both a keyboard shortcut and a context menu item.
-   * N. B. This does *not* currently reinstall the original keyboard shortcuts.
-   * You should manually reinstall the previously registered shortcuts (either
-   * from core or from another plugin you may be using).
+   * Reinstall the original cut/copy/paste shortcuts.
    */
   uninstall() {
     ContextMenuRegistry.registry.unregister('blockCutFromContextMenu');
@@ -72,6 +70,18 @@ export class Clipboard {
     ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.CUT);
     ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.COPY);
     ShortcutRegistry.registry.unregister(Constants.SHORTCUT_NAMES.PASTE);
+
+    if (this.oldCutShortcut) {
+      ShortcutRegistry.registry.register(this.oldCutShortcut);
+    }
+
+    if (this.oldCopyShortcut) {
+      ShortcutRegistry.registry.register(this.oldCopyShortcut);
+    }
+
+    if (this.oldPasteShortcut) {
+      ShortcutRegistry.registry.register(this.oldPasteShortcut);
+    }
   }
 
   /**

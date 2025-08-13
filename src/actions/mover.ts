@@ -45,7 +45,7 @@ const CONSTRAINED_ADDITIONAL_PADDING = 70;
 /**
  * Identifier for a keyboard shortcut that commits the in-progress move.
  */
-const COMMIT_MOVE_SHORTCUT = 'commitMove';
+export const COMMIT_MOVE_SHORTCUT = 'commitMove';
 
 /**
  * Whether this is an insert or a move.
