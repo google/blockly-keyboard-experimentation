@@ -158,6 +158,10 @@ export const testFileLocations = {
   MOVE_START_TEST_BLOCKS: createTestUrl(
     new URLSearchParams({scenario: 'moveStartTestBlocks'}),
   ),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  MOVE_STATEMENT_TEST_BLOCKS: createTestUrl(
+    new URLSearchParams({scenario: 'moveStatementTestBlocks'}),
+  ),
   COMMENTS: createTestUrl(new URLSearchParams({scenario: 'comments'})),
   // eslint-disable-next-line @typescript-eslint/naming-convention
   BASE_RTL: createTestUrl(new URLSearchParams({rtl: 'true'})),

@@ -870,6 +870,100 @@ const moveStartTestBlocks = {
   },
 };
 
+// A bunch of statement blocks.  The draw_emoji block will be
+// (constrained) moved up, down, left and right to verify that it
+// visits the expected positions.
+const moveStatementTestBlocks = {
+  'blocks': {
+    'languageVersion': 0,
+    'blocks': [
+      {
+        'type': 'p5_setup',
+        'id': 'p5_setup',
+        'x': 0,
+        'y': 75,
+        'deletable': false,
+        'inputs': {
+          'STATEMENTS': {
+            'block': {
+              'type': 'p5_canvas',
+              'id': 'p5_canvas',
+              'deletable': false,
+              'movable': false,
+              'fields': {
+                'WIDTH': 400,
+                'HEIGHT': 400,
+              },
+              'next': {
+                'block': {
+                  'type': 'draw_emoji',
+                  'id': 'draw_emoji',
+                  'fields': {
+                    'emoji': '✨',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        'type': 'text_print',
+        'id': 'text_print',
+        'x': 0,
+        'y': 300,
+        'inputs': {
+          'TEXT': {
+            'shadow': {
+              'type': 'text',
+              'id': 'shadow_text',
+              'fields': {
+                'TEXT': 'abc',
+              },
+            },
+          },
+        },
+        'next': {
+          'block': {
+            'type': 'controls_if',
+            'id': 'controls_if',
+            'extraState': {
+              'elseIfCount': 1,
+              'hasElse': true,
+            },
+            'inputs': {
+              'DO0': {
+                'block': {
+                  'type': 'controls_repeat_ext',
+                  'id': 'controls_repeat_ext',
+                  'inputs': {
+                    'TIMES': {
+                      'shadow': {
+                        'type': 'math_number',
+                        'id': 'shadow_math_number',
+                        'fields': {
+                          'NUM': 10,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        'type': 'p5_draw',
+        'id': 'p5_draw',
+        'x': 0,
+        'y': 753,
+        'deletable': false,
+      },
+    ],
+  },
+};
+
 const comments = {
   'workspaceComments': [
     {
@@ -996,12 +1090,17 @@ export const load = function (workspace, scenarioString) {
     comments,
     moreBlocks,
     moveStartTestBlocks,
+    moveStatementTestBlocks,
     navigationTestBlocks,
     simpleCircle,
     'sun': sunnyDay,
   };
   // Don't emit events during loading.
   Blockly.Events.disable();
-  Blockly.serialization.workspaces.load(scenarioMap[scenarioString], workspace, false);
+  Blockly.serialization.workspaces.load(
+    scenarioMap[scenarioString],
+    workspace,
+    false,
+  );
   Blockly.Events.enable();
 };

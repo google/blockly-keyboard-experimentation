@@ -158,6 +158,20 @@ suite('Move start tests', function () {
       await sendKeyAndWait(this.browser, Key.Escape);
     }
   });
+});
+
+suite('Statement move tests', function () {
+  // Increase timeout to 10s for this longer test (but disable
+  // timeouts if when non-zero PAUSE_TIME is used to watch tests) run.
+  this.timeout(PAUSE_TIME ? 0 : 10000);
+
+  // Clear the workspace and load start blocks.
+  setup(async function () {
+    this.browser = await testSetup(
+      testFileLocations.MOVE_STATEMENT_TEST_BLOCKS,
+    );
+    await this.browser.pause(PAUSE_TIME);
+  });
 
   // When a top-level block with no previous, next or output
   // connections is subject to a constrained move, it should not move.
@@ -168,7 +182,7 @@ suite('Move start tests', function () {
   // block unexpectedly moving (unless workspace scale was === 1).
   test('Constrained move of unattachable top-level block', async function () {
     // Block ID of an unconnectable block.
-    const BLOCK = 'p5_setup_1';
+    const BLOCK = 'p5_setup';
 
     // Scale workspace.
     await this.browser.execute(() => {
