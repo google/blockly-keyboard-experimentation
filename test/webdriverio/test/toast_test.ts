@@ -9,6 +9,9 @@ import * as Blockly from 'blockly/core';
 import {PAUSE_TIME, testFileLocations, testSetup} from './test_setup.js';
 
 suite('HTML toasts', function () {
+  // Disable timeouts when non-zero PAUSE_TIME is used to watch tests run.
+  if (PAUSE_TIME) this.timeout(0);
+
   // Clear the workspace and load start blocks.
   setup(async function () {
     this.browser = await testSetup(testFileLocations.BASE);

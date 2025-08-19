@@ -23,6 +23,9 @@ import {
 import {Key} from 'webdriverio';
 
 suite('Workspace comment navigation', function () {
+  // Disable timeouts when non-zero PAUSE_TIME is used to watch tests run.
+  if (PAUSE_TIME) this.timeout(0);
+
   // Clear the workspace and load start blocks.
   setup(async function () {
     this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
