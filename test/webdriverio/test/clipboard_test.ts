@@ -13,7 +13,6 @@ import {
   getBlockElementById,
   getSelectedBlockId,
   ElementWithId,
-  tabNavigateToWorkspace,
   focusOnBlock,
   focusOnBlockField,
   blockIsPresent,
