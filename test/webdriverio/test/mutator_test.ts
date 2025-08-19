@@ -14,7 +14,6 @@ import {
   testSetup,
   testFileLocations,
   PAUSE_TIME,
-  tabNavigateToWorkspace,
   sendKeyAndWait,
   keyRight,
   keyDown,
@@ -29,8 +28,6 @@ suite('Mutator navigation', function () {
   setup(async function () {
     this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
     this.openMutator = async () => {
-      await tabNavigateToWorkspace(this.browser);
-      await this.browser.pause(PAUSE_TIME);
       await focusOnBlock(this.browser, 'controls_if_1');
       await this.browser.pause(PAUSE_TIME);
       // Navigate to the mutator icon

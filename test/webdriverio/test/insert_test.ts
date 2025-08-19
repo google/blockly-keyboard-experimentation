@@ -34,7 +34,6 @@ suite('Insert test', function () {
 
   test('Insert and cancel with block selection', async function () {
     // Navigate to draw_circle_1.
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
     // Insert 'if' block
     await sendKeyAndWait(this.browser, 't');
@@ -70,7 +69,6 @@ suite('Insert test', function () {
 
   test('Insert C-shaped block with statement block selected', async function () {
     // Navigate to draw_circle_1.
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
 
     await moveToToolboxCategory(this.browser, 'Functions');

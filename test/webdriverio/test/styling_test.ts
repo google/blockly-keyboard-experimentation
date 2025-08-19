@@ -81,7 +81,6 @@ suite('Styling test', function () {
   });
 
   test('Workspace has only active tree style when move is in progress', async function () {
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'set_background_color_1');
     // Moves block to drag layer which requires different selectors.
     await sendKeyAndWait(this.browser, 'm');
@@ -91,7 +90,6 @@ suite('Styling test', function () {
   });
 
   test('Workspace has only active tree style when widget has focus', async function () {
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'create_canvas_1');
     // Move to field.
     await keyRight(this.browser);
@@ -103,7 +101,6 @@ suite('Styling test', function () {
   });
 
   test('Workspace has only active tree style when dropdown has focus', async function () {
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'set_background_color_1');
     // Move to color block.
     await keyRight(this.browser);
