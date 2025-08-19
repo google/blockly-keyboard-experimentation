@@ -13,19 +13,19 @@ import {
   getBlockElementById,
   getSelectedBlockId,
   ElementWithId,
-  tabNavigateToWorkspace,
   focusOnBlock,
   focusOnBlockField,
   blockIsPresent,
   getFocusedBlockType,
+  sendKeyAndWait,
 } from './test_setup.js';
 import {Key, KeyAction, PointerAction, WheelAction} from 'webdriverio';
 
 suite('Clipboard test', function () {
-  // Setting timeout to unlimited as these tests take longer time to run
-  this.timeout(0);
+  // Disable timeouts when non-zero PAUSE_TIME is used to watch tests run.
+  if (PAUSE_TIME) this.timeout(0);
 
-  // Clear the workspace and load start blocks
+  // Clear the workspace and load start blocks.
   setup(async function () {
     this.browser = await testSetup(testFileLocations.BASE);
     await this.browser.pause(PAUSE_TIME);
@@ -33,13 +33,11 @@ suite('Clipboard test', function () {
 
   test('Copy and paste while block selected', async function () {
     // Navigate to draw_circle_1.
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
 
     // Copy and paste
-    await this.browser.keys([Key.Ctrl, 'c']);
-    await this.browser.keys([Key.Ctrl, 'v']);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, 'c']);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, 'v']);
 
     const block = await getBlockElementById(this.browser, 'draw_circle_1');
     const blocks = await getSameBlocks(this.browser, block);
@@ -54,15 +52,13 @@ suite('Clipboard test', function () {
 
   test('Cut and paste while block selected', async function () {
     // Navigate to draw_circle_1.
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
     const block = await getBlockElementById(this.browser, 'draw_circle_1');
 
     // Cut and paste
-    await this.browser.keys([Key.Ctrl, 'x']);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, 'x']);
     await block.waitForExist({reverse: true});
-    await this.browser.keys([Key.Ctrl, 'v']);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, 'v']);
 
     const focusedType = await getFocusedBlockType(this.browser);
 
@@ -117,11 +113,10 @@ suite('Clipboard test', function () {
     // Open a field editor
     await focusOnBlockField(this.browser, 'draw_circle_1_color', 'COLOUR');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys(Key.Enter);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, Key.Enter);
 
     // Try to cut block while field editor is open
-    await this.browser.keys([Key.Ctrl, 'x']);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, 'x']);
 
     // Block is not deleted
     chai.assert.isTrue(

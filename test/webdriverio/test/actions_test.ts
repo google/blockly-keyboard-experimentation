@@ -14,27 +14,31 @@ import {
   tabNavigateToWorkspace,
   testFileLocations,
   testSetup,
+  sendKeyAndWait,
   keyRight,
   contextMenuItems,
 } from './test_setup.js';
 
 suite('Menus test', function () {
-  // Setting timeout to unlimited as these tests take longer time to run
-  this.timeout(0);
+  // Disable timeouts when non-zero PAUSE_TIME is used to watch tests run.
+  if (PAUSE_TIME) this.timeout(0);
 
-  // Clear the workspace and load start blocks
+  // Clear the workspace and load start blocks.
   setup(async function () {
+    // This is the first test suite, which must wait for Chrome +
+    // chromedriver to start up, which can be slow—perhaps a few
+    // seconds.  Allow 30s just in case.
+    this.timeout(30000);
+
     this.browser = await testSetup(testFileLocations.BASE);
     await this.browser.pause(PAUSE_TIME);
   });
 
   test('Menu on block', async function () {
     // Navigate to draw_circle_1.
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
     await this.browser.pause(PAUSE_TIME);
-    await this.browser.keys([Key.Ctrl, Key.Return]);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
 
     chai.assert.deepEqual(
       process.platform === 'darwin'
@@ -70,14 +74,12 @@ suite('Menus test', function () {
 
   test('Menu on block in the toolbox', async function () {
     // Navigate to draw_circle_1.
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
     // Navigate to a toolbox category
     await moveToToolboxCategory(this.browser, 'Functions');
     // Move to flyout.
     await keyRight(this.browser);
-    await this.browser.keys([Key.Ctrl, Key.Return]);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
 
     chai.assert.deepEqual(
       process.platform === 'darwin'
@@ -100,9 +102,8 @@ suite('Menus test', function () {
   test('Menu on workspace', async function () {
     // Navigate to draw_circle_1.
     await tabNavigateToWorkspace(this.browser);
-    await this.browser.keys('w');
-    await this.browser.keys([Key.Ctrl, Key.Return]);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, 'w');
+    await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
 
     chai.assert.deepEqual(
       process.platform === 'darwin'
@@ -132,12 +133,11 @@ suite('Menus test', function () {
 
   test('Menu on block during drag is not shown', async function () {
     // Navigate to draw_circle_1.
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
     // Start moving the block
-    await this.browser.keys('m');
-    await this.browser.keys([Key.Ctrl, Key.Return]);
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, 'm');
+    await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
+
     chai.assert.isTrue(
       await contextMenuExists(this.browser, 'Collapse Block', true),
       'The menu should not be openable during a move',
