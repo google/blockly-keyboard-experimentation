@@ -19,6 +19,7 @@ import {
   keyDown,
   keyUp,
   contextMenuItems,
+  PAUSE_TIME,
 } from './test_setup.js';
 import {Key} from 'webdriverio';
 
