@@ -457,8 +457,8 @@ export async function tabNavigateToWorkspace(
 ) {
   // Move focus to initial pre-injection focusable div element.
   //
-  // Ideally we'd just rest focus state to the state it is in when the
-  // document initially loads (and then send one tab), but alas
+  // Ideally we'd just reset focus state to the state it is in when
+  // the document initially loads (and then send one tab), but alas
   // there's no straightforward way to do that; see
   // https://stackoverflow.com/q/51518855/4969945
   await browser.execute(() => document.getElementById('focusableDiv')?.focus());
