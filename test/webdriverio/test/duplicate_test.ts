@@ -29,7 +29,6 @@ suite('Duplicate test', function () {
 
   test('Duplicate block', async function () {
     // Navigate to draw_circle_1.
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
 
     // Duplicate

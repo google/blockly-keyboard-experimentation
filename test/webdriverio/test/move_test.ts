@@ -10,7 +10,6 @@ import {Browser, Key} from 'webdriverio';
 import {
   PAUSE_TIME,
   focusOnBlock,
-  tabNavigateToWorkspace,
   testFileLocations,
   testSetup,
   sendKeyAndWait,
@@ -36,7 +35,6 @@ suite('Move tests', function () {
   test('Start moving statement blocks', async function () {
     for (let i = 1; i < 7; i++) {
       // Navigate to statement_<i>.
-      await tabNavigateToWorkspace(this.browser);
       await focusOnBlock(this.browser, `statement_${i}`);
 
       // Get information about parent connection of selected block,
@@ -96,7 +94,6 @@ suite('Move tests', function () {
   test('Start moving value blocks', async function () {
     for (let i = 1; i < 7; i++) {
       // Navigate to statement_<i>.
-      await tabNavigateToWorkspace(this.browser);
       await focusOnBlock(this.browser, `value_${i}`);
 
       // Get information about parent connection of selected block,
@@ -166,7 +163,6 @@ suite('Move tests', function () {
     });
 
     // Navigate to unconnectable block, get initial coords and start move.
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, BLOCK);
     const startCoordinate = await getCoordinate(this.browser, BLOCK);
     await sendKeyAndWait(this.browser, 'm');
