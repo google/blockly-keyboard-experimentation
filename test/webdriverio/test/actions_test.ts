@@ -22,6 +22,68 @@ import {
   contextMenuItems,
 } from './test_setup.js';
 
+const isDarwin = process.platform === 'darwin';
+const blockActionsViaKeyboard = [
+  {'text': 'Duplicate D'},
+  {'text': 'Add Comment'},
+  {'text': 'External Inputs'},
+  {'text': 'Collapse Block'},
+  {'text': 'Disable Block'},
+  {'text': 'Delete 2 Blocks Delete'},
+  {'text': 'Move Block M'},
+  {'text': 'Edit Block contents Right'},
+  {'text': isDarwin ? 'Cut ⌘ X' : 'Cut Ctrl + X'},
+  {'text': isDarwin ? 'Copy ⌘ C' : 'Copy Ctrl + C'},
+  {'disabled': true, 'text': isDarwin ? 'Paste ⌘ V' : 'Paste Ctrl + V'},
+];
+
+const blockActionsViaMouse = [
+  {'text': 'Duplicate D'},
+  {'text': 'Add Comment'},
+  {'text': 'External Inputs'},
+  {'text': 'Collapse Block'},
+  {'text': 'Disable Block'},
+  {'text': 'Delete 2 Blocks Delete'},
+  {'text': isDarwin ? 'Cut ⌘ X' : 'Cut Ctrl + X'},
+  {'text': isDarwin ? 'Copy ⌘ C' : 'Copy Ctrl + C'},
+  {'disabled': true, 'text': isDarwin ? 'Paste ⌘ V' : 'Paste Ctrl + V'},
+];
+
+const shadowBlockActionsViaKeyboard = [
+  {'text': 'Add Comment'},
+  {'text': 'Collapse Block'},
+  {'text': 'Disable Block'},
+  {'text': 'Help'},
+  {'text': 'Move Block M'},
+  {'disabled': true, 'text': isDarwin ? 'Cut ⌘ X' : 'Cut Ctrl + X'},
+  {'text': isDarwin ? 'Copy ⌘ C' : 'Copy Ctrl + C'},
+  {'disabled': true, 'text': isDarwin ? 'Paste ⌘ V' : 'Paste Ctrl + V'},
+];
+
+const toolboxBlockActionsViaKeyboard = [
+  {'text': 'Help'},
+  {'disabled': true, 'text': 'Move Block M'},
+  {'disabled': true, 'text': isDarwin ? 'Cut ⌘ X' : 'Cut Ctrl + X'},
+  {'text': isDarwin ? 'Copy ⌘ C' : 'Copy Ctrl + C'},
+];
+
+const flyoutBlockActionsViaMouse = [
+  {'text': 'Help'},
+  {'disabled': true, 'text': isDarwin ? 'Cut ⌘ X' : 'Cut Ctrl + X'},
+  {'text': isDarwin ? 'Copy ⌘ C' : 'Copy Ctrl + C'},
+];
+
+const workspaceActionsViaKeyboard = [
+  {'disabled': true, 'text': 'Undo'},
+  {'disabled': true, 'text': 'Redo'},
+  {'text': 'Clean up Blocks'},
+  {'text': 'Collapse Blocks'},
+  {'disabled': true, 'text': 'Expand Blocks'},
+  {'text': 'Delete 4 Blocks'},
+  {'text': 'Add Comment'},
+  {'disabled': true, 'text': isDarwin ? 'Paste ⌘ V' : 'Paste Ctrl + V'},
+];
+
 suite('Menus test', function () {
   // Disable timeouts when non-zero PAUSE_TIME is used to watch tests run.
   if (PAUSE_TIME) this.timeout(0);
@@ -45,33 +107,7 @@ suite('Menus test', function () {
 
     chai.assert.deepEqual(
       await contextMenuItems(this.browser),
-      process.platform === 'darwin'
-        ? [
-            {'text': 'Duplicate D'},
-            {'text': 'Add Comment'},
-            {'text': 'External Inputs'},
-            {'text': 'Collapse Block'},
-            {'text': 'Disable Block'},
-            {'text': 'Delete 2 Blocks Delete'},
-            {'text': 'Move Block M'},
-            {'text': 'Edit Block contents Right'},
-            {'text': 'Cut ⌘ X'},
-            {'text': 'Copy ⌘ C'},
-            {'disabled': true, 'text': 'Paste ⌘ V'},
-          ]
-        : [
-            {'text': 'Duplicate D'},
-            {'text': 'Add Comment'},
-            {'text': 'External Inputs'},
-            {'text': 'Collapse Block'},
-            {'text': 'Disable Block'},
-            {'text': 'Delete 2 Blocks Delete'},
-            {'text': 'Move Block M'},
-            {'text': 'Edit Block contents Right'},
-            {'text': 'Cut Ctrl + X'},
-            {'text': 'Copy Ctrl + C'},
-            {'disabled': true, 'text': 'Paste Ctrl + V'},
-          ],
+      blockActionsViaKeyboard,
     );
   });
 
@@ -81,29 +117,7 @@ suite('Menus test', function () {
 
     chai.assert.deepEqual(
       await contextMenuItems(this.browser),
-      process.platform === 'darwin'
-        ? [
-            {'text': 'Duplicate D'},
-            {'text': 'Add Comment'},
-            {'text': 'External Inputs'},
-            {'text': 'Collapse Block'},
-            {'text': 'Disable Block'},
-            {'text': 'Delete 2 Blocks Delete'},
-            {'text': 'Cut ⌘ X'},
-            {'text': 'Copy ⌘ C'},
-            {'disabled': true, 'text': 'Paste ⌘ V'},
-          ]
-        : [
-            {'text': 'Duplicate D'},
-            {'text': 'Add Comment'},
-            {'text': 'External Inputs'},
-            {'text': 'Collapse Block'},
-            {'text': 'Disable Block'},
-            {'text': 'Delete 2 Blocks Delete'},
-            {'text': 'Cut Ctrl + X'},
-            {'text': 'Copy Ctrl + C'},
-            {'disabled': true, 'text': 'Paste Ctrl + V'},
-          ],
+      blockActionsViaMouse,
     );
   });
 
@@ -115,27 +129,7 @@ suite('Menus test', function () {
 
     chai.assert.deepEqual(
       await contextMenuItems(this.browser),
-      process.platform === 'darwin'
-        ? [
-            {'text': 'Add Comment'},
-            {'text': 'Collapse Block'},
-            {'text': 'Disable Block'},
-            {'text': 'Help'},
-            {'text': 'Move Block M'},
-            {'disabled': true, 'text': 'Cut ⌘ X'},
-            {'text': 'Copy ⌘ C'},
-            {'disabled': true, 'text': 'Paste ⌘ V'},
-          ]
-        : [
-            {'text': 'Add Comment'},
-            {'text': 'Collapse Block'},
-            {'text': 'Disable Block'},
-            {'text': 'Help'},
-            {'text': 'Move Block M'},
-            {'disabled': true, 'text': 'Cut Ctrl + X'},
-            {'text': 'Copy Ctrl + C'},
-            {'disabled': true, 'text': 'Paste Ctrl + V'},
-          ],
+      shadowBlockActionsViaKeyboard,
     );
   });
 
@@ -148,20 +142,8 @@ suite('Menus test', function () {
     await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
 
     chai.assert.deepEqual(
-      process.platform === 'darwin'
-        ? [
-            {'text': 'Help'},
-            {'disabled': true, 'text': 'Move Block M'},
-            {'disabled': true, 'text': 'Cut ⌘ X'},
-            {'text': 'Copy ⌘ C'},
-          ]
-        : [
-            {'text': 'Help'},
-            {'disabled': true, 'text': 'Move Block M'},
-            {'disabled': true, 'text': 'Cut Ctrl + X'},
-            {'text': 'Copy Ctrl + C'},
-          ],
       await contextMenuItems(this.browser),
+      toolboxBlockActionsViaKeyboard,
     );
   });
 
@@ -176,18 +158,8 @@ suite('Menus test', function () {
     await this.browser.pause(PAUSE_TIME);
 
     chai.assert.deepEqual(
-      process.platform === 'darwin'
-        ? [
-            {'text': 'Help'},
-            {'disabled': true, 'text': 'Cut ⌘ X'},
-            {'text': 'Copy ⌘ C'},
-          ]
-        : [
-            {'text': 'Help'},
-            {'disabled': true, 'text': 'Cut Ctrl + X'},
-            {'text': 'Copy Ctrl + C'},
-          ],
       await contextMenuItems(this.browser),
+      flyoutBlockActionsViaMouse,
     );
   });
 
@@ -198,28 +170,8 @@ suite('Menus test', function () {
     await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
 
     chai.assert.deepEqual(
-      process.platform === 'darwin'
-        ? [
-            {'disabled': true, 'text': 'Undo'},
-            {'disabled': true, 'text': 'Redo'},
-            {'text': 'Clean up Blocks'},
-            {'text': 'Collapse Blocks'},
-            {'disabled': true, 'text': 'Expand Blocks'},
-            {'text': 'Delete 4 Blocks'},
-            {'text': 'Add Comment'},
-            {'disabled': true, 'text': 'Paste ⌘ V'},
-          ]
-        : [
-            {'disabled': true, 'text': 'Undo'},
-            {'disabled': true, 'text': 'Redo'},
-            {'text': 'Clean up Blocks'},
-            {'text': 'Collapse Blocks'},
-            {'disabled': true, 'text': 'Expand Blocks'},
-            {'text': 'Delete 4 Blocks'},
-            {'text': 'Add Comment'},
-            {'disabled': true, 'text': 'Paste Ctrl + V'},
-          ],
       await contextMenuItems(this.browser),
+      workspaceActionsViaKeyboard,
     );
   });
 
