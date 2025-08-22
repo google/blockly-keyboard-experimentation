@@ -56,6 +56,7 @@ const shadowBlockActionsViaKeyboard = [
   {'text': 'Disable Block'},
   {'text': 'Help'},
   {'text': 'Move Block M'},
+  {'text': 'Edit Block contents Right'},
   {'disabled': true, 'text': isDarwin ? 'Cut ⌘ X' : 'Cut Ctrl + X'},
   {'text': isDarwin ? 'Copy ⌘ C' : 'Copy Ctrl + C'},
   {'disabled': true, 'text': isDarwin ? 'Paste ⌘ V' : 'Paste Ctrl + V'},
@@ -80,7 +81,7 @@ const workspaceActionsViaKeyboard = [
   {'text': 'Clean up Blocks'},
   {'text': 'Collapse Blocks'},
   {'disabled': true, 'text': 'Expand Blocks'},
-  {'text': 'Delete 4 Blocks'},
+  {'text': 'Delete 14 Blocks'},
   {'text': 'Add Comment'},
   {'disabled': true, 'text': isDarwin ? 'Paste ⌘ V' : 'Paste Ctrl + V'},
 ];
@@ -96,7 +97,7 @@ suite('Menus test', function () {
     // seconds.  Allow 30s just in case.
     this.timeout(30000);
 
-    this.browser = await testSetup(testFileLocations.BASE);
+    this.browser = await testSetup(testFileLocations.MORE_BLOCKS);
     await this.browser.pause(PAUSE_TIME);
   });
 
@@ -124,7 +125,7 @@ suite('Menus test', function () {
 
   test('Shadow block menu via keyboard displays expected items', async function () {
     await tabNavigateToWorkspace(this.browser);
-    await focusOnBlock(this.browser, 'draw_circle_1');
+    await focusOnBlock(this.browser, 'text_print_1');
     await this.browser.keys(Key.ArrowRight);
     await this.browser.keys([Key.Ctrl, Key.Return]);
     await this.browser.pause(PAUSE_TIME);
