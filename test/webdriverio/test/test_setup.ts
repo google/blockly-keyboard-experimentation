@@ -153,6 +153,8 @@ export const testFileLocations = {
     new URLSearchParams({scenario: 'navigationTestBlocks'}),
   ),
   // eslint-disable-next-line @typescript-eslint/naming-convention
+  MORE_BLOCKS: createTestUrl(new URLSearchParams({scenario: 'moreBlocks'})),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   MOVE_TEST_BLOCKS: createTestUrl(
     new URLSearchParams({scenario: 'moveTestBlocks'}),
   ),
@@ -188,7 +190,7 @@ export async function focusWorkspace(browser: WebdriverIO.Browser) {
   const workspaceElement = await browser.$(
     '#blocklyDiv > div > svg.blocklySvg > g',
   );
-  await workspaceElement.click();
+  await workspaceElement.click({x: 100});
 }
 
 /**
@@ -573,7 +575,7 @@ export async function isDragging(
 }
 
 /**
- * Returns the result of the specificied action precondition.
+ * Returns the result of the specified action precondition.
  *
  * @param browser The active WebdriverIO Browser object.
  * @param action The action to check the precondition for.
@@ -709,4 +711,18 @@ export async function clickBlock(
   await browser.execute((elemId) => {
     document.getElementById(elemId)?.removeAttribute('id');
   }, findableId);
+}
+
+/**
+ * Right-clicks on a block with the provided type in the flyout.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param blockType The name of the type block to right click on.
+ */
+export async function rightClickOnFlyoutBlockType(
+  browser: WebdriverIO.Browser,
+  blockType: string,
+) {
+  const elem = await browser.$(`.blocklyFlyout .${blockType}`);
+  await elem.click({button: 'right'});
 }
