@@ -14,6 +14,8 @@ import {
   testSetup,
   sendKeyAndWait,
   keyDown,
+  keyRight,
+  keyLeft,
   contextMenuItems,
 } from './test_setup.js';
 
@@ -173,6 +175,60 @@ suite('Statement move tests', function () {
     await this.browser.pause(PAUSE_TIME);
   });
 
+  // Move a simple stack block using left and right keys, ensuring it
+  // visits all expected connection candidates.
+  test('Constrained move of simple stack block left/right', async function () {
+    // Block ID of stack block to be moved.
+    const BLOCK = 'draw_emoji';
+
+    // Navigate to block to be moved and intiate move.
+    await focusOnBlock(this.browser, BLOCK);
+    await sendKeyAndWait(this.browser, 'm');
+
+    // Expected connection candidate after pressing right arrow n times:
+    const expected = [
+      {id: 'p5_canvas', index: 1}, // Next; starting location.
+      {id: 'text_print', index: 0}, // Previous.
+      {id: 'text_print', index: 1}, // Next.
+      {id: 'controls_if', index: 3}, // Statement input for "if".
+      {id: 'controls_repeat_ext', index: 3}, // Statement input.
+      {id: 'controls_repeat_ext', index: 1}, // Next.
+      {id: 'controls_if', index: 5}, // Statement input for "else if".
+      {id: 'controls_if', index: 6}, // Statement input for "else".
+      {id: 'controls_if', index: 1}, // Next.
+      {id: 'p5_draw', index: 0}, // Statement input.
+      {id: 'p5_canvas', index: 1}, // Next; starting location again.
+    ];
+
+    // Move to right multiple times, checking that the connection
+    // candidate after i moves matches expected[i].
+    for (let i = 0; i < expected.length; i++) {
+      const candidate = await getConnectionCandidate(this.browser);
+      chai.assert.deepEqual(candidate, expected[i]);
+      await keyRight(this.browser);
+    }
+
+    // Abort and restart move.
+    await sendKeyAndWait(this.browser, Key.Escape);
+    await sendKeyAndWait(this.browser, 'm');
+
+    // Move left multiple times, checking that the connection
+    // candidate after i moves matches expected[expected.length - i - 1].
+    for (let i = 0; i < expected.length; i++) {
+      const candidate = await getConnectionCandidate(this.browser);
+      chai.assert.deepEqual(candidate, expected[expected.length - i - 1]);
+      await keyLeft(this.browser);
+    }
+
+    // Finish move.
+    await sendKeyAndWait(this.browser, Key.Enter);
+
+    // Check final location of moved block.
+    const info = await getFocusedNeighbourInfo(this.browser);
+    chai.assert.equal(info.parentId, 'p5_draw');
+    chai.assert.equal(info.parentIndex, 0);
+  });
+
   // When a top-level block with no previous, next or output
   // connections is subject to a constrained move, it should not move.
   //
@@ -318,4 +374,42 @@ function getCoordinate(
     if (!block) throw new Error('block not found');
     return block.getRelativeToSurfaceXY();
   }, id);
+}
+
+/**
+ * Get information about the connection candidate for the
+ * currently-moving block (if any).
+ *
+ * @param browser The webdriverio browser session.
+ * @returns A promise setting to either null if there is no connection
+ *     candidate, or otherwise if there is one to
+ *
+ *         {id, index}
+ *
+ *     where id is the block ID of the neighbour, and index is the
+ *     index of the connection to which the currently-moving block is
+ *     connected., or to null if there is no connection candidate.
+ */
+function getConnectionCandidate(
+  browser: Browser,
+): Promise<{id: string; index: number} | null> {
+  return browser.execute(() => {
+    const focused = Blockly.getFocusManager().getFocusedNode();
+    if (!focused) throw new Error('nothing focused');
+    if (!(focused instanceof Blockly.BlockSvg)) {
+      throw new TypeError('focused node is not a BlockSvg');
+    }
+    const block = focused; // Inferred as BlockSvg.
+    const dragStrategy =
+      block.getDragStrategy() as Blockly.dragging.BlockDragStrategy;
+    if (!dragStrategy) throw new Error('no drag strategy');
+    // @ts-expect-error connectionCandidate is private.
+    const neighbour = dragStrategy.connectionCandidate?.neighbour;
+    if (!neighbour) return null;
+    const candidateBlock = neighbour.getSourceBlock();
+    if (!candidateBlock) return null;
+    const blockConnections = candidateBlock.getConnections_(true);
+    const index = blockConnections.indexOf(neighbour);
+    return {id: candidateBlock.id, index};
+  });
 }
