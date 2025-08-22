@@ -14,8 +14,6 @@ import {
   testSetup,
   sendKeyAndWait,
   keyDown,
-  keyRight,
-  keyLeft,
   contextMenuItems,
 } from './test_setup.js';
 
@@ -175,59 +173,46 @@ suite('Statement move tests', function () {
     await this.browser.pause(PAUSE_TIME);
   });
 
-  // Move a simple stack block using left and right keys, ensuring it
-  // visits all expected connection candidates.
-  test('Constrained move of simple stack block left/right', async function () {
-    // Block ID of stack block to be moved.
-    const BLOCK = 'draw_emoji';
+  /** ID of a statement block with no inputs. */
+  const BLOCK_SIMPLE = 'draw_emoji';
 
-    // Navigate to block to be moved and intiate move.
-    await focusOnBlock(this.browser, BLOCK);
-    await sendKeyAndWait(this.browser, 'm');
+  /**
+   * Expected connection candidates when moving BLOCK_SIMPLE, after
+   * pressing right or down arrow n times.
+   */
+  const EXPECTED_SIMPLE = [
+    {id: 'p5_canvas', index: 1}, // Next; starting location.
+    {id: 'text_print', index: 0}, // Previous.
+    {id: 'text_print', index: 1}, // Next.
+    {id: 'controls_if', index: 3}, // Statement input for "if".
+    {id: 'controls_repeat_ext', index: 3}, // Statement input.
+    {id: 'controls_repeat_ext', index: 1}, // Next.
+    {id: 'controls_if', index: 5}, // Statement input for "else if".
+    {id: 'controls_if', index: 6}, // Statement input for "else".
+    {id: 'controls_if', index: 1}, // Next.
+    {id: 'p5_draw', index: 0}, // Statement input.
+    {id: 'p5_canvas', index: 1}, // Next; starting location again.
+  ];
+  const EXPECTED_SIMPLE_REVERSED = EXPECTED_SIMPLE.slice().reverse();
 
-    // Expected connection candidate after pressing right arrow n times:
-    const expected = [
-      {id: 'p5_canvas', index: 1}, // Next; starting location.
-      {id: 'text_print', index: 0}, // Previous.
-      {id: 'text_print', index: 1}, // Next.
-      {id: 'controls_if', index: 3}, // Statement input for "if".
-      {id: 'controls_repeat_ext', index: 3}, // Statement input.
-      {id: 'controls_repeat_ext', index: 1}, // Next.
-      {id: 'controls_if', index: 5}, // Statement input for "else if".
-      {id: 'controls_if', index: 6}, // Statement input for "else".
-      {id: 'controls_if', index: 1}, // Next.
-      {id: 'p5_draw', index: 0}, // Statement input.
-      {id: 'p5_canvas', index: 1}, // Next; starting location again.
-    ];
-
-    // Move to right multiple times, checking that the connection
-    // candidate after i moves matches expected[i].
-    for (let i = 0; i < expected.length; i++) {
-      const candidate = await getConnectionCandidate(this.browser);
-      chai.assert.deepEqual(candidate, expected[i]);
-      await keyRight(this.browser);
-    }
-
-    // Abort and restart move.
-    await sendKeyAndWait(this.browser, Key.Escape);
-    await sendKeyAndWait(this.browser, 'm');
-
-    // Move left multiple times, checking that the connection
-    // candidate after i moves matches expected[expected.length - i - 1].
-    for (let i = 0; i < expected.length; i++) {
-      const candidate = await getConnectionCandidate(this.browser);
-      chai.assert.deepEqual(candidate, expected[expected.length - i - 1]);
-      await keyLeft(this.browser);
-    }
-
-    // Finish move.
-    await sendKeyAndWait(this.browser, Key.Enter);
-
-    // Check final location of moved block.
-    const info = await getFocusedNeighbourInfo(this.browser);
-    chai.assert.equal(info.parentId, 'p5_draw');
-    chai.assert.equal(info.parentIndex, 0);
-  });
+  test(
+    'Constrained move of simple stack block right',
+    moveTest(BLOCK_SIMPLE, Key.ArrowRight, EXPECTED_SIMPLE, {
+      parentId: null,
+      parentIndex: null,
+      nextId: 'text_print',
+      valueId: null,
+    }),
+  );
+  test(
+    'Constrained move of simple stack block left',
+    moveTest(BLOCK_SIMPLE, Key.ArrowLeft, EXPECTED_SIMPLE_REVERSED, {
+      parentId: 'p5_draw',
+      parentIndex: 0,
+      nextId: null,
+      valueId: null,
+    }),
+  );
 
   // When a top-level block with no previous, next or output
   // connections is subject to a constrained move, it should not move.
@@ -286,7 +271,44 @@ suite('Statement move tests', function () {
 });
 
 /**
- * Get information about the currently-selected block's parent and
+ * Create a mocha test function moving a specified block in a
+ * particular direction, checking that it has the the expected
+ * connection candidate after each step, and that once the move
+ * finishes it is connected as expected.
+ *
+ * @param mover Block ID of the block to be moved.
+ * @param key Key to send to move one step.
+ * @param candidates Array of expected connection candidates.
+ * @param finalInfo Expected final connections when move finished,
+ *     as returne d by getFocusedNeighbourInfo.
+ * @returns function to pass as second argument to mocha's test function.
+ */
+function moveTest(
+  mover: string,
+  key: string | string[],
+  candidates: Array<{id: string; index: number}>,
+  finalInfo: Awaited<ReturnType<typeof getFocusedNeighbourInfo>>,
+) {
+  return async function (this: Mocha.Context) {
+    // Navigate to block to be moved and intiate move.
+    await focusOnBlock(this.browser, mover);
+    await sendKeyAndWait(this.browser, 'm');
+    // Move to right multiple times, checking connection candidates.
+    for (let i = 0; i < candidates.length; i++) {
+      const candidate = await getConnectionCandidate(this.browser);
+      chai.assert.deepEqual(candidate, candidates[i]);
+      await sendKeyAndWait(this.browser, key);
+    }
+
+    // Finish move and check final location of moved block.
+    await sendKeyAndWait(this.browser, Key.Enter);
+    const info = await getFocusedNeighbourInfo(this.browser);
+    chai.assert.deepEqual(info, finalInfo);
+  };
+}
+
+/**
+ * Get information about the currently-focused block's parent and
  * child blocks.
  *
  * @param browser The webdriverio browser session.
