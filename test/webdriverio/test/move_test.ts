@@ -330,11 +330,17 @@ function moveTest(
  * child blocks.
  *
  * @param browser The webdriverio browser session.
- * @returns A promise setting to {parentId, parentIndex, nextId,
- *   valueId}, being respectively the parent block ID, index of parent
- *   connection, next block ID, and ID of the block connected to the
- *   zeroth value value input, or null if the given item does not
- *   exist.
+ * @returns A promise setting to
+ *
+ *         {parentId, parentIndex, nextId, valueId}
+ *
+ *     where parentId, parentIndex are the ID of the parent block and
+ *     the index of the connection on that block to which the
+ *     currently-focused block is connected, nextId is the ID of block
+ *     connected to the focused block's next connection, and valueID
+ *     is the ID of a block connected to the zeroth input of the
+ *     focused block (or, in each case, null if there is no such
+ *     block).
  */
 function getFocusedNeighbourInfo(browser: Browser) {
   return browser.execute(() => {
