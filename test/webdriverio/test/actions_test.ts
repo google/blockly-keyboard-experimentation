@@ -23,6 +23,7 @@ import {
 } from './test_setup.js';
 
 const isDarwin = process.platform === 'darwin';
+
 const blockActionsViaKeyboard = [
   {'text': 'Duplicate D'},
   {'text': 'Add Comment'},
@@ -123,7 +124,8 @@ suite('Menus test', function () {
 
   test('Shadow block menu via keyboard displays expected items', async function () {
     await tabNavigateToWorkspace(this.browser);
-    await focusOnBlock(this.browser, 'draw_circle_1_color');
+    await focusOnBlock(this.browser, 'draw_circle_1');
+    await this.browser.keys(Key.ArrowRight);
     await this.browser.keys([Key.Ctrl, Key.Return]);
     await this.browser.pause(PAUSE_TIME);
 
