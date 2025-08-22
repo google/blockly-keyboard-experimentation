@@ -213,6 +213,24 @@ suite('Statement move tests', function () {
       valueId: null,
     }),
   );
+  test(
+    'Constrained move of simple stack block down',
+    moveTest(BLOCK_SIMPLE, Key.ArrowDown, EXPECTED_SIMPLE, {
+      parentId: null,
+      parentIndex: null,
+      nextId: 'text_print',
+      valueId: null,
+    }),
+  );
+  test(
+    'Constrained move of simple stack block up',
+    moveTest(BLOCK_SIMPLE, Key.ArrowUp, EXPECTED_SIMPLE_REVERSED, {
+      parentId: 'p5_draw',
+      parentIndex: 0,
+      nextId: null,
+      valueId: null,
+    }),
+  );
 
   // When a top-level block with no previous, next or output
   // connections is subject to a constrained move, it should not move.
