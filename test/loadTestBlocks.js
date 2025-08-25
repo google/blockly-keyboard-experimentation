@@ -317,12 +317,12 @@ const moreBlocks = {
               'next': {
                 'block': {
                   'type': 'text_print',
-                  'id': 'J`*)bq?#`_Vq^X(DQF2t',
+                  'id': 'text_print_1',
                   'inputs': {
                     'TEXT': {
                       'shadow': {
                         'type': 'text',
-                        'id': '6fW_sIt1t|63j}nPE1ge',
+                        'id': 'text_print_shadow_text_1',
                         'fields': {
                           'TEXT': 'abc',
                         },
