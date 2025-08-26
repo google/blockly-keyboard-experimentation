@@ -181,17 +181,17 @@ suite('Statement move tests', function () {
    * pressing right or down arrow n times.
    */
   const EXPECTED_SIMPLE = [
-    {id: 'p5_canvas', index: 1}, // Next; starting location.
-    {id: 'text_print', index: 0}, // Previous.
-    {id: 'text_print', index: 1}, // Next.
-    {id: 'controls_if', index: 3}, // Statement input for "if".
-    {id: 'controls_repeat_ext', index: 3}, // Statement input.
-    {id: 'controls_repeat_ext', index: 1}, // Next.
-    {id: 'controls_if', index: 5}, // Statement input for "else if".
-    {id: 'controls_if', index: 6}, // Statement input for "else".
-    {id: 'controls_if', index: 1}, // Next.
-    {id: 'p5_draw', index: 0}, // Statement input.
-    {id: 'p5_canvas', index: 1}, // Next; starting location again.
+    {id: 'p5_canvas', index: 1, ownIndex: 0}, // Next; starting location.
+    {id: 'text_print', index: 0, ownIndex: 1}, // Previous.
+    {id: 'text_print', index: 1, ownIndex: 0}, // Next.
+    {id: 'controls_if', index: 3, ownIndex: 0}, // "If" statement input.
+    {id: 'controls_repeat_ext', index: 3, ownIndex: 0}, // Statement input.
+    {id: 'controls_repeat_ext', index: 1, ownIndex: 0}, // Next.
+    {id: 'controls_if', index: 5, ownIndex: 0}, // "Else if" statement input.
+    {id: 'controls_if', index: 6, ownIndex: 0}, // "Else" statement input.
+    {id: 'controls_if', index: 1, ownIndex: 0}, // Next.
+    {id: 'p5_draw', index: 0, ownIndex: 0}, // Statement input.
+    {id: 'p5_canvas', index: 1, ownIndex: 0}, // Next; starting location again.
   ];
   const EXPECTED_SIMPLE_REVERSED = EXPECTED_SIMPLE.slice().reverse();
 
@@ -430,11 +430,11 @@ function getCoordinate(
  * @returns A promise setting to either null if there is no connection
  *     candidate, or otherwise if there is one to
  *
- *         {id, index}
+ *         {id, index, ownIndex}
  *
- *     where id is the block ID of the neighbour, and index is the
- *     index of the connection to which the currently-moving block is
- *     connected., or to null if there is no connection candidate.
+ *     where id is the block ID of the neighbour, index is the index
+ *     of the candidate connection on the neighbour, and ownIndex is
+ *     the index of the candidate connection on the moving block.
  */
 function getConnectionCandidate(
   browser: Browser,
@@ -450,12 +450,14 @@ function getConnectionCandidate(
       block.getDragStrategy() as Blockly.dragging.BlockDragStrategy;
     if (!dragStrategy) throw new Error('no drag strategy');
     // @ts-expect-error connectionCandidate is private.
-    const neighbour = dragStrategy.connectionCandidate?.neighbour;
-    if (!neighbour) return null;
-    const candidateBlock = neighbour.getSourceBlock();
-    if (!candidateBlock) return null;
-    const blockConnections = candidateBlock.getConnections_(true);
-    const index = blockConnections.indexOf(neighbour);
-    return {id: candidateBlock.id, index};
+    const candidate = dragStrategy.connectionCandidate;
+    if (!candidate) return null;
+    const neighbourBlock = candidate.neighbour.getSourceBlock();
+    if (!neighbourBlock) throw new TypeError('connection has no source block');
+    const neighbourConnections = neighbourBlock.getConnections_(true);
+    const index = neighbourConnections.indexOf(candidate.neighbour);
+    const ownConnections = block.getConnections_(true);
+    const ownIndex = ownConnections.indexOf(candidate.local);
+    return {id: neighbourBlock.id, index, ownIndex};
   });
 }
