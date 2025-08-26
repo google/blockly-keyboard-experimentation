@@ -14,6 +14,7 @@ import {
   testSetup,
   sendKeyAndWait,
   keyDown,
+  contextMenuItems,
 } from './test_setup.js';
 
 suite('Move tests', function () {
@@ -32,6 +33,8 @@ suite('Move tests', function () {
   // moved, with subsequent statement blocks below it in the stack
   // reattached to where the moving block was - i.e., that a stack
   // heal will occur.
+  //
+  // Also tests initating a move using the shortcut key.
   test('Start moving statement blocks', async function () {
     for (let i = 1; i < 7; i++) {
       // Navigate to statement_<i>.
@@ -48,7 +51,7 @@ suite('Move tests', function () {
       );
       chai.assert(info.nextId, 'selected block has no next block');
 
-      // Start move.
+      // Start move using keyboard shortcut.
       await sendKeyAndWait(this.browser, 'm');
 
       // Check that the moving block has nothing connected it its
@@ -91,6 +94,8 @@ suite('Move tests', function () {
   // When a move of a value block begins, it is expected that block
   // and all blocks connected to its inputs will be moved - i.e., that
   // a stack heal (really: unary operator chain heal) will NOT occur.
+  //
+  // Also tests initiating a move via the context menu.
   test('Start moving value blocks', async function () {
     for (let i = 1; i < 7; i++) {
       // Navigate to statement_<i>.
@@ -107,8 +112,16 @@ suite('Move tests', function () {
       );
       chai.assert(info.valueId, 'selected block has no child value block');
 
-      // Start move.
+      // Start move using context menu (using keyboard nav).
+      await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
       await sendKeyAndWait(this.browser, 'm');
+      await keyDown(
+        this.browser,
+        (await contextMenuItems(this.browser)).findIndex(({text}) =>
+          text.includes('Move'),
+        ),
+      );
+      await sendKeyAndWait(this.browser, Key.Return);
 
       // Check that the moving block has nothing connected it its
       // next/previous connections, and same thing connected to value
