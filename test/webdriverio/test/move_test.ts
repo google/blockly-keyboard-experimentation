@@ -235,6 +235,73 @@ suite('Statement move tests', function () {
     }),
   );
 
+  /** ID of a statement block with no inputs. */
+  const BLOCK_COMPLEX = 'complex_mover';
+
+  /**
+   * Expected connection candidates when moving BLOCK_COMPLEX, after
+   * pressing right or down arrow n times.
+   */
+  const EXPECTED_COMPLEX = [
+    // TODO(#702): Due to a bug in KeyboardDragStrategy, certain
+    // connection candidates that can be found using the mouse are not
+    // visited when doing a keyboard drag.  They appear in the list
+    // below, but commented out for now.
+    // is fixed.
+    {id: 'simple_mover', index: 1, ownIndex: 0}, // Next; starting location.
+    // {id: 'text_print', index: 0, ownIndex: 1}, // Previous to own next.
+    {id: 'text_print', index: 0, ownIndex: 4}, // Previous to own else input.
+    // {id: 'text_print', index: 0, ownIndex: 3}, // Previous to own if input.
+    {id: 'text_print', index: 1, ownIndex: 0}, // Next.
+    {id: 'controls_if', index: 3, ownIndex: 0}, // "If" statement input.
+    {id: 'controls_repeat_ext', index: 3, ownIndex: 0}, // Statement input.
+    {id: 'controls_repeat_ext', index: 1, ownIndex: 0}, // Next.
+    {id: 'controls_if', index: 5, ownIndex: 0}, // "Else if" statement input.
+    {id: 'controls_if', index: 6, ownIndex: 0}, // "Else" statement input.
+    {id: 'controls_if', index: 1, ownIndex: 0}, // Next.
+    {id: 'p5_draw', index: 0, ownIndex: 0}, // Statement input.
+    {id: 'p5_canvas', index: 1, ownIndex: 0}, // Next; starting location again.
+    {id: 'simple_mover', index: 1, ownIndex: 0}, // Next; starting location.
+  ];
+  const EXPECTED_COMPLEX_REVERSED = EXPECTED_COMPLEX.slice().reverse();
+
+  test(
+    'Constrained move of complex stack block right',
+    moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_COMPLEX,{
+      parentId: null,
+      parentIndex: null,
+      nextId: null, // TODO(#702): Should be 'text_print',
+      valueId: null,
+    }),
+  );
+  test(
+    'Constrained move of complex stack block left',
+    moveTest(BLOCK_COMPLEX, Key.ArrowLeft, EXPECTED_COMPLEX_REVERSED, {
+      parentId: 'p5_canvas',
+      parentIndex: 1,
+      nextId: 'simple_mover',
+      valueId: null,
+    }),
+  );
+  test(
+    'Constrained move of complex stack block down',
+    moveTest(BLOCK_COMPLEX, Key.ArrowDown, EXPECTED_COMPLEX, {
+      parentId: null,
+      parentIndex: null,
+      nextId: null, // TODO(#702): Should be 'text_print',
+      valueId: null,
+    }),
+  );
+  test(
+    'Constrained move of complex stack block up',
+    moveTest(BLOCK_COMPLEX, Key.ArrowUp, EXPECTED_COMPLEX_REVERSED, {
+      parentId: 'p5_canvas',
+      parentIndex: 1,
+      nextId: 'simple_mover',
+      valueId: null,
+    }),
+  );
+
   // When a top-level block with no previous, next or output
   // connections is subject to a constrained move, it should not move.
   //
