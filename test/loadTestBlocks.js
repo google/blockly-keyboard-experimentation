@@ -870,9 +870,9 @@ const moveStartTestBlocks = {
   },
 };
 
-// A bunch of statement blocks.  The draw_emoji block will be
-// (constrained) moved up, down, left and right to verify that it
-// visits the expected positions.
+// A bunch of statement blocks.  The blocks with IDs simple_mover and
+// complex_mover will be (constrained-)moved up, down, left and right
+// to verify that they visit all the expected candidate connections.
 const moveStatementTestBlocks = {
   'blocks': {
     'languageVersion': 0,
@@ -880,7 +880,7 @@ const moveStatementTestBlocks = {
       {
         'type': 'p5_setup',
         'id': 'p5_setup',
-        'x': 0,
+        'x': 75,
         'y': 75,
         'deletable': false,
         'inputs': {
@@ -897,9 +897,18 @@ const moveStatementTestBlocks = {
               'next': {
                 'block': {
                   'type': 'draw_emoji',
-                  'id': 'draw_emoji',
+                  'id': 'simple_mover',
                   'fields': {
-                    'emoji': '✨',
+                    'emoji': '✨'
+                  },
+                  'next': {
+                    'block': {
+                      'type': 'controls_if',
+                      'id': 'complex_mover',
+                      'extraState': {
+                        'hasElse': true,
+                      },
+                    },
                   },
                 },
               },
@@ -910,8 +919,11 @@ const moveStatementTestBlocks = {
       {
         'type': 'text_print',
         'id': 'text_print',
-        'x': 0,
-        'y': 300,
+        "disabledReasons": [
+          "MANUALLY_DISABLED"
+        ],
+        'x': 75,
+        'y': 400,
         'inputs': {
           'TEXT': {
             'shadow': {
@@ -956,8 +968,8 @@ const moveStatementTestBlocks = {
       {
         'type': 'p5_draw',
         'id': 'p5_draw',
-        'x': 0,
-        'y': 753,
+        'x': 75,
+        'y': 950,
         'deletable': false,
       },
     ],

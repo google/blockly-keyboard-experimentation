@@ -174,7 +174,7 @@ suite('Statement move tests', function () {
   });
 
   /** ID of a statement block with no inputs. */
-  const BLOCK_SIMPLE = 'draw_emoji';
+  const BLOCK_SIMPLE = 'simple_mover';
 
   /**
    * Expected connection candidates when moving BLOCK_SIMPLE, after
@@ -182,6 +182,9 @@ suite('Statement move tests', function () {
    */
   const EXPECTED_SIMPLE = [
     {id: 'p5_canvas', index: 1, ownIndex: 0}, // Next; starting location.
+    {id: 'complex_mover', index: 3, ownIndex: 0}, // "If" statement input.
+    {id: 'complex_mover', index: 4, ownIndex: 0}, // "Else" statement input.
+    {id: 'complex_mover', index: 1, ownIndex: 0}, // Next.
     {id: 'text_print', index: 0, ownIndex: 1}, // Previous.
     {id: 'text_print', index: 1, ownIndex: 0}, // Next.
     {id: 'controls_if', index: 3, ownIndex: 0}, // "If" statement input.
@@ -198,9 +201,9 @@ suite('Statement move tests', function () {
   test(
     'Constrained move of simple stack block right',
     moveTest(BLOCK_SIMPLE, Key.ArrowRight, EXPECTED_SIMPLE, {
-      parentId: null,
-      parentIndex: null,
-      nextId: 'text_print',
+      parentId: 'complex_mover',
+      parentIndex: 3,
+      nextId: null,
       valueId: null,
     }),
   );
@@ -216,9 +219,9 @@ suite('Statement move tests', function () {
   test(
     'Constrained move of simple stack block down',
     moveTest(BLOCK_SIMPLE, Key.ArrowDown, EXPECTED_SIMPLE, {
-      parentId: null,
-      parentIndex: null,
-      nextId: 'text_print',
+      parentId: 'complex_mover',
+      parentIndex: 3,
+      nextId: null,
       valueId: null,
     }),
   );
