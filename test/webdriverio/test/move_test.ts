@@ -235,7 +235,7 @@ suite('Statement move tests', function () {
     }),
   );
 
-  /** ID of a statement block with no inputs. */
+  /** ID of a statement block with multiple statement inputs. */
   const BLOCK_COMPLEX = 'complex_mover';
 
   /**
