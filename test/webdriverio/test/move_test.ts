@@ -267,7 +267,7 @@ suite('Statement move tests', function () {
 
   test(
     'Constrained move of complex stack block right',
-    moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_COMPLEX,{
+    moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_COMPLEX, {
       parentId: null,
       parentIndex: null,
       nextId: null, // TODO(#702): Should be 'text_print',

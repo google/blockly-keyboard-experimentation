@@ -899,7 +899,7 @@ const moveStatementTestBlocks = {
                   'type': 'draw_emoji',
                   'id': 'simple_mover',
                   'fields': {
-                    'emoji': '✨'
+                    'emoji': '✨',
                   },
                   'next': {
                     'block': {
@@ -919,9 +919,7 @@ const moveStatementTestBlocks = {
       {
         'type': 'text_print',
         'id': 'text_print',
-        "disabledReasons": [
-          "MANUALLY_DISABLED"
-        ],
+        'disabledReasons': ['MANUALLY_DISABLED'],
         'x': 75,
         'y': 400,
         'inputs': {
