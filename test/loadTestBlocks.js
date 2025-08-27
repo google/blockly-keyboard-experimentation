@@ -570,7 +570,15 @@ const navigationTestBlocks = {
   },
 };
 
-const moveTestBlocks = {
+// The draw block contains a stack of statement blocks, each of which
+// has a value input to which is connected a value expression block
+// which itself has one or two inputs which have (non-shadow) simple
+// value blocks connected.  Each statement block will be selected in
+// turn and then a move initiated (and then aborted).  This is then
+// repeated with the first level value blocks (those that are attached
+// to the statement blocks).  The second level value blocks are
+// present to verify correct (lack of) heal behaviour.
+const moveStartTestBlocks = {
   'blocks': {
     'languageVersion': 0,
     'blocks': [
@@ -862,6 +870,112 @@ const moveTestBlocks = {
   },
 };
 
+// A bunch of statement blocks.  The blocks with IDs simple_mover and
+// complex_mover will be (constrained-)moved up, down, left and right
+// to verify that they visit all the expected candidate connections.
+const moveStatementTestBlocks = {
+  'blocks': {
+    'languageVersion': 0,
+    'blocks': [
+      {
+        'type': 'p5_setup',
+        'id': 'p5_setup',
+        'x': 75,
+        'y': 75,
+        'deletable': false,
+        'inputs': {
+          'STATEMENTS': {
+            'block': {
+              'type': 'p5_canvas',
+              'id': 'p5_canvas',
+              'deletable': false,
+              'movable': false,
+              'fields': {
+                'WIDTH': 400,
+                'HEIGHT': 400,
+              },
+              'next': {
+                'block': {
+                  'type': 'draw_emoji',
+                  'id': 'simple_mover',
+                  'fields': {
+                    'emoji': '✨'
+                  },
+                  'next': {
+                    'block': {
+                      'type': 'controls_if',
+                      'id': 'complex_mover',
+                      'extraState': {
+                        'hasElse': true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        'type': 'text_print',
+        'id': 'text_print',
+        "disabledReasons": [
+          "MANUALLY_DISABLED"
+        ],
+        'x': 75,
+        'y': 400,
+        'inputs': {
+          'TEXT': {
+            'shadow': {
+              'type': 'text',
+              'id': 'shadow_text',
+              'fields': {
+                'TEXT': 'abc',
+              },
+            },
+          },
+        },
+        'next': {
+          'block': {
+            'type': 'controls_if',
+            'id': 'controls_if',
+            'extraState': {
+              'elseIfCount': 1,
+              'hasElse': true,
+            },
+            'inputs': {
+              'DO0': {
+                'block': {
+                  'type': 'controls_repeat_ext',
+                  'id': 'controls_repeat_ext',
+                  'inputs': {
+                    'TIMES': {
+                      'shadow': {
+                        'type': 'math_number',
+                        'id': 'shadow_math_number',
+                        'fields': {
+                          'NUM': 10,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        'type': 'p5_draw',
+        'id': 'p5_draw',
+        'x': 75,
+        'y': 950,
+        'deletable': false,
+      },
+    ],
+  },
+};
+
 const comments = {
   'workspaceComments': [
     {
@@ -985,17 +1099,20 @@ const comments = {
 export const load = function (workspace, scenarioString) {
   const scenarioMap = {
     'blank': blankCanvas,
-    'comments': comments,
-    'moreBlocks': moreBlocks,
-    'moveTestBlocks': moveTestBlocks,
-    'navigationTestBlocks': navigationTestBlocks,
-    'simpleCircle': simpleCircle,
+    comments,
+    moreBlocks,
+    moveStartTestBlocks,
+    moveStatementTestBlocks,
+    navigationTestBlocks,
+    simpleCircle,
     'sun': sunnyDay,
   };
-
-  const data = JSON.stringify(scenarioMap[scenarioString]);
   // Don't emit events during loading.
   Blockly.Events.disable();
-  Blockly.serialization.workspaces.load(JSON.parse(data), workspace, false);
+  Blockly.serialization.workspaces.load(
+    scenarioMap[scenarioString],
+    workspace,
+    false,
+  );
   Blockly.Events.enable();
 };
