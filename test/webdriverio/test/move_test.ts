@@ -345,6 +345,43 @@ for (const renderer of ['geras', 'zelos']) {
       await this.browser.pause(PAUSE_TIME);
     });
 
+    /** ID of a simple reporter (a value block with no inputs). */
+    const BLOCK_SIMPLE = 'simple_mover';
+
+    /**
+     * Expected connection candidates when moving BLOCK_SIMPLE, after
+     * pressing ArrowRight n times.
+     */
+    const EXPECTED_SIMPLE_RIGHT = [
+      {id: 'print0', index: 2, ownIndex: 0}, // Starting location.
+      {id: 'print1', index: 2, ownIndex: 0}, // Print block with no shadow.
+      {id: 'print2', index: 2, ownIndex: 0}, // Print block with shadow.
+      // Skip draw_emoji block as it has no value inputs.
+      {id: 'print3', index: 2, ownIndex: 0}, // Replacing count expression.
+      {id: 'text_count1', index: 1, ownIndex: 0}, // Count block SUB input.
+      {id: 'text_count1', index: 2, ownIndex: 0}, // Count block TEXT input.
+      // Skip controls_repeat_ext block's TIMES input as it is incompatible.
+      {id: 'print4', index: 2, ownIndex: 0}, // Replacing count expression.
+      {id: 'text_count2', index: 1, ownIndex: 0}, // Count block SUB input.
+      {id: 'text_count2', index: 2, ownIndex: 0}, // Count block TEXT input.
+    ];
+    /**
+     * Expected connection candidates when moving BLOCK_SIMPLE, after
+     * pressing ArrowLeft n times.
+     */
+    const EXPECTED_SIMPLE_LEFT = EXPECTED_SIMPLE_RIGHT.slice(0, 1).concat(
+      EXPECTED_SIMPLE_RIGHT.slice(1).reverse(),
+    );
+
+    const testOrSkip = renderer === 'zelos' ? test.skip : test;
+    testOrSkip(
+      'Constrained move of simple value block right',
+      moveTest(BLOCK_SIMPLE, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
+    );
+    testOrSkip(
+      'Constrained move of simple value block left',
+      moveTest(BLOCK_SIMPLE, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
+    );
   });
 }
 
