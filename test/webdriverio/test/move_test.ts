@@ -10,6 +10,7 @@ import {Browser, Key} from 'webdriverio';
 import {
   PAUSE_TIME,
   focusOnBlock,
+  createTestUrl,
   testFileLocations,
   testSetup,
   sendKeyAndWait,
@@ -327,6 +328,25 @@ suite('Statement move tests', function () {
     await sendKeyAndWait(this.browser, Key.Escape);
   });
 });
+
+for (const renderer of ['geras', 'zelos']) {
+  suite(`Value expression move tests (${renderer})`, function () {
+    // Increase timeout to 10s for this longer test (but disable
+    // timeouts if when non-zero PAUSE_TIME is used to watch tests) run.
+    this.timeout(PAUSE_TIME ? 0 : 10000);
+
+    // Clear the workspace and load start blocks.
+    setup(async function () {
+      this.browser = await testSetup(
+        createTestUrl(
+          new URLSearchParams({renderer, scenario: 'moveValueTestBlocks'}),
+        ),
+      );
+      await this.browser.pause(PAUSE_TIME);
+    });
+
+  });
+}
 
 /**
  * Create a mocha test function moving a specified block in a

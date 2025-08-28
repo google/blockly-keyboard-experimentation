@@ -137,7 +137,7 @@ function posixPath(target: string): string {
 }
 
 // Relative to dist folder for TS build
-const createTestUrl = (options?: URLSearchParams) => {
+export const createTestUrl = (options?: URLSearchParams) => {
   const dirname = path.dirname(fileURLToPath(import.meta.url));
   const base = new URL(
     `file://${posixPath(path.join(dirname, '..', '..', 'build', 'index.html'))}`,
