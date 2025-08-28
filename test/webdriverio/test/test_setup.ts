@@ -558,6 +558,7 @@ export async function sendKeyAndWait(
   keys: string | string[],
   times = 1,
 ) {
+  // @ts-ignore: Unintentional comparison error
   if (PAUSE_TIME === 0) {
     // Send all keys in one call if no pauses needed.
     keys = Array(times).fill(keys).flat();
