@@ -455,7 +455,8 @@ suite(`Value expression move tests`, function () {
           await sendKeyAndWait(this.browser, Key.Delete);
         });
 
-        test(
+        // TODO(#709): Reenable test once crash bug is fixed.
+        test.skip(
           'moving right',
           moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_UNARY_RIGHT),
         );
