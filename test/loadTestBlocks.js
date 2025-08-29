@@ -1000,10 +1000,19 @@ const moveValueTestBlocks = {
         },
       },
       {
+        'type': 'text',
+        'id': 'unattached',
+        'x': 75,
+        'y': 200,
+        'fields': {
+          'TEXT': 'unattached value',
+        },
+      },
+      {
         'type': 'p5_draw',
         'id': 'p5_draw',
         'x': 75,
-        'y': 200,
+        'y': 260,
         'deletable': false,
         'inputs': {
           'STATEMENTS': {
@@ -1013,10 +1022,21 @@ const moveValueTestBlocks = {
               'inputs': {
                 'TEXT': {
                   'block': {
-                    'type': 'text',
-                    'id': 'simple_mover',
+                    'type': 'text_changeCase',
+                    'id': 'complex_mover',
                     'fields': {
-                      'TEXT': 'simple mover',
+                      'CASE': 'TITLECASE',
+                    },
+                    'inputs': {
+                      'TEXT': {
+                        'block': {
+                          'type': 'text',
+                          'id': 'simple_mover',
+                          'fields': {
+                            'TEXT': 'simple mover',
+                          },
+                        },
+                      },
                     },
                   },
                 },
