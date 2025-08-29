@@ -368,6 +368,25 @@ suite(`Value expression move tests`, function () {
     EXPECTED_SIMPLE_RIGHT.slice(1).reverse(),
   );
 
+  /** ID of a unary expression block (block with one value input + output) */
+  const BLOCK_COMPLEX = 'complex_mover';
+
+  /**
+   * Expected connection candidates when moving row consisting of
+   * BLOCK_COMPLEX, with a block (in this case BLOCK_SIMPLE) attached
+   * to its input, after pressing ArrowRight n times.
+   */
+  const EXPECTED_ROW_RIGHT = EXPECTED_SIMPLE_RIGHT.slice();
+  EXPECTED_ROW_RIGHT[0] = EXPECTED_ROW_RIGHT.pop()!;
+  /**
+   * Expected connection candidates when moving row consisting of
+   * BLOCK_COMPLEX, with a block (in this case BLOCK_SIMPLE) attached
+   * to its input, after pressing ArrowLeft n times.
+   */
+  const EXPECTED_ROW_LEFT = EXPECTED_ROW_RIGHT.slice(0, 1).concat(
+    EXPECTED_ROW_RIGHT.slice(1).reverse(),
+  );
+
   for (const renderer of ['geras', 'thrasos', 'zelos']) {
     suite(`using ${renderer}`, function () {
       // Clear the workspace and load start blocks.
@@ -388,6 +407,16 @@ suite(`Value expression move tests`, function () {
         test(
           'moving left',
           moveTest(BLOCK_SIMPLE, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
+        );
+      });
+      suite('Constrained moves of two blocks with no free inputs', function () {
+        test(
+          'moving right',
+          moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_ROW_RIGHT),
+        );
+        test(
+          'moving left',
+          moveTest(BLOCK_COMPLEX, Key.ArrowLeft, EXPECTED_ROW_LEFT),
         );
       });
     });
