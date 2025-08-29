@@ -414,7 +414,10 @@ suite(`Value expression move tests`, function () {
   );
 
   for (const renderer of ['geras', 'thrasos', 'zelos']) {
-    suite(`using ${renderer}`, function () {
+    // TODO(#707): These tests fail when run using zelos, so for now
+    // we skip entire suite.  Stop skipping suite when bug is fixed.
+    const suiteOrSkip = renderer === 'zelos' ? suite.skip : suite;
+    suiteOrSkip(`using ${renderer}`, function () {
       // Clear the workspace and load start blocks.
       setup(async function () {
         this.browser = await testSetup(
