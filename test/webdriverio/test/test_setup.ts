@@ -131,9 +131,7 @@ export async function testSetup(
  * @returns posix path
  */
 function posixPath(target: string): string {
-  const result = target.split(path.sep).join(path.posix.sep);
-  console.log(result);
-  return result;
+  return target.split(path.sep).join(path.posix.sep);
 }
 
 // Relative to dist folder for TS build
