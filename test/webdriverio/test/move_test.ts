@@ -179,9 +179,9 @@ suite('Statement move tests', function () {
 
   /**
    * Expected connection candidates when moving BLOCK_SIMPLE, after
-   * pressing right or down arrow n times.
+   * pressing right (or down) arrow n times.
    */
-  const EXPECTED_SIMPLE = [
+  const EXPECTED_SIMPLE_RIGHT = [
     {id: 'p5_canvas', index: 1, ownIndex: 0}, // Next; starting location.
     {id: 'complex_mover', index: 3, ownIndex: 0}, // "If" statement input.
     {id: 'complex_mover', index: 4, ownIndex: 0}, // "Else" statement input.
@@ -198,37 +198,39 @@ suite('Statement move tests', function () {
   ];
   /**
    * Expected connection candidates when moving BLOCK_SIMPLE after
-   * pressing left or up arrow n times.
+   * pressing left (or up) arrow n times.
    */
-  const EXPECTED_SIMPLE_REVERSED = EXPECTED_SIMPLE.slice(0, 1).concat(
-    EXPECTED_SIMPLE.slice(1).reverse(),
+  const EXPECTED_SIMPLE_LEFT = EXPECTED_SIMPLE_RIGHT.slice(0, 1).concat(
+    EXPECTED_SIMPLE_RIGHT.slice(1).reverse(),
   );
 
-  test(
-    'Constrained move of simple stack block right',
-    moveTest(BLOCK_SIMPLE, Key.ArrowRight, EXPECTED_SIMPLE),
-  );
-  test(
-    'Constrained move of simple stack block left',
-    moveTest(BLOCK_SIMPLE, Key.ArrowLeft, EXPECTED_SIMPLE_REVERSED),
-  );
-  test(
-    'Constrained move of simple stack block down',
-    moveTest(BLOCK_SIMPLE, Key.ArrowDown, EXPECTED_SIMPLE),
-  );
-  test(
-    'Constrained move of simple stack block up',
-    moveTest(BLOCK_SIMPLE, Key.ArrowUp, EXPECTED_SIMPLE_REVERSED),
-  );
+  suite('Constrained moves of simple stack block', function () {
+    test(
+      'moving right',
+      moveTest(BLOCK_SIMPLE, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
+    );
+    test(
+      'moving left',
+      moveTest(BLOCK_SIMPLE, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
+    );
+    test(
+      'moving down',
+      moveTest(BLOCK_SIMPLE, Key.ArrowDown, EXPECTED_SIMPLE_RIGHT),
+    );
+    test(
+      'moving up',
+      moveTest(BLOCK_SIMPLE, Key.ArrowUp, EXPECTED_SIMPLE_LEFT),
+    );
+  });
 
   /** ID of a statement block with multiple statement inputs. */
   const BLOCK_COMPLEX = 'complex_mover';
 
   /**
    * Expected connection candidates when moving BLOCK_COMPLEX, after
-   * pressing right or down arrow n times.
+   * pressing right (or down) arrow n times.
    */
-  const EXPECTED_COMPLEX = [
+  const EXPECTED_COMPLEX_RIGHT = [
     // TODO(#702): Due to a bug in KeyboardDragStrategy, certain
     // connection candidates that can be found using the mouse are not
     // visited when doing a keyboard drag.  They appear in the list
@@ -252,26 +254,28 @@ suite('Statement move tests', function () {
    * Expected connection candidates when moving BLOCK_COMPLEX after
    * pressing left or up arrow n times.
    */
-  const EXPECTED_COMPLEX_REVERSED = EXPECTED_COMPLEX.slice(0, 1).concat(
-    EXPECTED_COMPLEX.slice(1).reverse(),
+  const EXPECTED_COMPLEX_LEFT = EXPECTED_COMPLEX_RIGHT.slice(0, 1).concat(
+    EXPECTED_COMPLEX_RIGHT.slice(1).reverse(),
   );
 
-  test(
-    'Constrained move of complex stack block right',
-    moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_COMPLEX),
-  );
-  test(
-    'Constrained move of complex stack block left',
-    moveTest(BLOCK_COMPLEX, Key.ArrowLeft, EXPECTED_COMPLEX_REVERSED),
-  );
-  test(
-    'Constrained move of complex stack block down',
-    moveTest(BLOCK_COMPLEX, Key.ArrowDown, EXPECTED_COMPLEX),
-  );
-  test(
-    'Constrained move of complex stack block up',
-    moveTest(BLOCK_COMPLEX, Key.ArrowUp, EXPECTED_COMPLEX_REVERSED),
-  );
+  suite('Constrained moves of stack block with statement inputs', function () {
+    test(
+      'moving right',
+      moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_COMPLEX_RIGHT),
+    );
+    test(
+      'moving left',
+      moveTest(BLOCK_COMPLEX, Key.ArrowLeft, EXPECTED_COMPLEX_LEFT),
+    );
+    test(
+      'moving down',
+      moveTest(BLOCK_COMPLEX, Key.ArrowDown, EXPECTED_COMPLEX_RIGHT),
+    );
+    test(
+      'moving up',
+      moveTest(BLOCK_COMPLEX, Key.ArrowUp, EXPECTED_COMPLEX_LEFT),
+    );
+  });
 
   // When a top-level block with no previous, next or output
   // connections is subject to a constrained move, it should not move.
@@ -365,10 +369,6 @@ suite(`Value expression move tests`, function () {
   );
 
   for (const renderer of ['geras', 'thrasos', 'zelos']) {
-    // TODO(#707): These tests fail when run using zelos, so for now
-    // we skip entire suite.  Stop skipping suite when bug is fixed.
-    // const suiteOrSkip = renderer === 'zelos' ? suite.skip : suite;
-    // suiteOrSkip(`using ${renderer}`, function () {
     suite(`using ${renderer}`, function () {
       // Clear the workspace and load start blocks.
       setup(async function () {
@@ -380,14 +380,16 @@ suite(`Value expression move tests`, function () {
         await this.browser.pause(PAUSE_TIME);
       });
 
-      test(
-        'Constrained move of simple value block right',
-        moveTest(BLOCK_SIMPLE, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
-      );
-      test(
-        'Constrained move of simple value block left',
-        moveTest(BLOCK_SIMPLE, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
-      );
+      suite('Constrained moves of a simple reporter block', function () {
+        test(
+          'moving right',
+          moveTest(BLOCK_SIMPLE, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
+        );
+        test(
+          'moving left',
+          moveTest(BLOCK_SIMPLE, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
+        );
+      });
     });
   }
 });
