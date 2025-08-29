@@ -329,61 +329,66 @@ suite('Statement move tests', function () {
   });
 });
 
-for (const renderer of ['geras', 'zelos']) {
-  suite(`Value expression move tests (${renderer})`, function () {
-    // Increase timeout to 10s for this longer test (but disable
-    // timeouts if when non-zero PAUSE_TIME is used to watch tests) run.
-    this.timeout(PAUSE_TIME ? 0 : 10000);
+suite(`Value expression move tests`, function () {
+  // Increase timeout to 10s for this longer test (but disable
+  // timeouts if when non-zero PAUSE_TIME is used to watch tests) run.
+  this.timeout(PAUSE_TIME ? 0 : 10000);
 
-    // Clear the workspace and load start blocks.
-    setup(async function () {
-      this.browser = await testSetup(
-        createTestUrl(
-          new URLSearchParams({renderer, scenario: 'moveValueTestBlocks'}),
-        ),
+  /** ID of a simple reporter (a value block with no inputs). */
+  const BLOCK_SIMPLE = 'simple_mover';
+
+  /**
+   * Expected connection candidates when moving BLOCK_SIMPLE, after
+   * pressing ArrowRight n times.
+   */
+  const EXPECTED_SIMPLE_RIGHT = [
+    {id: 'print0', index: 2, ownIndex: 0}, // Starting location.
+    {id: 'print1', index: 2, ownIndex: 0}, // Print block with no shadow.
+    {id: 'print2', index: 2, ownIndex: 0}, // Print block with shadow.
+    // Skip draw_emoji block as it has no value inputs.
+    {id: 'print3', index: 2, ownIndex: 0}, // Replacing  join expression.
+    {id: 'text_join1', index: 1, ownIndex: 0}, // Join block ADD0 input.
+    {id: 'text_join1', index: 2, ownIndex: 0}, // Join block ADD1 input.
+    // Skip controls_repeat_ext block's TIMES input as it is incompatible.
+    {id: 'print4', index: 2, ownIndex: 0}, // Replacing join expression.
+    {id: 'text_join2', index: 1, ownIndex: 0}, // Join block ADD0 input.
+    {id: 'text_join2', index: 2, ownIndex: 0}, // Join block ADD1 input.
+  ];
+  /**
+   * Expected connection candidates when moving BLOCK_SIMPLE, after
+   * pressing ArrowLeft n times.
+   */
+  const EXPECTED_SIMPLE_LEFT = EXPECTED_SIMPLE_RIGHT.slice(0, 1).concat(
+    EXPECTED_SIMPLE_RIGHT.slice(1).reverse(),
+  );
+
+  for (const renderer of ['geras', 'thrasos', 'zelos']) {
+    // TODO(#707): These tests fail when run using zelos, so for now
+    // we skip entire suite.  Stop skipping suite when bug is fixed.
+    // const suiteOrSkip = renderer === 'zelos' ? suite.skip : suite;
+    // suiteOrSkip(`using ${renderer}`, function () {
+    suite(`using ${renderer}`, function () {
+      // Clear the workspace and load start blocks.
+      setup(async function () {
+        this.browser = await testSetup(
+          createTestUrl(
+            new URLSearchParams({renderer, scenario: 'moveValueTestBlocks'}),
+          ),
+        );
+        await this.browser.pause(PAUSE_TIME);
+      });
+
+      test(
+        'Constrained move of simple value block right',
+        moveTest(BLOCK_SIMPLE, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
       );
-      await this.browser.pause(PAUSE_TIME);
+      test(
+        'Constrained move of simple value block left',
+        moveTest(BLOCK_SIMPLE, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
+      );
     });
-
-    /** ID of a simple reporter (a value block with no inputs). */
-    const BLOCK_SIMPLE = 'simple_mover';
-
-    /**
-     * Expected connection candidates when moving BLOCK_SIMPLE, after
-     * pressing ArrowRight n times.
-     */
-    const EXPECTED_SIMPLE_RIGHT = [
-      {id: 'print0', index: 2, ownIndex: 0}, // Starting location.
-      {id: 'print1', index: 2, ownIndex: 0}, // Print block with no shadow.
-      {id: 'print2', index: 2, ownIndex: 0}, // Print block with shadow.
-      // Skip draw_emoji block as it has no value inputs.
-      {id: 'print3', index: 2, ownIndex: 0}, // Replacing count expression.
-      {id: 'text_count1', index: 1, ownIndex: 0}, // Count block SUB input.
-      {id: 'text_count1', index: 2, ownIndex: 0}, // Count block TEXT input.
-      // Skip controls_repeat_ext block's TIMES input as it is incompatible.
-      {id: 'print4', index: 2, ownIndex: 0}, // Replacing count expression.
-      {id: 'text_count2', index: 1, ownIndex: 0}, // Count block SUB input.
-      {id: 'text_count2', index: 2, ownIndex: 0}, // Count block TEXT input.
-    ];
-    /**
-     * Expected connection candidates when moving BLOCK_SIMPLE, after
-     * pressing ArrowLeft n times.
-     */
-    const EXPECTED_SIMPLE_LEFT = EXPECTED_SIMPLE_RIGHT.slice(0, 1).concat(
-      EXPECTED_SIMPLE_RIGHT.slice(1).reverse(),
-    );
-
-    const testOrSkip = renderer === 'zelos' ? test.skip : test;
-    testOrSkip(
-      'Constrained move of simple value block right',
-      moveTest(BLOCK_SIMPLE, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
-    );
-    testOrSkip(
-      'Constrained move of simple value block left',
-      moveTest(BLOCK_SIMPLE, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
-    );
-  });
-}
+  }
+});
 
 /**
  * Create a mocha test function moving a specified block in a

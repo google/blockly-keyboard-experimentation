@@ -1054,15 +1054,16 @@ const moveValueTestBlocks = {
                               'inputs': {
                                 'TEXT': {
                                   'block': {
-                                    'type': 'text_count',
-                                    'id': 'text_count1',
+                                    'type': 'text_join',
+                                    'id': 'text_join1',
+                                    'inline': true,
                                     'inputs': {
-                                      'SUB': {
+                                      'ADD0': {
                                         'shadow': {
                                           'type': 'text',
-                                          'id': 'shadow_count1.1',
+                                          'id': 'shadow_join',
                                           'fields': {
-                                            'TEXT': 'shadow',
+                                            'TEXT': 'inline',
                                           },
                                         },
                                       },
@@ -1091,8 +1092,8 @@ const moveValueTestBlocks = {
                                         'inputs': {
                                           'TEXT': {
                                             'block': {
-                                              'type': 'text_count',
-                                              'id': 'text_count2',
+                                              'type': 'text_join',
+                                              'id': 'text_join2',
                                               'inline': false,
                                             },
                                           },
