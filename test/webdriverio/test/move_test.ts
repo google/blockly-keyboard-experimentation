@@ -387,6 +387,32 @@ suite(`Value expression move tests`, function () {
     EXPECTED_ROW_RIGHT.slice(1).reverse(),
   );
 
+  /**
+   * Expected connection candidates when moving row consisting of
+   * BLOCK_COMPLEX on its own after pressing ArrowRight n times.
+   */
+  const EXPECTED_UNARY_RIGHT = [
+    {id: 'print0', index: 2, ownIndex: 0}, // Starting location.
+    {id: 'print1', index: 2, ownIndex: 0}, // Print block with no shadow.
+    {id: 'print2', index: 2, ownIndex: 0}, // Print block with shadow.
+    // Skip draw_emoji block as it has no value inputs.
+    {id: 'print3', index: 2, ownIndex: 0}, // Replacing  join expression.
+    {id: 'text_join1', index: 1, ownIndex: 0}, // Join block ADD0 input.
+    {id: 'text_join1', index: 2, ownIndex: 0}, // Join block ADD1 input.
+    // Skip controls_repeat_ext block's TIMES input as it is incompatible.
+    {id: 'print4', index: 2, ownIndex: 0}, // Replacing join expression.
+    {id: 'text_join2', index: 1, ownIndex: 0}, // Join block ADD0 input.
+    {id: 'text_join2', index: 2, ownIndex: 0}, // Join block ADD1 input.
+    {id: 'unattached', index: 0, ownIndex: 1}, // Unattached text to own input.
+  ];
+  /**
+   * Expected connection candidates when moving row consisting of
+   * BLOCK_UNARY on its own after pressing ArrowLEFT n times.
+   */
+  const EXPECTED_UNARY_LEFT = EXPECTED_UNARY_RIGHT.slice(0, 1).concat(
+    EXPECTED_UNARY_RIGHT.slice(1).reverse(),
+  );
+
   for (const renderer of ['geras', 'thrasos', 'zelos']) {
     suite(`using ${renderer}`, function () {
       // Clear the workspace and load start blocks.
@@ -417,6 +443,22 @@ suite(`Value expression move tests`, function () {
         test(
           'moving left',
           moveTest(BLOCK_COMPLEX, Key.ArrowLeft, EXPECTED_ROW_LEFT),
+        );
+      });
+      suite('Constrained moves of unary expression block', function () {
+        setup(async function () {
+          // Delete block connected to complex_mover's input.
+          await focusOnBlock(this.browser, BLOCK_SIMPLE);
+          await sendKeyAndWait(this.browser, Key.Delete);
+        });
+
+        test(
+          'moving right',
+          moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_UNARY_RIGHT),
+        );
+        test(
+          'moving left',
+          moveTest(BLOCK_COMPLEX, Key.ArrowLeft, EXPECTED_UNARY_LEFT),
         );
       });
     });
