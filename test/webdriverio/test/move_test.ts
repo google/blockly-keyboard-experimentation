@@ -377,6 +377,7 @@ suite(`Value expression move tests`, function () {
    * to its input, after pressing ArrowRight n times.
    */
   const EXPECTED_ROW_RIGHT = EXPECTED_SIMPLE_RIGHT.slice();
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   EXPECTED_ROW_RIGHT[0] = EXPECTED_ROW_RIGHT.pop()!;
   /**
    * Expected connection candidates when moving row consisting of
