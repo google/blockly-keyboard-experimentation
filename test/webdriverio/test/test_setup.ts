@@ -131,13 +131,11 @@ export async function testSetup(
  * @returns posix path
  */
 function posixPath(target: string): string {
-  const result = target.split(path.sep).join(path.posix.sep);
-  console.log(result);
-  return result;
+  return target.split(path.sep).join(path.posix.sep);
 }
 
 // Relative to dist folder for TS build
-const createTestUrl = (options?: URLSearchParams) => {
+export const createTestUrl = (options?: URLSearchParams) => {
   const dirname = path.dirname(fileURLToPath(import.meta.url));
   const base = new URL(
     `file://${posixPath(path.join(dirname, '..', '..', 'build', 'index.html'))}`,
@@ -558,6 +556,8 @@ export async function sendKeyAndWait(
   keys: string | string[],
   times = 1,
 ) {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore: Unintentional comparison error
   if (PAUSE_TIME === 0) {
     // Send all keys in one call if no pauses needed.
     keys = Array(times).fill(keys).flat();

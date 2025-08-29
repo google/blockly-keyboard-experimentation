@@ -10,6 +10,7 @@ import {Browser, Key} from 'webdriverio';
 import {
   PAUSE_TIME,
   focusOnBlock,
+  createTestUrl,
   testFileLocations,
   testSetup,
   sendKeyAndWait,
@@ -178,9 +179,9 @@ suite('Statement move tests', function () {
 
   /**
    * Expected connection candidates when moving BLOCK_SIMPLE, after
-   * pressing right or down arrow n times.
+   * pressing right (or down) arrow n times.
    */
-  const EXPECTED_SIMPLE = [
+  const EXPECTED_SIMPLE_RIGHT = [
     {id: 'p5_canvas', index: 1, ownIndex: 0}, // Next; starting location.
     {id: 'complex_mover', index: 3, ownIndex: 0}, // "If" statement input.
     {id: 'complex_mover', index: 4, ownIndex: 0}, // "Else" statement input.
@@ -194,55 +195,42 @@ suite('Statement move tests', function () {
     {id: 'controls_if', index: 6, ownIndex: 0}, // "Else" statement input.
     {id: 'controls_if', index: 1, ownIndex: 0}, // Next.
     {id: 'p5_draw', index: 0, ownIndex: 0}, // Statement input.
-    {id: 'p5_canvas', index: 1, ownIndex: 0}, // Next; starting location again.
   ];
-  const EXPECTED_SIMPLE_REVERSED = EXPECTED_SIMPLE.slice().reverse();
+  /**
+   * Expected connection candidates when moving BLOCK_SIMPLE after
+   * pressing left (or up) arrow n times.
+   */
+  const EXPECTED_SIMPLE_LEFT = EXPECTED_SIMPLE_RIGHT.slice(0, 1).concat(
+    EXPECTED_SIMPLE_RIGHT.slice(1).reverse(),
+  );
 
-  test(
-    'Constrained move of simple stack block right',
-    moveTest(BLOCK_SIMPLE, Key.ArrowRight, EXPECTED_SIMPLE, {
-      parentId: 'complex_mover',
-      parentIndex: 3,
-      nextId: null,
-      valueId: null,
-    }),
-  );
-  test(
-    'Constrained move of simple stack block left',
-    moveTest(BLOCK_SIMPLE, Key.ArrowLeft, EXPECTED_SIMPLE_REVERSED, {
-      parentId: 'p5_draw',
-      parentIndex: 0,
-      nextId: null,
-      valueId: null,
-    }),
-  );
-  test(
-    'Constrained move of simple stack block down',
-    moveTest(BLOCK_SIMPLE, Key.ArrowDown, EXPECTED_SIMPLE, {
-      parentId: 'complex_mover',
-      parentIndex: 3,
-      nextId: null,
-      valueId: null,
-    }),
-  );
-  test(
-    'Constrained move of simple stack block up',
-    moveTest(BLOCK_SIMPLE, Key.ArrowUp, EXPECTED_SIMPLE_REVERSED, {
-      parentId: 'p5_draw',
-      parentIndex: 0,
-      nextId: null,
-      valueId: null,
-    }),
-  );
+  suite('Constrained moves of simple stack block', function () {
+    test(
+      'moving right',
+      moveTest(BLOCK_SIMPLE, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
+    );
+    test(
+      'moving left',
+      moveTest(BLOCK_SIMPLE, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
+    );
+    test(
+      'moving down',
+      moveTest(BLOCK_SIMPLE, Key.ArrowDown, EXPECTED_SIMPLE_RIGHT),
+    );
+    test(
+      'moving up',
+      moveTest(BLOCK_SIMPLE, Key.ArrowUp, EXPECTED_SIMPLE_LEFT),
+    );
+  });
 
   /** ID of a statement block with multiple statement inputs. */
   const BLOCK_COMPLEX = 'complex_mover';
 
   /**
    * Expected connection candidates when moving BLOCK_COMPLEX, after
-   * pressing right or down arrow n times.
+   * pressing right (or down) arrow n times.
    */
-  const EXPECTED_COMPLEX = [
+  const EXPECTED_COMPLEX_RIGHT = [
     // TODO(#702): Due to a bug in KeyboardDragStrategy, certain
     // connection candidates that can be found using the mouse are not
     // visited when doing a keyboard drag.  They appear in the list
@@ -261,46 +249,33 @@ suite('Statement move tests', function () {
     {id: 'controls_if', index: 1, ownIndex: 0}, // Next.
     {id: 'p5_draw', index: 0, ownIndex: 0}, // Statement input.
     {id: 'p5_canvas', index: 1, ownIndex: 0}, // Next; starting location again.
-    {id: 'simple_mover', index: 1, ownIndex: 0}, // Next; starting location.
   ];
-  const EXPECTED_COMPLEX_REVERSED = EXPECTED_COMPLEX.slice().reverse();
+  /**
+   * Expected connection candidates when moving BLOCK_COMPLEX after
+   * pressing left or up arrow n times.
+   */
+  const EXPECTED_COMPLEX_LEFT = EXPECTED_COMPLEX_RIGHT.slice(0, 1).concat(
+    EXPECTED_COMPLEX_RIGHT.slice(1).reverse(),
+  );
 
-  test(
-    'Constrained move of complex stack block right',
-    moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_COMPLEX, {
-      parentId: null,
-      parentIndex: null,
-      nextId: null, // TODO(#702): Should be 'text_print',
-      valueId: null,
-    }),
-  );
-  test(
-    'Constrained move of complex stack block left',
-    moveTest(BLOCK_COMPLEX, Key.ArrowLeft, EXPECTED_COMPLEX_REVERSED, {
-      parentId: 'p5_canvas',
-      parentIndex: 1,
-      nextId: 'simple_mover',
-      valueId: null,
-    }),
-  );
-  test(
-    'Constrained move of complex stack block down',
-    moveTest(BLOCK_COMPLEX, Key.ArrowDown, EXPECTED_COMPLEX, {
-      parentId: null,
-      parentIndex: null,
-      nextId: null, // TODO(#702): Should be 'text_print',
-      valueId: null,
-    }),
-  );
-  test(
-    'Constrained move of complex stack block up',
-    moveTest(BLOCK_COMPLEX, Key.ArrowUp, EXPECTED_COMPLEX_REVERSED, {
-      parentId: 'p5_canvas',
-      parentIndex: 1,
-      nextId: 'simple_mover',
-      valueId: null,
-    }),
-  );
+  suite('Constrained moves of stack block with statement inputs', function () {
+    test(
+      'moving right',
+      moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_COMPLEX_RIGHT),
+    );
+    test(
+      'moving left',
+      moveTest(BLOCK_COMPLEX, Key.ArrowLeft, EXPECTED_COMPLEX_LEFT),
+    );
+    test(
+      'moving down',
+      moveTest(BLOCK_COMPLEX, Key.ArrowDown, EXPECTED_COMPLEX_RIGHT),
+    );
+    test(
+      'moving up',
+      moveTest(BLOCK_COMPLEX, Key.ArrowUp, EXPECTED_COMPLEX_LEFT),
+    );
+  });
 
   // When a top-level block with no previous, next or output
   // connections is subject to a constrained move, it should not move.
@@ -358,30 +333,166 @@ suite('Statement move tests', function () {
   });
 });
 
+suite(`Value expression move tests`, function () {
+  // Increase timeout to 10s for this longer test (but disable
+  // timeouts if when non-zero PAUSE_TIME is used to watch tests) run.
+  this.timeout(PAUSE_TIME ? 0 : 10000);
+
+  /** ID of a simple reporter (a value block with no inputs). */
+  const BLOCK_SIMPLE = 'simple_mover';
+
+  /**
+   * Expected connection candidates when moving BLOCK_SIMPLE, after
+   * pressing ArrowRight n times.
+   */
+  const EXPECTED_SIMPLE_RIGHT = [
+    {id: 'complex_mover', index: 1, ownIndex: 0}, // Starting location.
+    {id: 'print1', index: 2, ownIndex: 0}, // Print block with no shadow.
+    {id: 'print2', index: 2, ownIndex: 0}, // Print block with shadow.
+    // Skip draw_emoji block as it has no value inputs.
+    {id: 'print3', index: 2, ownIndex: 0}, // Replacing  join expression.
+    {id: 'text_join1', index: 1, ownIndex: 0}, // Join block ADD0 input.
+    {id: 'text_join1', index: 2, ownIndex: 0}, // Join block ADD1 input.
+    // Skip controls_repeat_ext block's TIMES input as it is incompatible.
+    {id: 'print4', index: 2, ownIndex: 0}, // Replacing join expression.
+    {id: 'text_join2', index: 1, ownIndex: 0}, // Join block ADD0 input.
+    {id: 'text_join2', index: 2, ownIndex: 0}, // Join block ADD1 input.
+    // Skip unconnected text block as it has no inputs.
+    {id: 'print0', index: 2, ownIndex: 0}, // Print block having complex_mover.
+  ];
+  /**
+   * Expected connection candidates when moving BLOCK_SIMPLE, after
+   * pressing ArrowLeft n times.
+   */
+  const EXPECTED_SIMPLE_LEFT = EXPECTED_SIMPLE_RIGHT.slice(0, 1).concat(
+    EXPECTED_SIMPLE_RIGHT.slice(1).reverse(),
+  );
+
+  /** ID of a unary expression block (block with one value input + output) */
+  const BLOCK_COMPLEX = 'complex_mover';
+
+  /**
+   * Expected connection candidates when moving row consisting of
+   * BLOCK_COMPLEX, with a block (in this case BLOCK_SIMPLE) attached
+   * to its input, after pressing ArrowRight n times.
+   */
+  const EXPECTED_ROW_RIGHT = EXPECTED_SIMPLE_RIGHT.slice();
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  EXPECTED_ROW_RIGHT[0] = EXPECTED_ROW_RIGHT.pop()!;
+  /**
+   * Expected connection candidates when moving row consisting of
+   * BLOCK_COMPLEX, with a block (in this case BLOCK_SIMPLE) attached
+   * to its input, after pressing ArrowLeft n times.
+   */
+  const EXPECTED_ROW_LEFT = EXPECTED_ROW_RIGHT.slice(0, 1).concat(
+    EXPECTED_ROW_RIGHT.slice(1).reverse(),
+  );
+
+  /**
+   * Expected connection candidates when moving row consisting of
+   * BLOCK_COMPLEX on its own after pressing ArrowRight n times.
+   */
+  const EXPECTED_UNARY_RIGHT = [
+    {id: 'print0', index: 2, ownIndex: 0}, // Starting location.
+    {id: 'print1', index: 2, ownIndex: 0}, // Print block with no shadow.
+    {id: 'print2', index: 2, ownIndex: 0}, // Print block with shadow.
+    // Skip draw_emoji block as it has no value inputs.
+    {id: 'print3', index: 2, ownIndex: 0}, // Replacing  join expression.
+    {id: 'text_join1', index: 1, ownIndex: 0}, // Join block ADD0 input.
+    {id: 'text_join1', index: 2, ownIndex: 0}, // Join block ADD1 input.
+    // Skip controls_repeat_ext block's TIMES input as it is incompatible.
+    {id: 'print4', index: 2, ownIndex: 0}, // Replacing join expression.
+    {id: 'text_join2', index: 1, ownIndex: 0}, // Join block ADD0 input.
+    {id: 'text_join2', index: 2, ownIndex: 0}, // Join block ADD1 input.
+    {id: 'unattached', index: 0, ownIndex: 1}, // Unattached text to own input.
+  ];
+  /**
+   * Expected connection candidates when moving row consisting of
+   * BLOCK_UNARY on its own after pressing ArrowLEFT n times.
+   */
+  const EXPECTED_UNARY_LEFT = EXPECTED_UNARY_RIGHT.slice(0, 1).concat(
+    EXPECTED_UNARY_RIGHT.slice(1).reverse(),
+  );
+
+  for (const renderer of ['geras', 'thrasos', 'zelos']) {
+    // TODO(#707): These tests fail when run using zelos, so for now
+    // we skip entire suite.  Stop skipping suite when bug is fixed.
+    const suiteOrSkip = renderer === 'zelos' ? suite.skip : suite;
+    suiteOrSkip(`using ${renderer}`, function () {
+      // Clear the workspace and load start blocks.
+      setup(async function () {
+        this.browser = await testSetup(
+          createTestUrl(
+            new URLSearchParams({renderer, scenario: 'moveValueTestBlocks'}),
+          ),
+        );
+        await this.browser.pause(PAUSE_TIME);
+      });
+
+      suite('Constrained moves of a simple reporter block', function () {
+        test(
+          'moving right',
+          moveTest(BLOCK_SIMPLE, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
+        );
+        test(
+          'moving left',
+          moveTest(BLOCK_SIMPLE, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
+        );
+      });
+      suite('Constrained moves of two blocks with no free inputs', function () {
+        test(
+          'moving right',
+          moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_ROW_RIGHT),
+        );
+        test(
+          'moving left',
+          moveTest(BLOCK_COMPLEX, Key.ArrowLeft, EXPECTED_ROW_LEFT),
+        );
+      });
+      suite('Constrained moves of unary expression block', function () {
+        setup(async function () {
+          // Delete block connected to complex_mover's input.
+          await focusOnBlock(this.browser, BLOCK_SIMPLE);
+          await sendKeyAndWait(this.browser, Key.Delete);
+        });
+
+        // TODO(#709): Reenable test once crash bug is fixed.
+        test.skip(
+          'moving right',
+          moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_UNARY_RIGHT),
+        );
+        test(
+          'moving left',
+          moveTest(BLOCK_COMPLEX, Key.ArrowLeft, EXPECTED_UNARY_LEFT),
+        );
+      });
+    });
+  }
+});
+
 /**
  * Create a mocha test function moving a specified block in a
  * particular direction, checking that it has the the expected
  * connection candidate after each step, and that once the move
- * finishes it is connected as expected.
+ * finishes that the moving block is reconnected to its initial
+ * location.
  *
  * @param mover Block ID of the block to be moved.
  * @param key Key to send to move one step.
  * @param candidates Array of expected connection candidates.
- * @param finalInfo Expected final connections when move finished,
- *     as returne d by getFocusedNeighbourInfo.
  * @returns function to pass as second argument to mocha's test function.
  */
 function moveTest(
   mover: string,
   key: string | string[],
   candidates: Array<{id: string; index: number}>,
-  finalInfo: Awaited<ReturnType<typeof getFocusedNeighbourInfo>>,
 ) {
   return async function (this: Mocha.Context) {
     // Navigate to block to be moved and intiate move.
     await focusOnBlock(this.browser, mover);
+    const initialInfo = await getFocusedNeighbourInfo(this.browser);
     await sendKeyAndWait(this.browser, 'm');
-    // Move to right multiple times, checking connection candidates.
+    // Press specified key multiple times, checking connection candidates.
     for (let i = 0; i < candidates.length; i++) {
       const candidate = await getConnectionCandidate(this.browser);
       chai.assert.deepEqual(candidate, candidates[i]);
@@ -390,8 +501,8 @@ function moveTest(
 
     // Finish move and check final location of moved block.
     await sendKeyAndWait(this.browser, Key.Enter);
-    const info = await getFocusedNeighbourInfo(this.browser);
-    chai.assert.deepEqual(info, finalInfo);
+    const finalInfo = await getFocusedNeighbourInfo(this.browser);
+    chai.assert.deepEqual(initialInfo, finalInfo);
   };
 }
 
