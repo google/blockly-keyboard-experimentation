@@ -642,3 +642,66 @@ function getConnectionCandidate(
     return {id: neighbourBlock.id, index, ownIndex};
   });
 }
+
+/**
+ * Create a new block from serialised state (parsed JSON) and
+ * optionally attach it to an existing block on the workspace.
+ *
+ * @param browser The WebdriverIO browser object.
+ * @param state The JSON definition of the new block.
+ * @param parentId The ID of the block to attach to. If undefined, the
+ *     new block is not attached.
+ * @param inputName The name of the input on the parent block to
+ *     attach to. If undefined, the new block is attached to the
+ *     parent's next connection.
+ * @returns A promise that resolves with the new block's ID.
+ */
+async function appendBlock(
+  browser: Browser,
+  state: Blockly.serialization.blocks.State,
+  parentId?: string,
+  inputName?: string,
+): Promise<string> {
+  return await browser.execute(
+    (state, parentId, inputName) => {
+      const workspace = Blockly.getMainWorkspace();
+      if (!workspace) throw new Error('workspace not found');
+
+      const block = Blockly.serialization.blocks.append(state, workspace);
+      if (!block) throw new Error('failed to create block from state');
+      if (!parentId) return block.id;
+
+      try {
+        const parent = workspace.getBlockById(parentId);
+        if (!parent) throw new Error(`parent block not found: ${parentId}`);
+
+        let parentConnection;
+        let childConnection;
+
+        if (inputName) {
+          parentConnection = parent.getInput(inputName)?.connection;
+          if (!parentConnection) {
+            throw new Error(`input ${inputName} not found on parent`);
+          }
+          childConnection = block.outputConnection ?? block.previousConnection;
+        } else {
+          parentConnection = parent.nextConnection;
+          if (!parentConnection) {
+            throw new Error('parent has no next connection');
+          }
+          childConnection = block.previousConnection;
+        }
+        if (!childConnection) throw new Error('new block not compatible');
+        parentConnection.connect(childConnection);
+        return block.id;
+      } catch (e) {
+        // If anything goes wrong during attachment, clean up the new block.
+        block.dispose();
+        throw e;
+      }
+    },
+    state,
+    parentId,
+    inputName,
+  );
+}
