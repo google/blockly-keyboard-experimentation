@@ -1002,28 +1002,6 @@ const moveValueTestBlocks = {
             'block': {
               'type': 'text_print',
               'id': 'print0',
-              'inputs': {
-                'TEXT': {
-                  'block': {
-                    'type': 'text_changeCase',
-                    'id': 'complex_mover',
-                    'fields': {
-                      'CASE': 'TITLECASE',
-                    },
-                    'inputs': {
-                      'TEXT': {
-                        'block': {
-                          'type': 'text',
-                          'id': 'simple_mover',
-                          'fields': {
-                            'TEXT': 'simple mover',
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
               'next': {
                 'block': {
                   'type': 'text_print',

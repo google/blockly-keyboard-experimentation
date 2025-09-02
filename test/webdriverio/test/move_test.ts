@@ -346,15 +346,18 @@ suite(`Value expression move tests`, function () {
   // timeouts if when non-zero PAUSE_TIME is used to watch tests) run.
   this.timeout(PAUSE_TIME ? 0 : 10000);
 
-  /** ID of a simple reporter (a value block with no inputs). */
-  const BLOCK_SIMPLE = 'simple_mover';
-
+  /** Serialized simple reporter value block with no inputs. */
+  const VALUE_SIMPLE = {
+    type: 'text',
+    id: 'simple_mover',
+    fields: {TEXT: 'simple mover'},
+  };
   /**
-   * Expected connection candidates when moving BLOCK_SIMPLE, after
+   * Expected connection candidates when moving VALUE_SIMPLE, after
    * pressing ArrowRight n times.
    */
   const EXPECTED_SIMPLE_RIGHT = [
-    {id: 'complex_mover', index: 1, ownIndex: 0}, // Starting location.
+    {id: 'print0', index: 2, ownIndex: 0}, // Print block; starting location.
     {id: 'print1', index: 2, ownIndex: 0}, // Print block with no shadow.
     {id: 'print2', index: 2, ownIndex: 0}, // Print block with shadow.
     // Skip draw_emoji block as it has no value inputs.
@@ -366,7 +369,6 @@ suite(`Value expression move tests`, function () {
     {id: 'text_join2', index: 1, ownIndex: 0}, // Join block ADD0 input.
     {id: 'text_join2', index: 2, ownIndex: 0}, // Join block ADD1 input.
     // Skip unconnected text block as it has no inputs.
-    {id: 'print0', index: 2, ownIndex: 0}, // Print block having complex_mover.
   ];
   /**
    * Expected connection candidates when moving BLOCK_SIMPLE, after
@@ -376,44 +378,34 @@ suite(`Value expression move tests`, function () {
     EXPECTED_SIMPLE_RIGHT.slice(1).reverse(),
   );
 
-  /** ID of a unary expression block (block with one value input + output) */
-  const BLOCK_COMPLEX = 'complex_mover';
+  /**
+   * Serialized row of value blocks with no free inputs; should behave
+   * as VALUE_SIMPLE does.
+   */
+  const VALUE_ROW = {
+    type: 'text_changeCase',
+    id: 'row_mover',
+    fields: {CASE: 'TITLECASE'},
+    inputs: {
+      TEXT: {block: VALUE_SIMPLE},
+    },
+  };
+  // EXPECTED_ROW_RIGHT will be same as EXPECTED_SIMPLE_RIGHT (and
+  // same for ..._LEFT).
 
+  /** Serialized value block with a single free (external) input. */
+  const VALUE_UNARY = {
+    type: 'text_changeCase',
+    id: 'unary_mover',
+    fields: {CASE: 'TITLECASE'},
+  };
   /**
-   * Expected connection candidates when moving row consisting of
-   * BLOCK_COMPLEX, with a block (in this case BLOCK_SIMPLE) attached
-   * to its input, after pressing ArrowRight n times.
+   * Expected connection candidates when moving VALUE_UNARY after
+   * pressing ArrowRight n times.
    */
-  const EXPECTED_ROW_RIGHT = EXPECTED_SIMPLE_RIGHT.slice();
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  EXPECTED_ROW_RIGHT[0] = EXPECTED_ROW_RIGHT.pop()!;
-  /**
-   * Expected connection candidates when moving row consisting of
-   * BLOCK_COMPLEX, with a block (in this case BLOCK_SIMPLE) attached
-   * to its input, after pressing ArrowLeft n times.
-   */
-  const EXPECTED_ROW_LEFT = EXPECTED_ROW_RIGHT.slice(0, 1).concat(
-    EXPECTED_ROW_RIGHT.slice(1).reverse(),
-  );
-
-  /**
-   * Expected connection candidates when moving row consisting of
-   * BLOCK_COMPLEX on its own after pressing ArrowRight n times.
-   */
-  const EXPECTED_UNARY_RIGHT = [
-    {id: 'print0', index: 2, ownIndex: 0}, // Starting location.
-    {id: 'print1', index: 2, ownIndex: 0}, // Print block with no shadow.
-    {id: 'print2', index: 2, ownIndex: 0}, // Print block with shadow.
-    // Skip draw_emoji block as it has no value inputs.
-    {id: 'print3', index: 2, ownIndex: 0}, // Replacing  join expression.
-    {id: 'text_join1', index: 1, ownIndex: 0}, // Join block ADD0 input.
-    {id: 'text_join1', index: 2, ownIndex: 0}, // Join block ADD1 input.
-    // Skip controls_repeat_ext block's TIMES input as it is incompatible.
-    {id: 'print4', index: 2, ownIndex: 0}, // Replacing join expression.
-    {id: 'text_join2', index: 1, ownIndex: 0}, // Join block ADD0 input.
-    {id: 'text_join2', index: 2, ownIndex: 0}, // Join block ADD1 input.
+  const EXPECTED_UNARY_RIGHT = EXPECTED_SIMPLE_RIGHT.concat([
     {id: 'unattached', index: 0, ownIndex: 1}, // Unattached text to own input.
-  ];
+  ]);
   /**
    * Expected connection candidates when moving row consisting of
    * BLOCK_UNARY on its own after pressing ArrowLEFT n times.
@@ -438,40 +430,45 @@ suite(`Value expression move tests`, function () {
       });
 
       suite('Constrained moves of a simple reporter block', function () {
+        setup(async function () {
+          await appendBlock(this.browser, VALUE_SIMPLE, 'print0', 'TEXT');
+        });
         test(
           'moving right',
-          moveTest(BLOCK_SIMPLE, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
+          moveTest(VALUE_SIMPLE.id, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
         );
         test(
           'moving left',
-          moveTest(BLOCK_SIMPLE, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
+          moveTest(VALUE_SIMPLE.id, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
         );
       });
-      suite('Constrained moves of two blocks with no free inputs', function () {
+
+      suite('Constrained moves of row of value blocks', function () {
+        setup(async function () {
+          await appendBlock(this.browser, VALUE_ROW, 'print0', 'TEXT');
+        });
         test(
           'moving right',
-          moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_ROW_RIGHT),
+          moveTest(VALUE_ROW.id, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
         );
         test(
           'moving left',
-          moveTest(BLOCK_COMPLEX, Key.ArrowLeft, EXPECTED_ROW_LEFT),
+          moveTest(VALUE_ROW.id, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
         );
       });
+
       suite('Constrained moves of unary expression block', function () {
         setup(async function () {
-          // Delete block connected to complex_mover's input.
-          await focusOnBlock(this.browser, BLOCK_SIMPLE);
-          await sendKeyAndWait(this.browser, Key.Delete);
+          await appendBlock(this.browser, VALUE_UNARY, 'print0', 'TEXT');
         });
-
         // TODO(#709): Reenable test once crash bug is fixed.
         test.skip(
           'moving right',
-          moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_UNARY_RIGHT),
+          moveTest(VALUE_UNARY.id, Key.ArrowRight, EXPECTED_UNARY_RIGHT),
         );
         test(
           'moving left',
-          moveTest(BLOCK_COMPLEX, Key.ArrowLeft, EXPECTED_UNARY_LEFT),
+          moveTest(VALUE_UNARY.id, Key.ArrowLeft, EXPECTED_UNARY_LEFT),
         );
       });
     });
