@@ -357,18 +357,19 @@ suite(`Value expression move tests`, function () {
    * pressing ArrowRight n times.
    */
   const EXPECTED_SIMPLE_RIGHT = [
-    {id: 'print0', index: 2, ownIndex: 0}, // Print block; starting location.
+    {id: 'join0', index: 1, ownIndex: 0}, // Join block ADD0 input.
+    {id: 'join0', index: 2, ownIndex: 0}, // Join block ADD1 input.
     {id: 'print1', index: 2, ownIndex: 0}, // Print block with no shadow.
     {id: 'print2', index: 2, ownIndex: 0}, // Print block with shadow.
     // Skip draw_emoji block as it has no value inputs.
     {id: 'print3', index: 2, ownIndex: 0}, // Replacing  join expression.
-    {id: 'text_join1', index: 1, ownIndex: 0}, // Join block ADD0 input.
-    {id: 'text_join1', index: 2, ownIndex: 0}, // Join block ADD1 input.
+    {id: 'join1', index: 1, ownIndex: 0}, // Join block ADD0 input.
+    {id: 'join1', index: 2, ownIndex: 0}, // Join block ADD1 input.
     // Skip controls_repeat_ext block's TIMES input as it is incompatible.
     {id: 'print4', index: 2, ownIndex: 0}, // Replacing join expression.
-    {id: 'text_join2', index: 1, ownIndex: 0}, // Join block ADD0 input.
-    {id: 'text_join2', index: 2, ownIndex: 0}, // Join block ADD1 input.
-    // Skip unconnected text block as it has no inputs.
+    {id: 'join2', index: 1, ownIndex: 0}, // Join block ADD0 input.
+    {id: 'join2', index: 2, ownIndex: 0}, // Join block ADD1 input.
+    // Skip input of unattached join block.
   ];
   /**
    * Expected connection candidates when moving BLOCK_SIMPLE, after
@@ -404,7 +405,7 @@ suite(`Value expression move tests`, function () {
    * pressing ArrowRight n times.
    */
   const EXPECTED_UNARY_RIGHT = EXPECTED_SIMPLE_RIGHT.concat([
-    {id: 'unattached', index: 0, ownIndex: 1}, // Unattached text to own input.
+    {id: 'join0', index: 0, ownIndex: 1}, // Unattached block to own input.
   ]);
   /**
    * Expected connection candidates when moving row consisting of
@@ -431,7 +432,7 @@ suite(`Value expression move tests`, function () {
 
       suite('Constrained moves of a simple reporter block', function () {
         setup(async function () {
-          await appendBlock(this.browser, VALUE_SIMPLE, 'print0', 'TEXT');
+          await appendBlock(this.browser, VALUE_SIMPLE, 'join0', 'ADD0');
         });
         test(
           'moving right',
@@ -445,7 +446,7 @@ suite(`Value expression move tests`, function () {
 
       suite('Constrained moves of row of value blocks', function () {
         setup(async function () {
-          await appendBlock(this.browser, VALUE_ROW, 'print0', 'TEXT');
+          await appendBlock(this.browser, VALUE_ROW, 'join0', 'ADD0');
         });
         test(
           'moving right',
@@ -459,7 +460,7 @@ suite(`Value expression move tests`, function () {
 
       suite('Constrained moves of unary expression block', function () {
         setup(async function () {
-          await appendBlock(this.browser, VALUE_UNARY, 'print0', 'TEXT');
+          await appendBlock(this.browser, VALUE_UNARY, 'join0', 'ADD0');
         });
         // TODO(#709): Reenable test once crash bug is fixed.
         test.skip(
