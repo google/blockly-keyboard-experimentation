@@ -174,18 +174,18 @@ suite('Statement move tests', function () {
     await this.browser.pause(PAUSE_TIME);
   });
 
-  /** ID of a statement block with no inputs. */
-  const BLOCK_SIMPLE = 'simple_mover';
-
+  /** Serialized simple statement block with no statement inputs. */
+  const STATEMENT_SIMPLE = {
+    type: 'draw_emoji',
+    id: 'simple_mover',
+    fields: {emoji: '✨'},
+  };
   /**
-   * Expected connection candidates when moving BLOCK_SIMPLE, after
-   * pressing right (or down) arrow n times.
+   * Expected connection candidates when moving a block with no
+   * inputs, after pressing right (or down) arrow n times.
    */
   const EXPECTED_SIMPLE_RIGHT = [
     {id: 'p5_canvas', index: 1, ownIndex: 0}, // Next; starting location.
-    {id: 'complex_mover', index: 3, ownIndex: 0}, // "If" statement input.
-    {id: 'complex_mover', index: 4, ownIndex: 0}, // "Else" statement input.
-    {id: 'complex_mover', index: 1, ownIndex: 0}, // Next.
     {id: 'text_print', index: 0, ownIndex: 1}, // Previous.
     {id: 'text_print', index: 1, ownIndex: 0}, // Next.
     {id: 'controls_if', index: 3, ownIndex: 0}, // "If" statement input.
@@ -197,46 +197,52 @@ suite('Statement move tests', function () {
     {id: 'p5_draw', index: 0, ownIndex: 0}, // Statement input.
   ];
   /**
-   * Expected connection candidates when moving BLOCK_SIMPLE after
+   * Expected connection candidates when moving STATEMENT_SIMPLE after
    * pressing left (or up) arrow n times.
    */
   const EXPECTED_SIMPLE_LEFT = EXPECTED_SIMPLE_RIGHT.slice(0, 1).concat(
     EXPECTED_SIMPLE_RIGHT.slice(1).reverse(),
   );
 
-  suite('Constrained moves of simple stack block', function () {
+  suite('Constrained moves of simple statement block', function () {
+    setup(async function () {
+      await appendBlock(this.browser, STATEMENT_SIMPLE, 'p5_canvas');
+    });
     test(
       'moving right',
-      moveTest(BLOCK_SIMPLE, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
+      moveTest(STATEMENT_SIMPLE.id, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
     );
     test(
       'moving left',
-      moveTest(BLOCK_SIMPLE, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
+      moveTest(STATEMENT_SIMPLE.id, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
     );
     test(
       'moving down',
-      moveTest(BLOCK_SIMPLE, Key.ArrowDown, EXPECTED_SIMPLE_RIGHT),
+      moveTest(STATEMENT_SIMPLE.id, Key.ArrowDown, EXPECTED_SIMPLE_RIGHT),
     );
     test(
       'moving up',
-      moveTest(BLOCK_SIMPLE, Key.ArrowUp, EXPECTED_SIMPLE_LEFT),
+      moveTest(STATEMENT_SIMPLE.id, Key.ArrowUp, EXPECTED_SIMPLE_LEFT),
     );
   });
 
-  /** ID of a statement block with multiple statement inputs. */
-  const BLOCK_COMPLEX = 'complex_mover';
-
+  /** Serialized statement block with multiple statement inputs. */
+  const STATEMENT_COMPLEX = {
+    type: 'controls_if',
+    id: 'complex_mover',
+    extraState: {hasElse: true},
+  };
   /**
-   * Expected connection candidates when moving BLOCK_COMPLEX, after
+   * Expected connection candidates when moving STATEMENT_COMPLEX, after
    * pressing right (or down) arrow n times.
    */
   const EXPECTED_COMPLEX_RIGHT = [
     // TODO(#702): Due to a bug in KeyboardDragStrategy, certain
     // connection candidates that can be found using the mouse are not
-    // visited when doing a keyboard drag.  They appear in the list
-    // below, but commented out for now.
-    // is fixed.
-    {id: 'simple_mover', index: 1, ownIndex: 0}, // Next; starting location.
+    // visited when doing a keyboard move.  They appear in the list
+    // below, but commented out for now.  They should be uncommented
+    // when bug is fixed.
+    {id: 'p5_canvas', index: 1, ownIndex: 0}, // Next; starting location again.
     // {id: 'text_print', index: 0, ownIndex: 1}, // Previous to own next.
     {id: 'text_print', index: 0, ownIndex: 4}, // Previous to own else input.
     // {id: 'text_print', index: 0, ownIndex: 3}, // Previous to own if input.
@@ -248,10 +254,9 @@ suite('Statement move tests', function () {
     {id: 'controls_if', index: 6, ownIndex: 0}, // "Else" statement input.
     {id: 'controls_if', index: 1, ownIndex: 0}, // Next.
     {id: 'p5_draw', index: 0, ownIndex: 0}, // Statement input.
-    {id: 'p5_canvas', index: 1, ownIndex: 0}, // Next; starting location again.
   ];
   /**
-   * Expected connection candidates when moving BLOCK_COMPLEX after
+   * Expected connection candidates when moving STATEMENT_COMPLEX after
    * pressing left or up arrow n times.
    */
   const EXPECTED_COMPLEX_LEFT = EXPECTED_COMPLEX_RIGHT.slice(0, 1).concat(
@@ -259,21 +264,24 @@ suite('Statement move tests', function () {
   );
 
   suite('Constrained moves of stack block with statement inputs', function () {
+    setup(async function () {
+      await appendBlock(this.browser, STATEMENT_COMPLEX, 'p5_canvas');
+    });
     test(
       'moving right',
-      moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_COMPLEX_RIGHT),
+      moveTest(STATEMENT_COMPLEX.id, Key.ArrowRight, EXPECTED_COMPLEX_RIGHT),
     );
     test(
       'moving left',
-      moveTest(BLOCK_COMPLEX, Key.ArrowLeft, EXPECTED_COMPLEX_LEFT),
+      moveTest(STATEMENT_COMPLEX.id, Key.ArrowLeft, EXPECTED_COMPLEX_LEFT),
     );
     test(
       'moving down',
-      moveTest(BLOCK_COMPLEX, Key.ArrowDown, EXPECTED_COMPLEX_RIGHT),
+      moveTest(STATEMENT_COMPLEX.id, Key.ArrowDown, EXPECTED_COMPLEX_RIGHT),
     );
     test(
       'moving up',
-      moveTest(BLOCK_COMPLEX, Key.ArrowUp, EXPECTED_COMPLEX_LEFT),
+      moveTest(STATEMENT_COMPLEX.id, Key.ArrowUp, EXPECTED_COMPLEX_LEFT),
     );
   });
 

@@ -870,9 +870,10 @@ const moveStartTestBlocks = {
   },
 };
 
-// A bunch of statement blocks.  The blocks with IDs simple_mover and
-// complex_mover will be (constrained-)moved up, down, left and right
-// to verify that they visit all the expected candidate connections.
+// A bunch of statement blocks.  It is intended that statement blocks
+// to be moved can be attached to the next connection of p5_canvas,
+// and then be (constrained-)moved up, down, left and right to verify
+// that they visit all the expected candidate connections.
 const moveStatementTestBlocks = {
   'blocks': {
     'languageVersion': 0,
@@ -893,24 +894,6 @@ const moveStatementTestBlocks = {
               'fields': {
                 'WIDTH': 400,
                 'HEIGHT': 400,
-              },
-              'next': {
-                'block': {
-                  'type': 'draw_emoji',
-                  'id': 'simple_mover',
-                  'fields': {
-                    'emoji': '✨',
-                  },
-                  'next': {
-                    'block': {
-                      'type': 'controls_if',
-                      'id': 'complex_mover',
-                      'extraState': {
-                        'hasElse': true,
-                      },
-                    },
-                  },
-                },
               },
             },
           },
