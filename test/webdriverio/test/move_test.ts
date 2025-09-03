@@ -415,6 +415,32 @@ suite(`Value expression move tests`, function () {
     EXPECTED_UNARY_RIGHT.slice(1).reverse(),
   );
 
+  /** Serialized value block with a single free (external) input. */
+  const VALUE_COMPLEX = {
+    type: 'text_join',
+    id: 'complex_mover',
+  };
+  /**
+   * Expected connection candidates when moving VALUE_COMPLEX after
+   * pressing ArrowRight n times.
+   */
+  const EXPECTED_COMPLEX_RIGHT = EXPECTED_SIMPLE_RIGHT.concat([
+    // TODO(#702): Due to a bug in KeyboardDragStrategy, certain
+    // connection candidates that can be found using the mouse are not
+    // visited when doing a keyboard move.  They appear in the list
+    // below, but commented out for now.  They should be uncommented
+    // when bug is fixed.
+    {id: 'join0', index: 0, ownIndex: 2}, // Unattached block to own input.
+    // {id: 'join0', index: 0, ownIndex: 1}, // Unattached block to own input.
+  ]);
+  /**
+   * Expected connection candidates when moving row consisting of
+   * BLOCK_COMPLEX on its own after pressing ArrowLEFT n times.
+   */
+  const EXPECTED_COMPLEX_LEFT = EXPECTED_COMPLEX_RIGHT.slice(0, 1).concat(
+    EXPECTED_COMPLEX_RIGHT.slice(1).reverse(),
+  );
+
   for (const renderer of ['geras', 'thrasos', 'zelos']) {
     // TODO(#707): These tests fail when run using zelos, so for now
     // we skip entire suite.  Stop skipping suite when bug is fixed.
@@ -470,6 +496,20 @@ suite(`Value expression move tests`, function () {
         test(
           'moving left',
           moveTest(VALUE_UNARY.id, Key.ArrowLeft, EXPECTED_UNARY_LEFT),
+        );
+      });
+
+      suite('Constrained moves of a complex expression block', function () {
+        setup(async function () {
+          await appendBlock(this.browser, VALUE_COMPLEX, 'join0', 'ADD0');
+        });
+        test(
+          'moving right',
+          moveTest(VALUE_COMPLEX.id, Key.ArrowRight, EXPECTED_COMPLEX_RIGHT),
+        );
+        test(
+          'moving left',
+          moveTest(VALUE_COMPLEX.id, Key.ArrowLeft, EXPECTED_COMPLEX_LEFT),
         );
       });
     });
