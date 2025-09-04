@@ -174,18 +174,18 @@ suite('Statement move tests', function () {
     await this.browser.pause(PAUSE_TIME);
   });
 
-  /** ID of a statement block with no inputs. */
-  const BLOCK_SIMPLE = 'simple_mover';
-
+  /** Serialized simple statement block with no statement inputs. */
+  const STATEMENT_SIMPLE = {
+    type: 'draw_emoji',
+    id: 'simple_mover',
+    fields: {emoji: '✨'},
+  };
   /**
-   * Expected connection candidates when moving BLOCK_SIMPLE, after
-   * pressing right (or down) arrow n times.
+   * Expected connection candidates when moving a block with no
+   * inputs, after pressing right (or down) arrow n times.
    */
   const EXPECTED_SIMPLE_RIGHT = [
     {id: 'p5_canvas', index: 1, ownIndex: 0}, // Next; starting location.
-    {id: 'complex_mover', index: 3, ownIndex: 0}, // "If" statement input.
-    {id: 'complex_mover', index: 4, ownIndex: 0}, // "Else" statement input.
-    {id: 'complex_mover', index: 1, ownIndex: 0}, // Next.
     {id: 'text_print', index: 0, ownIndex: 1}, // Previous.
     {id: 'text_print', index: 1, ownIndex: 0}, // Next.
     {id: 'controls_if', index: 3, ownIndex: 0}, // "If" statement input.
@@ -197,46 +197,52 @@ suite('Statement move tests', function () {
     {id: 'p5_draw', index: 0, ownIndex: 0}, // Statement input.
   ];
   /**
-   * Expected connection candidates when moving BLOCK_SIMPLE after
+   * Expected connection candidates when moving STATEMENT_SIMPLE after
    * pressing left (or up) arrow n times.
    */
   const EXPECTED_SIMPLE_LEFT = EXPECTED_SIMPLE_RIGHT.slice(0, 1).concat(
     EXPECTED_SIMPLE_RIGHT.slice(1).reverse(),
   );
 
-  suite('Constrained moves of simple stack block', function () {
+  suite('Constrained moves of simple statement block', function () {
+    setup(async function () {
+      await appendBlock(this.browser, STATEMENT_SIMPLE, 'p5_canvas');
+    });
     test(
       'moving right',
-      moveTest(BLOCK_SIMPLE, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
+      moveTest(STATEMENT_SIMPLE.id, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
     );
     test(
       'moving left',
-      moveTest(BLOCK_SIMPLE, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
+      moveTest(STATEMENT_SIMPLE.id, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
     );
     test(
       'moving down',
-      moveTest(BLOCK_SIMPLE, Key.ArrowDown, EXPECTED_SIMPLE_RIGHT),
+      moveTest(STATEMENT_SIMPLE.id, Key.ArrowDown, EXPECTED_SIMPLE_RIGHT),
     );
     test(
       'moving up',
-      moveTest(BLOCK_SIMPLE, Key.ArrowUp, EXPECTED_SIMPLE_LEFT),
+      moveTest(STATEMENT_SIMPLE.id, Key.ArrowUp, EXPECTED_SIMPLE_LEFT),
     );
   });
 
-  /** ID of a statement block with multiple statement inputs. */
-  const BLOCK_COMPLEX = 'complex_mover';
-
+  /** Serialized statement block with multiple statement inputs. */
+  const STATEMENT_COMPLEX = {
+    type: 'controls_if',
+    id: 'complex_mover',
+    extraState: {hasElse: true},
+  };
   /**
-   * Expected connection candidates when moving BLOCK_COMPLEX, after
+   * Expected connection candidates when moving STATEMENT_COMPLEX, after
    * pressing right (or down) arrow n times.
    */
   const EXPECTED_COMPLEX_RIGHT = [
     // TODO(#702): Due to a bug in KeyboardDragStrategy, certain
     // connection candidates that can be found using the mouse are not
-    // visited when doing a keyboard drag.  They appear in the list
-    // below, but commented out for now.
-    // is fixed.
-    {id: 'simple_mover', index: 1, ownIndex: 0}, // Next; starting location.
+    // visited when doing a keyboard move.  They appear in the list
+    // below, but commented out for now.  They should be uncommented
+    // when bug is fixed.
+    {id: 'p5_canvas', index: 1, ownIndex: 0}, // Next; starting location again.
     // {id: 'text_print', index: 0, ownIndex: 1}, // Previous to own next.
     {id: 'text_print', index: 0, ownIndex: 4}, // Previous to own else input.
     // {id: 'text_print', index: 0, ownIndex: 3}, // Previous to own if input.
@@ -248,10 +254,9 @@ suite('Statement move tests', function () {
     {id: 'controls_if', index: 6, ownIndex: 0}, // "Else" statement input.
     {id: 'controls_if', index: 1, ownIndex: 0}, // Next.
     {id: 'p5_draw', index: 0, ownIndex: 0}, // Statement input.
-    {id: 'p5_canvas', index: 1, ownIndex: 0}, // Next; starting location again.
   ];
   /**
-   * Expected connection candidates when moving BLOCK_COMPLEX after
+   * Expected connection candidates when moving STATEMENT_COMPLEX after
    * pressing left or up arrow n times.
    */
   const EXPECTED_COMPLEX_LEFT = EXPECTED_COMPLEX_RIGHT.slice(0, 1).concat(
@@ -259,21 +264,24 @@ suite('Statement move tests', function () {
   );
 
   suite('Constrained moves of stack block with statement inputs', function () {
+    setup(async function () {
+      await appendBlock(this.browser, STATEMENT_COMPLEX, 'p5_canvas');
+    });
     test(
       'moving right',
-      moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_COMPLEX_RIGHT),
+      moveTest(STATEMENT_COMPLEX.id, Key.ArrowRight, EXPECTED_COMPLEX_RIGHT),
     );
     test(
       'moving left',
-      moveTest(BLOCK_COMPLEX, Key.ArrowLeft, EXPECTED_COMPLEX_LEFT),
+      moveTest(STATEMENT_COMPLEX.id, Key.ArrowLeft, EXPECTED_COMPLEX_LEFT),
     );
     test(
       'moving down',
-      moveTest(BLOCK_COMPLEX, Key.ArrowDown, EXPECTED_COMPLEX_RIGHT),
+      moveTest(STATEMENT_COMPLEX.id, Key.ArrowDown, EXPECTED_COMPLEX_RIGHT),
     );
     test(
       'moving up',
-      moveTest(BLOCK_COMPLEX, Key.ArrowUp, EXPECTED_COMPLEX_LEFT),
+      moveTest(STATEMENT_COMPLEX.id, Key.ArrowUp, EXPECTED_COMPLEX_LEFT),
     );
   });
 
@@ -338,27 +346,30 @@ suite(`Value expression move tests`, function () {
   // timeouts if when non-zero PAUSE_TIME is used to watch tests) run.
   this.timeout(PAUSE_TIME ? 0 : 10000);
 
-  /** ID of a simple reporter (a value block with no inputs). */
-  const BLOCK_SIMPLE = 'simple_mover';
-
+  /** Serialized simple reporter value block with no inputs. */
+  const VALUE_SIMPLE = {
+    type: 'text',
+    id: 'simple_mover',
+    fields: {TEXT: 'simple mover'},
+  };
   /**
-   * Expected connection candidates when moving BLOCK_SIMPLE, after
+   * Expected connection candidates when moving VALUE_SIMPLE, after
    * pressing ArrowRight n times.
    */
   const EXPECTED_SIMPLE_RIGHT = [
-    {id: 'complex_mover', index: 1, ownIndex: 0}, // Starting location.
+    {id: 'join0', index: 1, ownIndex: 0}, // Join block ADD0 input.
+    {id: 'join0', index: 2, ownIndex: 0}, // Join block ADD1 input.
     {id: 'print1', index: 2, ownIndex: 0}, // Print block with no shadow.
     {id: 'print2', index: 2, ownIndex: 0}, // Print block with shadow.
     // Skip draw_emoji block as it has no value inputs.
     {id: 'print3', index: 2, ownIndex: 0}, // Replacing  join expression.
-    {id: 'text_join1', index: 1, ownIndex: 0}, // Join block ADD0 input.
-    {id: 'text_join1', index: 2, ownIndex: 0}, // Join block ADD1 input.
+    {id: 'join1', index: 1, ownIndex: 0}, // Join block ADD0 input.
+    {id: 'join1', index: 2, ownIndex: 0}, // Join block ADD1 input.
     // Skip controls_repeat_ext block's TIMES input as it is incompatible.
     {id: 'print4', index: 2, ownIndex: 0}, // Replacing join expression.
-    {id: 'text_join2', index: 1, ownIndex: 0}, // Join block ADD0 input.
-    {id: 'text_join2', index: 2, ownIndex: 0}, // Join block ADD1 input.
-    // Skip unconnected text block as it has no inputs.
-    {id: 'print0', index: 2, ownIndex: 0}, // Print block having complex_mover.
+    {id: 'join2', index: 1, ownIndex: 0}, // Join block ADD0 input.
+    {id: 'join2', index: 2, ownIndex: 0}, // Join block ADD1 input.
+    // Skip input of unattached join block.
   ];
   /**
    * Expected connection candidates when moving BLOCK_SIMPLE, after
@@ -368,50 +379,66 @@ suite(`Value expression move tests`, function () {
     EXPECTED_SIMPLE_RIGHT.slice(1).reverse(),
   );
 
-  /** ID of a unary expression block (block with one value input + output) */
-  const BLOCK_COMPLEX = 'complex_mover';
+  /**
+   * Serialized row of value blocks with no free inputs; should behave
+   * as VALUE_SIMPLE does.
+   */
+  const VALUE_ROW = {
+    type: 'text_changeCase',
+    id: 'row_mover',
+    fields: {CASE: 'TITLECASE'},
+    inputs: {
+      TEXT: {block: VALUE_SIMPLE},
+    },
+  };
+  // EXPECTED_ROW_RIGHT will be same as EXPECTED_SIMPLE_RIGHT (and
+  // same for ..._LEFT).
 
+  /** Serialized value block with a single free (external) input. */
+  const VALUE_UNARY = {
+    type: 'text_changeCase',
+    id: 'unary_mover',
+    fields: {CASE: 'TITLECASE'},
+  };
   /**
-   * Expected connection candidates when moving row consisting of
-   * BLOCK_COMPLEX, with a block (in this case BLOCK_SIMPLE) attached
-   * to its input, after pressing ArrowRight n times.
+   * Expected connection candidates when moving VALUE_UNARY after
+   * pressing ArrowRight n times.
    */
-  const EXPECTED_ROW_RIGHT = EXPECTED_SIMPLE_RIGHT.slice();
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  EXPECTED_ROW_RIGHT[0] = EXPECTED_ROW_RIGHT.pop()!;
-  /**
-   * Expected connection candidates when moving row consisting of
-   * BLOCK_COMPLEX, with a block (in this case BLOCK_SIMPLE) attached
-   * to its input, after pressing ArrowLeft n times.
-   */
-  const EXPECTED_ROW_LEFT = EXPECTED_ROW_RIGHT.slice(0, 1).concat(
-    EXPECTED_ROW_RIGHT.slice(1).reverse(),
-  );
-
-  /**
-   * Expected connection candidates when moving row consisting of
-   * BLOCK_COMPLEX on its own after pressing ArrowRight n times.
-   */
-  const EXPECTED_UNARY_RIGHT = [
-    {id: 'print0', index: 2, ownIndex: 0}, // Starting location.
-    {id: 'print1', index: 2, ownIndex: 0}, // Print block with no shadow.
-    {id: 'print2', index: 2, ownIndex: 0}, // Print block with shadow.
-    // Skip draw_emoji block as it has no value inputs.
-    {id: 'print3', index: 2, ownIndex: 0}, // Replacing  join expression.
-    {id: 'text_join1', index: 1, ownIndex: 0}, // Join block ADD0 input.
-    {id: 'text_join1', index: 2, ownIndex: 0}, // Join block ADD1 input.
-    // Skip controls_repeat_ext block's TIMES input as it is incompatible.
-    {id: 'print4', index: 2, ownIndex: 0}, // Replacing join expression.
-    {id: 'text_join2', index: 1, ownIndex: 0}, // Join block ADD0 input.
-    {id: 'text_join2', index: 2, ownIndex: 0}, // Join block ADD1 input.
-    {id: 'unattached', index: 0, ownIndex: 1}, // Unattached text to own input.
-  ];
+  const EXPECTED_UNARY_RIGHT = EXPECTED_SIMPLE_RIGHT.concat([
+    {id: 'join0', index: 0, ownIndex: 1}, // Unattached block to own input.
+  ]);
   /**
    * Expected connection candidates when moving row consisting of
    * BLOCK_UNARY on its own after pressing ArrowLEFT n times.
    */
   const EXPECTED_UNARY_LEFT = EXPECTED_UNARY_RIGHT.slice(0, 1).concat(
     EXPECTED_UNARY_RIGHT.slice(1).reverse(),
+  );
+
+  /** Serialized value block with a single free (external) input. */
+  const VALUE_COMPLEX = {
+    type: 'text_join',
+    id: 'complex_mover',
+  };
+  /**
+   * Expected connection candidates when moving VALUE_COMPLEX after
+   * pressing ArrowRight n times.
+   */
+  const EXPECTED_COMPLEX_RIGHT = EXPECTED_SIMPLE_RIGHT.concat([
+    // TODO(#702): Due to a bug in KeyboardDragStrategy, certain
+    // connection candidates that can be found using the mouse are not
+    // visited when doing a keyboard move.  They appear in the list
+    // below, but commented out for now.  They should be uncommented
+    // when bug is fixed.
+    {id: 'join0', index: 0, ownIndex: 2}, // Unattached block to own input.
+    // {id: 'join0', index: 0, ownIndex: 1}, // Unattached block to own input.
+  ]);
+  /**
+   * Expected connection candidates when moving row consisting of
+   * BLOCK_COMPLEX on its own after pressing ArrowLEFT n times.
+   */
+  const EXPECTED_COMPLEX_LEFT = EXPECTED_COMPLEX_RIGHT.slice(0, 1).concat(
+    EXPECTED_COMPLEX_RIGHT.slice(1).reverse(),
   );
 
   for (const renderer of ['geras', 'thrasos', 'zelos']) {
@@ -430,40 +457,59 @@ suite(`Value expression move tests`, function () {
       });
 
       suite('Constrained moves of a simple reporter block', function () {
+        setup(async function () {
+          await appendBlock(this.browser, VALUE_SIMPLE, 'join0', 'ADD0');
+        });
         test(
           'moving right',
-          moveTest(BLOCK_SIMPLE, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
+          moveTest(VALUE_SIMPLE.id, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
         );
         test(
           'moving left',
-          moveTest(BLOCK_SIMPLE, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
+          moveTest(VALUE_SIMPLE.id, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
         );
       });
-      suite('Constrained moves of two blocks with no free inputs', function () {
+
+      suite('Constrained moves of row of value blocks', function () {
+        setup(async function () {
+          await appendBlock(this.browser, VALUE_ROW, 'join0', 'ADD0');
+        });
         test(
           'moving right',
-          moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_ROW_RIGHT),
+          moveTest(VALUE_ROW.id, Key.ArrowRight, EXPECTED_SIMPLE_RIGHT),
         );
         test(
           'moving left',
-          moveTest(BLOCK_COMPLEX, Key.ArrowLeft, EXPECTED_ROW_LEFT),
+          moveTest(VALUE_ROW.id, Key.ArrowLeft, EXPECTED_SIMPLE_LEFT),
         );
       });
+
       suite('Constrained moves of unary expression block', function () {
         setup(async function () {
-          // Delete block connected to complex_mover's input.
-          await focusOnBlock(this.browser, BLOCK_SIMPLE);
-          await sendKeyAndWait(this.browser, Key.Delete);
+          await appendBlock(this.browser, VALUE_UNARY, 'join0', 'ADD0');
         });
-
         // TODO(#709): Reenable test once crash bug is fixed.
         test.skip(
           'moving right',
-          moveTest(BLOCK_COMPLEX, Key.ArrowRight, EXPECTED_UNARY_RIGHT),
+          moveTest(VALUE_UNARY.id, Key.ArrowRight, EXPECTED_UNARY_RIGHT),
         );
         test(
           'moving left',
-          moveTest(BLOCK_COMPLEX, Key.ArrowLeft, EXPECTED_UNARY_LEFT),
+          moveTest(VALUE_UNARY.id, Key.ArrowLeft, EXPECTED_UNARY_LEFT),
+        );
+      });
+
+      suite('Constrained moves of a complex expression block', function () {
+        setup(async function () {
+          await appendBlock(this.browser, VALUE_COMPLEX, 'join0', 'ADD0');
+        });
+        test(
+          'moving right',
+          moveTest(VALUE_COMPLEX.id, Key.ArrowRight, EXPECTED_COMPLEX_RIGHT),
+        );
+        test(
+          'moving left',
+          moveTest(VALUE_COMPLEX.id, Key.ArrowLeft, EXPECTED_COMPLEX_LEFT),
         );
       });
     });
@@ -641,4 +687,67 @@ function getConnectionCandidate(
     const ownIndex = ownConnections.indexOf(candidate.local);
     return {id: neighbourBlock.id, index, ownIndex};
   });
+}
+
+/**
+ * Create a new block from serialised state (parsed JSON) and
+ * optionally attach it to an existing block on the workspace.
+ *
+ * @param browser The WebdriverIO browser object.
+ * @param state The JSON definition of the new block.
+ * @param parentId The ID of the block to attach to. If undefined, the
+ *     new block is not attached.
+ * @param inputName The name of the input on the parent block to
+ *     attach to. If undefined, the new block is attached to the
+ *     parent's next connection.
+ * @returns A promise that resolves with the new block's ID.
+ */
+async function appendBlock(
+  browser: Browser,
+  state: Blockly.serialization.blocks.State,
+  parentId?: string,
+  inputName?: string,
+): Promise<string> {
+  return await browser.execute(
+    (state, parentId, inputName) => {
+      const workspace = Blockly.getMainWorkspace();
+      if (!workspace) throw new Error('workspace not found');
+
+      const block = Blockly.serialization.blocks.append(state, workspace);
+      if (!block) throw new Error('failed to create block from state');
+      if (!parentId) return block.id;
+
+      try {
+        const parent = workspace.getBlockById(parentId);
+        if (!parent) throw new Error(`parent block not found: ${parentId}`);
+
+        let parentConnection;
+        let childConnection;
+
+        if (inputName) {
+          parentConnection = parent.getInput(inputName)?.connection;
+          if (!parentConnection) {
+            throw new Error(`input ${inputName} not found on parent`);
+          }
+          childConnection = block.outputConnection ?? block.previousConnection;
+        } else {
+          parentConnection = parent.nextConnection;
+          if (!parentConnection) {
+            throw new Error('parent has no next connection');
+          }
+          childConnection = block.previousConnection;
+        }
+        if (!childConnection) throw new Error('new block not compatible');
+        parentConnection.connect(childConnection);
+        return block.id;
+      } catch (e) {
+        // If anything goes wrong during attachment, clean up the new block.
+        block.dispose();
+        throw e;
+      }
+    },
+    state,
+    parentId,
+    inputName,
+  );
 }

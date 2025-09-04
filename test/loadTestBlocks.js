@@ -870,9 +870,10 @@ const moveStartTestBlocks = {
   },
 };
 
-// A bunch of statement blocks.  The blocks with IDs simple_mover and
-// complex_mover will be (constrained-)moved up, down, left and right
-// to verify that they visit all the expected candidate connections.
+// A bunch of statement blocks.  It is intended that statement blocks
+// to be moved can be attached to the next connection of p5_canvas,
+// and then be (constrained-)moved up, down, left and right to verify
+// that they visit all the expected candidate connections.
 const moveStatementTestBlocks = {
   'blocks': {
     'languageVersion': 0,
@@ -893,24 +894,6 @@ const moveStatementTestBlocks = {
               'fields': {
                 'WIDTH': 400,
                 'HEIGHT': 400,
-              },
-              'next': {
-                'block': {
-                  'type': 'draw_emoji',
-                  'id': 'simple_mover',
-                  'fields': {
-                    'emoji': '✨',
-                  },
-                  'next': {
-                    'block': {
-                      'type': 'controls_if',
-                      'id': 'complex_mover',
-                      'extraState': {
-                        'hasElse': true,
-                      },
-                    },
-                  },
-                },
               },
             },
           },
@@ -1000,123 +983,92 @@ const moveValueTestBlocks = {
         },
       },
       {
-        'type': 'text',
-        'id': 'unattached',
+        'type': 'text_join',
+        'id': 'join0',
         'x': 75,
         'y': 200,
-        'fields': {
-          'TEXT': 'unattached value',
-        },
       },
       {
         'type': 'p5_draw',
         'id': 'p5_draw',
         'x': 75,
-        'y': 260,
+        'y': 300,
         'deletable': false,
         'inputs': {
           'STATEMENTS': {
             'block': {
               'type': 'text_print',
-              'id': 'print0',
-              'inputs': {
-                'TEXT': {
-                  'block': {
-                    'type': 'text_changeCase',
-                    'id': 'complex_mover',
-                    'fields': {
-                      'CASE': 'TITLECASE',
-                    },
-                    'inputs': {
-                      'TEXT': {
-                        'block': {
-                          'type': 'text',
-                          'id': 'simple_mover',
-                          'fields': {
-                            'TEXT': 'simple mover',
-                          },
+              'id': 'print1',
+              'next': {
+                'block': {
+                  'type': 'text_print',
+                  'id': 'print2',
+                  'inputs': {
+                    'TEXT': {
+                      'shadow': {
+                        'type': 'text',
+                        'id': 'shadow_print2',
+                        'fields': {
+                          'TEXT': 'shadow',
                         },
                       },
                     },
                   },
-                },
-              },
-              'next': {
-                'block': {
-                  'type': 'text_print',
-                  'id': 'print1',
                   'next': {
                     'block': {
-                      'type': 'text_print',
-                      'id': 'print2',
-                      'inputs': {
-                        'TEXT': {
-                          'shadow': {
-                            'type': 'text',
-                            'id': 'shadow_print2',
-                            'fields': {
-                              'TEXT': 'shadow',
-                            },
-                          },
-                        },
+                      'type': 'draw_emoji',
+                      'id': 'draw_emoji',
+                      'fields': {
+                        'emoji': '🐻',
                       },
                       'next': {
                         'block': {
-                          'type': 'draw_emoji',
-                          'id': 'draw_emoji',
-                          'fields': {
-                            'emoji': '🐻',
-                          },
-                          'next': {
-                            'block': {
-                              'type': 'text_print',
-                              'id': 'print3',
-                              'inputs': {
-                                'TEXT': {
-                                  'block': {
-                                    'type': 'text_join',
-                                    'id': 'text_join1',
-                                    'inline': true,
-                                    'inputs': {
-                                      'ADD0': {
-                                        'shadow': {
-                                          'type': 'text',
-                                          'id': 'shadow_join',
-                                          'fields': {
-                                            'TEXT': 'inline',
-                                          },
-                                        },
+                          'type': 'text_print',
+                          'id': 'print3',
+                          'inputs': {
+                            'TEXT': {
+                              'block': {
+                                'type': 'text_join',
+                                'id': 'join1',
+                                'inline': true,
+                                'inputs': {
+                                  'ADD0': {
+                                    'shadow': {
+                                      'type': 'text',
+                                      'id': 'shadow_join',
+                                      'fields': {
+                                        'TEXT': 'inline',
                                       },
                                     },
                                   },
                                 },
                               },
-                              'next': {
-                                'block': {
-                                  'type': 'controls_repeat_ext',
-                                  'id': 'controls_repeat_ext',
-                                  'inputs': {
-                                    'TIMES': {
-                                      'shadow': {
-                                        'type': 'math_number',
-                                        'id': 'shadow_repeat',
-                                        'fields': {
-                                          'NUM': 1,
-                                        },
-                                      },
+                            },
+                          },
+                          'next': {
+                            'block': {
+                              'type': 'controls_repeat_ext',
+                              'id': 'controls_repeat_ext',
+                              'inputs': {
+                                'TIMES': {
+                                  'shadow': {
+                                    'type': 'math_number',
+                                    'id': 'shadow_repeat',
+                                    'fields': {
+                                      'NUM': 1,
                                     },
-                                    'DO': {
-                                      'block': {
-                                        'type': 'text_print',
-                                        'id': 'print4',
-                                        'inputs': {
-                                          'TEXT': {
-                                            'block': {
-                                              'type': 'text_join',
-                                              'id': 'text_join2',
-                                              'inline': false,
-                                            },
-                                          },
+                                  },
+                                },
+                                'DO': {
+                                  'block': {
+                                    'type': 'text_print',
+                                    'id': 'print4',
+                                    'inputs': {
+                                      'TEXT': {
+                                        'block': {
+                                          'type': 'text_join',
+                                          'id': 'join2',
+                                          'inline': false,
                                         },
                                       },
                                     },
