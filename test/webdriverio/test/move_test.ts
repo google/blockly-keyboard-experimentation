@@ -124,12 +124,17 @@ suite('Move start tests', function () {
 
       // Start move using context menu (using keyboard nav).
       await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
-      await keyDown(
-        this.browser,
-        (await contextMenuItems(this.browser)).findIndex(({text}) =>
-          text.includes('Move'),
-        ),
+
+      // Find how many times to press the down arrow
+      const index = (await contextMenuItems(this.browser)).findIndex(({text}) =>
+        text.includes('Move'),
       );
+      chai.assert.isAbove(
+        index,
+        -1,
+        'expected Move to appear in context menu items',
+      );
+      await keyDown(this.browser, index);
       await sendKeyAndWait(this.browser, Key.Return);
 
       // Check that the moving block has nothing connected it its
