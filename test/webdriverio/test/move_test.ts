@@ -45,12 +45,15 @@ suite('Move start tests', function () {
       // and block connected to selected block's next connection.
       const info = await getFocusedNeighbourInfo(this.browser);
 
-      chai.assert(info.parentId, 'selected block has no parent block');
+      chai.assert.exists(
+        info.parentId,
+        'selected block should have parent block',
+      );
       chai.assert(
         typeof info.parentIndex === 'number',
-        'parent connection index not found',
+        'parent connection index should exist and be a number',
       );
-      chai.assert(info.nextId, 'selected block has no next block');
+      chai.assert.exists(info.nextId, 'selected block should have next block');
 
       // Start move using keyboard shortcut.
       await sendKeyAndWait(this.browser, 'm');
@@ -59,12 +62,12 @@ suite('Move start tests', function () {
       // next/previous connections, and same thing connected to value
       // input.
       const newInfo = await getFocusedNeighbourInfo(this.browser);
-      chai.assert(
-        newInfo.parentId === null,
+      chai.assert.isNull(
+        newInfo.parentId,
         'moving block should have no parent block',
       );
-      chai.assert(
-        newInfo.nextId === null,
+      chai.assert.isNull(
+        newInfo.nextId,
         'moving block should have no next block',
       );
       chai.assert.strictEqual(
@@ -106,16 +109,21 @@ suite('Move start tests', function () {
       // and block connected to selected block's value input.
       const info = await getFocusedNeighbourInfo(this.browser);
 
-      chai.assert(info.parentId, 'selected block has no parent block');
+      chai.assert.exists(
+        info.parentId,
+        'selected block should have parent block',
+      );
       chai.assert(
         typeof info.parentIndex === 'number',
-        'parent connection index not found',
+        'parent connection index should exist and be a number',
       );
-      chai.assert(info.valueId, 'selected block has no child value block');
+      chai.assert.exists(
+        info.valueId,
+        'selected block should have child value block',
+      );
 
       // Start move using context menu (using keyboard nav).
       await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
-      await sendKeyAndWait(this.browser, 'm');
       await keyDown(
         this.browser,
         (await contextMenuItems(this.browser)).findIndex(({text}) =>
@@ -128,12 +136,12 @@ suite('Move start tests', function () {
       // next/previous connections, and same thing connected to value
       // input.
       const newInfo = await getFocusedNeighbourInfo(this.browser);
-      chai.assert(
-        newInfo.parentId === null,
+      chai.assert.isNull(
+        newInfo.parentId,
         'moving block should have no parent block',
       );
-      chai.assert(
-        newInfo.nextId === null,
+      chai.assert.isNull(
+        newInfo.nextId,
         'moving block should have no next block',
       );
       chai.assert.strictEqual(
