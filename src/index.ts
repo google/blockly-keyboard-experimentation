@@ -140,6 +140,17 @@ export class KeyboardNavigation {
   }
 
   /**
+   * Registers a default toolbox implementation that doesn't handle
+   * keydown events, since we now handle them in this plugin. If you
+   * use the default toolbox, call this function before calling
+   * `Blockly.inject`. If you use a custom toolbox, override the
+   * `onKeyDown_` method in your toolbox implementation to make it a no-op.
+   */
+  static registerNavigationDeferringToolbox() {
+    this.registerNavigationDeferringToolbox();
+  }
+
+  /**
    * Register CSS used by the plugin.
    * This is broken up into sections by purpose, with some notes about
    * where it should eventually live.
