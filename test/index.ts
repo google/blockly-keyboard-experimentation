@@ -97,15 +97,19 @@ async function createWorkspace(): Promise<Blockly.WorkspaceSvg> {
   KeyboardNavigation.registerKeyboardNavigationStyles();
   registerFlyoutCursor();
   registerNavigationDeferringToolbox();
+  registerRunCodeShortcut();
+  Blockly.ContextMenuItems.registerCommentOptions();
 
+  let navigation: KeyboardNavigation | null = null;
   const workspace = (
     await createPlayground(
       blocklyDiv,
       (blocklyDiv, options) => {
+        if (navigation) {
+          navigation.dispose();
+        }
         const ws = Blockly.inject(blocklyDiv, options);
-        Blockly.ContextMenuItems.registerCommentOptions();
-        new KeyboardNavigation(ws);
-        registerRunCodeShortcut();
+        navigation = new KeyboardNavigation(ws);
 
         // Disable blocks that aren't inside the setup or draw loops.
         ws.addChangeListener(Blockly.Events.disableOrphans);
