@@ -179,6 +179,7 @@ export class Mover {
             utils.KeyCodes.DOWN,
             utils.KeyCodes.ENTER,
             utils.KeyCodes.ESC,
+            utils.KeyCodes.M,
           ].includes(
             typeof keyCode === 'number'
               ? keyCode
