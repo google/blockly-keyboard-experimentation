@@ -1206,6 +1206,12 @@ const comments = {
   },
 };
 
+const emptyWorkspace = {
+  'blocks': {
+    'blocks': [],
+  },
+};
+
 /**
  * Loads saved state from local storage into the given workspace.
  * @param {Blockly.Workspace} workspace Blockly workspace to load into.
@@ -1222,6 +1228,7 @@ export const load = function (workspace, scenarioString) {
     navigationTestBlocks,
     simpleCircle,
     'sun': sunnyDay,
+    emptyWorkspace,
   };
   // Don't emit events during loading.
   Blockly.Events.disable();
