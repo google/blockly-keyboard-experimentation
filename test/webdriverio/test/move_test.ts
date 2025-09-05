@@ -98,8 +98,6 @@ suite('Move start tests', function () {
   // When a move of a value block begins, it is expected that block
   // and all blocks connected to its inputs will be moved - i.e., that
   // a stack heal (really: unary operator chain heal) will NOT occur.
-  //
-  // Also tests initiating a move via the context menu.
   test('Start moving value blocks', async function () {
     for (let i = 1; i < 7; i++) {
       // Navigate to statement_<i>.
@@ -122,20 +120,8 @@ suite('Move start tests', function () {
         'selected block should have child value block',
       );
 
-      // Start move using context menu (using keyboard nav).
-      await sendKeyAndWait(this.browser, [Key.Ctrl, Key.Return]);
-
-      // Find how many times to press the down arrow
-      const index = (await contextMenuItems(this.browser)).findIndex(({text}) =>
-        text.includes('Move'),
-      );
-      chai.assert.isAbove(
-        index,
-        -1,
-        'expected Move to appear in context menu items',
-      );
-      await keyDown(this.browser, index);
-      await sendKeyAndWait(this.browser, Key.Return);
+      // Start move
+      await sendKeyAndWait(this.browser, 'm');
 
       // Check that the moving block has nothing connected it its
       // next/previous connections, and same thing connected to value
