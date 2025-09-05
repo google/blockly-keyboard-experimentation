@@ -24,7 +24,7 @@ import {javascriptGenerator} from 'blockly/javascript';
 // @ts-expect-error No types in js file
 import {load} from './loadTestBlocks';
 import {runCode, registerRunCodeShortcut} from './runCode';
-import {addGUIControls, createPlayground} from '@blockly/dev-tools';
+import {createPlayground} from '@blockly/dev-tools';
 
 (window as unknown as {Blockly: typeof Blockly}).Blockly = Blockly;
 
