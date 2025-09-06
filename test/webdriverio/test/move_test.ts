@@ -15,7 +15,6 @@ import {
   testSetup,
   sendKeyAndWait,
   keyDown,
-  contextMenuItems,
 } from './test_setup.js';
 
 suite('Move start tests', function () {
