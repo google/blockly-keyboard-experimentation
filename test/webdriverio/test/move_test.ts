@@ -138,8 +138,7 @@ suite('Move start tests', function () {
       await sendKeyAndWait(this.browser, Key.Return);
 
       // Wait for the move icon to appear so we know we're in move mode.
-      const bubble = this.browser.$('.blocklyMoveIndicatorBubble');
-      await bubble.waitForExist();
+      await this.browser.$('.blocklyMoveIndicatorBubble').waitForExist();
 
       // Check that the moving block has nothing connected it its
       // next/previous connections, and same thing connected to value
