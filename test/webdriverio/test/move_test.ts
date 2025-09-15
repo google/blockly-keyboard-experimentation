@@ -692,7 +692,6 @@ function getConnectionCandidate(
     const dragStrategy =
       block.getDragStrategy() as Blockly.dragging.BlockDragStrategy;
     if (!dragStrategy) throw new Error('no drag strategy');
-    // @ts-expect-error connectionCandidate is private.
     const candidate = dragStrategy.connectionCandidate;
     if (!candidate) return null;
     const neighbourBlock = candidate.neighbour.getSourceBlock();
