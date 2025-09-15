@@ -54,6 +54,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       this.allConnections.push(
         ...topBlock
           .getDescendants(true)
+          .filter((block: BlockSvg) => !block.isShadow())
           .flatMap((block: BlockSvg) => block.getConnections_(false))
           .sort((a: RenderedConnection, b: RenderedConnection) => {
             let delta = a.y - b.y;
