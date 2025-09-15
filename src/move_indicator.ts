@@ -38,6 +38,7 @@ export class MoveIndicatorBubble
       {},
       workspace.getBubbleCanvas(),
     );
+    this.svgRoot.classList.add('blocklyMoveIndicatorBubble');
     const rtl = workspace.RTL;
     Blockly.utils.dom.createSvgElement(
       Blockly.utils.Svg.CIRCLE,

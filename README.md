@@ -73,6 +73,11 @@ import {KeyboardNavigation} from '@blockly/keyboard-navigation';
 // Must be done before calling Blockly.inject.
 KeyboardNavigation.registerKeyboardNavigationStyles();
 
+// Register the default toolbox. Only do this once per page-load.
+// Must be done before calling Blockly.inject.
+// See instructions below if you don't use the default toolbox.
+KeyboardNavigation.registerNavigationDeferringToolbox();
+
 // Inject Blockly.
 const workspace = Blockly.inject('blocklyDiv', {
   toolbox: toolboxCategories,
@@ -81,7 +86,7 @@ const workspace = Blockly.inject('blocklyDiv', {
 const keyboardNav = new KeyboardNavigation(workspace);
 ```
 
-## Add shortcuts to page
+### Add shortcuts to page
 
 In order to see the keyboard help popup when the user presses /, you need to add an empty div element to the hosting page that has the Blockly div element with the id "shortcuts". The plugin will take care of layout and formatting.
 
@@ -93,7 +98,20 @@ In order to see the keyboard help popup when the user presses /, you need to add
 ...
 ```
 
-### Usage with cross-tab-copy-paste plugin
+### Use with custom Toolbox implementation
+
+If you supply your own subclass of `Toolbox`, you need to override the `onKeyDown_` method to make it a no-op. The base class has its own keyboard navigation built-in that you need to disable.
+
+```js
+class YourCustomToolbox extends Blockly.Toolbox {
+  protected override onKeyDown_(e: KeyboardEvent) {
+    // No-op, prevent keyboard handling by superclass in order to defer to
+    // global keyboard navigation.
+  }
+}
+```
+
+### Use with cross-tab-copy-paste plugin
 
 This plugin adds context menu items for copying & pasting. It also adds feedback to copying & pasting as toasts that are shown to the user upon successful copy or cut. It is compatible with the `@blockly/plugin-cross-tab-copy-paste` by following these steps:
 

@@ -18,10 +18,10 @@ import {
 import * as chai from 'chai';
 
 suite('Styling test', function () {
-  // Setting timeout to unlimited as these tests take longer time to run
-  this.timeout(0);
+  // Disable timeouts when non-zero PAUSE_TIME is used to watch tests run.
+  if (PAUSE_TIME) this.timeout(0);
 
-  // Clear the workspace and load start blocks
+  // Clear the workspace and load start blocks.
   setup(async function () {
     this.browser = await testSetup(testFileLocations.BASE);
     await this.browser.pause(PAUSE_TIME);
@@ -81,7 +81,6 @@ suite('Styling test', function () {
   });
 
   test('Workspace has only active tree style when move is in progress', async function () {
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'set_background_color_1');
     // Moves block to drag layer which requires different selectors.
     await sendKeyAndWait(this.browser, 'm');
@@ -91,7 +90,6 @@ suite('Styling test', function () {
   });
 
   test('Workspace has only active tree style when widget has focus', async function () {
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'create_canvas_1');
     // Move to field.
     await keyRight(this.browser);
@@ -103,7 +101,6 @@ suite('Styling test', function () {
   });
 
   test('Workspace has only active tree style when dropdown has focus', async function () {
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'set_background_color_1');
     // Move to color block.
     await keyRight(this.browser);

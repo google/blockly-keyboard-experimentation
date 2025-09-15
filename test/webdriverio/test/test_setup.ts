@@ -11,9 +11,9 @@
  * This file is to be used in the suiteSetup for any automated fuctional test.
  *
  * Note: In this file many functions return browser elements that can
- * be clicked or otherwise interacted with through Selenium WebDriver. These
+ * be clicked or otherwise interacted with through WebdriverIO. These
  * elements are not the raw HTML and SVG elements on the page; they are
- * identifiers that Selenium can use to find those elements.
+ * identifiers that WebdriverIO can use to find those elements.
  */
 
 import * as Blockly from 'blockly';
@@ -27,16 +27,30 @@ import {fileURLToPath} from 'url';
 let driver: webdriverio.Browser | null = null;
 
 /**
- * The default amount of time to wait during a test. Increase this to make
- * tests easier to watch; decrease it to make tests run faster.
+ * The default amount of time to wait during a test, in ms.  Increase
+ * this to make tests easier to watch; decrease it to make tests run
+ * faster.
+ *
+ * The _test.js files in this directory are set up to disable timeouts
+ * automatically when PAUSE_TIME is set to a nonzero value via
+ *
+ *     if (PAUSE_TIME) this.timeout(0);
+ *
+ * at the top of each suite.
+ *
+ * Tests should pass reliably even with this set to zero; use one of
+ * the browser.wait* functions if you need your test to wait for
+ * something to happen after sending input.
  */
-export const PAUSE_TIME = 50;
+export const PAUSE_TIME = 0;
 
 /**
- * Start up the test page. This should only be done once, to avoid
- * constantly popping browser windows open and closed.
+ * Start up WebdriverIO and load the test page. This should only be
+ * done once, to avoid constantly popping browser windows open and
+ * closed.
  *
- * @returns A Promise that resolves to a webdriverIO browser that tests can manipulate.
+ * @returns A Promise that resolves to a WebdriverIO browser that
+ *     tests can manipulate.
  */
 export async function driverSetup(): Promise<webdriverio.Browser> {
   const options = {
@@ -68,14 +82,14 @@ export async function driverSetup(): Promise<webdriverio.Browser> {
     // https://github.com/google/blockly/issues/5345 for details.
     options.capabilities['goog:chromeOptions'].args.push('--disable-gpu');
   }
-  // Use Selenium to bring up the page
+  // Use webdriver to bring up the page
   console.log('Starting webdriverio...');
   driver = await webdriverio.remote(options);
   return driver;
 }
 
 /**
- * End the webdriverIO session.
+ * End the WebdriverIO session.
  *
  * @return A Promise that resolves after the actions have been completed.
  */
@@ -90,7 +104,8 @@ export async function driverTeardown() {
  *
  * @param playgroundUrl The URL to open for the test, which should be
  *     a Blockly playground with a workspace.
- * @returns A Promise that resolves to a webdriverIO browser that tests can manipulate.
+ * @returns A Promise that resolves to a WebdriverIO browser that
+ *     tests can manipulate.
  */
 export async function testSetup(
   playgroundUrl: string,
@@ -116,13 +131,11 @@ export async function testSetup(
  * @returns posix path
  */
 function posixPath(target: string): string {
-  const result = target.split(path.sep).join(path.posix.sep);
-  console.log(result);
-  return result;
+  return target.split(path.sep).join(path.posix.sep);
 }
 
 // Relative to dist folder for TS build
-const createTestUrl = (options?: URLSearchParams) => {
+export const createTestUrl = (options?: URLSearchParams) => {
   const dirname = path.dirname(fileURLToPath(import.meta.url));
   const base = new URL(
     `file://${posixPath(path.join(dirname, '..', '..', 'build', 'index.html'))}`,
@@ -138,8 +151,14 @@ export const testFileLocations = {
     new URLSearchParams({scenario: 'navigationTestBlocks'}),
   ),
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  MOVE_TEST_BLOCKS: createTestUrl(
-    new URLSearchParams({scenario: 'moveTestBlocks'}),
+  MORE_BLOCKS: createTestUrl(new URLSearchParams({scenario: 'moreBlocks'})),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  MOVE_START_TEST_BLOCKS: createTestUrl(
+    new URLSearchParams({scenario: 'moveStartTestBlocks'}),
+  ),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  MOVE_STATEMENT_TEST_BLOCKS: createTestUrl(
+    new URLSearchParams({scenario: 'moveStatementTestBlocks'}),
   ),
   COMMENTS: createTestUrl(new URLSearchParams({scenario: 'comments'})),
   // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -173,7 +192,7 @@ export async function focusWorkspace(browser: WebdriverIO.Browser) {
   const workspaceElement = await browser.$(
     '#blocklyDiv > div > svg.blocklySvg > g',
   );
-  await workspaceElement.click();
+  await workspaceElement.click({x: 100});
 }
 
 /**
@@ -440,8 +459,14 @@ export async function tabNavigateToWorkspace(
   hasToolbox = true,
   hasFlyout = true,
 ) {
-  // Navigate past the initial pre-injection focusable div element.
-  await tabNavigateForward(browser);
+  // Move focus to initial pre-injection focusable div element.
+  //
+  // Ideally we'd just reset focus state to the state it is in when
+  // the document initially loads (and then send one tab), but alas
+  // there's no straightforward way to do that; see
+  // https://stackoverflow.com/q/51518855/4969945
+  await browser.execute(() => document.getElementById('focusableDiv')?.focus());
+  // Navigate to workspace.
   if (hasToolbox) await tabNavigateForward(browser);
   if (hasFlyout) await tabNavigateForward(browser);
   await tabNavigateForward(browser); // Tab to the workspace itself.
@@ -531,9 +556,17 @@ export async function sendKeyAndWait(
   keys: string | string[],
   times = 1,
 ) {
-  for (let i = 0; i < times; i++) {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore: Unintentional comparison error
+  if (PAUSE_TIME === 0) {
+    // Send all keys in one call if no pauses needed.
+    keys = Array(times).fill(keys).flat();
     await browser.keys(keys);
-    await browser.pause(PAUSE_TIME);
+  } else {
+    for (let i = 0; i < times; i++) {
+      await browser.keys(keys);
+      await browser.pause(PAUSE_TIME);
+    }
   }
 }
 
@@ -552,7 +585,7 @@ export async function isDragging(
 }
 
 /**
- * Returns the result of the specificied action precondition.
+ * Returns the result of the specified action precondition.
  *
  * @param browser The active WebdriverIO Browser object.
  * @param action The action to check the precondition for.
@@ -679,7 +712,7 @@ export async function clickBlock(
     findableId,
   );
 
-  // In the test context, get the Webdriverio Element that we've identified.
+  // In the test context, get the WebdriverIO Element that we've identified.
   const elem = await browser.$(`#${findableId}`);
 
   await elem.click(clickOptions);
@@ -688,4 +721,18 @@ export async function clickBlock(
   await browser.execute((elemId) => {
     document.getElementById(elemId)?.removeAttribute('id');
   }, findableId);
+}
+
+/**
+ * Right-clicks on a block with the provided type in the flyout.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param blockType The name of the type block to right click on.
+ */
+export async function rightClickOnFlyoutBlockType(
+  browser: WebdriverIO.Browser,
+  blockType: string,
+) {
+  const elem = await browser.$(`.blocklyFlyout .${blockType}`);
+  await elem.click({button: 'right'});
 }

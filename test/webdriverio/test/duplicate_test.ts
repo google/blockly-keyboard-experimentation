@@ -14,13 +14,14 @@ import {
   tabNavigateToWorkspace,
   testFileLocations,
   testSetup,
+  sendKeyAndWait,
 } from './test_setup.js';
 
 suite('Duplicate test', function () {
-  // Setting timeout to unlimited as these tests take longer time to run
-  this.timeout(0);
+  // Disable timeouts when non-zero PAUSE_TIME is used to watch tests run.
+  if (PAUSE_TIME) this.timeout(0);
 
-  // Clear the workspace and load start blocks
+  // Clear the workspace and load start blocks.
   setup(async function () {
     this.browser = await testSetup(testFileLocations.BASE);
     await this.browser.pause(PAUSE_TIME);
@@ -28,12 +29,10 @@ suite('Duplicate test', function () {
 
   test('Duplicate block', async function () {
     // Navigate to draw_circle_1.
-    await tabNavigateToWorkspace(this.browser);
     await focusOnBlock(this.browser, 'draw_circle_1');
 
     // Duplicate
-    await this.browser.keys('d');
-    await this.browser.pause(PAUSE_TIME);
+    await sendKeyAndWait(this.browser, 'd');
 
     // Check a different block of the same type has focus.
     chai.assert.notEqual(
@@ -65,7 +64,7 @@ suite('Duplicate test', function () {
     await this.browser.pause(PAUSE_TIME);
 
     // Duplicate.
-    await this.browser.keys('d');
+    await sendKeyAndWait(this.browser, 'd');
 
     // Assert we have two comments with the same text.
     const commentTexts = await this.browser.execute(() =>
