@@ -24,7 +24,6 @@ import {javascriptGenerator} from 'blockly/javascript';
 // @ts-expect-error No types in js file
 import {load} from './loadTestBlocks';
 import {runCode, registerRunCodeShortcut} from './runCode';
-import {createPlayground} from '@blockly/dev-tools';
 
 (window as unknown as {Blockly: typeof Blockly}).Blockly = Blockly;
 
@@ -81,7 +80,7 @@ function getOptions() {
  *
  * @returns The created workspace.
  */
-async function createWorkspace(): Promise<Blockly.WorkspaceSvg> {
+function createWorkspace(): Blockly.WorkspaceSvg {
   const {scenario, renderer, toolbox} = getOptions();
 
   const injectOptions = {
@@ -97,30 +96,17 @@ async function createWorkspace(): Promise<Blockly.WorkspaceSvg> {
   KeyboardNavigation.registerKeyboardNavigationStyles();
   registerFlyoutCursor();
   registerNavigationDeferringToolbox();
-  registerRunCodeShortcut();
+  const workspace = Blockly.inject(blocklyDiv, injectOptions);
+
   Blockly.ContextMenuItems.registerCommentOptions();
+  new KeyboardNavigation(workspace);
+  registerRunCodeShortcut();
 
-  let navigation: KeyboardNavigation | null = null;
-  const workspace = (
-    await createPlayground(
-      blocklyDiv,
-      (blocklyDiv, options) => {
-        if (navigation) {
-          navigation.dispose();
-        }
-        const ws = Blockly.inject(blocklyDiv, options);
-        navigation = new KeyboardNavigation(ws);
+  // Disable blocks that aren't inside the setup or draw loops.
+  workspace.addChangeListener(Blockly.Events.disableOrphans);
 
-        // Disable blocks that aren't inside the setup or draw loops.
-        ws.addChangeListener(Blockly.Events.disableOrphans);
-
-        load(ws, scenario);
-        runCode();
-        return ws;
-      },
-      injectOptions,
-    )
-  ).getWorkspace();
+  load(workspace, scenario);
+  runCode();
 
   return workspace;
 }
@@ -138,9 +124,9 @@ function addP5() {
   javascriptGenerator.addReservedWords('sketch');
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
   addP5();
-  await createWorkspace();
+  createWorkspace();
   document.getElementById('run')?.addEventListener('click', runCode);
   // Add Blockly to the global scope so that test code can access it to
   // verify state after keypresses.
