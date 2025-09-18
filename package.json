@@ -51,7 +51,6 @@
   ],
   "devDependencies": {
     "@blockly/dev-scripts": "^4.0.8",
-    "@blockly/dev-tools": "^9.0.2",
     "@blockly/field-colour": "^6.0.2",
     "@eslint/eslintrc": "^2.1.2",
     "@eslint/js": "^8.49.0",
