@@ -332,14 +332,15 @@ export class EnterAction {
       // @ts-expect-error private field access
       workspace.flyoutButtonCallbacks;
 
-    const info = button.info;
-    if ('callbackkey' in info) {
-      const buttonCallback = flyoutButtonCallbacks.get(info.callbackkey);
-      if (!buttonCallback) {
-        throw new Error('No callback function found for flyout button.');
-      }
-      buttonCallback(button);
+    // TODO: Remove cast once blockly 12.4.0 is the minimum version of Blockly required.
+    // button.callbackKey is private until that version.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const callbackKey = (button as any).callbackKey;
+    const buttonCallback = flyoutButtonCallbacks.get(callbackKey);
+    if (!buttonCallback) {
+      throw new Error('No callback function found for flyout button.');
     }
+    buttonCallback(button);
   }
 
   /**
