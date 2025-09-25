@@ -15,13 +15,16 @@
     "prepublishOnly": "npm login --registry https://wombat-dressing-room.appspot.com",
     "start": "blockly-scripts start",
     "test": "npm run test:mocha && npm run test:wdio",
+    "test:ci": "npm run test:mocha && npm run test:wdio:ci",
     "test:mocha": "blockly-scripts test",
     "test:wdio": "npm run wdio:clean && npm run wdio:run",
+    "test:wdio:ci": "npm run wdio:clean && npm run wdio:run:ci",
     "wdio:build": "npm run wdio:build:app && npm run wdio:build:tests",
     "wdio:build:app": "cd test/webdriverio && webpack",
     "wdio:build:tests": "tsc -p ./test/webdriverio/test/tsconfig.json",
     "wdio:clean": "cd test/webdriverio/test && rm -rf dist",
     "wdio:run": "npm run wdio:build && cd test/webdriverio/test && npx mocha dist"
+    "wdio:run:ci": "npm run wdio:build && cd test/webdriverio/test && npx mocha --timeout 30000 dist"
   },
   "main": "./dist/index.js",
   "module": "./src/index.js",
