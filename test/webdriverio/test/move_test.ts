@@ -25,7 +25,10 @@ suite('Move start tests', function () {
 
   // Clear the workspace and load start blocks.
   setup(async function () {
-    this.browser = await testSetup(testFileLocations.MOVE_START_TEST_BLOCKS);
+    this.browser = await testSetup(
+      testFileLocations.MOVE_START_TEST_BLOCKS,
+      this.timeout(),
+    );
     await this.browser.pause(PAUSE_TIME);
   });
 
@@ -186,6 +189,7 @@ suite('Statement move tests', function () {
   setup(async function () {
     this.browser = await testSetup(
       testFileLocations.MOVE_STATEMENT_TEST_BLOCKS,
+      this.timeout(),
     );
     await this.browser.pause(PAUSE_TIME);
   });
@@ -468,6 +472,7 @@ suite(`Value expression move tests`, function () {
           createTestUrl(
             new URLSearchParams({renderer, scenario: 'moveValueTestBlocks'}),
           ),
+          this.timeout(),
         );
         await this.browser.pause(PAUSE_TIME);
       });

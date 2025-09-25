@@ -29,7 +29,10 @@ suite('Workspace comment navigation', function () {
 
   // Clear the workspace and load start blocks.
   setup(async function () {
-    this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
+    this.browser = await testSetup(
+      testFileLocations.NAVIGATION_TEST_BLOCKS,
+      this.timeout(),
+    );
     [this.commentId1, this.commentId2] = await this.browser.execute(() => {
       const workspace = Blockly.getMainWorkspace();
       const comment1 = Blockly.serialization.workspaceComments.append(

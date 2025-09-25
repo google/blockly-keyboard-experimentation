@@ -25,7 +25,7 @@ suite('Scrolling into view', function () {
   //
   // N.B. that this is called only one per suite, not once per test.
   suiteSetup(async function () {
-    this.browser = await testSetup(testFileLocations.BASE);
+    this.browser = await testSetup(testFileLocations.BASE, this.timeout());
     this.windowSize = await this.browser.getWindowSize();
     await this.browser.setWindowSize(800, 600);
     await this.browser.pause(PAUSE_TIME);
@@ -41,7 +41,7 @@ suite('Scrolling into view', function () {
 
   // Clear the workspace and load start blocks.
   setup(async function () {
-    await testSetup(testFileLocations.BASE);
+    await testSetup(testFileLocations.BASE, this.timeout());
   });
 
   test('Insert scrolls new block into view', async function () {
