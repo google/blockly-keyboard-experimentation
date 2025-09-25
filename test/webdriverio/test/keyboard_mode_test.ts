@@ -32,7 +32,10 @@ suite(
 
     setup(async function () {
       // Reload the page between tests
-      this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
+      this.browser = await testSetup(
+        testFileLocations.NAVIGATION_TEST_BLOCKS,
+        this.timeout(),
+      );
 
       await this.browser.pause(PAUSE_TIME);
 

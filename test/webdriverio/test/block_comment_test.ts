@@ -23,7 +23,10 @@ suite('Block comment navigation', function () {
 
   // Clear the workspace and load start blocks.
   setup(async function () {
-    this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
+    this.browser = await testSetup(
+      testFileLocations.NAVIGATION_TEST_BLOCKS,
+      this.timeout(),
+    );
     await this.browser.execute(() => {
       Blockly.getMainWorkspace()
         .getBlockById('p5_canvas_1')

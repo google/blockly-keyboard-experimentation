@@ -31,7 +31,10 @@ suite('Keyboard navigation on Blocks', function () {
 
   // Clear the workspace and load start blocks.
   suiteSetup(async function () {
-    this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
+    this.browser = await testSetup(
+      testFileLocations.NAVIGATION_TEST_BLOCKS,
+      this.timeout(),
+    );
   });
 
   test('Default workspace', async function () {
@@ -226,7 +229,10 @@ suite('Keyboard navigation on Fields', function () {
 
   // Clear the workspace and load start blocks.
   suiteSetup(async function () {
-    this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
+    this.browser = await testSetup(
+      testFileLocations.NAVIGATION_TEST_BLOCKS,
+      this.timeout(),
+    );
   });
 
   test('Up from first field selects block', async function () {
