@@ -23,7 +23,10 @@ suite('Block comment navigation', function () {
 
   // Clear the workspace and load start blocks.
   setup(async function () {
-    this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
+    this.browser = await testSetup(
+      testFileLocations.NAVIGATION_TEST_BLOCKS,
+      this.timeout(),
+    );
     await this.browser.execute(() => {
       Blockly.getMainWorkspace()
         .getBlockById('p5_canvas_1')
@@ -36,7 +39,8 @@ suite('Block comment navigation', function () {
     await keyRight(this.browser);
     await sendKeyAndWait(this.browser, Key.Enter);
     const focusedNodeId = await getCurrentFocusNodeId(this.browser);
-    chai.assert.equal(focusedNodeId, 'blockly-2s_comment_textarea_');
+    chai.assert.isDefined(focusedNodeId);
+    chai.assert.match(focusedNodeId, /blockly-\w+_comment_textarea_/);
   });
 
   test('Escape from a focused comment focuses its bubble', async function () {

@@ -6,6 +6,7 @@
 
 import * as chai from 'chai';
 import * as Blockly from 'blockly';
+import * as webdriverio from 'webdriverio';
 import {
   testSetup,
   testFileLocations,
@@ -18,6 +19,7 @@ import {
   keyRight,
   getCurrentFocusNodeId,
   getCurrentFocusedBlockId,
+  tabNavigateToToolbox,
 } from './test_setup.js';
 
 suite('Toolbox and flyout test', function () {
@@ -26,7 +28,7 @@ suite('Toolbox and flyout test', function () {
 
   // Clear the workspace and load start blocks.
   setup(async function () {
-    this.browser = await testSetup(testFileLocations.BASE);
+    this.browser = await testSetup(testFileLocations.BASE, this.timeout());
     await this.browser.pause(PAUSE_TIME);
   });
 
@@ -243,6 +245,77 @@ suite('Toolbox and flyout test', function () {
     const flyoutIsOpen = await checkIfFlyoutIsOpen(this.browser);
     chai.assert.strictEqual(focusedId, elemId);
     chai.assert.isTrue(flyoutIsOpen);
+  });
+
+  suite('Flyout buttons', function () {
+    setup(async function () {
+      // New toolbox definition
+      const toolbox = {
+        'kind': 'categoryToolbox',
+        'contents': [
+          {
+            'kind': 'category',
+            'name': 'test category',
+            'contents': [
+              {
+                'kind': 'button',
+                'text': 'A button',
+                // Note lowercase
+                'callbackkey': 'buttonCallback',
+              },
+              {
+                'kind': 'button',
+                'text': 'Second button',
+                // Note camelCase
+                'callbackKey': 'buttonCallback',
+              },
+            ],
+          },
+        ],
+      };
+
+      // Replace toolbox contents & register button callback
+      await this.browser.execute((toolboxDef) => {
+        const ws = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
+        ws.updateToolbox(toolboxDef);
+        ws.registerButtonCallback('buttonCallback', () => {
+          alert('Button pressed');
+        });
+      }, toolbox);
+    });
+    teardown(async function () {
+      try {
+        await this.browser.acceptAlert();
+      } catch {
+        // Don't do anything if the alert isn't present, the test already failed elsewhere.
+      }
+    });
+    test('callbackkey is activated with enter', async function () {
+      await tabNavigateToToolbox(this.browser);
+      await this.browser.pause(PAUSE_TIME);
+
+      // First thing in the toolbox is the first button
+      // Press Enter to activate it.
+      await keyRight(this.browser);
+      await sendKeyAndWait(this.browser, webdriverio.Key.Enter);
+
+      // This errors if there is no alert present
+      await this.browser.getAlertText();
+    });
+
+    test('callbackKey is activated with enter', async function () {
+      await tabNavigateToToolbox(this.browser);
+      await this.browser.pause(PAUSE_TIME);
+
+      // Navigate to second button.
+      // Press Enter to activate it.
+      await keyRight(this.browser);
+      await keyDown(this.browser);
+      await sendKeyAndWait(this.browser, webdriverio.Key.Enter);
+
+      // This errors if there is no alert present
+      await this.browser.getAlertText();
+    });
   });
 });
 

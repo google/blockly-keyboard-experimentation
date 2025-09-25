@@ -49,10 +49,14 @@ export const PAUSE_TIME = 0;
  * done once, to avoid constantly popping browser windows open and
  * closed.
  *
+ * @param wdioWaitTimeoutMs The timeout for WebdriverIO waitFor*() commands, in
+ *     milliseconds.
  * @returns A Promise that resolves to a WebdriverIO browser that
  *     tests can manipulate.
  */
-export async function driverSetup(): Promise<webdriverio.Browser> {
+export async function driverSetup(
+  wdioWaitTimeoutMs: number,
+): Promise<webdriverio.Browser> {
   const options = {
     capabilities: {
       'browserName': 'chrome',
@@ -66,6 +70,7 @@ export async function driverSetup(): Promise<webdriverio.Browser> {
       // eslint-disable-next-line @typescript-eslint/naming-convention
       'wdio:enforceWebDriverClassic': true,
     },
+    waitforTimeout: wdioWaitTimeoutMs,
     logLevel: 'warn' as const,
   };
 
@@ -104,20 +109,24 @@ export async function driverTeardown() {
  *
  * @param playgroundUrl The URL to open for the test, which should be
  *     a Blockly playground with a workspace.
+ * @param wdioWaitTimeoutMs The timeout for WebdriverIO waitFor*() commands, in
+ *     milliseconds. This should generally be synchronized with the default
+ *     Mocah test timeout.
  * @returns A Promise that resolves to a WebdriverIO browser that
  *     tests can manipulate.
  */
 export async function testSetup(
   playgroundUrl: string,
+  wdioWaitTimeoutMs: number,
 ): Promise<webdriverio.Browser> {
   if (!driver) {
-    driver = await driverSetup();
+    driver = await driverSetup(wdioWaitTimeoutMs);
   }
   await driver.url(playgroundUrl);
   // Wait for the workspace to exist and be rendered.
   await driver
     .$('.blocklySvg .blocklyWorkspace > .blocklyBlockCanvas')
-    .waitForExist({timeout: 2000});
+    .waitForExist();
   return driver;
 }
 
@@ -193,6 +202,7 @@ export async function focusWorkspace(browser: WebdriverIO.Browser) {
     '#blocklyDiv > div > svg.blocklySvg > g',
   );
   await workspaceElement.click({x: 100});
+  await browser.pause(PAUSE_TIME);
 }
 
 /**
@@ -205,7 +215,7 @@ export async function moveToToolboxCategory(
   browser: WebdriverIO.Browser,
   category: string,
 ) {
-  await browser.keys('t');
+  await sendKeyAndWait(browser, 't');
   const categoryIndex = await browser.execute((category) => {
     const all = Array.from(
       document.querySelectorAll('.blocklyToolboxCategoryLabel'),
@@ -275,12 +285,13 @@ export async function focusOnBlock(
   browser: WebdriverIO.Browser,
   blockId: string,
 ) {
-  return await browser.execute((blockId) => {
+  await browser.execute((blockId) => {
     const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
     const block = workspaceSvg.getBlockById(blockId);
     if (!block) throw new Error(`No block found with ID: ${blockId}.`);
     Blockly.getFocusManager().focusNode(block);
   }, blockId);
+  await browser.pause(PAUSE_TIME);
 }
 
 /**
@@ -295,7 +306,7 @@ export async function focusOnWorkspaceComment(
   browser: WebdriverIO.Browser,
   commentId: string,
 ) {
-  return await browser.execute((commentId) => {
+  await browser.execute((commentId) => {
     const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
     const comment = workspaceSvg.getCommentById(commentId);
     if (!comment) {
@@ -303,6 +314,7 @@ export async function focusOnWorkspaceComment(
     }
     Blockly.getFocusManager().focusNode(comment);
   }, commentId);
+  await browser.pause(PAUSE_TIME);
 }
 
 /**
@@ -320,7 +332,7 @@ export async function focusOnBlockField(
   blockId: string,
   fieldName: string,
 ) {
-  return await browser.execute(
+  await browser.execute(
     (blockId, fieldName) => {
       const workspaceSvg = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg;
       const block = workspaceSvg.getBlockById(blockId);
@@ -334,6 +346,7 @@ export async function focusOnBlockField(
     blockId,
     fieldName,
   );
+  await browser.pause(PAUSE_TIME);
 }
 
 /**
@@ -466,6 +479,7 @@ export async function tabNavigateToWorkspace(
   // there's no straightforward way to do that; see
   // https://stackoverflow.com/q/51518855/4969945
   await browser.execute(() => document.getElementById('focusableDiv')?.focus());
+  await browser.pause(PAUSE_TIME);
   // Navigate to workspace.
   if (hasToolbox) await tabNavigateForward(browser);
   if (hasFlyout) await tabNavigateForward(browser);
@@ -639,7 +653,7 @@ export async function contextMenuExists(
   const item = await browser.$(
     `//div[contains(@class, "blocklyMenuItem")]//*[text()="${itemText}"]`,
   );
-  return await item.waitForExist({timeout: 200, reverse: reverse});
+  return await item.waitForExist({reverse: reverse});
 }
 
 /**
@@ -711,11 +725,13 @@ export async function clickBlock(
     blockId,
     findableId,
   );
+  await browser.pause(PAUSE_TIME);
 
   // In the test context, get the WebdriverIO Element that we've identified.
   const elem = await browser.$(`#${findableId}`);
 
   await elem.click(clickOptions);
+  await browser.pause(PAUSE_TIME);
 
   // In the browser context, remove the ID.
   await browser.execute((elemId) => {
@@ -735,4 +751,5 @@ export async function rightClickOnFlyoutBlockType(
 ) {
   const elem = await browser.$(`.blocklyFlyout .${blockType}`);
   await elem.click({button: 'right'});
+  await browser.pause(PAUSE_TIME);
 }

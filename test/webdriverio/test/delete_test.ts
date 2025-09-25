@@ -27,7 +27,10 @@ suite('Deleting Blocks', function () {
 
   // Clear the workspace and load start blocks.
   setup(async function () {
-    this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
+    this.browser = await testSetup(
+      testFileLocations.NAVIGATION_TEST_BLOCKS,
+      this.timeout(),
+    );
     await this.browser.pause(PAUSE_TIME);
   });
 
