@@ -42,7 +42,7 @@ let driver: webdriverio.Browser | null = null;
  * the browser.wait* functions if you need your test to wait for
  * something to happen after sending input.
  */
-export const PAUSE_TIME = 0;
+export const PAUSE_TIME = fetchEnvironmentPauseTime() ?? 0;
 
 /**
  * Start up WebdriverIO and load the test page. This should only be
@@ -91,6 +91,20 @@ export async function driverSetup(
   console.log('Starting webdriverio...');
   driver = await webdriverio.remote(options);
   return driver;
+}
+
+/**
+ * Fetches the environmentally configured pause time for tests.
+ *
+ * @return The paues time, in milliseconds, for tests or null if one isn't
+ *     correctly configured.
+ */
+function fetchEnvironmentPauseTime(): number | null {
+  const envPauseTimeMsStr = process.env.BLOCKLY_WDIO_PAUSE_TIME_MS;
+  if (!envPauseTimeMsStr) return null;
+  const envPauseTimeMs = parseInt(envPauseTimeMsStr);
+  if (isNaN(envPauseTimeMs)) return null;
+  return envPauseTimeMs;
 }
 
 /**

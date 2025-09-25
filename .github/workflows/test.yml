@@ -21,7 +21,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            BLOCKLY_WDIO_PAUSE_TIME_MS: donotoverride
+          - os: macos-latest
+            BLOCKLY_WDIO_PAUSE_TIME_MS: 100
 
     steps:
       - name: Checkout experimentation plugin
@@ -64,6 +68,8 @@ jobs:
         run: |
           cd main
           npm run test:ci
+        env:
+          BLOCKLY_WDIO_PAUSE_TIME_MS: ${{ matrix.BLOCKLY_WDIO_PAUSE_TIME_MS }}
 
   webdriverio_tests:
     name: WebdriverIO tests (against pinned v12)
