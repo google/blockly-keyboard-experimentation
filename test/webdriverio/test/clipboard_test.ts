@@ -27,7 +27,7 @@ suite('Clipboard test', function () {
 
   // Clear the workspace and load start blocks.
   setup(async function () {
-    this.browser = await testSetup(testFileLocations.BASE);
+    this.browser = await testSetup(testFileLocations.BASE, this.timeout());
     await this.browser.pause(PAUSE_TIME);
   });
 

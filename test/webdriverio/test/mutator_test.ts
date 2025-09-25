@@ -26,7 +26,10 @@ suite('Mutator navigation', function () {
 
   // Clear the workspace and load start blocks.
   setup(async function () {
-    this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
+    this.browser = await testSetup(
+      testFileLocations.NAVIGATION_TEST_BLOCKS,
+      this.timeout(),
+    );
     this.openMutator = async () => {
       await focusOnBlock(this.browser, 'controls_if_1');
       await this.browser.pause(PAUSE_TIME);

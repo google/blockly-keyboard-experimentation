@@ -18,7 +18,7 @@ import {
 suite('Stack navigation', function () {
   // Clear the workspace and load start blocks.
   setup(async function () {
-    this.browser = await testSetup(testFileLocations.COMMENTS);
+    this.browser = await testSetup(testFileLocations.COMMENTS, this.timeout());
     await this.browser.pause(PAUSE_TIME);
   });
 
