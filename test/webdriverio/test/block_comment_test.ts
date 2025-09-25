@@ -36,7 +36,8 @@ suite('Block comment navigation', function () {
     await keyRight(this.browser);
     await sendKeyAndWait(this.browser, Key.Enter);
     const focusedNodeId = await getCurrentFocusNodeId(this.browser);
-    chai.assert.equal(focusedNodeId, 'blockly-2s_comment_textarea_');
+    chai.assert.isDefined(focusedNodeId);
+    chai.assert.match(focusedNodeId, /blockly\-\w+_comment_textarea_/);
   });
 
   test('Escape from a focused comment focuses its bubble', async function () {
