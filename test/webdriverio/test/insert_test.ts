@@ -5,6 +5,7 @@
  */
 
 import * as chai from 'chai';
+import * as Blockly from 'blockly';
 import {Key} from 'webdriverio';
 import {
   getFocusedBlockType,
@@ -86,6 +87,34 @@ suite('Insert test', function () {
   });
 
   test('Insert without having focused the workspace', async function () {
+    await tabNavigateToToolbox(this.browser);
+
+    // Insert 'if' block
+    await keyRight(this.browser);
+    // Choose.
+    await sendKeyAndWait(this.browser, Key.Enter);
+    // Confirm position.
+    await sendKeyAndWait(this.browser, Key.Enter);
+
+    // Assert inserted inside first block p5_setup not at top-level.
+    chai.assert.equal('controls_if', await getFocusedBlockType(this.browser));
+    await keyUp(this.browser);
+    chai.assert.equal(
+      'p5_background_color',
+      await getFocusedBlockType(this.browser),
+    );
+  });
+
+  test('Does not insert between immovable blocks', async function () {
+    // Focus the create canvas block; we want to ensure that the newly
+    // inserted block is not attached to its next connection, because doing
+    // so would splice it into an immovable stack.
+    await focusOnBlock(this.browser, 'create_canvas_1');
+    await this.browser.execute(() => {
+      Blockly.getMainWorkspace()
+        .getAllBlocks()
+        .forEach((b) => b.setMovable(false));
+    });
     await tabNavigateToToolbox(this.browser);
 
     // Insert 'if' block

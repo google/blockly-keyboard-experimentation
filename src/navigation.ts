@@ -429,9 +429,28 @@ export class Navigation {
         return connection as Blockly.RenderedConnection;
       }
 
-      // 2. Connect statement blocks to next connection.
+      // 2. Connect statement blocks to next connection. Only return a next
+      // connection to which the statement block can actually connect; some
+      // may be ineligible because they are e.g. in the middle of an immovable
+      // stack.
       if (stationaryNode.nextConnection && !movingHasOutput) {
-        return stationaryNode.nextConnection;
+        let nextConnection: Blockly.RenderedConnection | null =
+          stationaryNode.nextConnection;
+        while (nextConnection) {
+          if (
+            movingBlock.workspace.connectionChecker.canConnect(
+              movingBlock.previousConnection,
+              nextConnection,
+              true,
+              Infinity,
+            )
+          ) {
+            return nextConnection;
+          }
+          nextConnection =
+            nextConnection.getSourceBlock().getNextBlock()?.nextConnection ??
+            null;
+        }
       }
 
       // 3. Output connection. This will wrap around or displace.
