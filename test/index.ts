@@ -16,8 +16,6 @@ import {forBlock} from './blocks/p5_generators';
 // @ts-expect-error No types in js file
 import {blocks} from './blocks/p5_blocks';
 // @ts-expect-error No types in js file
-import {toolbox as toolboxFlyout} from './blocks/toolbox.js';
-// @ts-expect-error No types in js file
 import toolboxCategories from './toolboxCategories.js';
 
 import {javascriptGenerator} from 'blockly/javascript';
