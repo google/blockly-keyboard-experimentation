@@ -733,7 +733,7 @@ suite(`Statement expression unconstrained move tests`, function () {
             this.browser,
             STATEMENT_SIMPLE.id,
             (await getCoordinate(this.browser, 'text_print')).x + 25,
-            (await getCoordinate(this.browser, 'text_print')).y - 60,
+            (await getCoordinate(this.browser, 'text_print')).y - 70,
           );
           await moveBlockAndAssertCandidates(
             STATEMENT_SIMPLE.id,
@@ -748,7 +748,7 @@ suite(`Statement expression unconstrained move tests`, function () {
             this.browser,
             STATEMENT_SIMPLE.id,
             (await getCoordinate(this.browser, 'text_print')).x + 25,
-            (await getCoordinate(this.browser, 'text_print')).y + 240,
+            (await getCoordinate(this.browser, 'text_print')).y + 237,
           );
           await moveBlockAndAssertCandidates(
             STATEMENT_SIMPLE.id,
@@ -799,7 +799,7 @@ suite(`Statement expression unconstrained move tests`, function () {
             this.browser,
             STATEMENT_COMPLEX.id,
             (await getCoordinate(this.browser, 'text_print')).x - 22,
-            (await getCoordinate(this.browser, 'text_print')).y - 120,
+            (await getCoordinate(this.browser, 'text_print')).y - 125,
           );
           await moveBlockAndAssertCandidates(
             STATEMENT_COMPLEX.id,
@@ -814,7 +814,7 @@ suite(`Statement expression unconstrained move tests`, function () {
             this.browser,
             STATEMENT_COMPLEX.id,
             (await getCoordinate(this.browser, 'text_print')).x - 22,
-            (await getCoordinate(this.browser, 'text_print')).y + 260,
+            (await getCoordinate(this.browser, 'text_print')).y + 254,
           );
           await moveBlockAndAssertCandidates(
             STATEMENT_COMPLEX.id,
@@ -956,7 +956,7 @@ suite(`Value expression unconstrained move tests`, function () {
             this.browser,
             VALUE_SIMPLE.id,
             (await getInputCoordinates(this.browser, 'print1', 'TEXT')).x,
-            (await getCoordinate(this.browser, 'join0')).y + 80,
+            (await getCoordinate(this.browser, 'join0')).y + 70,
           );
           await moveBlockAndAssertCandidates(
             VALUE_SIMPLE.id,
@@ -971,7 +971,7 @@ suite(`Value expression unconstrained move tests`, function () {
             this.browser,
             VALUE_SIMPLE.id,
             (await getInputCoordinates(this.browser, 'print1', 'TEXT')).x,
-            (await getCoordinate(this.browser, 'join0')).y + 235,
+            (await getCoordinate(this.browser, 'join0')).y + 230,
           );
           await moveBlockAndAssertCandidates(
             VALUE_SIMPLE.id,
@@ -1022,7 +1022,7 @@ suite(`Value expression unconstrained move tests`, function () {
             this.browser,
             VALUE_UNARY.id,
             (await getInputCoordinates(this.browser, 'print1', 'TEXT')).x,
-            (await getCoordinate(this.browser, 'join0')).y + 80,
+            (await getCoordinate(this.browser, 'join0')).y + 70,
           );
           await moveBlockAndAssertCandidates(
             VALUE_UNARY.id,
@@ -1037,7 +1037,7 @@ suite(`Value expression unconstrained move tests`, function () {
             this.browser,
             VALUE_UNARY.id,
             (await getInputCoordinates(this.browser, 'print1', 'TEXT')).x,
-            (await getCoordinate(this.browser, 'join0')).y + 235,
+            (await getCoordinate(this.browser, 'join0')).y + 230,
           );
           await moveBlockAndAssertCandidates(
             VALUE_UNARY.id,
