@@ -59,14 +59,16 @@ suite('Stack navigation', function () {
       await getCurrentFocusNodeId(this.browser),
     );
     await sendKeyAndWait(this.browser, 'b');
-    chai.assert.equal(
-      'p5_draw_1',
-      await getCurrentFocusedBlockId(this.browser),
+    chai.assert.isTrue(
+      (await getCurrentFocusNodeId(this.browser))?.startsWith(
+        'draw_circle_2_connection',
+      ),
     );
     await sendKeyAndWait(this.browser, 'b');
-    chai.assert.equal(
-      'p5_setup_1',
-      await getCurrentFocusedBlockId(this.browser),
+    chai.assert.isTrue(
+      (await getCurrentFocusNodeId(this.browser))?.startsWith(
+        'set_background_color_1_connection',
+      ),
     );
   });
 });

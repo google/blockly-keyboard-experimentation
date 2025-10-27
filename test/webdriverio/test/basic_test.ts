@@ -49,7 +49,7 @@ suite('Keyboard navigation on Blocks', function () {
     await tabNavigateToWorkspace(this.browser);
     await this.browser.pause(PAUSE_TIME);
 
-    await keyDown(this.browser, 14);
+    await keyDown(this.browser, 22);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
@@ -59,7 +59,9 @@ suite('Keyboard navigation on Blocks', function () {
   test('Down from statement block selects next block across stacks', async function () {
     await focusOnBlock(this.browser, 'p5_canvas_1');
     await this.browser.pause(PAUSE_TIME);
-    await keyDown(this.browser);
+    // Key down twice; the first down moves to the next connection on the
+    // selected block.
+    await keyDown(this.browser, 2);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
@@ -164,7 +166,9 @@ suite('Keyboard navigation on Blocks', function () {
   test('Right from last inline input selects next block', async function () {
     await focusOnBlock(this.browser, 'colour_picker_1');
     await this.browser.pause(PAUSE_TIME);
-    await keyRight(this.browser);
+    // Go right twice; first one selects the next connection on the colour
+    // picker's parent block.
+    await keyRight(this.browser, 2);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
@@ -174,7 +178,9 @@ suite('Keyboard navigation on Blocks', function () {
   test('Down from inline input selects next block', async function () {
     await focusOnBlock(this.browser, 'colour_picker_1');
     await this.browser.pause(PAUSE_TIME);
-    await keyDown(this.browser);
+    // Go down twice; first one selects the next connection on the colour
+    // picker's parent block.
+    await keyDown(this.browser, 2);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
@@ -204,7 +210,8 @@ suite('Keyboard navigation on Blocks', function () {
       .expect(await getCurrentFocusNodeId(this.browser))
       .to.include('text_1_field_');
 
-    await keyRight(this.browser);
+    // Go right twice; first one selects the next connection on the print block.
+    await keyRight(this.browser, 2);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
@@ -284,7 +291,9 @@ suite('Keyboard navigation on Fields', function () {
   test('Right from second field selects next block', async function () {
     await focusOnBlockField(this.browser, 'p5_canvas_1', 'HEIGHT');
     await this.browser.pause(PAUSE_TIME);
-    await keyRight(this.browser);
+    // Go right twice; first one selects the next connection on the create
+    // canvas block.
+    await keyRight(this.browser, 2);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
@@ -294,7 +303,9 @@ suite('Keyboard navigation on Fields', function () {
   test('Down from field selects next block', async function () {
     await focusOnBlockField(this.browser, 'p5_canvas_1', 'WIDTH');
     await this.browser.pause(PAUSE_TIME);
-    await keyDown(this.browser);
+    // Go down twice; first one selects the next connection on the create
+    // canvas block.
+    await keyDown(this.browser, 2);
 
     chai
       .expect(await getCurrentFocusedBlockId(this.browser))
