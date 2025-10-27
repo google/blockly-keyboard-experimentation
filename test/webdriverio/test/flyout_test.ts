@@ -196,7 +196,7 @@ suite('Toolbox and flyout test', function () {
     await tabNavigateToWorkspace(this.browser);
 
     // Note that two tabs are needed here to move past the flyout.
-    await keyDown(this.browser, 3);
+    await keyDown(this.browser, 4);
     await tabNavigateBackward(this.browser);
     await tabNavigateForward(this.browser);
     await tabNavigateForward(this.browser);

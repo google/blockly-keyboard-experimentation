@@ -71,7 +71,8 @@ suite('Workspace comment navigation', function () {
 
   test('Navigate forward from block to workspace comment', async function () {
     await focusOnBlock(this.browser, 'p5_canvas_1');
-    await keyDown(this.browser);
+    // Key down twice; the first focuses the block's next connection.
+    await keyDown(this.browser, 2);
     const focusedNodeId = await getCurrentFocusNodeId(this.browser);
     chai.assert.equal(focusedNodeId, this.commentId1);
   });
@@ -92,7 +93,8 @@ suite('Workspace comment navigation', function () {
 
   test('Navigate backward from workspace comment to block', async function () {
     await focusOnWorkspaceComment(this.browser, this.commentId1);
-    await keyUp(this.browser);
+    // Key up twice; the first focuses the block's next connection.
+    await keyUp(this.browser, 2);
     const focusedBlock = await getFocusedBlockType(this.browser);
     chai.assert.equal(focusedBlock, 'p5_canvas');
   });
